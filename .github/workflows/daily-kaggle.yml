@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Prepare current private notebook
+        run: cat notebook.gz.part* | gzip -dc > kaggle_avatar_pipeline.ipynb
       - name: Install official Kaggle CLI
         run: pip install --upgrade kaggle
       - name: Authenticate and start private GPU kernel
