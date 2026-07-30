@@ -1,3 +1,58 @@
-name: placeholder
-on: workflow_dispatch:
-jobs: {}
+name: PCS Legat Kaggle GPU
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 03:30 Thailand (UTC+7) = 20:30 UTC on the previous day.
+    - cron: "30 20 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  run-kaggle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install official Kaggle CLI
+        run: pip install --upgrade kaggle
+      - name: Authenticate and start private GPU kernel
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          test -n "$KAGGLE_API_TOKEN"
+          kaggle kernels push -p . --accelerator NvidiaTeslaP100 --timeout 1800
+      - name: Wait for the Kaggle run
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 180); do
+            status="$(kaggle kernels status tatyanathai/pcs-legat-avatar-pipeline 2>&1 | tee /dev/stderr)"
+            if echo "$status" | grep -qiE 'complete|completed|success'; then
+              exit 0
+            fi
+            if echo "$status" | grep -qiE 'error|failed|cancel'; then
+              exit 1
+            fi
+            sleep 60
+          done
+          echo "Timed out waiting for Kaggle" >&2
+          exit 1
+      - name: Download outputs
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          mkdir -p kaggle-output
+          kaggle kernels output tatyanathai/pcs-legat-avatar-pipeline -p kaggle-output -o
+      - name: Upload run artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pcs-legat-avatar-output
+          path: kaggle-output/**
+          if-no-files-found: error
+          retention-days: 14
