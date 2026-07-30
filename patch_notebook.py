@@ -42,7 +42,7 @@ env_matches = 0
 echo_matches = 0
 
 old_echo = "run(ECHO_PIP + ['install', '-r', str(ECHO/'requirements.txt')])"
-new_echo = "run(ECHO_PIP + ['install', '--no-build-isolation', '-r', str(ECHO/'requirements.txt')])"
+new_echo = "echo_requirements = ECHO / 'requirements.txt'\necho_req_text = echo_requirements.read_text(encoding='utf-8')\nif 'onnxruntime-gpu==1.20.1' not in echo_req_text:\n    raise RuntimeError('Expected onnxruntime-gpu==1.20.1 in EchoMimicV2 requirements.')\necho_requirements.write_text(echo_req_text.replace('onnxruntime-gpu==1.20.1', 'onnxruntime-gpu==1.20.2'), encoding='utf-8')\nrun(ECHO_PIP + ['install', '--no-build-isolation', '-r', str(echo_requirements)])"
 
 for cell in nb.get('cells', []):
     source = ''.join(cell.get('source', []))
@@ -72,5 +72,5 @@ if echo_matches != 1:
 path.write_text(json.dumps(nb, ensure_ascii=False, indent=1), encoding='utf-8')
 print(
     f'Patched {path}: uv-managed Python 3.10, setuptools<81, '
-    'and no-build-isolation for EchoMimicV2 requirements.'
+    'onnxruntime-gpu 1.20.2, and no-build-isolation for EchoMimicV2 requirements.'
 )
