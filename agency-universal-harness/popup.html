@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agency Universal Harness</title>
+<style>
+  :root{color-scheme:dark;--bg:#10141c;--panel:#171d28;--line:#2b3547;--text:#f4f7fb;--muted:#9aa6b8;--accent:#5b8cff;--ok:#42c77a;--warn:#e6a23c;--bad:#ff5e68}
+  *{box-sizing:border-box} body{margin:0;width:430px;min-height:620px;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+  header{padding:18px 18px 10px} h1{font-size:19px;margin:0 0 4px} .sub{color:var(--muted);font-size:12px}
+  main{padding:0 14px 16px}.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
+  .row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}.grow{flex:1}.label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+  .bind{padding:9px;border:1px solid var(--line);border-radius:10px;background:#121722;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-right:7px}.dot.ok{background:var(--ok)}
+  button{border:1px solid var(--line);background:#20293a;color:var(--text);border-radius:10px;padding:9px 10px;font-weight:650;cursor:pointer} button:hover{border-color:#536582}button.primary{background:var(--accent);border-color:var(--accent);color:white}button.danger{background:#32191d;border-color:#6b3038}button:disabled{opacity:.45;cursor:not-allowed}
+  textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);background:#0f141d;color:var(--text);border-radius:10px;padding:10px;outline:none}textarea:focus{border-color:var(--accent)}
+  .status{font-weight:700}.status.running,.status.awaiting_ai{color:#8fb0ff}.status.done{color:var(--ok)}.status.blocked,.status.cancelled{color:var(--bad)}.status.confirmation{color:var(--warn)}
+  .result{white-space:pre-wrap;background:#0d121a;border-radius:10px;padding:10px;margin-top:8px}.evidence{color:#b8c5d6;font-size:12px;margin-top:6px}
+  #confirm{border-color:#6e5427;background:#2c2416}.hidden{display:none}.log{max-height:180px;overflow:auto;font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace}.log div{padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}.log .success{color:#7ee2a5}.log .error{color:#ff8a91}.log .warn{color:#f4bf6c}
+  .foot{color:var(--muted);font-size:11px;padding:2px 4px}
+</style>
+</head>
+<body>
+<header><h1>Agency Universal Harness</h1><div class="sub">Browser Harness → Observe → Act → Verify → Learn</div></header>
+<main>
+  <section class="card">
+    <div class="label">Явная привязка вкладок</div>
+    <div id="chatBind" class="bind"><span class="dot"></span>ChatGPT не привязан</div>
+    <button id="bindChat" style="width:100%;margin-bottom:8px">Привязать текущий ChatGPT</button>
+    <div id="targetBind" class="bind"><span class="dot"></span>Рабочий сайт не привязан</div>
+    <button id="bindTarget" style="width:100%">Привязать текущий рабочий сайт</button>
+  </section>
+
+  <section class="card">
+    <div class="label">Задача</div>
+    <textarea id="task" placeholder="Например: открой запись, измени заголовок, проверь что значение сохранилось. Или: найди на странице нужные данные и верни результат."></textarea>
+    <div class="row" style="margin-top:8px"><button id="start" class="primary grow">Запустить</button><button id="cancel">Стоп</button></div>
+  </section>
+
+  <section id="runCard" class="card">
+    <div class="row"><div class="grow"><div class="label">Состояние</div><div id="runStatus" class="status">Нет активной задачи</div></div><div id="step"></div></div>
+    <div id="result" class="result hidden"></div><div id="evidence" class="evidence hidden"></div>
+  </section>
+
+  <section id="confirm" class="card hidden">
+    <div class="label">Нужно одноразовое подтверждение</div>
+    <div id="confirmText" style="margin-bottom:9px"></div>
+    <div class="row"><button id="approve" class="primary grow">Подтвердить это действие</button><button id="reject" class="danger">Остановить</button></div>
+  </section>
+
+  <section class="card"><div class="label">Журнал выполнения</div><div id="log" class="log"></div></section>
+  <div class="foot">Без OpenAI API. ChatGPT работает в явно привязанной открытой вкладке. Опасные действия требуют одноразового подтверждения.</div>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>

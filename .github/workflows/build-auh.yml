@@ -1,0 +1,48 @@
+name: Build Agency Universal Harness
+on:
+  push:
+    branches:
+      - agent/agency-universal-harness-v1c
+
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: JavaScript syntax
+        working-directory: agency-universal-harness
+        run: |
+          for f in service_worker.js policy.js page_agent.js chatgpt_adapter.js popup.js; do
+            node --check "$f"
+          done
+      - name: Static safety regression
+        working-directory: agency-universal-harness
+        run: node tests/static_checks.js
+      - name: Build Opera-ready folder
+        run: |
+          rm -rf dist
+          mkdir -p dist/Agency-Universal-Harness
+          cp agency-universal-harness/manifest.json dist/Agency-Universal-Harness/
+          cp agency-universal-harness/service_worker.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/policy.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/page_agent.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/chatgpt_adapter.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/popup.html dist/Agency-Universal-Harness/
+          cp agency-universal-harness/popup.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/README.txt dist/Agency-Universal-Harness/
+          test -f dist/Agency-Universal-Harness/manifest.json
+          test "$(find dist -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
+      - name: Release-folder smoke check
+        run: |
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Universal-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='1.0.0') process.exit(1); console.log('release manifest PASS')"
+          for f in dist/Agency-Universal-Harness/*.js; do node --check "$f"; done
+      - name: SHA256 inventory
+        run: |
+          (cd dist/Agency-Universal-Harness && sha256sum * > SHA256SUMS.txt)
+      - name: Upload Opera-ready package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Agency-Universal-Harness-Opera-v1.0.0
+          path: dist
+          if-no-files-found: error
+          retention-days: 30
