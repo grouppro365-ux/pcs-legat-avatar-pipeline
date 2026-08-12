@@ -1,6 +1,11 @@
 (() => {
   const clean = (s, max = 240) => String(s || '').replace(/\s+/g, ' ').trim().slice(0, max);
   const norm = s => clean(s, 300).toLowerCase();
+  const INTERACTIVE_SELECTOR = [
+    'button','a[href]','input','textarea','select','summary',
+    '[contenteditable="true"]','[role="button"]','[role="link"]','[role="textbox"]',
+    '[role="combobox"]','[role="checkbox"]','[role="radio"]','[role="menuitem"]','[tabindex]'
+  ].join(',');
 
   function visible(el) {
     if (!el || !el.isConnected) return false;
@@ -20,7 +25,8 @@
     if (labelled) return clean(labelled, 160);
     const id = el.id;
     if (id) {
-      const lab = document.querySelector(`label[for="${CSS.escape(id)}"]`);
+      const root = el.getRootNode?.() || document;
+      const lab = root.querySelector?.(`label[for="${CSS.escape(id)}"]`) || document.querySelector(`label[for="${CSS.escape(id)}"]`);
       if (lab) return clean(lab.innerText || lab.textContent, 160);
     }
     return clean(el.innerText || el.textContent || el.getAttribute('placeholder') || '', 160);
@@ -56,13 +62,29 @@
     };
   }
 
-  function interactiveNodes(limit = 320) {
-    const selector = [
-      'button','a[href]','input','textarea','select','summary',
-      '[contenteditable="true"]','[role="button"]','[role="link"]','[role="textbox"]',
-      '[role="combobox"]','[role="checkbox"]','[role="radio"]','[role="menuitem"]','[tabindex]'
-    ].join(',');
-    return Array.from(document.querySelectorAll(selector)).filter(visible).slice(0, limit);
+  function collectRoot(root, out, seen) {
+    if (!root?.querySelectorAll) return;
+    for (const el of root.querySelectorAll(INTERACTIVE_SELECTOR)) {
+      if (!seen.has(el)) { seen.add(el); out.push(el); }
+    }
+    for (const host of root.querySelectorAll('*')) {
+      if (host.shadowRoot) collectRoot(host.shadowRoot, out, seen);
+    }
+  }
+
+  function viewportRank(el) {
+    const r = el.getBoundingClientRect();
+    const inView = r.bottom >= 0 && r.top <= innerHeight && r.right >= 0 && r.left <= innerWidth;
+    const cy = r.top + r.height / 2;
+    const cx = r.left + r.width / 2;
+    const dist = Math.abs(cy - innerHeight / 2) + Math.abs(cx - innerWidth / 2) * 0.2;
+    return (inView ? 0 : 100000) + dist;
+  }
+
+  function interactiveNodes(limit = 360) {
+    const all = [];
+    collectRoot(document, all, new Set());
+    return all.filter(visible).sort((a,b) => viewportRank(a) - viewportRank(b)).slice(0, limit);
   }
 
   function same(a, b) { return !!a && !!b && norm(a) === norm(b); }
@@ -117,9 +139,7 @@
 
     const best = ranked[0];
     const second = ranked[1];
-    if (!best || best.score < 48) {
-      return {ok:false, error:'LOCATOR_NOT_FOUND', recoverable:true};
-    }
+    if (!best || best.score < 48) return {ok:false, error:'LOCATOR_NOT_FOUND', recoverable:true};
 
     const ambiguous = second && best.strong === 0 && second.strong === 0 && (best.score - second.score) < 12;
     if (ambiguous) {
