@@ -73,7 +73,7 @@
     action.type = type;
 
     if (type === 'navigate') {
-      try { new URL(String(action.url)); } catch { return {ok:false,error:'NAVIGATE_URL_INVALID'}; }
+      try { new URL(String(action.url), 'https://relative.invalid/'); } catch { return {ok:false,error:'NAVIGATE_URL_INVALID'}; }
       return {ok:true,value:obj};
     }
     if (type === 'wait' && !action.target && !action.textIncludes && !action.urlIncludes) return {ok:false,error:'WAIT_CONDITION_REQUIRED'};
