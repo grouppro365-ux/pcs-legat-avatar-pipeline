@@ -1,0 +1,48 @@
+name: Agency Workbench Opera Package
+
+on:
+  push:
+    branches:
+      - agency-workbench-opera-release
+    paths:
+      - 'tools/agency-workbench-opera-v0.3.1/**'
+      - '.github/workflows/agency-workbench-opera-package.yml'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate manifest and files
+        shell: bash
+        run: |
+          set -euo pipefail
+          SRC='tools/agency-workbench-opera-v0.3.1/Agency-Workbench-Opera-v0.3.1'
+          test -f "$SRC/manifest.json"
+          node -e "const m=require('./' + process.argv[1]); if(m.manifest_version!==3) process.exit(1); if(m.version!=='0.3.1') process.exit(2);" "$SRC/manifest.json"
+          for f in background.js policy.js page-agent.js chatgpt-bridge.js dashboard.js; do
+            test -f "$SRC/$f"
+            node --check "$SRC/$f"
+          done
+          test -f "$SRC/dashboard.html"
+          test -f "$SRC/README.txt"
+          ! grep -R -E 'OPENAI_API_KEY|api\.openai\.com|sk-proj-' "$SRC"
+
+      - name: Build one-folder Opera release
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf release
+          mkdir -p release
+          cp -R tools/agency-workbench-opera-v0.3.1/Agency-Workbench-Opera-v0.3.1 release/
+          test -f release/Agency-Workbench-Opera-v0.3.1/manifest.json
+          find release -maxdepth 2 -type f -print | sort
+
+      - name: Upload Opera-ready folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: Agency-Workbench-Opera-v0.3.1-OPERA-READY
+          path: release/
+          if-no-files-found: error
+          retention-days: 7
