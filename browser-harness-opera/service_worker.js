@@ -9,7 +9,9 @@ const MAX_PLANNER_ERRORS = 3;
 
 const SECRET_FIELD_RE = /(password|passcode|otp|one.?time|verification.?code|cvv|cvc|парол|код.?подтверж|однораз|secret|token)/i;
 const FINANCIAL_LEGAL_RE = /(pay|purchase|checkout|transfer|withdraw|bank|card|sign|contract|permission|grant access|оплат|купить|перевод|вывест|банк|карт|подписать|договор|доступ|разрешен)/i;
-const MUTATION_RE = /(send|publish|post|delete|remove|archive|submit|save|apply|отправ|опублик|размест|удал|архив|сохран|примен)/i;
+// Ordinary save/apply/form-submit steps are part of normal browser work and must not interrupt the user.
+// Confirmation is reserved for send/publish/delete when not explicitly requested, plus financial/legal/account actions.
+const MUTATION_RE = /(send|publish|post|delete|remove|archive|отправ|опублик|размест|удал|архив)/i;
 
 function emptyState() {
   return {version:'0.1.0', chat:null, target:null, tasks:[], run:null, routes:[], logs:[]};
@@ -36,7 +38,7 @@ function sanitize(value, key='') {
     return value.length > 700 ? `${value.slice(0,700)}…` : value;
   }
   if (Array.isArray(value)) return value.map(v => sanitize(v, key));
-  if (typeof value === 'object') { const out={}; for(const [k,v] of Object.entries(value)) out[k]=sanitize(v,k); return out; }
+  if (typeof value === 'object') { const out={}; for(const[k,v]of Object.entries(value)) out[k]=sanitize(v,k); return out; }
   return value;
 }
 async function activeTab() { const [tab] = await chrome.tabs.query({active:true,currentWindow:true}); return tab || null; }
@@ -87,8 +89,8 @@ function taskTokens(text) { return new Set(String(text||'').toLowerCase().split(
 function relatedRoutes(state, task, origin) {
   const wanted = taskTokens(task);
   return (state.routes || []).filter(r => r.origin === origin).map(r => {
-    const tokens = taskTokens(r.taskHint); let score=0; for(const x of wanted) if(tokens.has(x)) score++;
-    return {...r,score};
+    const tokens = taskTokens(r.taskHint); let overlap=0; for(const x of wanted) if(tokens.has(x)) overlap++;
+    return {...r,score:overlap};
   }).filter(r => r.score>0).sort((a,b)=>b.score-a.score).slice(0,3).map(r => ({taskHint:r.taskHint,steps:r.steps}));
 }
 
@@ -152,10 +154,17 @@ async function composerStillHasRequest(chatDriver, requestId) {
 }
 async function scopedSendButton(chatDriver) {
   const scan = await chatDriver.inspect({max:400});
-  const rx = /^(send|submit|отправить|отправка|send message)$/i;
-  const candidates = (scan.elements || []).filter(e => e.role === 'button' && rx.test(String(e.name || e.label || e.text || '').trim()));
+  const composer = (scan.elements || []).find(e => e.hints?.id === 'prompt-textarea') ||
+    [...(scan.elements || [])].reverse().find(e => e.role === 'textbox');
+  const rx = /(send|submit|отправ)/i;
+  let candidates = (scan.elements || []).filter(e => e.role === 'button' && rx.test(String(e.name || e.label || e.text || '').trim()));
+  if (composer?.rect) {
+    candidates = candidates.filter(e => e.rect && Math.abs((e.rect.y||0)-(composer.rect.y||0)) < 260);
+  }
   if (!candidates.length) return null;
-  candidates.sort((a,b) => (b.rect?.y || 0) - (a.rect?.y || 0));
+  if (composer?.rect) {
+    candidates.sort((a,b) => Math.abs((a.rect?.x||0)-(composer.rect.x+composer.rect.width)) - Math.abs((b.rect?.x||0)-(composer.rect.x+composer.rect.width)));
+  } else candidates.sort((a,b)=>(b.rect?.y||0)-(a.rect?.y||0));
   return new ElementProxy(chatDriver, candidates[0]);
 }
 async function trustedEnter(tabId) {
@@ -253,6 +262,7 @@ async function adoptChildTab(beforeIds, openerTabId, state) {
   const u = new URL(child.url);
   state.target = {tabId:child.id,origin:u.origin,title:child.title || u.hostname};
   addLog(state,'info','Harness продолжает работу в открывшейся вкладке.',{title:state.target.title,origin:u.origin});
+  await putState(state);
   return child;
 }
 
