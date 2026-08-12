@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Agency Workbench — ChatGPT Free Mode",
+  "version": "0.3.0",
+  "description": "Визуальный браузерный оператор: открытый ChatGPT как мозг, локальная проверка результата, без OpenAI API.",
+  "permissions": ["tabs", "scripting", "storage"],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://*.chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Agency Workbench"
+  }
+}

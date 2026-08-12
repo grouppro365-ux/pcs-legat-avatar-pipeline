@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Agency Workbench</title>
+<style>
+:root{--bg:#0d1117;--panel:#151b24;--panel2:#1d2634;--line:#2b384b;--text:#eef3fb;--muted:#9ba8ba;--accent:#78a6ff;--ok:#54d68c;--bad:#ff6b6b;--warn:#ffc861}
+*{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#0a0e14,#101722);color:var(--text);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1500px;margin:auto;padding:24px}.top{display:flex;gap:16px;align-items:center;justify-content:space-between;margin-bottom:20px}.brand h1{margin:0;font-size:28px}.brand p{margin:4px 0 0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1.05fr 1.35fr;gap:18px}.card{background:rgba(21,27,36,.96);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 10px 35px #0003}.card h2{margin:0 0 10px;font-size:19px}.help{color:var(--muted);font-size:13px;margin-bottom:12px}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0}.row>*{min-width:0}select,textarea,input,button{font:inherit}select,textarea,input{width:100%;background:#0f151e;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px}textarea{min-height:110px;resize:vertical}button{border:1px solid #3a4b63;background:#202b3b;color:#fff;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}button:hover{background:#29384d}button.primary{background:#2f66d3;border-color:#477de5}button.danger{background:#5b2b2f;border-color:#8c454c}.status{font-size:12px;padding:5px 9px;border-radius:999px;background:#263040;color:var(--muted)}.status.ok{background:#153c2a;color:#8cf0b3}.status.bad{background:#472327;color:#ff9f9f}.status.warn{background:#45371a;color:#ffd87d}
+.binding{padding:10px 12px;border:1px dashed #3b4b62;border-radius:12px;color:var(--muted);word-break:break-all;margin:8px 0}.binding b{color:#fff}.actions{display:flex;gap:10px;flex-wrap:wrap}.board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.col{background:#101720;border:1px solid #263346;border-radius:16px;min-height:190px;padding:10px}.col h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#9faec2;margin:4px 4px 10px}.task{background:#1b2533;border:1px solid #34455d;border-radius:12px;padding:11px;margin-bottom:8px;cursor:grab}.task .t{font-weight:700}.task .m{font-size:12px;color:#9eacc0;margin-top:6px}.task.active{outline:2px solid #3d77df}.task.blocked{border-color:#84444b}.task.done{border-color:#347754}
+.log{height:460px;overflow:auto;background:#080c12;border:1px solid #263346;border-radius:14px;padding:12px;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}.log div{padding:4px 0;border-bottom:1px solid #ffffff08;white-space:pre-wrap;word-break:break-word}.log .ok{color:#8de6ac}.log .bad{color:#ff9b9b}.log .sys{color:#95b7ff}.log .warn{color:#ffd17c}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modalbox{max-width:540px;background:#171e29;border:1px solid #46546a;border-radius:18px;padding:20px}.modalbox h3{margin-top:0}.small{font-size:12px;color:var(--muted)}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.board{grid-template-columns:1fr 1fr}}@media(max-width:620px){.board{grid-template-columns:1fr}.row{flex-direction:column;align-items:stretch}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand"><h1>Agency Workbench</h1><p>ChatGPT в открытой вкладке → браузер → проверка факта → готово</p></div><span id="globalStatus" class="status">v0.3.0</span></div>
+  <div class="grid">
+    <div>
+      <section class="card">
+        <h2>1. Явная привязка вкладок</h2>
+        <div class="help">Никаких случайных вкладок. Если привязанная вкладка закрылась или ушла на другой сайт — работа останавливается.</div>
+        <div class="row"><select id="chatSelect"></select><button id="bindChat">Привязать ChatGPT</button></div>
+        <div id="chatBinding" class="binding">ChatGPT не привязан</div>
+        <div class="row"><select id="targetSelect"></select><button id="bindTarget">Привязать рабочий сайт</button></div>
+        <div id="targetBinding" class="binding">Рабочий сайт не привязан</div>
+        <div class="actions"><button id="refreshTabs">Обновить вкладки</button><button id="pingBindings">Проверить bridge</button><button id="testChat">Тест ChatGPT</button></div>
+      </section>
+
+      <section class="card" style="margin-top:18px">
+        <h2>2. Поставить задачу</h2>
+        <textarea id="taskText" placeholder="Например: Создай новый пост в WordPress на тему X, заполни заголовок и текст, сохрани как черновик и проверь, что черновик реально сохранён."></textarea>
+        <div class="actions" style="margin-top:10px"><button id="addTask">Добавить</button><button id="addRun" class="primary">Добавить и запустить</button><button id="stopRun" class="danger">Стоп</button></div>
+        <div class="small" style="margin-top:9px">Опасные действия (публикация, отправка, удаление, оплата, доступы) требуют одноразового подтверждения.</div>
+      </section>
+
+      <section class="card" style="margin-top:18px">
+        <h2>Доска</h2>
+        <div class="board">
+          <div class="col" data-status="inbox"><h3>Входящие</h3><div class="tasks"></div></div>
+          <div class="col" data-status="running"><h3>В работе</h3><div class="tasks"></div></div>
+          <div class="col" data-status="blocked"><h3>Нужна проверка</h3><div class="tasks"></div></div>
+          <div class="col" data-status="done"><h3>Готово</h3><div class="tasks"></div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Журнал выполнения</h2>
+      <div class="help">Если что-то ломается, здесь будет точная точка обрыва: ChatGPT bridge, JSON, selector, safety gate, WordPress или verify.</div>
+      <div id="log" class="log"></div>
+    </section>
+  </div>
+</div>
+
+<div id="confirmModal" class="modal"><div class="modalbox"><h3>Нужно подтверждение</h3><p id="confirmText"></p><div class="actions"><button id="confirmYes" class="primary">Подтверждаю это действие один раз</button><button id="confirmNo">Отмена</button></div></div></div>
+<script src="dashboard.js"></script>
+</body>
+</html>

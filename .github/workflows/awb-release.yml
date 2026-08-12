@@ -1,0 +1,45 @@
+name: Agency Workbench v0.3.0 release check
+
+on:
+  push:
+    branches:
+      - agency-workbench-v0.3.0-build
+
+jobs:
+  verify-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static and syntax checks
+        run: node tests/static-check.mjs
+      - name: Build clean extension directory
+        run: |
+          rm -rf release
+          mkdir release
+          cp manifest.json background.js policy.js page-agent.js chatgpt-bridge.js dashboard.html dashboard.js README.md release/
+      - name: Clean-package smoke
+        run: |
+          test -f release/manifest.json
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('release/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='0.3.0') process.exit(1);"
+          node --check release/background.js
+          node --check release/policy.js
+          node --check release/page-agent.js
+          node --check release/chatgpt-bridge.js
+          node --check release/dashboard.js
+          grep -q 'Agency Workbench' release/dashboard.html
+          ! grep -R -E 'api\.openai\.com|OPENAI_API_KEY|sk-proj-' release --exclude=README.md
+      - name: Verify manifest is artifact root
+        run: |
+          cd release
+          test -f manifest.json
+          test ! -d agency-workbench-free-chatgpt-v0.3.0
+      - name: Upload installable extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: agency-workbench-free-chatgpt-v0.3.0
+          path: release/*
+          if-no-files-found: error
+          retention-days: 7
