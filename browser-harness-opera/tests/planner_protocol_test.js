@@ -10,6 +10,15 @@ const wrapped=`prefix {"ref":"bh99","role":"link"} noise ${valid} suffix`;
 assert.equal(P.extractJson(wrapped,id).status,'act');
 assert.throws(()=>P.extractJson('{"ref":"bh99","role":"link"}',id),/PLANNER_JSON_NOT_FOUND/);
 
+// Live ChatGPT tail reads may start in the middle of an older JSON/string.
+// Request-scoped extraction must still find the new complete response.
+const poisoned=`older tail starts mid string \\"foo } } {{ broken text REQUEST_ID=${id} lots of junk ${valid} feedback buttons`;
+assert.equal(P.extractJson(poisoned,id).action.target.ref,'bh12');
+
+// The same requestId may appear once in the user prompt and later in the assistant JSON.
+const duplicated=`REQUEST_ID=${id} schema placeholder text ... assistant: ${valid}`;
+assert.equal(P.extractJson(duplicated,id).status,'act');
+
 // Prompt schema uses a placeholder, so the user prompt itself can never validate as the answer.
 const schema=P.makeSchemaText();
 assert(schema.includes('<REQUEST_ID_FROM_TOP>'));
