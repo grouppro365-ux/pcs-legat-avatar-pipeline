@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Agency Workbench — ChatGPT Free Mode",
+  "version": "0.3.0",
+  "description": "Browser operator that uses an already-open ChatGPT tab as the reasoning engine. No OpenAI API key required.",
+  "permissions": ["tabs", "storage", "scripting"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "Agency Workbench"},
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["chatgpt-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "exclude_matches": ["https://chatgpt.com/*"],
+      "js": ["page-agent.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
