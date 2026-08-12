@@ -34,7 +34,7 @@ jobs:
 
       - name: Build one Opera-ready folder
         run: |
-          rm -rf dist Agency-Browser-Harness-Opera-v0.1.0.zip Agency-Browser-Harness-Opera-v0.1.0.zip.sha256
+          rm -rf dist Agency-Browser-Harness-Opera-v0.1.1.zip Agency-Browser-Harness-Opera-v0.1.1.zip.sha256
           mkdir -p dist/Agency-Browser-Harness
           cp browser-harness-opera/manifest.json dist/Agency-Browser-Harness/
           cp browser-harness-opera/bootstrap.js dist/Agency-Browser-Harness/
@@ -52,13 +52,14 @@ jobs:
 
       - name: Release-folder smoke
         run: |
-          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Browser-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='0.1.0'||m.background.service_worker!=='bootstrap.js') process.exit(1); console.log('manifest PASS')"
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Browser-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='0.1.1'||m.background.service_worker!=='bootstrap.js') process.exit(1); console.log('manifest PASS')"
           for f in dist/Agency-Browser-Harness/*.js; do node --check "$f"; done
           grep -q 'class Driver' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'class ElementProxy' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'waitFor(condition' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'sendMutationOnce' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'navigation_after_delivery_loss' dist/Agency-Browser-Harness/browser_harness_core.js
+          grep -q 'collectRequestScopedObjects' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'new Driver(chatTab.id)' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'chatDriver.read({maxChars:60000, tail:true})' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'pendingChildTabId' dist/Agency-Browser-Harness/target_tracker.js
@@ -69,18 +70,18 @@ jobs:
       - name: ZIP integrity and SHA256
         run: |
           (cd dist/Agency-Browser-Harness && sha256sum * > SHA256SUMS.txt)
-          (cd dist && zip -qr ../Agency-Browser-Harness-Opera-v0.1.0.zip Agency-Browser-Harness)
-          unzip -t Agency-Browser-Harness-Opera-v0.1.0.zip
-          unzip -l Agency-Browser-Harness-Opera-v0.1.0.zip | grep 'Agency-Browser-Harness/manifest.json'
-          sha256sum Agency-Browser-Harness-Opera-v0.1.0.zip > Agency-Browser-Harness-Opera-v0.1.0.zip.sha256
+          (cd dist && zip -qr ../Agency-Browser-Harness-Opera-v0.1.1.zip Agency-Browser-Harness)
+          unzip -t Agency-Browser-Harness-Opera-v0.1.1.zip
+          unzip -l Agency-Browser-Harness-Opera-v0.1.1.zip | grep 'Agency-Browser-Harness/manifest.json'
+          sha256sum Agency-Browser-Harness-Opera-v0.1.1.zip > Agency-Browser-Harness-Opera-v0.1.1.zip.sha256
 
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Agency-Browser-Harness-Opera-v0.1.0
+          name: Agency-Browser-Harness-Opera-v0.1.1
           path: |
-            Agency-Browser-Harness-Opera-v0.1.0.zip
-            Agency-Browser-Harness-Opera-v0.1.0.zip.sha256
+            Agency-Browser-Harness-Opera-v0.1.1.zip
+            Agency-Browser-Harness-Opera-v0.1.1.zip.sha256
           if-no-files-found: error
           retention-days: 30
 
@@ -88,10 +89,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES='Direct minimal adaptation of scriby/browser-harness (MIT) for an already-open Opera and ChatGPT. Preserves Driver, ElementProxy, find/findVisible and waitFor. Replaces NowJS, iframe harness and browser launcher with MV3 messaging/current tabs. Mutations are never blindly retried after delivery loss. No paid OpenAI API. Static/unit/package gates passed; live Opera E2E remains required before unattended production use.'
-          if gh release view abh-v0.1.0 >/dev/null 2>&1; then
-            gh release upload abh-v0.1.0 Agency-Browser-Harness-Opera-v0.1.0.zip Agency-Browser-Harness-Opera-v0.1.0.zip.sha256 --clobber
-            gh release edit abh-v0.1.0 --target "$GITHUB_SHA" --notes "$NOTES"
+          NOTES='v0.1.1 fixes the live 0/50 stall observed when ChatGPT had already rendered a valid planner JSON. Response extraction is now anchored to the exact requestId and no longer depends on parse state from the rest of the chat transcript. Direct minimal adaptation of scriby/browser-harness (MIT); no paid OpenAI API. Static/unit/package gates passed; live Opera E2E still required before unattended production use.'
+          if gh release view abh-v0.1.1 >/dev/null 2>&1; then
+            gh release upload abh-v0.1.1 Agency-Browser-Harness-Opera-v0.1.1.zip Agency-Browser-Harness-Opera-v0.1.1.zip.sha256 --clobber
+            gh release edit abh-v0.1.1 --target "$GITHUB_SHA" --notes "$NOTES"
           else
-            gh release create abh-v0.1.0 Agency-Browser-Harness-Opera-v0.1.0.zip Agency-Browser-Harness-Opera-v0.1.0.zip.sha256 --target "$GITHUB_SHA" --title 'Agency Browser Harness v0.1.0' --notes "$NOTES"
+            gh release create abh-v0.1.1 Agency-Browser-Harness-Opera-v0.1.1.zip Agency-Browser-Harness-Opera-v0.1.1.zip.sha256 --target "$GITHUB_SHA" --title 'Agency Browser Harness v0.1.1' --notes "$NOTES"
           fi
