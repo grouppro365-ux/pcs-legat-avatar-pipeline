@@ -6,12 +6,13 @@ function ok(cond,msg){if(!cond){console.error('FAIL:',msg);process.exit(1);}cons
 
 const manifest=JSON.parse(read('manifest.json'));
 ok(manifest.manifest_version===3,'Manifest V3');
-ok(manifest.version==='2.0.2','version 2.0.2');
-ok(manifest.background?.service_worker==='service_worker_v2.js','v2 resilient service worker configured');
+ok(manifest.version==='2.0.3','version 2.0.3');
+ok(manifest.background?.service_worker==='service_worker_v203.js','v2.0.3 migration wrapper configured');
 ok((manifest.permissions||[]).includes('debugger'),'debugger permission for trusted ChatGPT input');
+ok((manifest.content_scripts||[]).some(x=>(x.js||[]).join(',').includes('response_parser.js,chat_response_matcher.js,chatgpt_adapter.js')),'ChatGPT parser and matcher load before adapter');
 ok((manifest.content_scripts||[]).some(x=>(x.js||[]).join(',').includes('locator_engine.js,page_agent.js')),'locator engine loads before page agent');
 
-const files=['service_worker_v2.js','response_parser.js','chat_cdp.js','policy.js','locator_engine.js','page_agent.js','chatgpt_adapter.js','popup.js'];
+const files=['service_worker_v203.js','service_worker_v2.js','response_parser.js','chat_response_matcher.js','chat_cdp.js','policy.js','locator_engine.js','page_agent.js','chatgpt_adapter.js','popup.js'];
 const all=files.map(read).join('\n');
 ok(!/api\.openai\.com|OPENAI_API_KEY|sk-proj-/i.test(all),'no paid OpenAI API references');
 ok(!/\b(?:eval|Function)\s*\(/.test(all),'no raw eval/Function execution protocol');
@@ -33,6 +34,22 @@ const releaseBeforeSuccess=adapter.lastIndexOf('releaseRequest(requestId);', suc
 ok(successReport>0&&releaseBeforeSuccess>0&&releaseBeforeSuccess<successReport,'request slot is released before RESULT round-trip can re-enter next step');
 ok(/if \(activeRequest === requestId\) activeRequest = null/.test(adapter),'older async frame cannot clear a newer request');
 ok(/busy:!!activeRequest/.test(adapter),'ChatGPT PING exposes harness busy state for diagnostics');
+ok(/findUserAnchor/.test(adapter)&&/collectTextAfterUser/.test(adapter),'response detection is anchored after the exact user turn');
+ok(/data-turn=\\"assistant\\"/.test(adapter)||/data-turn="assistant"/.test(adapter),'response detector has assistant-turn fallback selector');
+ok(/turnContainers/.test(adapter)&&/article/.test(adapter),'response detector supports generic ChatGPT turn wrappers');
+ok(/Node\.DOCUMENT_POSITION_FOLLOWING/.test(adapter),'response recovery uses DOM order rather than page-wide text guessing');
+ok(/AUH_CHAT_RECOVER/.test(adapter),'adapter exposes non-resending DOM recovery endpoint');
+ok(/CHATGPT_RESPONSE_TIMEOUT/.test(adapter)&&/const recovered = findAssistantResult\(requestId\)/.test(adapter),'timeout performs final live-DOM recovery before failure');
+ok(/ADAPTER_VERSION = '2\.0\.3'/.test(adapter),'adapter version handshake is current');
+
+const matcher=read('chat_response_matcher.js');
+ok(/joined_fragments/.test(matcher)&&/parts\.slice\(i\)\.join/.test(matcher),'fragmented ChatGPT JSON can be reassembled');
+ok(/obj\.requestId === requestId/.test(matcher),'matcher requires exact requestId');
+
+const bootstrap=read('service_worker_v203.js');
+ok(/AUH_RUNTIME_VERSION = '2\.0\.3'/.test(bootstrap),'runtime bootstrap version is current');
+ok(/chrome\.tabs\.reload\(chatTabId\)/.test(bootstrap),'bound ChatGPT tab is refreshed once after runtime upgrade');
+ok(!/reload\([^)]*target/i.test(bootstrap),'working site is never auto-reloaded during upgrade');
 
 const page=read('page_agent.js');const worker=read('service_worker_v2.js');const locator=read('locator_engine.js');const policy=read('policy.js');
 ok(/new WeakMap\(\)/.test(page)&&/refFor\(/.test(page),'DOM elements keep stable refs across scans');
@@ -61,4 +78,4 @@ ok(/MAX_STEPS/.test(worker),'bounded runaway protection exists');
 ok(/run\.error/.test(read('popup.js')),'concrete runtime error is visible in popup');
 ok(/\/50/.test(read('popup.js'))&&/recoveries/.test(read('popup.js')),'popup exposes v2 step and recovery progress');
 
-console.log('ALL V2.0.2 STATIC CHECKS PASS');
+console.log('ALL V2.0.3 STATIC CHECKS PASS');
