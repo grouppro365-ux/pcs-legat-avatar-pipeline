@@ -6,7 +6,7 @@ function ok(cond,msg){if(!cond){console.error('FAIL:',msg);process.exit(1);}cons
 
 const manifest=JSON.parse(read('manifest.json'));
 ok(manifest.manifest_version===3,'Manifest V3');
-ok(manifest.version==='2.0.1','version 2.0.1');
+ok(manifest.version==='2.0.2','version 2.0.2');
 ok(manifest.background?.service_worker==='service_worker_v2.js','v2 resilient service worker configured');
 ok((manifest.permissions||[]).includes('debugger'),'debugger permission for trusted ChatGPT input');
 ok((manifest.content_scripts||[]).some(x=>(x.js||[]).join(',').includes('locator_engine.js,page_agent.js')),'locator engine loads before page agent');
@@ -25,6 +25,14 @@ ok(/Input\.dispatchKeyEvent/.test(read('chat_cdp.js'))&&/Enter/.test(read('chat_
 ok(!/new KeyboardEvent/.test(read('chatgpt_adapter.js')),'synthetic KeyboardEvent submit removed');
 ok(/waitForUserEcho/.test(read('chatgpt_adapter.js')),'send requires user-turn postcondition');
 ok(/collectTopLevelObjects/.test(read('response_parser.js')),'nested JSON response protection exists');
+
+const adapter=read('chatgpt_adapter.js');
+ok(/function releaseRequest\(requestId\)/.test(adapter),'ChatGPT request slot has guarded release helper');
+const successReport=adapter.indexOf("await reportResult({type:'AUH_CHAT_RESULT', requestId, ok:true");
+const releaseBeforeSuccess=adapter.lastIndexOf('releaseRequest(requestId);', successReport);
+ok(successReport>0&&releaseBeforeSuccess>0&&releaseBeforeSuccess<successReport,'request slot is released before RESULT round-trip can re-enter next step');
+ok(/if \(activeRequest === requestId\) activeRequest = null/.test(adapter),'older async frame cannot clear a newer request');
+ok(/busy:!!activeRequest/.test(adapter),'ChatGPT PING exposes harness busy state for diagnostics');
 
 const page=read('page_agent.js');const worker=read('service_worker_v2.js');const locator=read('locator_engine.js');const policy=read('policy.js');
 ok(/new WeakMap\(\)/.test(page)&&/refFor\(/.test(page),'DOM elements keep stable refs across scans');
@@ -53,4 +61,4 @@ ok(/MAX_STEPS/.test(worker),'bounded runaway protection exists');
 ok(/run\.error/.test(read('popup.js')),'concrete runtime error is visible in popup');
 ok(/\/50/.test(read('popup.js'))&&/recoveries/.test(read('popup.js')),'popup exposes v2 step and recovery progress');
 
-console.log('ALL V2.0.1 STATIC CHECKS PASS');
+console.log('ALL V2.0.2 STATIC CHECKS PASS');
