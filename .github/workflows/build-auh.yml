@@ -4,6 +4,9 @@ on:
     branches:
       - agent/agency-universal-harness-v1c
 
+permissions:
+  contents: write
+
 jobs:
   verify-and-package:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
         run: node tests/response_parser_test.js
       - name: Build Opera-ready folder
         run: |
-          rm -rf dist
+          rm -rf dist Agency-Universal-Harness-Opera-v1.0.2.zip
           mkdir -p dist/Agency-Universal-Harness
           cp agency-universal-harness/manifest.json dist/Agency-Universal-Harness/
           cp agency-universal-harness/service_worker.js dist/Agency-Universal-Harness/
@@ -47,13 +50,28 @@ jobs:
           grep -q 'AUH_RESPONSE_PARSER' dist/Agency-Universal-Harness/service_worker_v102.js
           grep -q 'collectTopLevelObjects' dist/Agency-Universal-Harness/response_parser.js
           ! grep -q 'new KeyboardEvent' dist/Agency-Universal-Harness/chatgpt_adapter.js
-      - name: SHA256 inventory
+      - name: SHA256 inventory and ZIP
         run: |
           (cd dist/Agency-Universal-Harness && sha256sum * > SHA256SUMS.txt)
-      - name: Upload Opera-ready package
+          (cd dist && zip -qr ../Agency-Universal-Harness-Opera-v1.0.2.zip Agency-Universal-Harness)
+          unzip -t Agency-Universal-Harness-Opera-v1.0.2.zip
+          unzip -l Agency-Universal-Harness-Opera-v1.0.2.zip | grep 'Agency-Universal-Harness/manifest.json'
+          sha256sum Agency-Universal-Harness-Opera-v1.0.2.zip > Agency-Universal-Harness-Opera-v1.0.2.zip.sha256
+      - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
           name: Agency-Universal-Harness-Opera-v1.0.2
-          path: dist
+          path: |
+            Agency-Universal-Harness-Opera-v1.0.2.zip
+            Agency-Universal-Harness-Opera-v1.0.2.zip.sha256
           if-no-files-found: error
           retention-days: 30
+      - name: Publish persistent GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view auh-v1.0.2 >/dev/null 2>&1; then
+            gh release upload auh-v1.0.2 Agency-Universal-Harness-Opera-v1.0.2.zip Agency-Universal-Harness-Opera-v1.0.2.zip.sha256 --clobber
+          else
+            gh release create auh-v1.0.2 Agency-Universal-Harness-Opera-v1.0.2.zip Agency-Universal-Harness-Opera-v1.0.2.zip.sha256 --target "$GITHUB_SHA" --title "Agency Universal Harness v1.0.2" --notes "Opera-ready release. Fixes trusted ChatGPT submit and top-level JSON response parsing. CI verified manifest, syntax, safety gates, live-response parser regression, ZIP integrity and Opera-ready folder structure."
+          fi
