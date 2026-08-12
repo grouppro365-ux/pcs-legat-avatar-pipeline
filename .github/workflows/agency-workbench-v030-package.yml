@@ -1,0 +1,45 @@
+name: Agency Workbench v0.3.0 Direct Package
+
+on:
+  push:
+    branches:
+      - agent/agency-workbench-v0.3.0
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency-workbench-free-chatgpt-v0.3.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest PASS')"
+      - name: Syntax check
+        run: |
+          node --check background.js
+          node --check chatgpt-bridge.js
+          node --check page-agent.js
+          node --check dashboard.js
+      - name: Static safety regression
+        run: node tests/static-check.mjs
+      - name: Upload direct-install extension folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: agency-workbench-free-chatgpt-v0.3.0-direct
+          path: |
+            agency-workbench-free-chatgpt-v0.3.0/manifest.json
+            agency-workbench-free-chatgpt-v0.3.0/background.js
+            agency-workbench-free-chatgpt-v0.3.0/chatgpt-bridge.js
+            agency-workbench-free-chatgpt-v0.3.0/page-agent.js
+            agency-workbench-free-chatgpt-v0.3.0/dashboard.html
+            agency-workbench-free-chatgpt-v0.3.0/dashboard.js
+            agency-workbench-free-chatgpt-v0.3.0/styles.css
+            agency-workbench-free-chatgpt-v0.3.0/README.md
+            agency-workbench-free-chatgpt-v0.3.0/QA-REPORT.md
+            agency-workbench-free-chatgpt-v0.3.0/VERSION
+          if-no-files-found: error
