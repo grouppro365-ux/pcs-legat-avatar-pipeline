@@ -16,6 +16,11 @@
 
   function textOf(el) { return String(el?.innerText || el?.textContent || '').trim(); }
 
+  function releaseRequest(requestId) {
+    // Never let an older async frame clear a newer request.
+    if (activeRequest === requestId) activeRequest = null;
+  }
+
   async function trustedInputAndSend(requestId, prompt, pinnedPath) {
     const el = composer();
     if (!el) throw new Error('CHATGPT_COMPOSER_NOT_FOUND');
@@ -80,6 +85,12 @@
     throw new Error('CHATGPT_RESPONSE_TIMEOUT');
   }
 
+  async function reportResult(payload) {
+    // The request slot MUST already be released before this call. The service worker
+    // may synchronously process the result and immediately start the next reasoning step.
+    return chrome.runtime.sendMessage(payload);
+  }
+
   async function executeAsk(requestId, prompt, pinnedPath) {
     if (!pinnedPath || conversationPath() !== pinnedPath) throw new Error('SAFETY_CHAT_SWITCH');
     if (activeRequest) throw new Error('CHATGPT_BUSY');
@@ -87,31 +98,41 @@
     try {
       const beforeUsers = document.querySelectorAll('[data-message-author-role="user"]').length;
 
-      // Filling the composer is NOT submission. Use trusted CDP keyboard input and Enter.
       await trustedInputAndSend(requestId, prompt, pinnedPath);
 
-      // A send is accepted only after the exact request appears as a new user turn.
       const sent = await waitForUserEcho(requestId, beforeUsers);
       if (!sent) throw new Error('CHATGPT_SEND_UNCERTAIN_NO_RETRY');
       if (conversationPath() !== pinnedPath) throw new Error('SAFETY_CHAT_SWITCH');
 
       const text = await waitForAssistant(requestId);
       if (conversationPath() !== pinnedPath) throw new Error('SAFETY_CHAT_SWITCH');
-      await chrome.runtime.sendMessage({type:'AUH_CHAT_RESULT', requestId, ok:true, text, conversationPath:pinnedPath});
+
+      // Critical ordering: free the slot BEFORE reporting the completed turn.
+      // handleChatResult() can execute a browser action and ask for the next step
+      // before sendMessage() resolves back into this content script.
+      releaseRequest(requestId);
+      await reportResult({type:'AUH_CHAT_RESULT', requestId, ok:true, text, conversationPath:pinnedPath});
     } catch (err) {
-      await chrome.runtime.sendMessage({type:'AUH_CHAT_RESULT', requestId, ok:false, error:String(err?.message || err), conversationPath:conversationPath()});
+      releaseRequest(requestId);
+      try {
+        await reportResult({type:'AUH_CHAT_RESULT', requestId, ok:false, error:String(err?.message || err), conversationPath:conversationPath()});
+      } catch {}
     } finally {
-      activeRequest = null;
+      // Guarded release: an older request can never clear a newer activeRequest.
+      releaseRequest(requestId);
     }
   }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     if (msg?.type === 'AUH_CHAT_PING') {
-      sendResponse({ok:!!conversationPath(), conversationPath:conversationPath()});
+      sendResponse({ok:!!conversationPath(), conversationPath:conversationPath(), busy:!!activeRequest});
       return;
     }
     if (msg?.type === 'AUH_CHAT_ASK') {
-      if (activeRequest) { sendResponse({ok:false, error:'CHATGPT_BUSY'}); return; }
+      if (activeRequest) {
+        sendResponse({ok:false, error:'CHATGPT_BUSY', activeRequest});
+        return;
+      }
       executeAsk(msg.requestId, msg.prompt, msg.pinnedPath);
       sendResponse({ok:true, accepted:true});
       return;
