@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Agency Workbench — Free ChatGPT",
+  "version": "0.3.1",
+  "description": "Browser workbench that uses an already open ChatGPT tab as the reasoning layer and verifies browser actions locally.",
+  "permissions": ["storage", "tabs", "scripting", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Agency Workbench",
+    "default_popup": "dashboard.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["chatgpt-bridge.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "exclude_matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["page-agent.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
