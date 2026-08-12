@@ -16,30 +16,37 @@
 
   function textOf(el) { return String(el?.innerText || el?.textContent || '').trim(); }
 
-  function setComposerText(el, text) {
+  async function trustedInputAndSend(requestId, prompt, pinnedPath) {
+    const el = composer();
+    if (!el) throw new Error('CHATGPT_COMPOSER_NOT_FOUND');
+    el.scrollIntoView({block:'nearest'});
     el.focus();
-    if (el.tagName === 'TEXTAREA') {
-      const set = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')?.set;
-      if (set) set.call(el, text); else el.value = text;
-      el.dispatchEvent(new Event('input', {bubbles:true}));
-      return;
-    }
-    el.textContent = '';
-    el.dispatchEvent(new InputEvent('input', {bubbles:true, inputType:'deleteContentBackward'}));
-    el.textContent = text;
-    el.dispatchEvent(new InputEvent('input', {bubbles:true, inputType:'insertText', data:text}));
+
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const finish = (fn, value) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try { port.disconnect(); } catch {}
+        fn(value);
+      };
+
+      const port = chrome.runtime.connect({name:'AUH_CHAT_CDP'});
+      const timer = setTimeout(() => finish(reject, new Error('CHATGPT_CDP_PORT_TIMEOUT')), 12000);
+      port.onMessage.addListener((msg) => {
+        if (msg?.ok) finish(resolve, msg);
+        else finish(reject, new Error(msg?.error || 'CHATGPT_CDP_FAILED'));
+      });
+      port.onDisconnect.addListener(() => {
+        const err = chrome.runtime.lastError?.message;
+        if (!settled && err) finish(reject, new Error(`CHATGPT_CDP_PORT_CLOSED:${err}`));
+      });
+      port.postMessage({type:'AUH_CHAT_CDP_INPUT_AND_SEND', requestId, prompt, pinnedPath});
+    });
   }
 
-  function findSendButton(el) {
-    const form = el.closest('form') || el.parentElement?.parentElement;
-    const candidates = form ? Array.from(form.querySelectorAll('button')) : [];
-    return candidates.find(b => {
-      const s = `${b.getAttribute('aria-label') || ''} ${b.getAttribute('data-testid') || ''} ${b.innerText || ''}`;
-      return /(send|submit|отправ)/i.test(s) && !b.disabled;
-    }) || null;
-  }
-
-  async function waitForUserEcho(requestId, beforeCount, timeoutMs = 8000) {
+  async function waitForUserEcho(requestId, beforeCount, timeoutMs = 12000) {
     const started = Date.now();
     while (Date.now() - started < timeoutMs) {
       const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"]'));
@@ -78,19 +85,16 @@
     if (activeRequest) throw new Error('CHATGPT_BUSY');
     activeRequest = requestId;
     try {
-      const el = composer();
-      if (!el) throw new Error('CHATGPT_COMPOSER_NOT_FOUND');
       const beforeUsers = document.querySelectorAll('[data-message-author-role="user"]').length;
-      setComposerText(el, prompt);
-      const send = findSendButton(el);
-      if (send) send.click();
-      else {
-        el.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter', code:'Enter', bubbles:true}));
-        el.dispatchEvent(new KeyboardEvent('keyup', {key:'Enter', code:'Enter', bubbles:true}));
-      }
+
+      // Filling the composer is NOT submission. Use trusted CDP keyboard input and Enter.
+      await trustedInputAndSend(requestId, prompt, pinnedPath);
+
+      // A send is accepted only after the exact request appears as a new user turn.
       const sent = await waitForUserEcho(requestId, beforeUsers);
       if (!sent) throw new Error('CHATGPT_SEND_UNCERTAIN_NO_RETRY');
       if (conversationPath() !== pinnedPath) throw new Error('SAFETY_CHAT_SWITCH');
+
       const text = await waitForAssistant(requestId);
       if (conversationPath() !== pinnedPath) throw new Error('SAFETY_CHAT_SWITCH');
       await chrome.runtime.sendMessage({type:'AUH_CHAT_RESULT', requestId, ok:true, text, conversationPath:pinnedPath});
