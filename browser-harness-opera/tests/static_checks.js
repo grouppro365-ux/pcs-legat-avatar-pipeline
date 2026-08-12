@@ -25,7 +25,9 @@ ok(/read-only condition/.test(core),'waitFor explicitly condition-only');
 ok(!/\bexec\s*:/.test(core),'no mutation-inside-wait exec option');
 ok(/sendReadOnly/.test(core)&&/sendMutationOnce/.test(core),'read and mutation transport separated');
 ok(/navigation_after_delivery_loss/.test(core),'mutation delivery loss checks navigation instead of blind retry');
-ok(!/sendMutationOnce[\s\S]{0,700}sendMutationOnce/.test(core),'single mutation transport primitive has no recursive resend');
+const mutationDef=core.match(/async sendMutationOnce\(message\)\s*\{([\s\S]*?)\n\s*\}/)?.[1]||'';
+ok(mutationDef&&!/sendMutationOnce\s*\(/.test(mutationDef),'mutation transport does not recursively resend itself');
+ok((core.match(/this\.sendMutationOnce\s*\(/g)||[]).length===1,'act has exactly one mutation transport call');
 ok(/timeoutMs\s*=\s*Number\(options\.timeoutMs \?\?/.test(core),'zero-timeout polling semantics preserved');
 
 ok(/WeakMap/.test(client)&&/elementByRef/.test(client),'browser-side element proxy cache');
