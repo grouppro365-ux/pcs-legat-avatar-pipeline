@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Agency Workbench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <div class="eyebrow">AGENCY WORKBENCH · FREE MODE v0.3.0</div>
+        <h1>Работа через открытый ChatGPT</h1>
+        <p>Без API. Вкладки привязываются явно. Bridge сам внедряется в уже открытые страницы.</p>
+      </div>
+      <button id="refreshTabs" class="ghost">Обновить вкладки</button>
+    </header>
+
+    <section class="panel">
+      <h2>1. Привязка и диагностика</h2>
+      <div class="grid2">
+        <div class="bindBox">
+          <label>ChatGPT</label>
+          <select id="chatSelect"></select>
+          <button id="bindChat">Привязать ChatGPT</button>
+          <div id="chatStatus" class="status neutral">Не проверено</div>
+        </div>
+        <div class="bindBox">
+          <label>Рабочий сайт</label>
+          <select id="targetSelect"></select>
+          <button id="bindTarget">Привязать рабочий сайт</button>
+          <div id="targetStatus" class="status neutral">Не проверено</div>
+        </div>
+      </div>
+      <div class="actionsRow">
+        <button id="diagnose" class="secondary">Проверить bridge</button>
+        <button id="testChat" class="secondary">Тест ChatGPT</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>2. Задача</h2>
+      <textarea id="task" rows="5" placeholder="Например: создай новый пост в WordPress с заголовком ... и текстом ... Сначала проверь, что всё заполнено правильно. Публикацию попроси подтвердить."></textarea>
+      <div class="actionsRow">
+        <button id="run">Запустить</button>
+        <button id="stop" class="danger">Остановить</button>
+        <button id="confirm" class="warn hidden">Подтвердить опасное действие один раз</button>
+      </div>
+      <div id="runState" class="runState">Ожидание задачи</div>
+    </section>
+
+    <section class="panel">
+      <div class="panelHead">
+        <h2>3. Журнал выполнения</h2>
+        <button id="clearLog" class="ghost small">Очистить</button>
+      </div>
+      <pre id="log"></pre>
+    </section>
+  </main>
+  <script src="dashboard.js"></script>
+</body>
+</html>
