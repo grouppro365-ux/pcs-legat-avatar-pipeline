@@ -4,7 +4,7 @@ function ok(c,m){if(!c){console.error('FAIL:',m);process.exit(1);}console.log('P
 
 const manifest=JSON.parse(read('manifest.json'));
 ok(manifest.manifest_version===3,'Manifest V3');
-ok(manifest.version==='0.1.0','version 0.1.0');
+ok(manifest.version==='0.1.1','version 0.1.1');
 ok(manifest.background?.service_worker==='bootstrap.js','bootstrap service worker configured');
 ok((manifest.permissions||[]).includes('debugger'),'trusted Enter fallback permission');
 ok((manifest.permissions||[]).includes('alarms'),'MV3 run-resume alarm permission');
@@ -37,6 +37,7 @@ ok(/FIELD_VALUE_REVERTED/.test(client),'SPA fill postcondition check');
 ok(/SELECT_VALUE_REVERTED/.test(client),'SPA select postcondition check');
 
 ok(/validateResponse/.test(planner)&&/ALLOWED_ACTIONS/.test(planner),'typed planner JSON validation');
+ok(/collectRequestScopedObjects/.test(planner)&&/balancedObjectFrom/.test(planner),'planner response is extracted from exact requestId, not whole-chat parser state');
 ok(/<REQUEST_ID_FROM_TOP>/.test(planner),'prompt schema cannot impersonate actual request id');
 ok(/DONE_PROOF_REQUIRED/.test(planner),'done requires proof schema');
 
