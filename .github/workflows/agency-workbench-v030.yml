@@ -1,0 +1,38 @@
+name: Agency Workbench v0.3.0 QA
+
+on:
+  push:
+    branches:
+      - agent/agency-workbench-v0.3.0
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency-workbench-free-chatgpt-v0.3.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8')); console.log('manifest PASS')"
+      - name: Syntax check
+        run: |
+          node --check background.js
+          node --check chatgpt-bridge.js
+          node --check page-agent.js
+          node --check dashboard.js
+      - name: Static safety regression
+        run: node tests/static-check.mjs
+      - name: Build extension zip
+        run: |
+          zip -r agency-workbench-free-chatgpt-v0.3.0.zip manifest.json background.js chatgpt-bridge.js page-agent.js dashboard.html dashboard.js styles.css README.md tests
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agency-workbench-free-chatgpt-v0.3.0
+          path: agency-workbench-free-chatgpt-v0.3.0/agency-workbench-free-chatgpt-v0.3.0.zip
+          if-no-files-found: error
