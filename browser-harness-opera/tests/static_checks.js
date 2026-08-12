@@ -53,10 +53,13 @@ ok(/BH_PLANNER\.validateResponse/.test(worker),'planner output validated before 
 ok(/verifyDone/.test(worker)&&/DONE_PROOF/.test(planner),'completion verified against live browser state');
 ok(/SECRET_FIELD_BLOCKED/.test(worker),'secret fields hard blocked');
 ok(/HIGH_RISK_CONFIRM_REQUIRED/.test(worker),'high-risk confirmation gate exists');
+const mutationPolicy=worker.match(/const MUTATION_RE\s*=\s*\/(.*?)\/i/)?.[1]||'';
+ok(!/(submit|save|apply|сохран|примен)/i.test(mutationPolicy),'ordinary save/apply/submit do not interrupt user with confirmation');
+ok(/async function adoptChildTab[\s\S]*?await putState\(state\)/.test(worker),'new child target is persisted before next Observe');
 ok(/relatedRoutes/.test(worker),'successful routes are reusable hints');
 ok(/chrome\.alarms/.test(worker),'run can be resumed by MV3 alarm');
 
-ok(/pendingChildTabId/.test(tracker)&&/openerTabId/.test(tracker),'child tab handoff is persisted');
+ok(/pendingChildTabId/.test(tracker)&&/openerTabId/.test(tracker),'child tab handoff is also tracked asynchronously');
 ok(/state\.target=next/.test(tracker),'same-tab navigation refreshes target metadata');
 ok(/importScripts\('service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'bootstrap loads runtime and tracker');
 
