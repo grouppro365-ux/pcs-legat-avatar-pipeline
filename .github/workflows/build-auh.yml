@@ -12,7 +12,7 @@ jobs:
       - name: JavaScript syntax
         working-directory: agency-universal-harness
         run: |
-          for f in service_worker.js policy.js page_agent.js chatgpt_adapter.js popup.js; do
+          for f in service_worker.js service_worker_v101.js chat_cdp.js policy.js page_agent.js chatgpt_adapter.js popup.js; do
             node --check "$f"
           done
       - name: Static safety regression
@@ -24,6 +24,8 @@ jobs:
           mkdir -p dist/Agency-Universal-Harness
           cp agency-universal-harness/manifest.json dist/Agency-Universal-Harness/
           cp agency-universal-harness/service_worker.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/service_worker_v101.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/chat_cdp.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/policy.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/page_agent.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/chatgpt_adapter.js dist/Agency-Universal-Harness/
@@ -34,15 +36,18 @@ jobs:
           test "$(find dist -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
       - name: Release-folder smoke check
         run: |
-          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Universal-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='1.0.0') process.exit(1); console.log('release manifest PASS')"
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Universal-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='1.0.1'||m.background.service_worker!=='service_worker_v101.js'||!m.permissions.includes('debugger')) process.exit(1); console.log('release manifest PASS')"
           for f in dist/Agency-Universal-Harness/*.js; do node --check "$f"; done
+          grep -q 'Input.insertText' dist/Agency-Universal-Harness/chat_cdp.js
+          grep -q 'Input.dispatchKeyEvent' dist/Agency-Universal-Harness/chat_cdp.js
+          ! grep -q 'new KeyboardEvent' dist/Agency-Universal-Harness/chatgpt_adapter.js
       - name: SHA256 inventory
         run: |
           (cd dist/Agency-Universal-Harness && sha256sum * > SHA256SUMS.txt)
       - name: Upload Opera-ready package
         uses: actions/upload-artifact@v4
         with:
-          name: Agency-Universal-Harness-Opera-v1.0.0
+          name: Agency-Universal-Harness-Opera-v1.0.1
           path: dist
           if-no-files-found: error
           retention-days: 30
