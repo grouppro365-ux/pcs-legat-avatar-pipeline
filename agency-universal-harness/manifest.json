@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Agency Universal Harness",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Universal Opera browser harness: observe → act → verify → learn, with an explicitly bound ChatGPT conversation as the reasoning surface.",
   "permissions": ["tabs", "storage", "scripting", "debugger"],
   "host_permissions": ["<all_urls>"],
-  "background": {"service_worker": "service_worker_v101.js"},
+  "background": {"service_worker": "service_worker_v102.js"},
   "action": {
     "default_popup": "popup.html",
     "default_title": "Agency Universal Harness"
