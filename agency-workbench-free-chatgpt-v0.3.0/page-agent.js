@@ -13,6 +13,7 @@
   }
 
   function textOf(el) {
+    if (!el || typeof el.getAttribute !== 'function') return '';
     return String(
       el.getAttribute('aria-label') ||
       el.getAttribute('placeholder') ||
@@ -63,12 +64,7 @@
         valuePresent: ['INPUT','TEXTAREA','SELECT'].includes(el.tagName) ? !!String(el.value || '') : undefined
       }));
 
-    return {
-      url: safeUrl(),
-      title: document.title,
-      visibleText: safePageText(),
-      elements
-    };
+    return { url: safeUrl(), title: document.title, visibleText: safePageText(), elements };
   }
 
   function elByRef(ref) {
@@ -83,8 +79,22 @@
         ? HTMLInputElement.prototype
         : null;
     const setter = proto && Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-    if (setter) setter.call(el, value);
-    else el.value = value;
+    if (setter) setter.call(el, value); else el.value = value;
+  }
+
+  function replaceContentEditable(el, value) {
+    el.focus();
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    let inserted = false;
+    try { inserted = document.execCommand('insertText', false, String(value)); } catch {}
+    if (!inserted) el.replaceChildren(document.createTextNode(String(value)));
+    el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: String(value) }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.blur();
   }
 
   function fillElement(el, value) {
@@ -101,10 +111,7 @@
       return String(el.value) === String(value);
     }
     if (el.isContentEditable) {
-      el.replaceChildren(document.createTextNode(String(value)));
-      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: String(value) }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-      el.blur();
+      replaceContentEditable(el, value);
       return (el.innerText || el.textContent || '').trim() === String(value).trim();
     }
     throw new Error('Элемент не поддерживает fill');
@@ -135,7 +142,14 @@
     }
 
     if (type === 'assertText') {
-      const hay = action.ref ? textOf(elByRef(action.ref) || {}) : safePageText();
+      let hay;
+      if (action.ref) {
+        const target = elByRef(action.ref);
+        if (!target) throw new Error(`Элемент ${action.ref} больше не найден. Нужен новый scan.`);
+        hay = textOf(target);
+      } else {
+        hay = safePageText();
+      }
       const expected = String(action.expected || '');
       const ok = hay.toLowerCase().includes(expected.toLowerCase());
       return { ok, type, proof: ok ? `Найден текст: ${expected}` : `Не найден текст: ${expected}` };
@@ -172,13 +186,7 @@
       checkCrossOrigin(el);
       const label = textOf(el);
       if (RISK_RE.test(label) && !action.confirmed) {
-        return {
-          ok: false,
-          confirmationRequired: true,
-          label,
-          type,
-          action: { ...action, confirmed: true }
-        };
+        return { ok: false, confirmationRequired: true, label, type, action: { ...action, confirmed: true } };
       }
       el.click();
       return { ok: true, type, label, proof: `Клик выполнен: ${label || action.ref}` };
@@ -199,12 +207,8 @@
     }
     if (message?.type === 'AGENCY_PAGE_EXECUTE') {
       (async () => {
-        try {
-          const result = await execute(message.action || {});
-          sendResponse(result);
-        } catch (e) {
-          sendResponse({ ok: false, error: e?.message || String(e) });
-        }
+        try { sendResponse(await execute(message.action || {})); }
+        catch (e) { sendResponse({ ok: false, error: e?.message || String(e) }); }
       })();
       return true;
     }
