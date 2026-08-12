@@ -5,7 +5,7 @@ function ok(c,m){if(!c){console.error('FAIL:',m);process.exit(1);}console.log('P
 const manifest=JSON.parse(read('manifest.json'));
 ok(manifest.manifest_version===3,'Manifest V3');
 ok(manifest.version==='0.1.0','version 0.1.0');
-ok(manifest.background?.service_worker==='service_worker.js','service worker configured');
+ok(manifest.background?.service_worker==='bootstrap.js','bootstrap service worker configured');
 ok((manifest.permissions||[]).includes('debugger'),'trusted Enter fallback permission');
 ok((manifest.permissions||[]).includes('alarms'),'MV3 run-resume alarm permission');
 
@@ -13,14 +13,21 @@ const core=read('browser_harness_core.js');
 const client=read('browser_harness_client.js');
 const planner=read('planner_protocol.js');
 const worker=read('service_worker.js');
+const tracker=read('target_tracker.js');
+const bootstrap=read('bootstrap.js');
 const ui=read('workbench.js');
-const all=[core,client,planner,worker,ui].join('\n');
+const all=[core,client,planner,worker,tracker,bootstrap,ui].join('\n');
 
 ok(/class Driver/.test(core),'Browser Harness Driver preserved');
 ok(/class ElementProxy/.test(core),'Browser Harness ElementProxy preserved');
 ok(/findElement/.test(core)&&/findVisible/.test(core)&&/waitFor\(/.test(core),'find/findVisible/waitFor preserved');
 ok(/read-only condition/.test(core),'waitFor explicitly condition-only');
 ok(!/\bexec\s*:/.test(core),'no mutation-inside-wait exec option');
+ok(/sendReadOnly/.test(core)&&/sendMutationOnce/.test(core),'read and mutation transport separated');
+ok(/navigation_after_delivery_loss/.test(core),'mutation delivery loss checks navigation instead of blind retry');
+ok(!/sendMutationOnce[\s\S]{0,700}sendMutationOnce/.test(core),'single mutation transport primitive has no recursive resend');
+ok(/timeoutMs\s*=\s*Number\(options\.timeoutMs \?\?/.test(core),'zero-timeout polling semantics preserved');
+
 ok(/WeakMap/.test(client)&&/elementByRef/.test(client),'browser-side element proxy cache');
 ok(/shadowRoot/.test(client),'open Shadow DOM traversal');
 ok(/semantic_fallback/.test(client),'self-healing semantic locator fallback');
@@ -46,6 +53,10 @@ ok(/SECRET_FIELD_BLOCKED/.test(worker),'secret fields hard blocked');
 ok(/HIGH_RISK_CONFIRM_REQUIRED/.test(worker),'high-risk confirmation gate exists');
 ok(/relatedRoutes/.test(worker),'successful routes are reusable hints');
 ok(/chrome\.alarms/.test(worker),'run can be resumed by MV3 alarm');
+
+ok(/pendingChildTabId/.test(tracker)&&/openerTabId/.test(tracker),'child tab handoff is persisted');
+ok(/state\.target=next/.test(tracker),'same-tab navigation refreshes target metadata');
+ok(/importScripts\('service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'bootstrap loads runtime and tracker');
 
 ok(!/api\.openai\.com|OPENAI_API_KEY|OpenRouter|TokenRouter|sk-proj-/i.test(all),'no paid AI API runtime');
 ok(!/nowjs|phantomjs|asyncblock|express\s*3/i.test(all),'legacy Browser Harness transport/runtime removed');
