@@ -21,7 +21,8 @@ function render() {
   const run = state?.run;
   const status = run?.status || '';
   $('runStatus').className = `status ${status}`;
-  $('runStatus').textContent = !run ? 'Нет активной задачи' : ({running:'Выполняется',awaiting_ai:'ChatGPT выбирает следующий шаг',confirmation:'Ждёт подтверждения',done:'Готово',blocked:'Остановлено',cancelled:'Отменено'}[status] || status);
+  const statusText = !run ? 'Нет активной задачи' : ({running:'Выполняется',awaiting_ai:'ChatGPT выбирает следующий шаг',confirmation:'Ждёт подтверждения',done:'Готово',blocked:'Остановлено',cancelled:'Отменено'}[status] || status);
+  $('runStatus').textContent = run?.error && ['blocked','cancelled'].includes(status) ? `${statusText}: ${run.error}` : statusText;
   $('step').textContent = run ? `${run.step || 0}/30` : '';
   $('start').disabled = !state?.chat || !state?.target || ['running','awaiting_ai','confirmation'].includes(status);
   $('cancel').disabled = !run || ['done','blocked','cancelled'].includes(status);
@@ -40,7 +41,10 @@ function render() {
   }
 
   const logs = (state?.logs || []).slice(-40).reverse();
-  $('log').innerHTML = logs.map(l => `<div class="${esc(l.level)}"><b>${esc((l.ts||'').slice(11,19))}</b> ${esc(l.message)}</div>`).join('') || '<div>Журнал пуст.</div>';
+  $('log').innerHTML = logs.map(l => {
+    const detail = l?.data?.error ? ` — ${l.data.error}` : '';
+    return `<div class="${esc(l.level)}"><b>${esc((l.ts||'').slice(11,19))}</b> ${esc(l.message)}${esc(detail)}</div>`;
+  }).join('') || '<div>Журнал пуст.</div>';
 }
 
 async function refresh() {
