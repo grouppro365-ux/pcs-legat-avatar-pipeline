@@ -15,10 +15,10 @@ jobs:
       - name: JavaScript syntax
         working-directory: agency-universal-harness
         run: |
-          for f in service_worker_v2.js response_parser.js chat_cdp.js policy.js locator_engine.js page_agent.js chatgpt_adapter.js popup.js tests/chat_busy_reentrancy_test.js; do
+          for f in service_worker_v203.js service_worker_v2.js response_parser.js chat_response_matcher.js chat_cdp.js policy.js locator_engine.js page_agent.js chatgpt_adapter.js popup.js tests/chat_busy_reentrancy_test.js tests/chat_response_matcher_test.js; do
             node --check "$f"
           done
-      - name: V2.0.2 safety and architecture regression
+      - name: V2.0.3 safety and architecture regression
         working-directory: agency-universal-harness
         run: node tests/static_checks.js
       - name: Live-response parser regression
@@ -27,13 +27,18 @@ jobs:
       - name: ChatGPT reentrancy regression
         working-directory: agency-universal-harness
         run: node tests/chat_busy_reentrancy_test.js
+      - name: ChatGPT fragmented-response recovery regression
+        working-directory: agency-universal-harness
+        run: node tests/chat_response_matcher_test.js
       - name: Build Opera-ready folder
         run: |
-          rm -rf dist Agency-Universal-Harness-Opera-v2.0.2.zip
+          rm -rf dist Agency-Universal-Harness-Opera-v2.0.3.zip
           mkdir -p dist/Agency-Universal-Harness
           cp agency-universal-harness/manifest.json dist/Agency-Universal-Harness/
+          cp agency-universal-harness/service_worker_v203.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/service_worker_v2.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/response_parser.js dist/Agency-Universal-Harness/
+          cp agency-universal-harness/chat_response_matcher.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/chat_cdp.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/policy.js dist/Agency-Universal-Harness/
           cp agency-universal-harness/locator_engine.js dist/Agency-Universal-Harness/
@@ -46,7 +51,7 @@ jobs:
           test "$(find dist -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
       - name: Release-folder smoke check
         run: |
-          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Universal-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='2.0.2'||m.background.service_worker!=='service_worker_v2.js'||!m.permissions.includes('debugger')) process.exit(1); console.log('release manifest PASS')"
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Universal-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='2.0.3'||m.background.service_worker!=='service_worker_v203.js'||!m.permissions.includes('debugger')) process.exit(1); console.log('release manifest PASS')"
           for f in dist/Agency-Universal-Harness/*.js; do node --check "$f"; done
           grep -q 'new WeakMap' dist/Agency-Universal-Harness/page_agent.js
           ! grep -q 'refs.clear' dist/Agency-Universal-Harness/page_agent.js
@@ -57,31 +62,36 @@ jobs:
           ! grep -q 'last_action' dist/Agency-Universal-Harness/service_worker_v2.js
           grep -q 'crossOriginNavigateNeedsConfirmation' dist/Agency-Universal-Harness/service_worker_v2.js
           grep -q 'releaseRequest(requestId)' dist/Agency-Universal-Harness/chatgpt_adapter.js
+          grep -q 'findUserAnchor' dist/Agency-Universal-Harness/chatgpt_adapter.js
+          grep -q 'collectTextAfterUser' dist/Agency-Universal-Harness/chatgpt_adapter.js
+          grep -q 'AUH_CHAT_RECOVER' dist/Agency-Universal-Harness/chatgpt_adapter.js
+          grep -q 'joined_fragments' dist/Agency-Universal-Harness/chat_response_matcher.js
+          grep -q 'chrome.tabs.reload(chatTabId)' dist/Agency-Universal-Harness/service_worker_v203.js
           grep -q 'Input.insertText' dist/Agency-Universal-Harness/chat_cdp.js
           grep -q 'Input.dispatchKeyEvent' dist/Agency-Universal-Harness/chat_cdp.js
           ! grep -q 'new KeyboardEvent' dist/Agency-Universal-Harness/chatgpt_adapter.js
       - name: SHA256 inventory and ZIP
         run: |
           (cd dist/Agency-Universal-Harness && sha256sum * > SHA256SUMS.txt)
-          (cd dist && zip -qr ../Agency-Universal-Harness-Opera-v2.0.2.zip Agency-Universal-Harness)
-          unzip -t Agency-Universal-Harness-Opera-v2.0.2.zip
-          unzip -l Agency-Universal-Harness-Opera-v2.0.2.zip | grep 'Agency-Universal-Harness/manifest.json'
-          sha256sum Agency-Universal-Harness-Opera-v2.0.2.zip > Agency-Universal-Harness-Opera-v2.0.2.zip.sha256
+          (cd dist && zip -qr ../Agency-Universal-Harness-Opera-v2.0.3.zip Agency-Universal-Harness)
+          unzip -t Agency-Universal-Harness-Opera-v2.0.3.zip
+          unzip -l Agency-Universal-Harness-Opera-v2.0.3.zip | grep 'Agency-Universal-Harness/manifest.json'
+          sha256sum Agency-Universal-Harness-Opera-v2.0.3.zip > Agency-Universal-Harness-Opera-v2.0.3.zip.sha256
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Agency-Universal-Harness-Opera-v2.0.2
+          name: Agency-Universal-Harness-Opera-v2.0.3
           path: |
-            Agency-Universal-Harness-Opera-v2.0.2.zip
-            Agency-Universal-Harness-Opera-v2.0.2.zip.sha256
+            Agency-Universal-Harness-Opera-v2.0.3.zip
+            Agency-Universal-Harness-Opera-v2.0.3.zip.sha256
           if-no-files-found: error
           retention-days: 30
       - name: Publish persistent GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view auh-v2.0.2 >/dev/null 2>&1; then
-            gh release upload auh-v2.0.2 Agency-Universal-Harness-Opera-v2.0.2.zip Agency-Universal-Harness-Opera-v2.0.2.zip.sha256 --clobber
+          if gh release view auh-v2.0.3 >/dev/null 2>&1; then
+            gh release upload auh-v2.0.3 Agency-Universal-Harness-Opera-v2.0.3.zip Agency-Universal-Harness-Opera-v2.0.3.zip.sha256 --clobber
           else
-            gh release create auh-v2.0.2 Agency-Universal-Harness-Opera-v2.0.2.zip Agency-Universal-Harness-Opera-v2.0.2.zip.sha256 --target "$GITHUB_SHA" --title "Agency Universal Harness v2.0.2" --notes "Fixes the live CHATGPT_BUSY re-entrancy race between consecutive reasoning steps. The ChatGPT adapter now releases only its own request slot before reporting a completed result, so the service worker can synchronously execute the browser action and start the next step without being rejected as busy. Includes a behavioral regression test that reproduces the exact live race. Retains stable refs, self-healing locators, recover/replan, trusted ChatGPT submit, cross-domain safety gates and live-page completion proof."
+            gh release create auh-v2.0.3 Agency-Universal-Harness-Opera-v2.0.3.zip Agency-Universal-Harness-Opera-v2.0.3.zip.sha256 --target "$GITHUB_SHA" --title "Agency Universal Harness v2.0.3" --notes "Fixes the live false CHATGPT_RESPONSE_TIMEOUT: the answer already existed in the bound ChatGPT conversation but the old detector trusted one assistant-role selector and missed it. v2.0.3 anchors recovery after the exact user turn, supports multiple ChatGPT turn wrappers, rebuilds fragmented JSON, performs a final live-DOM recovery before timeout, and refreshes only the bound ChatGPT tab once after an extension runtime upgrade so stale content scripts cannot survive. Retains the v2.0.2 re-entrancy fix, stable refs, self-healing locators, recover/replan, safety gates and live-page completion proof."
           fi
