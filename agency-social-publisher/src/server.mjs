@@ -22,6 +22,7 @@ import {
 } from './openai.mjs';
 import { generateLegatPlan, loadLegatConfig } from './legat.mjs';
 import { publishTenChat, publishExternal } from './secondary.mjs';
+import { mountMcp } from './mcp.mjs';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
@@ -30,14 +31,16 @@ const port = Number(process.env.PORT || 8787);
 app.use(express.json({ limit: '5mb' }));
 
 app.get('/health', (_req, res) => {
-  res.json({ ok: true, service: 'agency-social-publisher', version: '0.1.0' });
+  res.json({ ok: true, service: 'agency-social-publisher', version: '0.2.0' });
 });
 
 app.use((req, res, next) => {
   const secret = process.env.BRIDGE_SECRET;
   if (!secret) return next();
-  const supplied = req.header('x-bridge-key');
-  if (supplied !== secret) return res.status(401).json({ error: 'unauthorized' });
+  const bridgeKey = req.header('x-bridge-key');
+  const authorization = req.header('authorization') || '';
+  const bearer = authorization.toLowerCase().startsWith('bearer ') ? authorization.slice(7) : '';
+  if (bridgeKey !== secret && bearer !== secret) return res.status(401).json({ error: 'unauthorized' });
   next();
 });
 
@@ -45,8 +48,12 @@ function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
+// Streamable HTTP MCP endpoint used by ChatGPT/Codex plugin clients.
+mountMcp(app);
+
 app.get('/api/capabilities', (_req, res) => {
   res.json({
+    mcp: { endpoint: '/mcp', enabled: true },
     primary: {
       publisher: 'postiz',
       connectedAtRuntime: Boolean(process.env.POSTIZ_API_KEY),
