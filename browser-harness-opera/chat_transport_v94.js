@@ -3,8 +3,10 @@
  * It replaces only askChatGPT(). Browser Harness target execution remains unchanged.
  */
 (() => {
-  const flat = value => String(value ?? '').replace(/\s+/g, ' ').trim();
+  const {flat, requestTurnIndex, assistantFragmentsAfterRequest, parseAssistantFragments} = BH_CHAT94;
   const sleepLocal = ms => new Promise(r => setTimeout(r, ms));
+  const parseFragments = (fragments, requestId, marker, requireMarker=true) =>
+    parseAssistantFragments(fragments, requestId, marker, BH_PLANNER.extractJson, requireMarker);
 
   async function chatState(tabId) {
     let result = null;
@@ -22,39 +24,6 @@
     if (!tab) throw new Error('BOUND_CHAT_TAB_CLOSED');
     if (chatPath(tab.url || '') !== state.chat?.path) throw new Error('SAFETY_CHAT_SWITCH');
     return tab;
-  }
-
-  function requestTurnIndex(turns, requestId) {
-    for (let i = turns.length - 1; i >= 0; i -= 1) {
-      if (turns[i]?.role === 'user' && String(turns[i]?.text || '').includes(requestId)) return i;
-    }
-    return -1;
-  }
-
-  function assistantFragmentsAfterRequest(turns, requestId) {
-    const start = requestTurnIndex(turns, requestId);
-    if (start < 0) return [];
-    const out = [];
-    for (let i = start + 1; i < turns.length; i += 1) {
-      const turn = turns[i];
-      if (turn?.role === 'user') break;
-      if (turn?.role === 'assistant' && String(turn.text || '').trim()) out.push(String(turn.text));
-    }
-    return out;
-  }
-
-  function parseAssistantFragments(fragments, requestId, marker, requireMarker = true) {
-    if (!fragments.length) return null;
-    if (requireMarker && !fragments.some(text => text.includes(marker))) return null;
-    const candidates = [...fragments].reverse();
-    candidates.push(fragments.join('\n'));
-    for (const text of candidates) {
-      try {
-        const obj = BH_PLANNER.extractJson(text, requestId);
-        if (obj?.requestId === requestId) return obj;
-      } catch {}
-    }
-    return null;
   }
 
   async function dispatchKey(target, payload) {
@@ -109,7 +78,7 @@
       await sleepLocal(250);
     }
 
-    // A second submit attempt is allowed only while the exact intended prompt is still visibly unsent.
+    // Fallback is allowed only while the exact intended prompt is still visibly unsent.
     const afterPrimary = await chatState(chatTab.id);
     if (flat(afterPrimary.composer) === flat(prompt) && requestTurnIndex(afterPrimary.turns || [], requestId) < 0) {
       try {
@@ -142,21 +111,21 @@
       await assertPinnedConversation(state, chatTab.id);
       const current = await chatState(chatTab.id);
       const fragments = assistantFragmentsAfterRequest(current.turns || [], requestId);
-      const obj = parseAssistantFragments(fragments, requestId, marker, true);
+      const obj = parseFragments(fragments, requestId, marker, true);
       if (obj) return obj;
       await sleepLocal(450);
     }
 
-    // Final recovery: if the model produced a complete valid JSON but omitted the marker,
-    // recover it rather than inventing a false timeout. Never resend the prompt here.
+    // Final recovery: a complete valid request-scoped JSON is useful evidence even if the model omitted the marker.
+    // Never resend after a confirmed user turn.
     const finalState = await chatState(chatTab.id);
     const fragments = assistantFragmentsAfterRequest(finalState.turns || [], requestId);
-    const recovered = parseAssistantFragments(fragments, requestId, marker, false);
+    const recovered = parseFragments(fragments, requestId, marker, false);
     if (recovered) return recovered;
     throw new Error('CHATGPT_RESPONSE_NOT_FOUND_FOR_REQUEST');
   }
 
-  // Override only the old free-ChatGPT transport. Target Driver/action code remains byte-for-byte stable.
+  // Override only the old free-ChatGPT transport. Target Driver/action code remains unchanged.
   askChatGPT = async function(state, prompt, requestId) {
     const {chatTab,chatDriver} = await validateBindings(state);
     await assertPinnedConversation(state, chatTab.id);
@@ -168,10 +137,10 @@
       `Your single JSON object MUST include the top-level field \"completionMarker\":\"${marker}\" exactly.`
     ].join('\n');
 
-    // Recovery first: if this exact request was already submitted and answered, use it without sending again.
+    // Recover an already completed request without sending it again.
     const existing = await chatState(chatTab.id);
     if (requestTurnIndex(existing.turns || [], requestId) >= 0) {
-      const recovered = parseAssistantFragments(assistantFragmentsAfterRequest(existing.turns || [], requestId), requestId, marker, false);
+      const recovered = parseFragments(assistantFragmentsAfterRequest(existing.turns || [], requestId), requestId, marker, false);
       if (recovered) return recovered;
       return waitAnchoredResponse(state, chatTab, requestId, marker);
     }
