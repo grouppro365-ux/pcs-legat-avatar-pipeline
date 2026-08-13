@@ -1,0 +1,126 @@
+openapi: 3.1.0
+info:
+  title: Agency Social Publisher
+  version: 0.1.0
+  description: Unified generation and Postiz publishing bridge for Legat ABC.
+servers:
+  - url: https://YOUR_BRIDGE_HOST
+components:
+  securitySchemes:
+    BridgeKey:
+      type: apiKey
+      in: header
+      name: x-bridge-key
+security:
+  - BridgeKey: []
+paths:
+  /health:
+    get:
+      security: []
+      operationId: health
+      responses:
+        '200': { description: OK }
+  /api/integrations:
+    get:
+      operationId: listSocialIntegrations
+      responses:
+        '200': { description: Connected Postiz channels }
+  /api/plan:
+    post:
+      operationId: createLegatSocialPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject]
+              properties:
+                subject: { type: string }
+                facts: { type: object, additionalProperties: true }
+                channels:
+                  type: array
+                  items: { type: string }
+                goal: { type: string }
+                language: { type: string }
+      responses:
+        '200': { description: Channel-native content plan }
+  /api/generate/image:
+    post:
+      operationId: generateSocialImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string }
+                size: { type: string }
+                quality: { type: string }
+                uploadToPostiz: { type: boolean }
+                filename: { type: string }
+      responses:
+        '200': { description: Generated image or uploaded Postiz media }
+  /api/generate/video:
+    post:
+      operationId: generateSocialVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string }
+                seconds: { type: string, enum: ['4','8','12'] }
+                size: { type: string, enum: ['720x1280','1280x720','1024x1792','1792x1024'] }
+      responses:
+        '202': { description: OpenAI video generation job }
+  /api/generate/video/{id}:
+    get:
+      operationId: getSocialVideoStatus
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Video job status }
+  /api/generate/video/{id}/wait-and-upload:
+    post:
+      operationId: uploadGeneratedVideoToPostiz
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Generated MP4 uploaded into Postiz media }
+  /api/publish:
+    post:
+      operationId: publishOrScheduleSocialPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, content, integrationIds]
+              properties:
+                type: { type: string, enum: [draft, schedule, now] }
+                date: { type: string, format: date-time }
+                content: { type: string }
+                integrationIds:
+                  type: array
+                  items: { type: string }
+                media:
+                  type: array
+                  items: { type: object, additionalProperties: true }
+                settingsByIntegration:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200': { description: Postiz post result }
