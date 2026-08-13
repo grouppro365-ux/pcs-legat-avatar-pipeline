@@ -31,6 +31,10 @@ ok(/sendReadOnly/.test(core)&&/sendMutationOnce/.test(core),'read and mutation t
 ok(/navigation_after_delivery_loss/.test(core),'mutation loss checks navigation instead of blind retry');
 ok(/WeakMap/.test(client)&&/elementByRef/.test(client),'browser-side element proxy cache');
 ok(/shadowRoot/.test(client),'open Shadow DOM traversal');
+ok(/collectDocuments/.test(client)&&/contentDocument/.test(client),'same-origin iframe traversal for CMS editor canvases');
+ok(/queryAcrossDocuments/.test(client)&&/readAllText/.test(client),'find/read operate across same-origin iframe documents');
+ok(/frameDepth/.test(client)&&/topRect/.test(client),'iframe elements preserve frame context and top-relative geometry');
+ok(/Cross-origin frame:[\s\S]*opaque/.test(client),'cross-origin iframe boundary is fail-closed');
 ok(/semantic_fallback/.test(client),'self-healing semantic locator fallback');
 ok(/FIELD_VALUE_REVERTED/.test(client),'SPA fill postcondition');
 
@@ -44,6 +48,7 @@ ok(/DONE_PROOF_REQUIRED/.test(planner),'done requires live proof schema');
 ok(/new MutationObserver/.test(observer),'ChatGPT response collection is event-driven');
 ok(/ABH_CHAT_ARM/.test(observer)&&/ABH_CHAT_RECOVER/.test(observer),'observer arm/recovery protocol present');
 ok(/chrome\.storage\.local\.set/.test(observer)&&/ABH_CHAT_RESPONSE/.test(observer),'observer persists then signals response');
+ok(/acknowledged/.test(observer)&&/chrome\.storage\.local\.remove\(key\)/.test(observer),'response mailbox cleaned only after runtime ACK');
 ok(!/setInterval\s*\(/.test(observer),'observer has no polling interval');
 
 ok(/waiting_chatgpt/.test(worker),'durable waiting_chatgpt state exists');
@@ -64,6 +69,7 @@ ok(/HIGH_RISK_CONFIRM_REQUIRED/.test(worker),'high-risk confirmation exists');
 ok(/async function ensureGenericClient\(tabId\)[\s\S]*new Driver\(tabId\)/.test(worker)&&/ensureGenericClient\(chatTab\.id\)/.test(worker),'ChatGPT input uses the same generic Browser Harness Driver');
 ok(/chrome\.alarms/.test(worker),'MV3 recovery alarm exists');
 
+ok(/chrome\.storage\.onChanged/.test(tracker)&&/reconciling/.test(tracker),'target metadata self-reconciles after navigation/storage races');
 ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'skill loads before runtime');
 ok(/name: seo-article-writer-tatyana/.test(seoSkill)&&/version: "1\.0\.0"/.test(seoSkill),'canonical SEO skill bundled');
 ok(/IndexNow alone is never/.test(seoRuntime),'SEO runtime forbids indexing-only substitution');
