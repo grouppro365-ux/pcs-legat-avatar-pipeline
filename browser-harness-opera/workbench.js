@@ -14,13 +14,15 @@ async function call(type, payload={}) {
 }
 function time(ts){try{return new Date(ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch{return'';}}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function skillForTask(task){return /@seo-article-writer-tatyana|\bseo\b|rank math|seo[- ]?стат|мета[- ]?тег|каннибализац/i.test(String(task?.text||task||''))?'seo-article-writer-tatyana':'';}
 
 function card(task){
   const el=document.createElement('div');
   el.className=`card ${task.status||''}`;
   el.draggable=task.status==='queue';
   el.dataset.taskId=task.id;
-  el.innerHTML=`<div class="txt">${esc(task.text)}</div><div class="meta">${esc(task.status)}${task.error?` · ${esc(task.error)}`:''}${task.result?` · ${esc(task.result)}`:''}</div>`;
+  const skill=skillForTask(task);
+  el.innerHTML=`<div class="txt">${esc(task.text)}</div><div class="meta">${esc(task.status)}${skill?` · skill: ${esc(skill)}`:''}${task.error?` · ${esc(task.error)}`:''}${task.result?` · ${esc(task.result)}`:''}</div>`;
   el.addEventListener('dragstart',()=>{draggedTaskId=task.id;});
   el.addEventListener('dragend',()=>{draggedTaskId=null;document.querySelectorAll('.column').forEach(c=>c.classList.remove('dragover'));});
   return el;
@@ -48,7 +50,7 @@ function render(state){
   const status=run?.status||'idle';
   $('runStatus').textContent=status==='idle'?'Ожидание':status;
   $('runStatus').className=status==='done'?'ok':(['blocked','cancelled'].includes(status)?'err':(status==='confirmation'?'warn':''));
-  $('runProgress').textContent=run?`${run.step||0}/50 · recovery ${run.recoveries||0}/10`:'';
+  $('runProgress').textContent=run?`${run.step||0}/${run.maxSteps||100} · recovery ${run.recoveries||0}/10${Object.keys(run.ledger||{}).length?` · items ${Object.keys(run.ledger||{}).length}`:''}`:'';
   const showConfirm=run?.status==='confirmation'&&run.pendingAction?.token;
   $('confirmBox').classList.toggle('show',!!showConfirm);
   if(showConfirm){
