@@ -42,8 +42,9 @@ ok(/SELECT_VALUE_REVERTED/.test(client),'SPA select postcondition check');
 ok(/validateResponse/.test(planner)&&/ALLOWED_ACTIONS/.test(planner),'typed planner JSON validation');
 ok(/collectRequestScopedObjects/.test(planner)&&/balancedObjectFrom/.test(planner),'planner response is extracted from exact requestId, not whole-chat parser state');
 ok(/validateProgress/.test(planner)&&/itemStatus/.test(planner),'batch progress contract exists');
+ok(/validateBatch/.test(planner)&&/expectedTotal/.test(planner),'finite batch scope contract exists');
 ok(/PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP/.test(planner),'completed item requires a verification action');
-ok(/seoArticleWriterTatyana/.test(planner),'planner includes embedded SEO skill when runtime loaded');
+ok(/activateSeo/.test(planner)&&/seoArticleWriterTatyana/.test(planner),'embedded SEO skill is conditionally activated only for SEO tasks');
 ok(/<REQUEST_ID_FROM_TOP>/.test(planner),'prompt schema cannot impersonate actual request id');
 ok(/DONE_PROOF_REQUIRED/.test(planner),'done requires proof schema');
 
@@ -57,6 +58,7 @@ ok(!/activeRequest/.test(worker),'no bespoke ChatGPT activeRequest state machine
 ok(!/data-message-author-role/.test(worker),'no fragile ChatGPT assistant/user role selector');
 ok(!/CHATGPT_SEND_UNCERTAIN_NO_RETRY/.test(worker),'old terminal uncertain-send protocol removed');
 ok(/BH_PLANNER\.validateResponse/.test(worker),'planner output validated before browser action');
+ok(/BH_PLANNER\.makeSchemaText\(run\.task\)/.test(worker),'planner receives task text for conditional skill activation');
 ok(/verifyDone/.test(worker)&&/DONE_PROOF/.test(planner),'completion verified against live browser state');
 ok(/SECRET_FIELD_BLOCKED/.test(worker),'secret fields hard blocked');
 ok(/HIGH_RISK_CONFIRM_REQUIRED/.test(worker),'high-risk confirmation gate exists');
@@ -66,8 +68,8 @@ ok(/async function adoptChildTab[\s\S]*?await putState\(state\)/.test(worker),'n
 ok(/relatedRoutes/.test(worker),'successful routes are reusable hints');
 ok(/chrome\.alarms/.test(worker),'run can be resumed by MV3 alarm');
 ok(/BATCH_MAX_STEPS = 500/.test(worker)&&/maxStepsForTask/.test(worker),'batch tasks receive extended action budget');
-ok(/BATCH LEDGER/.test(worker)&&/current\.ledger/.test(worker),'batch ledger is persisted and included in planning');
-ok(/BATCH_LEDGER_INCOMPLETE/.test(worker),'batch cannot declare done with unfinished ledger');
+ok(/BATCH EXPECTED TOTAL/.test(worker)&&/BATCH LEDGER/.test(worker)&&/current\.ledger/.test(worker),'batch expected total and ledger are persisted and included in planning');
+ok(/BATCH_SCOPE_INCOMPLETE/.test(worker)&&/finished\.length < expected/.test(worker),'batch cannot declare done before expected scope is processed');
 
 ok(/pendingChildTabId/.test(tracker)&&/openerTabId/.test(tracker),'child tab handoff is also tracked asynchronously');
 ok(/state\.target=next/.test(tracker),'same-tab navigation refreshes target metadata');
@@ -77,8 +79,9 @@ ok(/name: seo-article-writer-tatyana/.test(seoSkill)&&/version: "1\.0\.0"/.test(
 ok(/IndexNow alone is never/.test(seoRuntime),'SEO runtime forbids indexing-only substitute for article optimization');
 ok(/Rank Math/.test(seoRuntime)&&/Focus Keyword/.test(seoRuntime)&&/Meta Description/.test(seoRuntime),'SEO runtime requires substantive Rank Math metadata work');
 ok(/Process one article to verified completion before moving to the next/.test(seoRuntime),'SEO batch mode is item-by-item with verification');
+ok(/batch\.expectedTotal/.test(seoRuntime),'SEO batch mode records real collection total before completion');
 ok(/NO RANKING PROMISES/.test(seoRuntime),'SEO runtime does not promise search rankings');
-ok(/BATCH_MAX_STEPS = 500/.test(releasePatch)&&/PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP/.test(releasePatch),'release patch enforces batch budget and verified completion');
+ok(/BATCH_MAX_STEPS = 500/.test(releasePatch)&&/PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP/.test(releasePatch)&&/BATCH_SCOPE_INCOMPLETE/.test(releasePatch),'release patch enforces batch budget, finite scope and verified completion');
 ok(/run\.maxSteps\|\|100/.test(ui)&&/skill:/.test(ui),'Workbench shows dynamic run budget and active embedded skill');
 
 ok(!/api\.openai\.com|OPENAI_API_KEY|OpenRouter|TokenRouter|sk-proj-/i.test(all),'no paid AI API runtime');
