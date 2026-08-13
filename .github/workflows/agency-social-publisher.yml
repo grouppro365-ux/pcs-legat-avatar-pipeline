@@ -5,10 +5,12 @@ on:
     branches: [agency-social-publisher]
     paths:
       - 'agency-social-publisher/**'
+      - '.agents/plugins/marketplace.json'
       - '.github/workflows/agency-social-publisher.yml'
   pull_request:
     paths:
       - 'agency-social-publisher/**'
+      - '.agents/plugins/marketplace.json'
 
 jobs:
   validate:
@@ -21,8 +23,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: agency-social-publisher/package.json
       - run: npm install
       - run: node --check src/postiz.mjs
       - run: node --check src/openai.mjs
@@ -31,7 +31,18 @@ jobs:
       - run: node --check src/secondary.mjs
       - run: node --check src/mcp.mjs
       - run: node --check src/server.mjs
-      - run: node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
+      - name: Validate JSON configuration
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
+          node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/plugin.json','utf8')); console.log('plugin manifest ok')"
+          node -e "JSON.parse(require('fs').readFileSync('../.agents/plugins/marketplace.json','utf8')); console.log('marketplace ok')"
+      - name: Validate skill frontmatter
+        shell: bash
+        run: |
+          test -f skills/legat-abc-social/SKILL.md
+          head -n 1 skills/legat-abc-social/SKILL.md | grep -qx -- '---'
+          grep -q '^name: legat-abc-social$' skills/legat-abc-social/SKILL.md
+          grep -q '^description:' skills/legat-abc-social/SKILL.md
       - name: Import MCP module
         run: node -e "import('./src/mcp.mjs').then(()=>console.log('mcp import ok'))"
       - name: Server and MCP initialize smoke test
