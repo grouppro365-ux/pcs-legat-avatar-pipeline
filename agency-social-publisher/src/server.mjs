@@ -21,6 +21,7 @@ import {
   waitForVideo,
 } from './openai.mjs';
 import { generateLegatPlan, loadLegatConfig } from './legat.mjs';
+import { publishTenChat, publishExternal } from './secondary.mjs';
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 100 * 1024 * 1024 } });
@@ -43,6 +44,26 @@ app.use((req, res, next) => {
 function asyncRoute(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
+
+app.get('/api/capabilities', (_req, res) => {
+  res.json({
+    primary: {
+      publisher: 'postiz',
+      connectedAtRuntime: Boolean(process.env.POSTIZ_API_KEY),
+      channels: ['instagram', 'facebook', 'telegram', 'vk', 'tiktok', 'youtube', 'threads', 'linkedin', 'pinterest', 'other-postiz-providers'],
+    },
+    secondary: {
+      tenchat: Boolean(process.env.TENCHAT_BRIDGE_URL),
+      generic: Boolean(process.env.SECONDARY_PUBLISHER_URL),
+      dzen: 'telegram-crosspost-route',
+    },
+    generation: {
+      text: Boolean(process.env.OPENAI_API_KEY),
+      image: Boolean(process.env.OPENAI_API_KEY),
+      video: Boolean(process.env.OPENAI_API_KEY),
+    },
+  });
+});
 
 app.get('/api/project', asyncRoute(async (_req, res) => {
   res.json(await loadLegatConfig());
@@ -121,6 +142,20 @@ app.post('/api/media/upload', upload.single('file'), asyncRoute(async (req, res)
 app.post('/api/publish', asyncRoute(async (req, res) => {
   const payload = await buildPostizPayload(req.body || {});
   res.json(await createPost(payload));
+}));
+
+app.post('/api/secondary/tenchat', asyncRoute(async (req, res) => {
+  if (!process.env.TENCHAT_BRIDGE_URL) return res.status(503).json({ error: 'TENCHAT_BRIDGE_URL is not configured' });
+  res.json(await publishTenChat(req.body || {}));
+}));
+
+app.post('/api/secondary/:channel', asyncRoute(async (req, res) => {
+  if (req.params.channel.toLowerCase() === 'tenchat') {
+    if (!process.env.TENCHAT_BRIDGE_URL) return res.status(503).json({ error: 'TENCHAT_BRIDGE_URL is not configured' });
+    return res.json(await publishTenChat(req.body || {}));
+  }
+  if (!process.env.SECONDARY_PUBLISHER_URL) return res.status(503).json({ error: 'SECONDARY_PUBLISHER_URL is not configured' });
+  res.json(await publishExternal(req.params.channel, req.body || {}));
 }));
 
 app.post('/api/workflows/image-draft', asyncRoute(async (req, res) => {
