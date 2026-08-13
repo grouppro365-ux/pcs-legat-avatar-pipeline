@@ -96,20 +96,28 @@ export async function readLegatSource(rawUrl) {
   };
 }
 
-export async function importMediaFromUrl(rawUrl, uploadBuffer) {
+export async function fetchApprovedMedia(rawUrl, { kind = 'any' } = {}) {
   const initial = assertAllowedMediaUrl(rawUrl);
   const response = await fetchWithValidatedRedirects(initial.toString(), assertAllowedMediaUrl);
   if (!response.ok) throw new Error(`Media source returned ${response.status}`);
   const finalUrl = assertAllowedMediaUrl(response.url || initial.toString());
   const mimeType = response.headers.get('content-type') || 'application/octet-stream';
-  if (!mimeType.startsWith('image/') && !mimeType.startsWith('video/') && !mimeType.startsWith('audio/')) {
-    throw new Error(`Unsupported media type: ${mimeType}`);
-  }
+  const allowedMime =
+    kind === 'image' ? mimeType.startsWith('image/') :
+    kind === 'video' ? mimeType.startsWith('video/') :
+    kind === 'audio' ? mimeType.startsWith('audio/') :
+    mimeType.startsWith('image/') || mimeType.startsWith('video/') || mimeType.startsWith('audio/');
+  if (!allowedMime) throw new Error(`Unsupported media type for ${kind}: ${mimeType}`);
   const contentLength = Number(response.headers.get('content-length') || 0);
   if (contentLength > MAX_MEDIA_BYTES) throw new Error('Media exceeds 100 MB limit');
   const buffer = Buffer.from(await response.arrayBuffer());
   if (buffer.byteLength > MAX_MEDIA_BYTES) throw new Error('Media exceeds 100 MB limit');
   const pathname = finalUrl.pathname;
   const filename = pathname.split('/').filter(Boolean).pop() || `media-${Date.now()}`;
-  return uploadBuffer(buffer, filename, mimeType);
+  return { buffer, filename, mimeType, url: finalUrl.toString() };
+}
+
+export async function importMediaFromUrl(rawUrl, uploadBuffer) {
+  const media = await fetchApprovedMedia(rawUrl);
+  return uploadBuffer(media.buffer, media.filename, media.mimeType);
 }
