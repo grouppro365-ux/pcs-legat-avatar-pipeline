@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Agency Browser Harness",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Opera Browser Harness with durable event-driven ChatGPT planning, verified actions, batch checkpoints and embedded seo-article-writer-tatyana.",
   "permissions": ["tabs", "storage", "scripting", "debugger", "alarms"],
   "host_permissions": ["<all_urls>"],
