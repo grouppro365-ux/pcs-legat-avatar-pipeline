@@ -9,11 +9,12 @@ const planner=read('planner_protocol.js');
 const worker=read('service_worker.js');
 const observer=read('chatgpt_observer.js');
 const tracker=read('target_tracker.js');
+const upgrade=read('upgrade_manager.js');
 const bootstrap=read('bootstrap.js');
 const ui=read('workbench.js');
 const seoRuntime=read('seo_article_writer_tatyana.js');
 const seoSkill=read('skills/seo-article-writer-tatyana/SKILL.md');
-const all=[core,client,planner,worker,observer,tracker,bootstrap,ui,seoRuntime,seoSkill].join('\n');
+const all=[core,client,planner,worker,observer,tracker,upgrade,bootstrap,ui,seoRuntime,seoSkill].join('\n');
 
 ok(manifest.manifest_version===3,'Manifest V3');
 ok(manifest.version==='0.3.0','version 0.3.0');
@@ -70,7 +71,9 @@ ok(/async function ensureGenericClient\(tabId\)[\s\S]*new Driver\(tabId\)/.test(
 ok(/chrome\.alarms/.test(worker),'MV3 recovery alarm exists');
 
 ok(/chrome\.storage\.onChanged/.test(tracker)&&/reconciling/.test(tracker),'target metadata self-reconciles after navigation/storage races');
-ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'skill loads before runtime');
+ok(/chrome\.runtime\.onInstalled/.test(upgrade)&&/chrome\.tabs\.reload/.test(upgrade),'extension update refreshes stale bound content-scripts');
+ok(/ACTIVE\.has\(state\.run\.status\)/.test(upgrade),'upgrade manager never reloads underneath an active run');
+ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js','upgrade_manager\.js'\)/.test(bootstrap),'skill/runtime/tracker/upgrade manager load in bootstrap');
 ok(/name: seo-article-writer-tatyana/.test(seoSkill)&&/version: "1\.0\.0"/.test(seoSkill),'canonical SEO skill bundled');
 ok(/IndexNow alone is never/.test(seoRuntime),'SEO runtime forbids indexing-only substitution');
 ok(/Rank Math/.test(seoRuntime)&&/Process one article to verified completion/.test(seoRuntime),'SEO runtime requires substantive per-article work');
