@@ -1,0 +1,20 @@
+{
+  "name": "legat-agency-plugins",
+  "interface": {
+    "displayName": "Legat Agency Plugins"
+  },
+  "plugins": [
+    {
+      "name": "legat-abc-social-publisher",
+      "source": {
+        "source": "local",
+        "path": "./agency-social-publisher"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
