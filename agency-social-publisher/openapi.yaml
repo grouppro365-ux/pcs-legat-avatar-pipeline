@@ -1,18 +1,24 @@
 openapi: 3.1.0
 info:
   title: Agency Social Publisher
-  version: 0.1.0
-  description: Unified generation and Postiz publishing bridge for Legat ABC.
+  version: 0.2.0
+  description: Unified generation, media, Postiz publishing and secondary-channel bridge for Legat ABC.
 servers:
   - url: https://YOUR_BRIDGE_HOST
 components:
   securitySchemes:
-    BridgeKey:
-      type: apiKey
-      in: header
-      name: x-bridge-key
+    BridgeBearer:
+      type: http
+      scheme: bearer
+  schemas:
+    MediaRef:
+      type: object
+      required: [id, path]
+      properties:
+        id: { type: string }
+        path: { type: string }
 security:
-  - BridgeKey: []
+  - BridgeBearer: []
 paths:
   /health:
     get:
@@ -20,11 +26,26 @@ paths:
       operationId: health
       responses:
         '200': { description: OK }
+  /api/capabilities:
+    get:
+      operationId: getCapabilities
+      responses:
+        '200': { description: Runtime capability flags }
   /api/integrations:
     get:
       operationId: listSocialIntegrations
       responses:
         '200': { description: Connected Postiz channels }
+  /api/integrations/{id}/settings:
+    get:
+      operationId: getSocialIntegrationSettings
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Provider settings schema }
   /api/plan:
     post:
       operationId: createLegatSocialPlan
@@ -89,16 +110,45 @@ paths:
           schema: { type: string }
       responses:
         '200': { description: Video job status }
-  /api/generate/video/{id}/wait-and-upload:
+  /api/generate/video/{id}/finalize:
     post:
-      operationId: uploadGeneratedVideoToPostiz
+      operationId: finalizeGeneratedVideoToPostiz
       parameters:
         - in: path
           name: id
           required: true
           schema: { type: string }
       responses:
-        '200': { description: Generated MP4 uploaded into Postiz media }
+        '200': { description: Completed MP4 uploaded into Postiz media }
+        '202': { description: Video is still processing }
+  /api/media/upload:
+    post:
+      operationId: uploadExistingSocialMedia
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200': { description: Existing media uploaded to Postiz }
+  /api/media/import-url:
+    post:
+      operationId: importApprovedMediaUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        '200': { description: Allowlisted media URL imported to Postiz }
   /api/publish:
     post:
       operationId: publishOrScheduleSocialPost
@@ -118,9 +168,15 @@ paths:
                   items: { type: string }
                 media:
                   type: array
-                  items: { type: object, additionalProperties: true }
+                  items: { $ref: '#/components/schemas/MediaRef' }
                 settingsByIntegration:
                   type: object
                   additionalProperties: true
       responses:
         '200': { description: Postiz post result }
+  /api/secondary/tenchat:
+    post:
+      operationId: publishTenChatThroughBridge
+      responses:
+        '200': { description: Secondary TenChat bridge result }
+        '503': { description: TenChat bridge is not configured }
