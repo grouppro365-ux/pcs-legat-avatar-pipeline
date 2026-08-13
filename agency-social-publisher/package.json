@@ -1,6 +1,6 @@
 {
   "name": "agency-social-publisher",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -11,9 +11,12 @@
     "dev": "node --watch src/server.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/node": "^2.0.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "multer": "^2.0.2",
-    "openai": "^5.12.2"
+    "openai": "^5.12.2",
+    "zod": "^4.0.0"
   }
 }
