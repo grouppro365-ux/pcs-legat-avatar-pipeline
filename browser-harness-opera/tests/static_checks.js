@@ -8,16 +8,18 @@ const client=read('browser_harness_client.js');
 const planner=read('planner_protocol.js');
 const worker=read('service_worker.js');
 const observer=read('chatgpt_observer.js');
+const bindHotfix=read('observer_bind_hotfix.js');
 const tracker=read('target_tracker.js');
 const upgrade=read('upgrade_manager.js');
 const bootstrap=read('bootstrap.js');
 const ui=read('workbench.js');
+const html=read('workbench.html');
 const seoRuntime=read('seo_article_writer_tatyana.js');
 const seoSkill=read('skills/seo-article-writer-tatyana/SKILL.md');
-const all=[core,client,planner,worker,observer,tracker,upgrade,bootstrap,ui,seoRuntime,seoSkill].join('\n');
+const all=[core,client,planner,worker,observer,bindHotfix,tracker,upgrade,bootstrap,ui,html,seoRuntime,seoSkill].join('\n');
 
 ok(manifest.manifest_version===3,'Manifest V3');
-ok(manifest.version==='0.3.0','version 0.3.0');
+ok(manifest.version==='0.3.1','version 0.3.1');
 ok(manifest.background?.service_worker==='bootstrap.js','bootstrap service worker configured');
 ok((manifest.permissions||[]).includes('debugger'),'trusted Enter permission');
 ok((manifest.permissions||[]).includes('alarms'),'durable alarm permission');
@@ -52,6 +54,11 @@ ok(/chrome\.storage\.local\.set/.test(observer)&&/ABH_CHAT_RESPONSE/.test(observ
 ok(/acknowledged/.test(observer)&&/chrome\.storage\.local\.remove\(key\)/.test(observer),'response mailbox cleaned only after runtime ACK');
 ok(!/setInterval\s*\(/.test(observer),'observer has no polling interval');
 
+ok(/CHATGPT_OBSERVER_NOT_READY_AFTER_RELOAD/.test(bindHotfix),'bind recovery has explicit post-reload failure code');
+ok(/chrome\.tabs\.reload/.test(bindHotfix)&&/waitTabComplete/.test(bindHotfix),'bind recovery reloads only the bound ChatGPT tab and waits for completion');
+ok(/pathAfter !== pathBefore/.test(bindHotfix)&&/SAFETY_CHAT_SWITCH/.test(bindHotfix),'bind recovery preserves pinned conversation path');
+ok(/bindRecovery:'reloaded'/.test(bindHotfix),'successful reload recovery is observable');
+
 ok(/waiting_chatgpt/.test(worker),'durable waiting_chatgpt state exists');
 ok(/ABH_CHAT_RESPONSE/.test(worker),'service worker consumes observer event');
 ok(/recoverPendingChat/.test(worker),'pending response recovery exists');
@@ -73,11 +80,13 @@ ok(/chrome\.alarms/.test(worker),'MV3 recovery alarm exists');
 ok(/chrome\.storage\.onChanged/.test(tracker)&&/reconciling/.test(tracker),'target metadata self-reconciles after navigation/storage races');
 ok(/chrome\.runtime\.onInstalled/.test(upgrade)&&/chrome\.tabs\.reload/.test(upgrade),'extension update refreshes stale bound content-scripts');
 ok(/ACTIVE\.has\(state\.run\.status\)/.test(upgrade),'upgrade manager never reloads underneath an active run');
-ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js','upgrade_manager\.js'\)/.test(bootstrap),'skill/runtime/tracker/upgrade manager load in bootstrap');
+ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','observer_bind_hotfix\.js','target_tracker\.js','upgrade_manager\.js'\)/.test(bootstrap),'skill/runtime/bind recovery/tracker/upgrade manager load in bootstrap');
 ok(/name: seo-article-writer-tatyana/.test(seoSkill)&&/version: "1\.0\.0"/.test(seoSkill),'canonical SEO skill bundled');
 ok(/IndexNow alone is never/.test(seoRuntime),'SEO runtime forbids indexing-only substitution');
 ok(/Rank Math/.test(seoRuntime)&&/Process one article to verified completion/.test(seoRuntime),'SEO runtime requires substantive per-article work');
 ok(/waiting_chatgpt/.test(ui)&&/articles/.test(ui),'Workbench exposes durable phase and batch progress');
+ok(/chrome\.runtime\.getManifest\(\)\.version|manifest\.version/.test(ui),'Workbench displays actual manifest version');
+ok(!/v0\.1\.0/.test(html),'stale hard-coded v0.1.0 label removed');
 
 ok(!/api\.openai\.com|OPENAI_API_KEY|OpenRouter|TokenRouter|sk-proj-/i.test(all),'no paid AI API runtime');
 ok(!/nowjs|phantomjs|asyncblock|express\s*3/i.test(all),'legacy Browser Harness transport removed');
