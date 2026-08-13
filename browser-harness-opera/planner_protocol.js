@@ -1,5 +1,6 @@
 (function(root){
   const ALLOWED_ACTIONS = new Set(['click','fill','select','check','uncheck','focus','scroll','wait','assert','submit','navigate']);
+  const ITEM_STATUSES = new Set(['working','completed','skipped']);
 
   function stripFences(text) {
     return String(text || '').replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
@@ -63,8 +64,6 @@
 
     let pos = raw.indexOf(needle);
     while (pos >= 0) {
-      // Inspect only nearby opening braces. This deliberately does NOT depend on
-      // the parse state of the preceding chat transcript, which may begin mid-JSON.
       const floor = Math.max(0, pos - 12000);
       const starts = [];
       for (let i = pos; i >= floor; i--) if (raw[i] === '{') starts.push(i);
@@ -82,13 +81,9 @@
 
   function extractJson(text, expectedRequestId) {
     const raw = stripFences(text);
-
-    // Primary path: anchor extraction to the exact requestId. This survives a
-    // tail read that starts in the middle of an older JSON object/string.
     const scoped = collectRequestScopedObjects(raw, expectedRequestId);
     if (scoped.length) return scoped[scoped.length - 1];
 
-    // Compatibility fallback for short/clean transcripts.
     const candidates = [raw, ...collectTopLevelObjects(raw)].map(parseObject).filter(Boolean);
     const exact = candidates.filter(obj => obj.requestId === expectedRequestId && (obj.status === 'act' || obj.status === 'done'));
     if (exact.length) return exact[exact.length - 1];
@@ -102,10 +97,21 @@
     return null;
   }
 
+  function validateProgress(progress) {
+    if (progress == null) return null;
+    if (!progress || typeof progress !== 'object' || Array.isArray(progress)) return 'PROGRESS_NOT_OBJECT';
+    if (!String(progress.itemKey || '').trim()) return 'PROGRESS_ITEM_KEY_REQUIRED';
+    if (!ITEM_STATUSES.has(String(progress.itemStatus || ''))) return 'PROGRESS_ITEM_STATUS_INVALID';
+    if (progress.note != null && typeof progress.note !== 'string') return 'PROGRESS_NOTE_INVALID';
+    return null;
+  }
+
   function validateResponse(obj, expectedRequestId) {
     if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return {ok:false,error:'PLANNER_RESPONSE_NOT_OBJECT'};
     if (obj.requestId !== expectedRequestId) return {ok:false,error:'REQUEST_ID_MISMATCH'};
     if (!['act','done'].includes(obj.status)) return {ok:false,error:'PLANNER_STATUS_INVALID'};
+    const progressError = validateProgress(obj.progress);
+    if (progressError) return {ok:false,error:progressError};
 
     if (obj.status === 'done') {
       const proof = obj.proof;
@@ -142,15 +148,19 @@
   }
 
   function makeSchemaText() {
-    return [
+    const lines = [
       'Return exactly ONE JSON object and nothing else.',
       'Use the requestId shown at the top of this prompt. Do not copy this placeholder literally.',
-      'ACT shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"act","action":{"type":"click|fill|select|check|uncheck|focus|scroll|wait|assert|submit|navigate","target":{"ref":"bh...","role":"","name":"","label":"","text":""}},"reason":"short"}',
-      'DONE shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"done","result":"specific result","proof":{"kind":"text|url|title|element","includes":"real fragment on current page"}}'
-    ].join('\n');
+      'ACT shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"act","action":{"type":"click|fill|select|check|uncheck|focus|scroll|wait|assert|submit|navigate","target":{"ref":"bh...","role":"","name":"","label":"","text":""}},"progress":{"itemKey":"stable item title/url/id","itemStatus":"working|completed|skipped","note":"short checkpoint"},"reason":"short"}',
+      'DONE shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"done","result":"specific result","proof":{"kind":"text|url|title|element","includes":"real fragment on current page"},"progress":{"itemKey":"optional final item","itemStatus":"completed|skipped","note":"short checkpoint"}}',
+      'For batch/collection work, use progress to keep a compact durable ledger. Mark an item completed only after a separate wait/assert/read step verifies the saved/target state; never mark completed on the mutation click itself.'
+    ];
+    const seoSkill = root.ABH_SKILLS?.seoArticleWriterTatyana?.prompt;
+    if (seoSkill) lines.push('', seoSkill);
+    return lines.join('\n');
   }
 
-  const api = {ALLOWED_ACTIONS, collectTopLevelObjects, collectRequestScopedObjects, extractJson, validateResponse, makeSchemaText};
+  const api = {ALLOWED_ACTIONS, ITEM_STATUSES, collectTopLevelObjects, collectRequestScopedObjects, extractJson, validateProgress, validateResponse, makeSchemaText};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BH_PLANNER = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

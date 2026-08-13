@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Agency Browser Harness",
-  "version": "0.1.1",
-  "description": "Minimal Opera adaptation of scriby/browser-harness: Driver, ElementProxy, find, waitFor and verify, with an already-open ChatGPT conversation as planner.",
+  "version": "0.1.4",
+  "description": "Recovery build: v0.1.1 stable controller + embedded SEO skill + Gutenberg same-origin iframe text editing.",
   "permissions": ["tabs", "storage", "scripting", "debugger", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {"service_worker": "bootstrap.js"},

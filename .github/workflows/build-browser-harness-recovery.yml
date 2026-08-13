@@ -1,0 +1,69 @@
+name: Build Browser Harness v0.1.4 RECOVERY
+on:
+  push:
+    branches: [agent/browser-harness-v011-recovery]
+permissions:
+  contents: write
+jobs:
+  recovery-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Freeze v0.1.1 controller transport
+        run: |
+          test "$(git hash-object browser-harness-opera/service_worker.js)" = "5c1a199bef7e3962fd4a6f37b1a023d85984c233"
+          test "$(git hash-object browser-harness-opera/browser_harness_core.js)" = "00c7bf25963c917b175161d18a8219e45a90456f"
+          test "$(git hash-object browser-harness-opera/target_tracker.js)" = "0c9f6e5deae659d06d659848c3a9a82c8e4873fc"
+          ! grep -E "chat_transport|chat_turns|observer|mailbox|local_executor" browser-harness-opera/bootstrap.js browser-harness-opera/manifest.json
+      - name: JavaScript syntax
+        run: |
+          for f in browser-harness-opera/*.js browser-harness-opera/tests/*.js; do node --check "$f"; done
+      - name: Browser Harness core regression
+        run: node browser-harness-opera/tests/core_test.js
+      - name: Planner regression
+        run: node browser-harness-opera/tests/planner_protocol_test.js
+      - name: Visible JSON regression
+        run: node browser-harness-opera/tests/recovery_visible_json_regression_test.js
+      - name: Gutenberg text-edit gate
+        run: |
+          grep -q "collectDocuments" browser-harness-opera/browser_harness_client.js
+          grep -q "readAllText" browser-harness-opera/browser_harness_client.js
+          grep -q "doc.execCommand" browser-harness-opera/browser_harness_client.js
+          grep -q "frameDepth" browser-harness-opera/browser_harness_client.js
+      - name: Embedded SEO skill gate
+        run: |
+          grep -q "seo_article_writer_tatyana.js" browser-harness-opera/bootstrap.js
+          grep -q "seoArticleWriterTatyana" browser-harness-opera/planner_protocol.js
+          test -f browser-harness-opera/skills/seo-article-writer-tatyana/SKILL.md
+      - name: Design Core regression
+        run: |
+          grep -q "repeat(3,minmax(0,1fr))" browser-harness-opera/workbench.html
+          grep -q "overflow-wrap:anywhere" browser-harness-opera/workbench.html
+          grep -q "word-break:break-word" browser-harness-opera/workbench.html
+          grep -q "@media(max-width:940px)" browser-harness-opera/workbench.html
+      - name: Build Opera folder and ZIP
+        run: |
+          rm -rf dist
+          mkdir -p dist/Agency-Browser-Harness
+          cp -R browser-harness-opera/. dist/Agency-Browser-Harness/
+          cd dist
+          zip -qr Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.zip Agency-Browser-Harness
+          unzip -t Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.zip
+          sha256sum Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.zip | tee Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Agency-Browser-Harness-Opera-v0.1.4-RECOVERY
+          path: |
+            dist/Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.zip
+            dist/Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.sha256
+      - name: Publish recovery release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete abh-v0.1.4-recovery --cleanup-tag -y || true
+          gh release create abh-v0.1.4-recovery \
+            dist/Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.zip \
+            dist/Agency-Browser-Harness-Opera-v0.1.4-RECOVERY.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Agency Browser Harness v0.1.4 RECOVERY" \
+            --notes "Recovery release based directly on abh-v0.1.1. The v0.1.1 controller, Driver transport and target tracker are SHA-frozen. Only Gutenberg same-origin iframe text editing, embedded seo-article-writer-tatyana prompt support, and Workbench overflow/responsive UI fixes are added. No v0.1.3 chat transport, observer, mailbox or local executor is loaded. Static/unit/package gates passed; live Opera E2E remains required."
