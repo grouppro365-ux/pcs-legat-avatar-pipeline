@@ -18,10 +18,10 @@ import {
   createVideo,
   getVideo,
   downloadVideo,
-  waitForVideo,
 } from './openai.mjs';
 import { generateLegatPlan, loadLegatConfig } from './legat.mjs';
 import { publishTenChat, publishExternal } from './secondary.mjs';
+import { importMediaFromUrl } from './source.mjs';
 import { mountMcp } from './mcp.mjs';
 
 const app = express();
@@ -131,19 +131,28 @@ app.get('/api/generate/video/:id', asyncRoute(async (req, res) => {
   res.json(await getVideo(req.params.id));
 }));
 
-app.post('/api/generate/video/:id/wait-and-upload', asyncRoute(async (req, res) => {
-  await waitForVideo(req.params.id, {
-    timeoutMs: Number(req.body?.timeoutMs || 15 * 60 * 1000),
-    intervalMs: Number(req.body?.intervalMs || 5000),
-  });
+app.post('/api/generate/video/:id/finalize', asyncRoute(async (req, res) => {
+  const job = await getVideo(req.params.id);
+  if (job.status === 'failed') {
+    return res.status(422).json({ error: job?.error?.message || 'Video generation failed', videoId: req.params.id });
+  }
+  if (job.status !== 'completed') {
+    return res.status(202).json({ ready: false, videoId: req.params.id, status: job.status || 'unknown' });
+  }
   const video = await downloadVideo(req.params.id);
   const postiz = await uploadBuffer(video.buffer, req.body?.filename || video.filename, video.mimeType);
-  res.json({ generated: true, videoId: req.params.id, postiz });
+  res.json({ generated: true, ready: true, videoId: req.params.id, postiz });
 }));
 
 app.post('/api/media/upload', upload.single('file'), asyncRoute(async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'file is required' });
   res.json(await uploadBuffer(req.file.buffer, req.file.originalname, req.file.mimetype));
+}));
+
+app.post('/api/media/import-url', asyncRoute(async (req, res) => {
+  const { url } = req.body || {};
+  if (!url) return res.status(400).json({ error: 'url is required' });
+  res.json(await importMediaFromUrl(url, uploadBuffer));
 }));
 
 app.post('/api/publish', asyncRoute(async (req, res) => {
