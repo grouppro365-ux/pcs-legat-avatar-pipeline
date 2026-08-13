@@ -4,7 +4,7 @@ function ok(c,m){if(!c){console.error('FAIL:',m);process.exit(1);}console.log('P
 
 const manifest=JSON.parse(read('manifest.json'));
 ok(manifest.manifest_version===3,'Manifest V3');
-ok(manifest.version==='0.1.1','version 0.1.1');
+ok(manifest.version==='0.2.0','version 0.2.0');
 ok(manifest.background?.service_worker==='bootstrap.js','bootstrap service worker configured');
 ok((manifest.permissions||[]).includes('debugger'),'trusted Enter fallback permission');
 ok((manifest.permissions||[]).includes('alarms'),'MV3 run-resume alarm permission');
@@ -16,7 +16,10 @@ const worker=read('service_worker.js');
 const tracker=read('target_tracker.js');
 const bootstrap=read('bootstrap.js');
 const ui=read('workbench.js');
-const all=[core,client,planner,worker,tracker,bootstrap,ui].join('\n');
+const seoRuntime=read('seo_article_writer_tatyana.js');
+const seoSkill=read('skills/seo-article-writer-tatyana/SKILL.md');
+const releasePatch=read('build/apply_runtime_patch.js');
+const all=[core,client,planner,worker,tracker,bootstrap,ui,seoRuntime,seoSkill,releasePatch].join('\n');
 
 ok(/class Driver/.test(core),'Browser Harness Driver preserved');
 ok(/class ElementProxy/.test(core),'Browser Harness ElementProxy preserved');
@@ -38,6 +41,9 @@ ok(/SELECT_VALUE_REVERTED/.test(client),'SPA select postcondition check');
 
 ok(/validateResponse/.test(planner)&&/ALLOWED_ACTIONS/.test(planner),'typed planner JSON validation');
 ok(/collectRequestScopedObjects/.test(planner)&&/balancedObjectFrom/.test(planner),'planner response is extracted from exact requestId, not whole-chat parser state');
+ok(/validateProgress/.test(planner)&&/itemStatus/.test(planner),'batch progress contract exists');
+ok(/PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP/.test(planner),'completed item requires a verification action');
+ok(/seoArticleWriterTatyana/.test(planner),'planner includes embedded SEO skill when runtime loaded');
 ok(/<REQUEST_ID_FROM_TOP>/.test(planner),'prompt schema cannot impersonate actual request id');
 ok(/DONE_PROOF_REQUIRED/.test(planner),'done requires proof schema');
 
@@ -59,10 +65,21 @@ ok(!/(submit|save|apply|сохран|примен)/i.test(mutationPolicy),'ordin
 ok(/async function adoptChildTab[\s\S]*?await putState\(state\)/.test(worker),'new child target is persisted before next Observe');
 ok(/relatedRoutes/.test(worker),'successful routes are reusable hints');
 ok(/chrome\.alarms/.test(worker),'run can be resumed by MV3 alarm');
+ok(/BATCH_MAX_STEPS = 500/.test(worker)&&/maxStepsForTask/.test(worker),'batch tasks receive extended action budget');
+ok(/BATCH LEDGER/.test(worker)&&/current\.ledger/.test(worker),'batch ledger is persisted and included in planning');
+ok(/BATCH_LEDGER_INCOMPLETE/.test(worker),'batch cannot declare done with unfinished ledger');
 
 ok(/pendingChildTabId/.test(tracker)&&/openerTabId/.test(tracker),'child tab handoff is also tracked asynchronously');
 ok(/state\.target=next/.test(tracker),'same-tab navigation refreshes target metadata');
-ok(/importScripts\('service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'bootstrap loads runtime and tracker');
+ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'bootstrap loads embedded SEO skill before runtime');
+
+ok(/name: seo-article-writer-tatyana/.test(seoSkill)&&/version: "1\.0\.0"/.test(seoSkill),'canonical seo-article-writer-tatyana skill source bundled');
+ok(/IndexNow alone is never/.test(seoRuntime),'SEO runtime forbids indexing-only substitute for article optimization');
+ok(/Rank Math/.test(seoRuntime)&&/Focus Keyword/.test(seoRuntime)&&/Meta Description/.test(seoRuntime),'SEO runtime requires substantive Rank Math metadata work');
+ok(/Process one article to verified completion before moving to the next/.test(seoRuntime),'SEO batch mode is item-by-item with verification');
+ok(/NO RANKING PROMISES/.test(seoRuntime),'SEO runtime does not promise search rankings');
+ok(/BATCH_MAX_STEPS = 500/.test(releasePatch)&&/PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP/.test(releasePatch),'release patch enforces batch budget and verified completion');
+ok(/run\.maxSteps\|\|100/.test(ui)&&/skill:/.test(ui),'Workbench shows dynamic run budget and active embedded skill');
 
 ok(!/api\.openai\.com|OPENAI_API_KEY|OpenRouter|TokenRouter|sk-proj-/i.test(all),'no paid AI API runtime');
 ok(!/nowjs|phantomjs|asyncblock|express\s*3/i.test(all),'legacy Browser Harness transport/runtime removed');
