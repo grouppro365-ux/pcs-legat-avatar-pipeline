@@ -19,6 +19,7 @@ import {
 import { generateLegatPlan } from './legat.mjs';
 import { readLegatSource, importMediaFromUrl } from './source.mjs';
 import { publishTenChat, publishExternal } from './secondary.mjs';
+import { renderReelFromImages } from './reel.mjs';
 
 const mediaSchema = z.object({
   id: z.string(),
@@ -205,13 +206,37 @@ function buildServer() {
     'import_social_media_from_url',
     {
       title: 'Import existing social media',
-      description: 'Import an existing image, video or audio file from an http/https URL into Postiz media without generating anything.',
+      description: 'Import an existing image, video or audio file from an approved http/https URL into Postiz media without generating anything.',
       inputSchema: z.object({ url: z.string().url() }),
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
     async ({ url }) => {
       const media = await importMediaFromUrl(url, uploadBuffer);
       return result({ media }, 'Existing media imported into Postiz.');
+    }
+  );
+
+  server.registerTool(
+    'render_reel_from_real_photos',
+    {
+      title: 'Render Reel from real photos',
+      description: 'Create a deterministic vertical MP4 from 1-8 approved real listing/partner image URLs using FFmpeg, optional factual title/subtitle, and upload the finished video to Postiz. This route does not AI-generate or alter the photographed object.',
+      inputSchema: z.object({
+        imageUrls: z.array(z.string().url()).min(1).max(8),
+        title: z.string().max(120).optional(),
+        subtitle: z.string().max(180).optional(),
+        footer: z.string().max(80).optional(),
+        width: z.number().int().min(320).max(2160).optional(),
+        height: z.number().int().min(320).max(2160).optional(),
+        fps: z.number().int().min(24).max(60).optional(),
+        secondsPerImage: z.number().min(1).max(6).optional(),
+        filename: z.string().max(120).optional(),
+      }),
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+    },
+    async (input) => {
+      const rendered = await renderReelFromImages(input);
+      return result(rendered, `Deterministic ${rendered.durationSeconds}s Reel rendered from ${rendered.sourceImages} real photo(s) and added to Postiz media.`);
     }
   );
 
