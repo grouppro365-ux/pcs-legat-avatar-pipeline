@@ -16,7 +16,7 @@ jobs:
       - name: JavaScript syntax
         working-directory: browser-harness-opera
         run: |
-          for f in bootstrap.js target_tracker.js upgrade_manager.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js chatgpt_observer.js workbench.js seo_article_writer_tatyana.js tests/planner_protocol_test.js tests/core_test.js tests/seo_skill_integration_test.js tests/chat_observer_static_test.js tests/static_checks.js; do
+          for f in bootstrap.js target_tracker.js upgrade_manager.js observer_bind_hotfix.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js chatgpt_observer.js workbench.js seo_article_writer_tatyana.js tests/planner_protocol_test.js tests/core_test.js tests/seo_skill_integration_test.js tests/chat_observer_static_test.js tests/observer_bind_hotfix_test.js tests/static_checks.js; do
             node --check "$f"
           done
 
@@ -36,18 +36,23 @@ jobs:
         working-directory: browser-harness-opera
         run: node tests/chat_observer_static_test.js
 
+      - name: ChatGPT bind recovery regression
+        working-directory: browser-harness-opera
+        run: node tests/observer_bind_hotfix_test.js
+
       - name: Agency Dev Core / RUflo static gates
         working-directory: browser-harness-opera
         run: node tests/static_checks.js
 
       - name: Build one Opera-ready folder
         run: |
-          rm -rf dist Agency-Browser-Harness-Opera-v0.3.0.zip Agency-Browser-Harness-Opera-v0.3.0.zip.sha256
+          rm -rf dist Agency-Browser-Harness-Opera-v0.3.1.zip Agency-Browser-Harness-Opera-v0.3.1.zip.sha256
           mkdir -p dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana
           cp browser-harness-opera/manifest.json dist/Agency-Browser-Harness/
           cp browser-harness-opera/bootstrap.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/target_tracker.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/upgrade_manager.js dist/Agency-Browser-Harness/
+          cp browser-harness-opera/observer_bind_hotfix.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/browser_harness_client.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/browser_harness_core.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/planner_protocol.js dist/Agency-Browser-Harness/
@@ -61,13 +66,14 @@ jobs:
           cp browser-harness-opera/skills/seo-article-writer-tatyana/SKILL.md dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/
           test -f dist/Agency-Browser-Harness/manifest.json
           test -f dist/Agency-Browser-Harness/chatgpt_observer.js
+          test -f dist/Agency-Browser-Harness/observer_bind_hotfix.js
           test -f dist/Agency-Browser-Harness/upgrade_manager.js
           test -f dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md
           test "$(find dist -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
 
       - name: Release-folder smoke
         run: |
-          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Browser-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='0.3.0'||m.background.service_worker!=='bootstrap.js') process.exit(1); const c=m.content_scripts.find(x=>(x.matches||[]).some(y=>y.includes('chatgpt.com'))); if(!c||!c.js.includes('chatgpt_observer.js')) process.exit(2); console.log('manifest PASS')"
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync('dist/Agency-Browser-Harness/manifest.json','utf8')); if(m.manifest_version!==3||m.version!=='0.3.1'||m.background.service_worker!=='bootstrap.js') process.exit(1); const c=m.content_scripts.find(x=>(x.matches||[]).some(y=>y.includes('chatgpt.com'))); if(!c||!c.js.includes('chatgpt_observer.js')) process.exit(2); console.log('manifest PASS')"
           for f in dist/Agency-Browser-Harness/*.js; do node --check "$f"; done
           grep -q 'class Driver' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'class ElementProxy' dist/Agency-Browser-Harness/browser_harness_core.js
@@ -76,6 +82,8 @@ jobs:
           grep -q 'contentDocument' dist/Agency-Browser-Harness/browser_harness_client.js
           grep -q 'new MutationObserver' dist/Agency-Browser-Harness/chatgpt_observer.js
           grep -q 'ABH_CHAT_RESPONSE' dist/Agency-Browser-Harness/chatgpt_observer.js
+          grep -q 'CHATGPT_OBSERVER_NOT_READY_AFTER_RELOAD' dist/Agency-Browser-Harness/observer_bind_hotfix.js
+          grep -q 'chrome.tabs.reload' dist/Agency-Browser-Harness/observer_bind_hotfix.js
           grep -q 'waiting_chatgpt' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'executePlannerBundle' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'BATCH_MAX_STEPS = 500' dist/Agency-Browser-Harness/service_worker.js
@@ -83,6 +91,8 @@ jobs:
           grep -q 'PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'MAX_ACTION_BUNDLE = 12' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'chrome.runtime.onInstalled' dist/Agency-Browser-Harness/upgrade_manager.js
+          grep -q 'chrome.runtime.getManifest' dist/Agency-Browser-Harness/workbench.js
+          ! grep -q 'v0.1.0' dist/Agency-Browser-Harness/workbench.html
           grep -q 'name: seo-article-writer-tatyana' dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md
           grep -q 'IndexNow alone is never' dist/Agency-Browser-Harness/seo_article_writer_tatyana.js
           ! grep -q 'CHATGPT_RESPONSE_TIMEOUT' dist/Agency-Browser-Harness/service_worker.js
@@ -92,21 +102,22 @@ jobs:
       - name: ZIP integrity and SHA256
         run: |
           (cd dist/Agency-Browser-Harness && find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt)
-          (cd dist && zip -qr ../Agency-Browser-Harness-Opera-v0.3.0.zip Agency-Browser-Harness)
-          unzip -t Agency-Browser-Harness-Opera-v0.3.0.zip
-          unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/manifest.json'
-          unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/chatgpt_observer.js'
-          unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/upgrade_manager.js'
-          unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md'
-          sha256sum Agency-Browser-Harness-Opera-v0.3.0.zip > Agency-Browser-Harness-Opera-v0.3.0.zip.sha256
+          (cd dist && zip -qr ../Agency-Browser-Harness-Opera-v0.3.1.zip Agency-Browser-Harness)
+          unzip -t Agency-Browser-Harness-Opera-v0.3.1.zip
+          unzip -l Agency-Browser-Harness-Opera-v0.3.1.zip | grep 'Agency-Browser-Harness/manifest.json'
+          unzip -l Agency-Browser-Harness-Opera-v0.3.1.zip | grep 'Agency-Browser-Harness/chatgpt_observer.js'
+          unzip -l Agency-Browser-Harness-Opera-v0.3.1.zip | grep 'Agency-Browser-Harness/observer_bind_hotfix.js'
+          unzip -l Agency-Browser-Harness-Opera-v0.3.1.zip | grep 'Agency-Browser-Harness/upgrade_manager.js'
+          unzip -l Agency-Browser-Harness-Opera-v0.3.1.zip | grep 'Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md'
+          sha256sum Agency-Browser-Harness-Opera-v0.3.1.zip > Agency-Browser-Harness-Opera-v0.3.1.zip.sha256
 
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Agency-Browser-Harness-Opera-v0.3.0
+          name: Agency-Browser-Harness-Opera-v0.3.1
           path: |
-            Agency-Browser-Harness-Opera-v0.3.0.zip
-            Agency-Browser-Harness-Opera-v0.3.0.zip.sha256
+            Agency-Browser-Harness-Opera-v0.3.1.zip
+            Agency-Browser-Harness-Opera-v0.3.1.zip.sha256
           if-no-files-found: error
           retention-days: 30
 
@@ -114,10 +125,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES='v0.3.0 replaces ChatGPT response polling with a durable event-driven content observer, supports small deterministic local action bundles, traverses same-origin CMS editor iframes, reconciles target metadata after navigation races, and refreshes stale bound content-scripts safely after extension updates. Browser Harness Driver/ElementProxy remains the execution base. seo-article-writer-tatyana is embedded and task-conditional. No paid AI API. Static/unit/package gates passed. Live Opera E2E of at least three real articles is still required before production-ready status.'
-          if gh release view abh-v0.3.0 >/dev/null 2>&1; then
-            gh release upload abh-v0.3.0 Agency-Browser-Harness-Opera-v0.3.0.zip Agency-Browser-Harness-Opera-v0.3.0.zip.sha256 --clobber
-            gh release edit abh-v0.3.0 --target "$GITHUB_SHA" --notes "$NOTES"
-          else
-            gh release create abh-v0.3.0 Agency-Browser-Harness-Opera-v0.3.0.zip Agency-Browser-Harness-Opera-v0.3.0.zip.sha256 --target "$GITHUB_SHA" --title 'Agency Browser Harness v0.3.0' --notes "$NOTES"
-          fi
+          NOTES='v0.3.1 fixes the observed CHATGPT_OBSERVER_NOT_READY bind failure with a deterministic handshake recovery: PING, clean reinjection, then automatic reload of only the pinned ChatGPT conversation and a required post-reload PING. It also removes the misleading hard-coded v0.1.0 UI label and shows the actual manifest version. Existing v0.3 event-driven response collection, Browser Harness Driver/ElementProxy, same-origin CMS iframe support, durable batch ledger and embedded seo-article-writer-tatyana remain. No paid AI API. Behavioral bind-recovery regression, static/unit/package gates passed. Live Opera E2E remains required before production-ready status.'
+          gh release create abh-v0.3.1 Agency-Browser-Harness-Opera-v0.3.1.zip Agency-Browser-Harness-Opera-v0.3.1.zip.sha256 --target "$GITHUB_SHA" --title 'Agency Browser Harness v0.3.1' --notes "$NOTES"
