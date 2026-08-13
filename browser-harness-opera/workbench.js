@@ -2,6 +2,9 @@ const $ = id => document.getElementById(id);
 let currentState = null;
 let draggedTaskId = null;
 
+const manifest = chrome.runtime.getManifest();
+if ($('versionLabel')) $('versionLabel').textContent = `Browser Harness → Opera · v${manifest.version}`;
+
 async function call(type, payload={}) {
   return new Promise((resolve,reject)=>{
     chrome.runtime.sendMessage({type,...payload}, res => {
