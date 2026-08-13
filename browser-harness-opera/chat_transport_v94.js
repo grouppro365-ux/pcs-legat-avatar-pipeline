@@ -1,5 +1,5 @@
 /*
- * Deterministic ChatGPT transport adapted from the proven Agency Browser Bridge 9.3/9.4 protocol.
+ * Deterministic ChatGPT transport adapted from Agency Browser Bridge 9.3/9.4.
  * It replaces only askChatGPT(). Browser Harness target execution remains unchanged.
  */
 (() => {
@@ -78,7 +78,6 @@
       await sleepLocal(250);
     }
 
-    // Fallback is allowed only while the exact intended prompt is still visibly unsent.
     const afterPrimary = await chatState(chatTab.id);
     if (flat(afterPrimary.composer) === flat(prompt) && requestTurnIndex(afterPrimary.turns || [], requestId) < 0) {
       try {
@@ -105,7 +104,14 @@
     throw new Error('CHATGPT_SUBMIT_UNCERTAIN_NO_RETRY');
   }
 
-  async function waitAnchoredResponse(state, chatTab, requestId, marker, timeoutMs = 180000) {
+  async function pageRecovery(chatDriver, requestId, marker) {
+    try {
+      const page = await chatDriver.read({maxChars:250000, tail:true});
+      return parseFragments([String(page?.text || '')], requestId, marker, false);
+    } catch { return null; }
+  }
+
+  async function waitAnchoredResponse(state, chatTab, chatDriver, requestId, marker, timeoutMs = 180000) {
     const started = Date.now();
     while (Date.now() - started < timeoutMs) {
       await assertPinnedConversation(state, chatTab.id);
@@ -116,16 +122,23 @@
       await sleepLocal(450);
     }
 
-    // Final recovery: a complete valid request-scoped JSON is useful evidence even if the model omitted the marker.
-    // Never resend after a confirmed user turn.
+    // Never resend here: submission was already confirmed.
     const finalState = await chatState(chatTab.id);
     const fragments = assistantFragmentsAfterRequest(finalState.turns || [], requestId);
     const recovered = parseFragments(fragments, requestId, marker, false);
     if (recovered) return recovered;
-    throw new Error('CHATGPT_RESPONSE_NOT_FOUND_FOR_REQUEST');
+
+    // Independent final path: read the full visible ChatGPT page. This covers
+    // DOM turn virtualization/selector drift and also uses malformed-fill recovery.
+    const pageRecovered = await pageRecovery(chatDriver, requestId, marker);
+    if (pageRecovered) return pageRecovered;
+
+    const requestIndex = requestTurnIndex(finalState.turns || [], requestId);
+    const chars = fragments.reduce((sum, x) => sum + String(x || '').length, 0);
+    const markerSeen = fragments.some(x => String(x || '').includes(marker));
+    throw new Error(`CHATGPT_RESPONSE_NOT_FOUND_FOR_REQUEST:req=${requestIndex}:fragments=${fragments.length}:chars=${chars}:marker=${markerSeen?1:0}`);
   }
 
-  // Override only the old free-ChatGPT transport. Target Driver/action code remains unchanged.
   askChatGPT = async function(state, prompt, requestId) {
     const {chatTab,chatDriver} = await validateBindings(state);
     await assertPinnedConversation(state, chatTab.id);
@@ -134,19 +147,25 @@
       String(prompt),
       '',
       `TRANSPORT_COMPLETION_MARKER=${marker}`,
-      `Your single JSON object MUST include the top-level field \"completionMarker\":\"${marker}\" exactly.`
+      `Your control JSON MUST include the top-level field \"completionMarker\":\"${marker}\" exactly.`,
+      'IMPORTANT FOR FILL WITH LONG OR FREE-FORM TEXT: do NOT put the prose in action.value.',
+      'Instead use action.textBlockId:"BODY" in the JSON, then after the JSON output exactly:',
+      '<<<ABH_TEXT:BODY>>>',
+      '<raw text to insert; quotes and line breaks are allowed here>',
+      '<<<ABH_END_TEXT:BODY>>>'
     ].join('\n');
 
-    // Recover an already completed request without sending it again.
     const existing = await chatState(chatTab.id);
     if (requestTurnIndex(existing.turns || [], requestId) >= 0) {
       const recovered = parseFragments(assistantFragmentsAfterRequest(existing.turns || [], requestId), requestId, marker, false);
       if (recovered) return recovered;
-      return waitAnchoredResponse(state, chatTab, requestId, marker);
+      const pageRecovered = await pageRecovery(chatDriver, requestId, marker);
+      if (pageRecovered) return pageRecovered;
+      return waitAnchoredResponse(state, chatTab, chatDriver, requestId, marker);
     }
 
     await prepareComposer(chatTab.id, transportPrompt, chatDriver);
     await sendOnceAndConfirm(state, chatTab, chatDriver, transportPrompt, requestId);
-    return waitAnchoredResponse(state, chatTab, requestId, marker);
+    return waitAnchoredResponse(state, chatTab, chatDriver, requestId, marker);
   };
 })();
