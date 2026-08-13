@@ -27,6 +27,25 @@ jobs:
       - run: node --check src/postiz.mjs
       - run: node --check src/openai.mjs
       - run: node --check src/legat.mjs
+      - run: node --check src/source.mjs
       - run: node --check src/secondary.mjs
+      - run: node --check src/mcp.mjs
       - run: node --check src/server.mjs
       - run: node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
+      - name: Import MCP module
+        run: node -e "import('./src/mcp.mjs').then(()=>console.log('mcp import ok'))"
+      - name: Server and MCP initialize smoke test
+        shell: bash
+        run: |
+          node src/server.mjs >/tmp/agency-social-publisher.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true; cat /tmp/agency-social-publisher.log' EXIT
+          sleep 3
+          curl -fsS http://127.0.0.1:8787/health | tee /tmp/health.json
+          grep -q 'agency-social-publisher' /tmp/health.json
+          curl -fsS -X POST http://127.0.0.1:8787/mcp \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"ci","version":"1.0.0"}}}' \
+            | tee /tmp/mcp-init.txt
+          grep -q 'agency-social-publisher' /tmp/mcp-init.txt
