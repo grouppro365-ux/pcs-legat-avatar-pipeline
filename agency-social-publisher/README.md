@@ -7,7 +7,8 @@ The goal is one command surface for:
 - reading current Legat ABC listing/category pages;
 - creating channel-native copy instead of one duplicated text;
 - generating images;
-- generating short Sora videos;
+- generating short AI videos;
+- rendering deterministic Reels from real listing photos with FFmpeg;
 - using existing images/videos without generation;
 - creating drafts;
 - scheduling and publishing;
@@ -23,7 +24,10 @@ ChatGPT / Codex
       ▼
 Agency Social Publisher
       ├── Legat ABC fact + editorial rules
-      ├── OpenAI text/image/video generation
+      ├── GPT-5.6 Terra text planning
+      ├── GPT Image 2 generation
+      ├── OpenAI video generation
+      ├── FFmpeg real-photo Reels
       ├── existing-media import
       ├── Postiz adapter
       ├── Dzen Telegram-source route
@@ -55,6 +59,7 @@ Creative/media tools:
 - `generate_social_image`
 - `start_social_video_generation`
 - `finish_social_video_to_media`
+- `render_reel_from_real_photos`
 - `import_social_media_from_url`
 
 Publishing tools:
@@ -91,6 +96,31 @@ Default workflow for new or variable commercial information:
 ```text
 source/facts → plan → media → draft → review → schedule/publish → analytics
 ```
+
+## Three media routes
+
+### 1. AI image/video
+
+Use this for editorial concepts, generic b-roll and other scenes where generation is appropriate.
+
+### 2. Deterministic real-photo Reel
+
+Use `render_reel_from_real_photos` for a concrete listing whose actual appearance must stay unchanged.
+
+The renderer:
+
+- accepts 1–8 allowlisted real image URLs;
+- creates a vertical MP4 using FFmpeg;
+- applies mild camera movement/crop only;
+- adds only the supplied factual title/subtitle/footer;
+- does not AI-redraw the photographed object;
+- uploads the result to Postiz media.
+
+This route requires the Docker/runtime image because FFmpeg is installed there.
+
+### 3. Existing media, no generation
+
+Already-edited MP4s, real photos, partner assets and other approved media can be imported/uploaded and sent directly to Postiz.
 
 ## Dzen
 
@@ -135,13 +165,23 @@ POSTIZ_API_KEY=
 OPENAI_API_KEY=
 ```
 
-Optional generation defaults:
+Current generation defaults:
 
 ```env
-OPENAI_TEXT_MODEL=gpt-5.1
-OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_TEXT_MODEL=gpt-5.6-terra
+OPENAI_IMAGE_MODEL=gpt-image-2
 OPENAI_VIDEO_MODEL=sora-2
 ```
+
+`OPENAI_VIDEO_MODEL` is deliberately configurable. The current Videos API still accepts Sora 2 while the current model catalog labels the Sora 2 family legacy.
+
+Approved existing-media hosts must be explicit:
+
+```env
+MEDIA_ALLOWED_HOSTS=legat-abc.com
+```
+
+Add only asset hosts that are actually controlled/approved for social media use.
 
 Do not commit real secrets.
 
@@ -151,6 +191,8 @@ Do not commit real secrets.
 npm install
 npm start
 ```
+
+For the deterministic Reel route, run the supplied Docker image or ensure FFmpeg + DejaVu fonts are installed on the host.
 
 Health:
 
@@ -213,47 +255,30 @@ get_social_account_settings
 
 because individual networks may require provider-specific settings.
 
-## Existing media, no generation
-
-The system is not generation-only.
-
-Existing photos, partner-authorized media, edited MP4s, HyperFrames outputs and other approved assets can be imported into Postiz and then drafted/scheduled/published.
-
-The MCP tool is:
-
-```text
-import_social_media_from_url
-```
-
-The REST upload route is:
-
-```text
-POST /api/media/upload
-```
-
 ## Generation
 
-Text: OpenAI Responses API.
+Text: OpenAI Responses API, default `gpt-5.6-terra`.
 
-Images: OpenAI Images API.
+Images: OpenAI Images API, default `gpt-image-2`.
 
-Video: OpenAI Videos API / Sora job flow.
+Video: OpenAI Videos API, model controlled by `OPENAI_VIDEO_MODEL`.
 
 Video generation is asynchronous: create the job, check its status, then download/upload the completed MP4 to Postiz.
 
 ## Verification status
 
-Source-level syntax/config CI exists in `.github/workflows/agency-social-publisher.yml` and includes MCP initialization smoke coverage.
+Source-level syntax/config CI exists in `.github/workflows/agency-social-publisher.yml` and includes MCP initialization smoke coverage plus a Docker build to validate the FFmpeg runtime.
 
 Do **not** call the system production-ready until all of the following have been tested with real credentials/accounts:
 
 1. Postiz integration discovery;
 2. a private draft;
 3. image upload;
-4. provider-specific schedule settings;
-5. one controlled live publication per target provider;
-6. Sora video generation → Postiz upload;
-7. analytics retrieval;
-8. Dzen crosspost verification;
-9. TenChat secondary bridge verification;
-10. remote HTTPS MCP connection from ChatGPT.
+4. deterministic real-photo Reel render + Postiz upload;
+5. provider-specific schedule settings;
+6. one controlled live publication per target provider;
+7. AI video generation → Postiz upload;
+8. analytics retrieval;
+9. Dzen crosspost verification;
+10. TenChat secondary bridge verification;
+11. remote HTTPS MCP connection from ChatGPT.
