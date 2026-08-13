@@ -51,19 +51,36 @@
     return false;
   }
 
+  function requestInsideComposer(requestId) {
+    const needle = `REQUEST_ID=${requestId}`;
+    return composerRoots().some(root => norm(root.innerText || root.textContent || root.value || '').includes(needle));
+  }
+
   async function persistAndSignal(obj) {
     const requestId = active?.requestId || obj?.requestId;
     if (!requestId || obj?.requestId !== requestId) return false;
+    const key = `${RESPONSE_PREFIX}${requestId}`;
     const record = {
       requestId,
       response: obj,
       chatPath: chatPath(),
       observedAt: new Date().toISOString()
     };
-    await chrome.storage.local.set({[`${RESPONSE_PREFIX}${requestId}`]: record});
+
+    // Persist first. If the service worker is asleep/crashes, startup recovery can
+    // still consume this exact response without ever resending the prompt.
+    await chrome.storage.local.set({[key]: record});
+    let acknowledged = false;
     try {
-      await chrome.runtime.sendMessage({type:'ABH_CHAT_RESPONSE', ...record});
+      const ack = await chrome.runtime.sendMessage({type:'ABH_CHAT_RESPONSE', ...record});
+      acknowledged = !!ack?.ok;
     } catch {}
+
+    // A successful runtime ACK means the response has already been copied into
+    // durable run state. Remove the mailbox record to prevent storage leaks or a
+    // later worker restart from replaying the same response. If no ACK arrived,
+    // keep it for recovery.
+    if (acknowledged) await chrome.storage.local.remove(key).catch(()=>{});
     active = null;
     return true;
   }
@@ -100,7 +117,7 @@
       const pending = state?.run?.pendingRequest;
       if (!pending?.requestId || !state?.chat?.path) return;
       if (state.chat.path !== chatPath()) return;
-      if (!['waiting_chatgpt','running'].includes(state.run?.status)) return;
+      if (!['waiting_chatgpt','running','sending_chatgpt'].includes(state.run?.status)) return;
       await arm(pending.requestId);
     } catch {}
   }
@@ -114,10 +131,12 @@
         return arm(msg.requestId);
       }
       if (msg?.type === 'ABH_CHAT_SENT_PROOF') {
+        const requestId = String(msg.requestId || '');
         return {
           ok:true,
-          requestId:String(msg.requestId || ''),
-          outsideComposer:requestOutsideComposer(String(msg.requestId || '')),
+          requestId,
+          outsideComposer:requestOutsideComposer(requestId),
+          insideComposer:requestInsideComposer(requestId),
           path:chatPath()
         };
       }
