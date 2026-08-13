@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Agency Browser Harness",
-  "version": "0.1.2",
-  "description": "Stable Opera adaptation of scriby/browser-harness: original v0.1.1 ChatGPT transport with same-origin CMS iframe and text-edit fixes.",
+  "version": "0.1.3",
+  "description": "Stable Browser Harness with deterministic ChatGPT request/turn transport and CMS text-edit support.",
   "permissions": ["tabs", "storage", "scripting", "debugger", "alarms"],
   "host_permissions": ["<all_urls>"],
   "background": {"service_worker": "bootstrap.js"},
@@ -14,6 +14,11 @@
     {
       "matches": ["http://*/*", "https://*/*"],
       "js": ["browser_harness_client.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["chat_turns_client.js"],
       "run_at": "document_idle"
     }
   ]
