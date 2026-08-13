@@ -1,213 +1,259 @@
-# Agency Social Publisher
+# Agency Social Publisher v0.2.0
 
-Unified generation + publishing bridge built around **Postiz** for Legat ABC.
+A unified Legat ABC social-media operating layer built on **Postiz + OpenAI + MCP**.
 
-## What it is
+The goal is one command surface for:
 
-Postiz remains the social account/authentication/scheduling layer. This service adds the missing editorial and generation layer:
+- reading current Legat ABC listing/category pages;
+- creating channel-native copy instead of one duplicated text;
+- generating images;
+- generating short Sora videos;
+- using existing images/videos without generation;
+- creating drafts;
+- scheduling and publishing;
+- collecting Postiz analytics;
+- routing Dzen and TenChat through explicitly configured bridges.
 
-- Legat ABC channel-native content planning;
-- text generation;
-- image generation;
-- Sora video job creation and upload;
-- upload of existing images/videos without generation;
-- Postiz media upload;
-- draft / schedule / publish calls;
-- connected channel discovery;
-- post and platform analytics;
-- one API contract (`openapi.yaml`) for future ChatGPT/MCP/plugin wiring.
-
-The service does **not** store social-network passwords. Social accounts are connected inside Postiz using the methods Postiz supports.
-
-## Current route
+## Architecture
 
 ```text
-Legat ABC facts / user request
-        ↓
+ChatGPT / Codex
+      │
+      │ MCP /mcp
+      ▼
 Agency Social Publisher
-        ├─ editorial plan
-        ├─ text
-        ├─ image generation
-        ├─ Sora video generation
-        └─ existing media upload
-        ↓
-Postiz
-        ↓
-Instagram / Facebook / Telegram / VK / TikTok / YouTube / other Postiz providers
+      ├── Legat ABC fact + editorial rules
+      ├── OpenAI text/image/video generation
+      ├── existing-media import
+      ├── Postiz adapter
+      ├── Dzen Telegram-source route
+      └── TenChat secondary bridge
+                     │
+                     ▼
+                   Postiz
+                     │
+      Instagram / Facebook / Telegram / VK /
+      TikTok / YouTube / Threads / LinkedIn / etc.
+```
+
+Postiz remains the social account/OAuth/scheduling layer. This service does **not** store social-network passwords, OTPs, cookies or recovery codes.
+
+## What the MCP exposes
+
+Read/planning tools:
+
+- `list_social_accounts`
+- `get_social_account_settings`
+- `read_legat_listing`
+- `plan_legat_social_content`
+- `get_social_video_status`
+- `get_social_post_analytics`
+- `get_social_platform_analytics`
+
+Creative/media tools:
+
+- `generate_social_image`
+- `start_social_video_generation`
+- `finish_social_video_to_media`
+- `import_social_media_from_url`
+
+Publishing tools:
+
+- `create_social_draft`
+- `schedule_social_post`
+- `publish_social_post_now`
+- `publish_channel_pack`
+- `publish_dzen_source_via_telegram`
+- `publish_tenchat_via_bridge`
+- `publish_external_channel`
+
+`publish_channel_pack` exists specifically so Instagram, Facebook, Telegram and VK can receive different native copy instead of one copy-pasted post.
+
+## Safety / fact behavior
+
+The Legat skill is intentionally conservative about commercial facts.
+
+It must not invent:
+
+- price or currency;
+- availability;
+- model/year/mileage/area;
+- location;
+- partner terms;
+- legal status;
+- ratings/reviews/statistics;
+- guarantees of transaction safety.
+
+For current Legat ABC listing facts, use `read_legat_listing` / `sourceUrl` first when possible.
+
+Default workflow for new or variable commercial information:
+
+```text
+source/facts → plan → media → draft → review → schedule/publish → analytics
 ```
 
 ## Dzen
 
-Dzen is not treated as a native Postiz provider in this project. The practical route is a dedicated Telegram channel connected to Dzen crossposting. Postiz publishes to Telegram; Dzen receives the Telegram publication through its configured crossposting route. Final Dzen status must still be verified.
+Dzen is currently modeled as a **Telegram crossposting route**, not as a native Postiz provider.
+
+The intended flow is:
+
+```text
+Agency Social Publisher
+      ↓
+Dedicated Telegram integration in Postiz
+      ↓
+Telegram → Dzen crossposting configuration
+```
+
+A successful Telegram source post does not by itself prove that Dzen published it. Dzen must be verified separately before reporting success.
 
 ## TenChat
 
-TenChat is not treated as a native Postiz provider yet. It remains `bridge_required`. The recommended secondary bridge is a supported scheduler integration such as SMMplanner. Do not emulate login or OTP inside this service.
+TenChat remains a secondary publisher route until a confirmed native/provider API is integrated.
 
-## Install
+Configure:
+
+```env
+TENCHAT_BRIDGE_URL=
+TENCHAT_BRIDGE_TOKEN=
+```
+
+The bridge may be an n8n workflow, supported scheduler integration or another explicitly configured publisher. Do not automate TenChat passwords or OTP entry.
+
+## Environment
+
+Copy `.env.example` to `.env`.
+
+Minimum runtime configuration:
+
+```env
+PORT=8787
+BRIDGE_SECRET=change-me
+POSTIZ_API_URL=https://api.postiz.com
+POSTIZ_API_KEY=
+OPENAI_API_KEY=
+```
+
+Optional generation defaults:
+
+```env
+OPENAI_TEXT_MODEL=gpt-5.1
+OPENAI_IMAGE_MODEL=gpt-image-1
+OPENAI_VIDEO_MODEL=sora-2
+```
+
+Do not commit real secrets.
+
+## Run locally
 
 ```bash
-cd agency-social-publisher
-cp .env.example .env
 npm install
 npm start
 ```
 
-Default port: `8787`.
-
-## Required environment variables
-
-```env
-POSTIZ_API_KEY=...
-OPENAI_API_KEY=...
-BRIDGE_SECRET=...
-```
-
-`POSTIZ_API_URL` defaults to Postiz Cloud (`https://api.postiz.com`) but can point to a self-hosted Postiz API.
-
-## Health
+Health:
 
 ```bash
-curl http://localhost:8787/health
+curl http://127.0.0.1:8787/health
 ```
 
-## Connected channels
+MCP endpoint:
 
-```bash
-curl http://localhost:8787/api/integrations \
-  -H "x-bridge-key: $BRIDGE_SECRET"
+```text
+POST /mcp
 ```
 
-Use the returned integration IDs when scheduling/publishing.
+When `BRIDGE_SECRET` is configured, authenticate with either:
 
-## Create a Legat ABC social plan
-
-```bash
-curl -X POST http://localhost:8787/api/plan \
-  -H "content-type: application/json" \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -d '{
-    "subject":"MG MG5 Pro K-BRIT in Pattaya",
-    "facts":{"year":2025,"mileage_km":6450,"location":"Pattaya"},
-    "channels":["instagram","facebook","telegram","vk"],
-    "goal":"traffic"
-  }'
+```text
+Authorization: Bearer <BRIDGE_SECRET>
 ```
 
-Missing facts must be surfaced as `fact_gaps`; the planner is instructed not to invent them.
+or the legacy bridge header:
 
-## Generate an image and put it in Postiz media
-
-```bash
-curl -X POST http://localhost:8787/api/generate/image \
-  -H "content-type: application/json" \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -d '{
-    "prompt":"Light editorial Legat ABC car-of-the-week cover...",
-    "size":"1024x1536",
-    "quality":"high",
-    "uploadToPostiz":true,
-    "filename":"mg5-cover.png"
-  }'
+```text
+x-bridge-key: <BRIDGE_SECRET>
 ```
 
-## Upload existing media without generation
+The static bearer secret is suitable for a private/dev deployment. Before exposing this as a broadly available public plugin with write actions, replace it with a production authentication flow appropriate to the deployment.
 
-```bash
-curl -X POST http://localhost:8787/api/media/upload \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -F "file=@reel.mp4"
+## ChatGPT plugin packaging
+
+The repo contains:
+
+```text
+.codex-plugin/plugin.json
+skills/legat-abc-social/SKILL.md
 ```
 
-This is the non-generation route: real photos, partner media, HyperFrames output, edited MP4, etc.
+The remote MCP must first be deployed to stable HTTPS. Then register its `/mcp` URL in ChatGPT developer/plugin tooling, obtain the registered app/plugin identifier, and wire that deployed MCP into the plugin package.
 
-## Generate Sora video
+Until the remote MCP URL exists and is registered, the package is source-complete but not yet a live connected ChatGPT plugin.
 
-Create the job:
+## Postiz setup
 
-```bash
-curl -X POST http://localhost:8787/api/generate/video \
-  -H "content-type: application/json" \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -d '{
-    "prompt":"Vertical editorial marketplace video...",
-    "seconds":"8",
-    "size":"720x1280"
-  }'
+Connect social accounts inside Postiz using Postiz-supported authorization. Then verify them through:
+
+```text
+GET /api/integrations
 ```
 
-Check status:
+or MCP tool:
 
-```bash
-curl http://localhost:8787/api/generate/video/VIDEO_ID \
-  -H "x-bridge-key: $BRIDGE_SECRET"
+```text
+list_social_accounts
 ```
 
-When ready, download it from OpenAI and upload directly to Postiz:
+Before first schedule/live publish for a provider, inspect:
 
-```bash
-curl -X POST http://localhost:8787/api/generate/video/VIDEO_ID/wait-and-upload \
-  -H "content-type: application/json" \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -d '{}'
+```text
+get_social_account_settings
 ```
 
-## Draft / schedule / publish
+because individual networks may require provider-specific settings.
 
-The safest first mode is `draft`.
+## Existing media, no generation
 
-```bash
-curl -X POST http://localhost:8787/api/publish \
-  -H "content-type: application/json" \
-  -H "x-bridge-key: $BRIDGE_SECRET" \
-  -d '{
-    "type":"draft",
-    "date":"2026-08-14T09:00:00+07:00",
-    "content":"Post text",
-    "integrationIds":["POSTIZ_INTEGRATION_ID"],
-    "media":[]
-  }'
+The system is not generation-only.
+
+Existing photos, partner-authorized media, edited MP4s, HyperFrames outputs and other approved assets can be imported into Postiz and then drafted/scheduled/published.
+
+The MCP tool is:
+
+```text
+import_social_media_from_url
 ```
 
-For scheduled/live posts, Postiz provider settings may be required. Inspect them with:
+The REST upload route is:
 
-```bash
-GET /api/integrations/{id}/settings
+```text
+POST /api/media/upload
 ```
 
-and pass provider-specific fields under `settingsByIntegration`.
+## Generation
 
-## Combined workflow: plan → image → Postiz draft
+Text: OpenAI Responses API.
 
-`POST /api/workflows/image-draft`
+Images: OpenAI Images API.
 
-This route refuses to create the draft when the planner reports unresolved `fact_gaps`.
+Video: OpenAI Videos API / Sora job flow.
 
-## Operating rule
+Video generation is asynchronous: create the job, check its status, then download/upload the completed MP4 to Postiz.
 
-Start with:
+## Verification status
 
-`generate → QA → Postiz draft → approval → schedule/publish`
+Source-level syntax/config CI exists in `.github/workflows/agency-social-publisher.yml` and includes MCP initialization smoke coverage.
 
-After the factual pipeline has been stable in production, low-risk content can be moved to direct scheduling.
+Do **not** call the system production-ready until all of the following have been tested with real credentials/accounts:
 
-High-risk/variable commercial facts (price, availability, legal/partner claims, exact conditions) should keep an approval gate.
-
-## Security
-
-- Never put passwords, OTP, cookies or recovery codes in this repository.
-- Keep `POSTIZ_API_KEY`, `OPENAI_API_KEY` and `BRIDGE_SECRET` in environment variables / secret storage.
-- Do not expose the bridge publicly without `BRIDGE_SECRET` or another authentication layer.
-- OAuth/social authorization belongs to Postiz (or the explicitly configured secondary bridge), not to the Legat skill.
-
-## Source architecture
-
-The adapter follows Postiz's public endpoints used by its own SDK/agent:
-
-- `GET /public/v1/integrations`
-- `GET /public/v1/integration-settings/:id`
-- `POST /public/v1/upload`
-- `POST /public/v1/posts`
-- post/platform analytics endpoints
-
-The OpenAI generation layer uses the Responses API for text, the Images API for images, and the Videos API for Sora jobs.
+1. Postiz integration discovery;
+2. a private draft;
+3. image upload;
+4. provider-specific schedule settings;
+5. one controlled live publication per target provider;
+6. Sora video generation → Postiz upload;
+7. analytics retrieval;
+8. Dzen crosspost verification;
+9. TenChat secondary bridge verification;
+10. remote HTTPS MCP connection from ChatGPT.
