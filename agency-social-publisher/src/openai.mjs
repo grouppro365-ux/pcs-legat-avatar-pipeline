@@ -8,7 +8,7 @@ function client() {
 export async function generateText({ prompt, instructions = '', model }) {
   const openai = client();
   const response = await openai.responses.create({
-    model: model || process.env.OPENAI_TEXT_MODEL || 'gpt-5.1',
+    model: model || process.env.OPENAI_TEXT_MODEL || 'gpt-5.6-terra',
     instructions: instructions || undefined,
     input: prompt,
   });
@@ -18,7 +18,7 @@ export async function generateText({ prompt, instructions = '', model }) {
 export async function generateImage({ prompt, size = '1024x1536', quality = 'high', model }) {
   const openai = client();
   const result = await openai.images.generate({
-    model: model || process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1',
+    model: model || process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2',
     prompt,
     size,
     quality,
@@ -76,15 +76,4 @@ export async function downloadVideo(videoId) {
     mimeType: response.headers.get('content-type') || 'video/mp4',
     filename: `${videoId}.mp4`,
   };
-}
-
-export async function waitForVideo(videoId, { timeoutMs = 15 * 60 * 1000, intervalMs = 5000 } = {}) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    const job = await getVideo(videoId);
-    if (job.status === 'completed') return job;
-    if (job.status === 'failed') throw new Error(job?.error?.message || 'Video generation failed');
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-  throw new Error(`Video generation timed out after ${timeoutMs}ms`);
 }
