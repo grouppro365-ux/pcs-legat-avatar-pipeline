@@ -29,6 +29,7 @@ jobs:
       - run: node --check src/legat.mjs
       - run: node --check src/source.mjs
       - run: node --check src/secondary.mjs
+      - run: node --check src/reel.mjs
       - run: node --check src/mcp.mjs
       - run: node --check src/server.mjs
       - name: Validate JSON configuration
@@ -60,3 +61,5 @@ jobs:
             --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"ci","version":"1.0.0"}}}' \
             | tee /tmp/mcp-init.txt
           grep -q 'agency-social-publisher' /tmp/mcp-init.txt
+      - name: Build Docker image with FFmpeg reel runtime
+        run: docker build -t agency-social-publisher-ci .
