@@ -1,0 +1,31 @@
+name: Agency Social Publisher CI
+
+on:
+  push:
+    branches: [agency-social-publisher]
+    paths:
+      - 'agency-social-publisher/**'
+      - '.github/workflows/agency-social-publisher.yml'
+  pull_request:
+    paths:
+      - 'agency-social-publisher/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency-social-publisher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: agency-social-publisher/package.json
+      - run: npm install
+      - run: node --check src/postiz.mjs
+      - run: node --check src/openai.mjs
+      - run: node --check src/legat.mjs
+      - run: node --check src/server.mjs
+      - run: node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
