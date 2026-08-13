@@ -72,8 +72,9 @@ jobs:
           grep -q 'collectRequestScopedObjects' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'BATCH_MAX_STEPS = 500' dist/Agency-Browser-Harness/service_worker.js
+          grep -q 'BATCH EXPECTED TOTAL' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'BATCH LEDGER' dist/Agency-Browser-Harness/service_worker.js
-          grep -q 'BATCH_LEDGER_INCOMPLETE' dist/Agency-Browser-Harness/service_worker.js
+          grep -q 'BATCH_SCOPE_INCOMPLETE' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'new Driver(chatTab.id)' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'chatDriver.read({maxChars:60000, tail:true})' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'pendingChildTabId' dist/Agency-Browser-Harness/target_tracker.js
@@ -107,7 +108,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES='v0.2.0 bundles seo-article-writer-tatyana as an embedded local skill and changes SEO batch behavior from indexing/navigation loops to substantive article editing. The skill requires article editor work, Rank Math metadata where available, source-first factual discipline, item-by-item batch checkpoints, post-save verification before completion, and treats IndexNow as auxiliary only. Batch tasks receive up to 500 verified steps and persist a compact item ledger. Direct minimal adaptation of scriby/browser-harness (MIT); no paid OpenAI API. Static/unit/package gates passed; live Opera E2E still required before unattended production use.'
+          NOTES='v0.2.0 bundles seo-article-writer-tatyana as an embedded local skill and changes SEO batch behavior from indexing/navigation loops to substantive article editing. The skill requires article editor work, Rank Math metadata where available, source-first factual discipline, item-by-item batch checkpoints, post-save verification before completion, and treats IndexNow as auxiliary only. Finite batch scope is learned from the real visible collection count when available; completion is blocked until completed+skipped items reach that expected total. Batch tasks receive up to 500 verified steps and persist a compact item ledger. Direct minimal adaptation of scriby/browser-harness (MIT); no paid OpenAI API. Static/unit/package gates passed; live Opera E2E still required before unattended production use.'
           if gh release view abh-v0.2.0 >/dev/null 2>&1; then
             gh release upload abh-v0.2.0 Agency-Browser-Harness-Opera-v0.2.0.zip Agency-Browser-Harness-Opera-v0.2.0.zip.sha256 --clobber
             gh release edit abh-v0.2.0 --target "$GITHUB_SHA" --notes "$NOTES"
