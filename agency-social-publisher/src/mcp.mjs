@@ -14,7 +14,6 @@ import {
   generateImage,
   createVideo,
   getVideo,
-  waitForVideo,
   downloadVideo,
 } from './openai.mjs';
 import { generateLegatPlan } from './legat.mjs';
@@ -178,19 +177,27 @@ function buildServer() {
     'finish_social_video_to_media',
     {
       title: 'Finish video and add it to Postiz',
-      description: 'Wait for an OpenAI video job to finish, download the MP4 and upload it to Postiz media. Does not publish the video.',
+      description: 'Check a video generation job and, only when it is complete, download the MP4 and upload it to Postiz media. This tool is non-blocking and safe for serverless MCP hosting.',
       inputSchema: z.object({
         videoId: z.string(),
         filename: z.string().optional(),
-        timeoutMs: z.number().int().positive().max(900000).optional(),
       }),
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
     },
-    async ({ videoId, filename, timeoutMs = 900000 }) => {
-      await waitForVideo(videoId, { timeoutMs });
+    async ({ videoId, filename }) => {
+      const job = await getVideo(videoId);
+      if (job.status === 'failed') {
+        throw new Error(job?.error?.message || 'Video generation failed');
+      }
+      if (job.status !== 'completed') {
+        return result(
+          { videoId, status: job.status || 'unknown', ready: false },
+          `Video is not ready yet. Current status: ${job.status || 'unknown'}. Check again later.`
+        );
+      }
       const video = await downloadVideo(videoId);
       const media = await uploadBuffer(video.buffer, filename || video.filename, video.mimeType);
-      return result({ videoId, media }, 'Generated video added to Postiz media.');
+      return result({ videoId, status: 'completed', ready: true, media }, 'Generated video added to Postiz media.');
     }
   );
 
