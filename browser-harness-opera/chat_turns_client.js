@@ -45,33 +45,39 @@
   }
 
   function logicalTurns() {
-    const turns = [];
-    const seen = new Set();
-    for (const sel of [
-      '[data-message-author-role]',
-      '[data-testid^="conversation-turn"]',
-      '[data-testid*="conversation-turn"]',
-      '[data-turn]',
-      'article'
-    ]) {
-      let list = [];
-      try { list = [...document.querySelectorAll(sel)]; } catch {}
-      for (const node of list) {
-        const role = roleFor(node);
-        if (!role || seen.has(node)) continue;
-        seen.add(node);
-        const text = bestText(node);
-        if (!text) continue;
-        turns.push({role, text});
-      }
+    let nodes = [];
+    try {
+      nodes = [...document.querySelectorAll([
+        '[data-message-author-role]',
+        '[data-testid^="conversation-turn"]',
+        '[data-testid*="conversation-turn"]',
+        '[data-turn]',
+        'article'
+      ].join(','))];
+    } catch {}
+
+    const raw = [];
+    for (const node of nodes) {
+      const role = roleFor(node);
+      if (!role) continue;
+      const text = bestText(node);
+      if (!text) continue;
+      raw.push({role, text});
     }
 
-    const deduped = [];
-    for (const turn of turns) {
-      const duplicate = deduped.some(x => x.role === turn.role && x.text === turn.text);
-      if (!duplicate) deduped.push(turn);
+    // ChatGPT may expose both an outer turn wrapper and an inner role node.
+    // Preserve DOM order while collapsing identical logical turns only when adjacent.
+    const turns = [];
+    for (const turn of raw) {
+      const last = turns.at(-1);
+      if (last && last.role === turn.role && last.text === turn.text) continue;
+      if (last && last.role === turn.role && (last.text.includes(turn.text) || turn.text.includes(last.text))) {
+        if (turn.text.length > last.text.length) turns[turns.length - 1] = turn;
+        continue;
+      }
+      turns.push(turn);
     }
-    return deduped.slice(-80);
+    return turns.slice(-80);
   }
 
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
