@@ -1,6 +1,6 @@
 ---
 name: legat-abc-social
-description: Operate Legat ABC social media across Instagram, Facebook, Telegram, VK, Dzen and TenChat: plan channel-native content from confirmed/live listing facts, generate or reuse media, create Reels, draft/schedule/publish through Agency Social Publisher, coordinate partner distribution, and review analytics without inventing listing data.
+description: Operate Legat ABC social media across Instagram, Facebook, Telegram, VK, Dzen and TenChat: plan channel-native content from confirmed/live listing facts, generate or reuse media, create AI or deterministic real-photo Reels, draft/schedule/publish through Agency Social Publisher, coordinate partner distribution, and review analytics without inventing listing data.
 version: 0.2.0
 language: ru
 ---
@@ -101,21 +101,41 @@ B2B: партнёры, поставщики, кейсы компаний, раз
 - огромного логотипа;
 - банальных рукопожатий и глобусов.
 
+## Ролики
+
+Есть два отдельных режима — не смешивай их без причины.
+
+### AI-video
+Используй `start_social_video_generation` для концептуальных/UGC/b-roll роликов, где допустима генерация. После завершения используй `finish_social_video_to_media`.
+
+### Real-photo Reel
+Для конкретной машины, квартиры, товара или другого предложения, когда внешний вид объекта нельзя менять, предпочитай `render_reel_from_real_photos`.
+
+Он:
+- берёт только approved/allowlisted реальные фото;
+- собирает вертикальный MP4 через FFmpeg;
+- добавляет только переданные factual title/subtitle/footer;
+- не дорисовывает и не меняет сам объект;
+- складывает готовый MP4 в Postiz media.
+
+Если есть уже готовый ролик — не генерируй новый, используй `import_social_media_from_url`.
+
 ## Рабочий порядок
 
 1. `list_social_accounts`, если integration IDs ещё неизвестны.
 2. Прочитать current source / факты.
 3. `plan_legat_social_content`.
 4. Если нужен новый визуал — `generate_social_image`.
-5. Если нужен новый ролик — `start_social_video_generation`, затем проверить статус и `finish_social_video_to_media` после завершения.
-6. Если медиа уже существует — `import_social_media_from_url` или загрузка через API.
-7. Для новых/изменчивых коммерческих фактов по умолчанию `create_social_draft`.
-8. Если пользователь явно просит расписание — `schedule_social_post`.
-9. Если пользователь явно просит публикацию сейчас — `publish_social_post_now`.
-10. Если тексты по площадкам различаются, используй `publish_channel_pack`, а не один текст во все сети.
-11. Для Дзена используй `publish_dzen_source_via_telegram` только при настроенном crossposting source.
-12. Для TenChat используй `publish_tenchat_via_bridge` только при настроенном bridge.
-13. После публикации используй аналитику и не оптимизируй стратегию только под likes/followers.
+5. Если нужен AI-ролик — `start_social_video_generation`, затем `get_social_video_status` и `finish_social_video_to_media`.
+6. Если нужен Reel из реальных фото без изменения объекта — `render_reel_from_real_photos`.
+7. Если медиа уже существует — `import_social_media_from_url` или загрузка через API.
+8. Для новых/изменчивых коммерческих фактов по умолчанию `create_social_draft`.
+9. Если пользователь явно просит расписание — `schedule_social_post`.
+10. Если пользователь явно просит публикацию сейчас — `publish_social_post_now`.
+11. Если тексты по площадкам различаются, используй `publish_channel_pack`, а не один текст во все сети.
+12. Для Дзена используй `publish_dzen_source_via_telegram` только при настроенном crossposting source.
+13. Для TenChat используй `publish_tenchat_via_bridge` только при настроенном bridge.
+14. После публикации используй аналитику и не оптимизируй стратегию только под likes/followers.
 
 ## Completion gate
 
