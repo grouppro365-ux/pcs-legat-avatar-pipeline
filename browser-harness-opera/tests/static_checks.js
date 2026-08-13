@@ -61,7 +61,7 @@ ok(/executePlannerBundle/.test(worker),'local deterministic action bundle execut
 ok(/pageChanged/.test(worker),'bundle stops after page change');
 ok(/SECRET_FIELD_BLOCKED/.test(worker),'secret field gate exists');
 ok(/HIGH_RISK_CONFIRM_REQUIRED/.test(worker),'high-risk confirmation exists');
-ok(/new Driver\(chatTab\.id\)/.test(worker),'ChatGPT still uses generic Browser Harness Driver for input');
+ok(/async function ensureGenericClient\(tabId\)[\s\S]*new Driver\(tabId\)/.test(worker)&&/ensureGenericClient\(chatTab\.id\)/.test(worker),'ChatGPT input uses the same generic Browser Harness Driver');
 ok(/chrome\.alarms/.test(worker),'MV3 recovery alarm exists');
 
 ok(/importScripts\('seo_article_writer_tatyana\.js','service_worker\.js','target_tracker\.js'\)/.test(bootstrap),'skill loads before runtime');
