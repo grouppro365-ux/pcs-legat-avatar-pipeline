@@ -16,7 +16,7 @@ jobs:
       - name: JavaScript syntax
         working-directory: browser-harness-opera
         run: |
-          for f in bootstrap.js target_tracker.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js workbench.js seo_article_writer_tatyana.js chat_turns_client.js chat_protocol_v94.js chat_transport_v94.js tests/planner_protocol_test.js tests/core_test.js tests/stable_textfix_regression_test.js tests/chat_protocol_v94_test.js tests/chat_transport_v94_static_test.js; do
+          for f in bootstrap.js target_tracker.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js workbench.js seo_article_writer_tatyana.js chat_turns_client.js chat_protocol_v94.js chat_transport_v94.js tests/planner_protocol_test.js tests/core_test.js tests/stable_textfix_regression_test.js tests/chat_protocol_v94_test.js tests/chat_transport_v94_static_test.js tests/chat_transport_override_test.js; do
             node --check "$f"
           done
 
@@ -39,6 +39,10 @@ jobs:
       - name: ChatGPT deterministic transport static gates
         working-directory: browser-harness-opera
         run: node tests/chat_transport_v94_static_test.js
+
+      - name: ChatGPT transport override runtime recovery
+        working-directory: browser-harness-opera
+        run: node tests/chat_transport_override_test.js
 
       - name: Protect stable target-side runtime
         run: |
