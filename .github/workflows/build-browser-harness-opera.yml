@@ -16,7 +16,7 @@ jobs:
       - name: JavaScript syntax
         working-directory: browser-harness-opera
         run: |
-          for f in bootstrap.js target_tracker.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js chatgpt_observer.js workbench.js seo_article_writer_tatyana.js tests/planner_protocol_test.js tests/core_test.js tests/seo_skill_integration_test.js tests/chat_observer_static_test.js tests/static_checks.js; do
+          for f in bootstrap.js target_tracker.js upgrade_manager.js browser_harness_client.js browser_harness_core.js planner_protocol.js service_worker.js chatgpt_observer.js workbench.js seo_article_writer_tatyana.js tests/planner_protocol_test.js tests/core_test.js tests/seo_skill_integration_test.js tests/chat_observer_static_test.js tests/static_checks.js; do
             node --check "$f"
           done
 
@@ -47,6 +47,7 @@ jobs:
           cp browser-harness-opera/manifest.json dist/Agency-Browser-Harness/
           cp browser-harness-opera/bootstrap.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/target_tracker.js dist/Agency-Browser-Harness/
+          cp browser-harness-opera/upgrade_manager.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/browser_harness_client.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/browser_harness_core.js dist/Agency-Browser-Harness/
           cp browser-harness-opera/planner_protocol.js dist/Agency-Browser-Harness/
@@ -60,6 +61,7 @@ jobs:
           cp browser-harness-opera/skills/seo-article-writer-tatyana/SKILL.md dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/
           test -f dist/Agency-Browser-Harness/manifest.json
           test -f dist/Agency-Browser-Harness/chatgpt_observer.js
+          test -f dist/Agency-Browser-Harness/upgrade_manager.js
           test -f dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md
           test "$(find dist -mindepth 1 -maxdepth 1 -type d | wc -l)" -eq 1
 
@@ -70,6 +72,8 @@ jobs:
           grep -q 'class Driver' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'class ElementProxy' dist/Agency-Browser-Harness/browser_harness_core.js
           grep -q 'waitFor(condition' dist/Agency-Browser-Harness/browser_harness_core.js
+          grep -q 'collectDocuments' dist/Agency-Browser-Harness/browser_harness_client.js
+          grep -q 'contentDocument' dist/Agency-Browser-Harness/browser_harness_client.js
           grep -q 'new MutationObserver' dist/Agency-Browser-Harness/chatgpt_observer.js
           grep -q 'ABH_CHAT_RESPONSE' dist/Agency-Browser-Harness/chatgpt_observer.js
           grep -q 'waiting_chatgpt' dist/Agency-Browser-Harness/service_worker.js
@@ -78,6 +82,7 @@ jobs:
           grep -q 'BATCH_SCOPE_INCOMPLETE' dist/Agency-Browser-Harness/service_worker.js
           grep -q 'PROGRESS_COMPLETED_REQUIRES_VERIFY_STEP' dist/Agency-Browser-Harness/planner_protocol.js
           grep -q 'MAX_ACTION_BUNDLE = 12' dist/Agency-Browser-Harness/planner_protocol.js
+          grep -q 'chrome.runtime.onInstalled' dist/Agency-Browser-Harness/upgrade_manager.js
           grep -q 'name: seo-article-writer-tatyana' dist/Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md
           grep -q 'IndexNow alone is never' dist/Agency-Browser-Harness/seo_article_writer_tatyana.js
           ! grep -q 'CHATGPT_RESPONSE_TIMEOUT' dist/Agency-Browser-Harness/service_worker.js
@@ -91,6 +96,7 @@ jobs:
           unzip -t Agency-Browser-Harness-Opera-v0.3.0.zip
           unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/manifest.json'
           unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/chatgpt_observer.js'
+          unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/upgrade_manager.js'
           unzip -l Agency-Browser-Harness-Opera-v0.3.0.zip | grep 'Agency-Browser-Harness/skills/seo-article-writer-tatyana/SKILL.md'
           sha256sum Agency-Browser-Harness-Opera-v0.3.0.zip > Agency-Browser-Harness-Opera-v0.3.0.zip.sha256
 
@@ -108,7 +114,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          NOTES='v0.3.0 replaces long ChatGPT response polling with an event-driven content observer that persists the exact requestId response and wakes the MV3 service worker. Pending waits survive service-worker sleep/restart and are recovered without resending confirmed/uncertain prompts. The planner can return small local action bundles (max 12) so deterministic same-page work such as article/content/Rank Math field edits can execute without a ChatGPT round-trip per click. Browser Harness Driver/ElementProxy remains the execution base. seo-article-writer-tatyana remains embedded and task-conditional. Static/unit/package gates passed. This is a live-E2E candidate; do not call production-ready until the user Opera run completes at least three real articles consecutively.'
+          NOTES='v0.3.0 replaces ChatGPT response polling with a durable event-driven content observer, supports small deterministic local action bundles, traverses same-origin CMS editor iframes, reconciles target metadata after navigation races, and refreshes stale bound content-scripts safely after extension updates. Browser Harness Driver/ElementProxy remains the execution base. seo-article-writer-tatyana is embedded and task-conditional. No paid AI API. Static/unit/package gates passed. Live Opera E2E of at least three real articles is still required before production-ready status.'
           if gh release view abh-v0.3.0 >/dev/null 2>&1; then
             gh release upload abh-v0.3.0 Agency-Browser-Harness-Opera-v0.3.0.zip Agency-Browser-Harness-Opera-v0.3.0.zip.sha256 --clobber
             gh release edit abh-v0.3.0 --target "$GITHUB_SHA" --notes "$NOTES"
