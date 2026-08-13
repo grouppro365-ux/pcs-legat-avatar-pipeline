@@ -19,6 +19,17 @@ assert(/acknowledged/.test(observer)&&/chrome\.storage\.local\.remove\(key\)/.te
 assert(/If no ACK arrived[\s\S]*keep it for recovery/.test(observer),'unacknowledged response remains recoverable');
 assert(!/setInterval\s*\(/.test(observer),'observer must not use periodic chat polling');
 
+// Regression: after Opera "Reload" an old isolated-world global can survive while
+// its old chrome.runtime listener is dead. A permanent boolean early-return made
+// the newly injected observer silently skip installation and caused
+// CHATGPT_OBSERVER_NOT_READY. Hot reload must be versioned/disposable instead.
+assert(!/if\s*\(globalThis\.__ABH_CHAT_OBSERVER__\)\s*return/.test(observer),'legacy permanent observer boolean guard must never return early');
+assert(/OBSERVER_VERSION/.test(observer),'observer must expose a concrete hot-reload generation');
+assert(/__ABH_CHAT_OBSERVER_CONTROLLER__/.test(observer),'observer must keep a versioned controller');
+assert(/previous\?\.dispose\?\.\(\)/.test(observer),'fresh observer must dispose a previous live generation when possible');
+assert(/removeListener\(onMessage\)/.test(observer)&&/disconnect\(\)/.test(observer),'observer generation must be disposable');
+assert(/observerVersion:OBSERVER_VERSION/.test(observer),'observer ping/records must expose generation for diagnostics');
+
 assert(/status='waiting_chatgpt'|status = 'waiting_chatgpt'|live\.status='waiting_chatgpt'/.test(worker),'worker must expose durable waiting_chatgpt state');
 assert(/ABH_CHAT_RESPONSE/.test(worker),'worker must consume event-driven response');
 assert(/recoverPendingChat/.test(worker),'worker must recover pending chat without resending');
