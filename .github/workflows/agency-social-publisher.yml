@@ -27,5 +27,6 @@ jobs:
       - run: node --check src/postiz.mjs
       - run: node --check src/openai.mjs
       - run: node --check src/legat.mjs
+      - run: node --check src/secondary.mjs
       - run: node --check src/server.mjs
       - run: node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
