@@ -148,13 +148,16 @@
   }
 
   function makeSchemaText() {
-    return [
+    const lines = [
       'Return exactly ONE JSON object and nothing else.',
       'Use the requestId shown at the top of this prompt. Do not copy this placeholder literally.',
       'ACT shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"act","action":{"type":"click|fill|select|check|uncheck|focus|scroll|wait|assert|submit|navigate","target":{"ref":"bh...","role":"","name":"","label":"","text":""}},"progress":{"itemKey":"stable item title/url/id","itemStatus":"working|completed|skipped","note":"short checkpoint"},"reason":"short"}',
       'DONE shape: {"requestId":"<REQUEST_ID_FROM_TOP>","status":"done","result":"specific result","proof":{"kind":"text|url|title|element","includes":"real fragment on current page"},"progress":{"itemKey":"optional final item","itemStatus":"completed|skipped","note":"short checkpoint"}}',
-      'For batch/collection work, use progress to keep a compact durable ledger. Mark an item completed only after a separate wait/assert step verifies the saved/target state; never mark completed on the mutation click itself.'
-    ].join('\n');
+      'For batch/collection work, use progress to keep a compact durable ledger. Mark an item completed only after a separate wait/assert/read step verifies the saved/target state; never mark completed on the mutation click itself.'
+    ];
+    const seoSkill = root.ABH_SKILLS?.seoArticleWriterTatyana?.prompt;
+    if (seoSkill) lines.push('', seoSkill);
+    return lines.join('\n');
   }
 
   const api = {ALLOWED_ACTIONS, ITEM_STATUSES, collectTopLevelObjects, collectRequestScopedObjects, extractJson, validateProgress, validateResponse, makeSchemaText};
