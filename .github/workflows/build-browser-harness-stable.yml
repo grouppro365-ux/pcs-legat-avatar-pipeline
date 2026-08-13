@@ -42,10 +42,11 @@ jobs:
 
       - name: Protect stable target-side runtime
         run: |
-          test "$(git rev-parse 3b0f710eeff7b1db5d31adb90772c4d40865017c:browser-harness-opera/browser_harness_core.js)" = "$(git rev-parse HEAD:browser-harness-opera/browser_harness_core.js)"
-          test "$(git rev-parse 3b0f710eeff7b1db5d31adb90772c4d40865017c:browser-harness-opera/browser_harness_client.js)" = "$(git rev-parse HEAD:browser-harness-opera/browser_harness_client.js)"
-          test "$(git rev-parse 3b0f710eeff7b1db5d31adb90772c4d40865017c:browser-harness-opera/target_tracker.js)" = "$(git rev-parse HEAD:browser-harness-opera/target_tracker.js)"
-          test "$(git rev-parse 3b0f710eeff7b1db5d31adb90772c4d40865017c:browser-harness-opera/seo_article_writer_tatyana.js)" = "$(git rev-parse HEAD:browser-harness-opera/seo_article_writer_tatyana.js)"
+          test "$(git hash-object browser-harness-opera/service_worker.js)" = "5c1a199bef7e3962fd4a6f37b1a023d85984c233"
+          test "$(git hash-object browser-harness-opera/browser_harness_core.js)" = "00c7bf25963c917b175161d18a8219e45a90456f"
+          test "$(git hash-object browser-harness-opera/browser_harness_client.js)" = "1ff22a9e42e98ec499ed984a4cd157cfc18b9556"
+          test "$(git hash-object browser-harness-opera/target_tracker.js)" = "0c9f6e5deae659d06d659848c3a9a82c8e4873fc"
+          test "$(git hash-object browser-harness-opera/seo_article_writer_tatyana.js)" = "a778d5fa461f14726a075e8ddcbe6ab3863b57a7"
           echo 'target-side stable lock PASS'
 
       - name: Build one Opera-ready folder
