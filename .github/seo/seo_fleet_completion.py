@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json, time, ssl, urllib.request, urllib.error, collections
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import seo_fleet_discovery as base
 
@@ -13,6 +14,7 @@ RESOLVED={
 STANDARD_PREFIXES=('wp/','oembed/','rankmath/','elementor/','contact-form-7/','yoast/','jetpack/','wp-site-health/','wp-block-editor/')
 SUSPECT=('bridge','legat','media','dispatcher','agency','seo','remote','sync','publish','content','fleet','network','portal')
 UA='SEOFleetCompletion/1.0'
+ROOT=Path(__file__).resolve().parents[2]
 
 def jget(domain):
     url=f'https://{domain}/wp-json/'
@@ -50,7 +52,8 @@ def bridge_probe(domain):
     return out
 
 def main():
-    prior=json.load(open('.seo-runner/fleet-discovery.json',encoding='utf-8'))
+    prior_path=ROOT/'.seo-runner'/'fleet-discovery.json'
+    prior=json.load(open(prior_path,encoding='utf-8'))
     added=[]
     with ThreadPoolExecutor(max_workers=5) as ex:
         fut={ex.submit(base.audit,'https://'+d):label for label,d in RESOLVED.items()}
