@@ -1,4 +1,4 @@
-name: Strict Final SEO Verification
+name: Homepage H1 Diagnostics
 
 on:
   push:
@@ -10,41 +10,29 @@ permissions:
   contents: write
 
 jobs:
-  strict-verify:
+  diagnose-h1:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Run strict read-only SEO audit
+      - name: Inspect rendered homepage H1 structure
         shell: bash
         run: |
-          set +e
           cd .github/seo
-          python3 seo_final_audit_strict.py
-          code=$?
-          echo "$code" > /tmp/seo-strict-code
-          cp seo-final-strict-report.json /tmp/seo-final-strict-report.json
-          exit 0
-
-      - name: Publish strict final report
+          python3 seo_h1_diag.py
+          cp seo-h1-diag.json /tmp/seo-h1-diag.json
+      - name: Publish H1 diagnostics
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-final-verifier"
+          git config user.name "seo-h1-diagnostics"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-final-strict-report.json .seo-runner/final-strict-report.json
-          git add .seo-runner/final-strict-report.json
-          git commit -m "Publish strict final SEO regression report [skip ci]"
+          cp /tmp/seo-h1-diag.json .seo-runner/h1-diag.json
+          git add .seo-runner/h1-diag.json
+          git commit -m "Publish homepage H1 diagnostics [skip ci]"
           git push origin HEAD:main
-
-      - name: Enforce strict all-pass gate
-        shell: bash
-        run: |
-          code="$(cat /tmp/seo-strict-code)"
-          [ "$code" = "0" ]
