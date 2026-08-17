@@ -1,4 +1,4 @@
-name: Hosting Secret Presence Probe
+name: Remaining H1 Diagnostics
 
 on:
   push:
@@ -7,37 +7,33 @@ on:
       - '.github/workflows/seo-repair-runner.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  probe-secrets:
+  diagnose-h1:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    env:
-      BEGET_USER: ${{ secrets.BEGET_USER }}
-      BEGET_PASSWORD: ${{ secrets.BEGET_PASSWORD }}
-      BEGET_LOGIN: ${{ secrets.BEGET_LOGIN }}
-      BEGET_PASS: ${{ secrets.BEGET_PASS }}
-      BEGET_FTP_USER: ${{ secrets.BEGET_FTP_USER }}
-      BEGET_FTP_PASSWORD: ${{ secrets.BEGET_FTP_PASSWORD }}
-      FTP_USER: ${{ secrets.FTP_USER }}
-      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-      FTP_PASS: ${{ secrets.FTP_PASS }}
-      WP_FLEET_USER: ${{ secrets.WP_FLEET_USER }}
-      WP_FLEET_PASSWORD: ${{ secrets.WP_FLEET_PASSWORD }}
-      HOSTING_USER: ${{ secrets.HOSTING_USER }}
-      HOSTING_PASSWORD: ${{ secrets.HOSTING_PASSWORD }}
+    timeout-minutes: 8
     steps:
-      - name: Report only secret presence
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Inspect rendered H1 structure
         shell: bash
         run: |
           set -euo pipefail
-          pair() { if [ -n "$2" ] && [ -n "$3" ]; then echo "$1=yes"; else echo "$1=no"; fi; }
-          pair BEGET_USER_PASSWORD "$BEGET_USER" "$BEGET_PASSWORD"
-          pair BEGET_LOGIN_PASS "$BEGET_LOGIN" "$BEGET_PASS"
-          pair BEGET_FTP "$BEGET_FTP_USER" "$BEGET_FTP_PASSWORD"
-          pair FTP_USER_PASSWORD "$FTP_USER" "$FTP_PASSWORD"
-          pair FTP_USERNAME_PASS "$FTP_USERNAME" "$FTP_PASS"
-          pair WP_FLEET "$WP_FLEET_USER" "$WP_FLEET_PASSWORD"
-          pair HOSTING "$HOSTING_USER" "$HOSTING_PASSWORD"
+          cd .github/seo
+          python3 seo_h1_diag.py
+          cp seo-h1-diag.json /tmp/seo-h1-diag.json
+      - name: Publish H1 diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "seo-h1-diagnostics"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin main --quiet
+          git reset --hard origin/main
+          mkdir -p .seo-runner
+          cp /tmp/seo-h1-diag.json .seo-runner/h1-remaining-diag.json
+          git add .seo-runner/h1-remaining-diag.json
+          git commit -m "Publish remaining H1 diagnostics [skip ci]"
+          git push origin HEAD:main
