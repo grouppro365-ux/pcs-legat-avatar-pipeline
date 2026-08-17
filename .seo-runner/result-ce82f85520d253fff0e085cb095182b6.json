@@ -1,0 +1,301 @@
+{
+  "mode": "h1_mu_install",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "ambitix.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Ambitix: новости бизнеса, технологий и инвестиций",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://ambitix.ru/?_seo_h1=1786968338",
+          "h1_count": 1,
+          "h1s": [
+            "Ambitix: новости бизнеса, технологий и инвестиций"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Ambitix: новости бизнеса, технологий и инвестиций"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1",
+            "Cache-Control": "max-age=3600, public"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "aspirix.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "aspirix.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Aspirix News: мировые новости экономики и технологий",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://aspirix.ru/?_seo_h1=1786968353",
+          "h1_count": 1,
+          "h1s": [
+            "Aspirix News: мировые новости экономики и технологий"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Aspirix News: мировые новости экономики и технологий"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "bizcenter-news.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "bizcenter-news.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Biz Center News: Главные события делового мира сегодня",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://bizcenter-news.ru/?_seo_h1=1786968367",
+          "h1_count": 1,
+          "h1s": [
+            "Biz Center News: Главные события делового мира сегодня"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Biz Center News: Главные события делового мира сегодня"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "bizupdate.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "bizupdate.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://bizupdate.ru/?_seo_h1=1786968381",
+          "h1_count": 1,
+          "h1s": [
+            "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "biz-world.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "biz-world.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://biz-world.ru/?_seo_h1=1786968396",
+          "h1_count": 1,
+          "h1s": [
+            "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "business-arena.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "business-arena.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://business-arena.ru/?_seo_h1=1786968414",
+          "h1_count": 1,
+          "h1s": [
+            "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "business-focus.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "install": {
+        "ok": true,
+        "domain": "business-focus.ru",
+        "mu_plugin": "seo-home-h1-normalizer.php",
+        "before_sha256": null,
+        "after_sha256": "3121021db8b2ec4a5b7906faf716801e320edfd5cd8d7f0a2e9e53bfa30e7fbf",
+        "bytes": 1467,
+        "expected_h1": "Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "self_deleted": true
+      },
+      "verification": {
+        "cache_busted": {
+          "status": 200,
+          "final": "https://business-focus.ru/?_seo_h1=1786968437",
+          "h1_count": 1,
+          "h1s": [
+            "Business Focus: Деловая аналитика, законы и экспертные мнения"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "plain": {
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "h1_count": 1,
+          "h1s": [
+            "Business Focus: Деловая аналитика, законы и экспертные мнения"
+          ],
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1"
+          }
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    }
+  ],
+  "all_pass": true
+}
