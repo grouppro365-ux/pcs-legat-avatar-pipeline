@@ -1,4 +1,4 @@
-name: Actionable Fleet SEO Diagnostics
+name: Fleet Repair Runner Validation
 
 on:
   push:
@@ -7,32 +7,25 @@ on:
       - '.github/workflows/seo-repair-runner.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  diagnose-actionable:
+  validate-repair-runner:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Classify robots HTTPS and post failures
+      - name: Compile Python repair runner
+        shell: bash
+        run: python3 -m py_compile .github/seo/seo_fleet_beget_repair.py
+      - name: Validate target planning without exposing secrets
         shell: bash
         run: |
-          set -euo pipefail
-          python3 .github/seo/seo_actionable_diagnostics.py
-          cp seo-actionable-diagnostics.json /tmp/seo-actionable-diagnostics.json
-      - name: Publish actionable diagnostics
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "seo-fleet-diagnostics"
-          git config user.email "actions@users.noreply.github.com"
-          git fetch origin main --quiet
-          git reset --hard origin/main
-          mkdir -p .seo-runner
-          cp /tmp/seo-actionable-diagnostics.json .seo-runner/actionable-diagnostics.json
-          git add .seo-runner/actionable-diagnostics.json
-          git commit -m "Publish actionable fleet SEO diagnostics [skip ci]"
-          git push origin HEAD:main
+          python3 - <<'PY'
+          import importlib.util,json
+          p='.github/seo/seo_fleet_beget_repair.py'
+          s=importlib.util.spec_from_file_location('repair',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
+          t=m.build_targets()
+          print(json.dumps({'targets':len(t),'tag':sum(x['fix_tag'] for x in t),'robots':sum(x['fix_robots'] for x in t),'https':sum(x['fix_https'] for x in t),'h1':sum(bool(x['h1_mode']) for x in t),'capitrx_excluded':all(x['domain']!='capitrx.ru' for x in t)}))
+          assert t and all(x['ftp_wp_path']==x['domain']+'/public_html' for x in t)
+          PY
