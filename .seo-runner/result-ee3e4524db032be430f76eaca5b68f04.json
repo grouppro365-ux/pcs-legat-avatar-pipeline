@@ -1,0 +1,164 @@
+{
+  "mode": "rankmath_tag_settings",
+  "sites": [
+    {
+      "domain": "biz-focus.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "data": {
+        "ok": true,
+        "domain": "biz-focus.ru",
+        "options": {
+          "rank-math-options-titles": {
+            "tax_post_tag_title": "Статьи %term% %page% %sep% %sitename%",
+            "tax_post_tag_robots": [
+              "noindex"
+            ],
+            "tax_post_tag_add_meta_box": "on",
+            "tax_post_tag_custom_robots": "on",
+            "tax_post_tag_description": "%term_description%",
+            "tax_post_tag_slack_enhanced_sharing": "on",
+            "remove_product_tag_snippet_data": "on",
+            "tax_post_tag_advanced_robots": {
+              "max-snippet": "-1",
+              "max-video-preview": "-1",
+              "max-image-preview": "large"
+            },
+            "remove_post_tag_snippet_data": "off"
+          },
+          "rank-math-options-sitemap": {
+            "tax_post_tag_sitemap": "on",
+            "tax_post_tag_html_sitemap": "on",
+            "tax_post_tag_include_empty": "off"
+          }
+        },
+        "active_plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php",
+          "webte-core/webte-core.php"
+        ],
+        "self_deleted": true
+      }
+    },
+    {
+      "domain": "biz-report.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "data": {
+        "ok": true,
+        "domain": "biz-report.ru",
+        "options": {
+          "rank-math-options-titles": {
+            "tax_post_tag_title": "Статьи %sep% %term% %page% %sep% %sitename%",
+            "tax_post_tag_robots": [
+              "index"
+            ],
+            "tax_post_tag_add_meta_box": "on",
+            "tax_post_tag_custom_robots": "on",
+            "tax_post_tag_description": "%term_description%",
+            "tax_post_tag_slack_enhanced_sharing": "on",
+            "remove_product_tag_snippet_data": "on",
+            "tax_post_tag_advanced_robots": {
+              "max-snippet": "-1",
+              "max-video-preview": "-1",
+              "max-image-preview": "large"
+            },
+            "remove_post_tag_snippet_data": "off"
+          },
+          "rank-math-options-sitemap": {
+            "tax_post_tag_sitemap": "on",
+            "tax_post_tag_html_sitemap": "on",
+            "tax_post_tag_include_empty": "off"
+          }
+        },
+        "active_plugins": [
+          "auto-image-attributes-from-filename-with-bulk-updater/iaff_image-attributes-from-filename.php",
+          "automatic-translator-addon-for-loco-translate/automatic-translator-addon-for-loco-translate.php",
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "duplicator/duplicator.php",
+          "duplicator/duplicator.php",
+          "elementor/elementor.php",
+          "elespare/elespare.php",
+          "loco-translate/loco.php",
+          "privacy-policy-cf7/privacy-policy-cf7.php",
+          "random-views-counter/random-views-counter.php",
+          "rss-for-yandex-turbo/rss-for-yandex-turbo.php",
+          "seo-by-rank-math/rank-math.php",
+          "seo-optimized-images/seo-optimized-images.php",
+          "user-counter/user-counter.php"
+        ],
+        "self_deleted": true
+      }
+    },
+    {
+      "domain": "businessherald.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "data": {
+        "ok": true,
+        "domain": "businessherald.ru",
+        "options": {
+          "rank-math-options-titles": {
+            "tax_post_tag_title": "Статьи %sep% %term% %page% %sep% %sitename%",
+            "tax_post_tag_robots": [
+              "index"
+            ],
+            "tax_post_tag_add_meta_box": "on",
+            "tax_post_tag_custom_robots": "on",
+            "tax_post_tag_description": "%term_description%",
+            "tax_post_tag_slack_enhanced_sharing": "on",
+            "remove_product_tag_snippet_data": "on",
+            "tax_post_tag_advanced_robots": {
+              "max-snippet": "-1",
+              "max-video-preview": "-1",
+              "max-image-preview": "large"
+            },
+            "remove_post_tag_snippet_data": "off"
+          },
+          "rank-math-options-sitemap": {
+            "tax_post_tag_sitemap": "on",
+            "tax_post_tag_html_sitemap": "on",
+            "tax_post_tag_include_empty": "off"
+          }
+        },
+        "active_plugins": [
+          "auto-image-attributes-from-filename-with-bulk-updater/iaff_image-attributes-from-filename.php",
+          "automatic-translator-addon-for-loco-translate/automatic-translator-addon-for-loco-translate.php",
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "duplicator/duplicator.php",
+          "duplicator/duplicator.php",
+          "elementor/elementor.php",
+          "elespare/elespare.php",
+          "loco-translate/loco.php",
+          "privacy-policy-cf7/privacy-policy-cf7.php",
+          "random-views-counter/random-views-counter.php",
+          "rss-for-yandex-turbo/rss-for-yandex-turbo.php",
+          "seo-by-rank-math/rank-math.php",
+          "seo-optimized-images/seo-optimized-images.php",
+          "user-counter/user-counter.php"
+        ],
+        "self_deleted": true
+      }
+    }
+  ]
+}
