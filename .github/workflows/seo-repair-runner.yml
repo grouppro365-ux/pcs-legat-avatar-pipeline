@@ -1,4 +1,4 @@
-name: Homepage H1 Diagnostics
+name: Homepage H1 Normalizer Repair
 
 on:
   push:
@@ -10,29 +10,93 @@ permissions:
   contents: write
 
 jobs:
-  diagnose-h1:
+  install-h1-normalizer:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Inspect rendered homepage H1 structure
-        shell: bash
-        run: |
-          cd .github/seo
-          python3 seo_h1_diag.py
-          cp seo-h1-diag.json /tmp/seo-h1-diag.json
-      - name: Publish H1 diagnostics
+
+      - name: Publish one-time certificate
+        id: handshake
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-h1-diagnostics"
+          NONCE="$(openssl rand -hex 16)"
+          echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
+          openssl req -x509 -newkey rsa:3072 -sha256 -nodes \
+            -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem \
+            -days 1 -subj "/CN=ephemeral-h1-normalizer-$NONCE" >/dev/null 2>&1
+          git config user.name "seo-ephemeral-runner"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-h1-diag.json .seo-runner/h1-diag.json
-          git add .seo-runner/h1-diag.json
-          git commit -m "Publish homepage H1 diagnostics [skip ci]"
+          NONCE="$NONCE" python3 - <<'PY'
+          import base64, json, os
+          cert=open('/tmp/seo-cert.pem','rb').read()
+          open('.seo-runner/public.json','w').write(json.dumps({
+              'source_sha':os.environ['GITHUB_SHA'],
+              'nonce':os.environ['NONCE'],
+              'cert_b64':base64.b64encode(cert).decode()
+          },indent=2))
+          PY
+          git add .seo-runner/public.json
+          git commit -m "Publish ephemeral H1 normalizer certificate [skip ci]"
           git push origin HEAD:main
+
+      - name: Wait for encrypted payload
+        shell: bash
+        env:
+          NONCE: ${{ steps.handshake.outputs.nonce }}
+        run: |
+          set -euo pipefail
+          P=".seo-runner/payload-${NONCE}.cms.b64"
+          found=0
+          for i in $(seq 1 120); do
+            git fetch origin main --quiet
+            if git show "origin/main:${P}" > /tmp/seo-payload.b64 2>/dev/null; then found=1; break; fi
+            sleep 5
+          done
+          [ "$found" = "1" ] || exit 2
+          base64 -d /tmp/seo-payload.b64 > /tmp/seo-payload.cms
+          openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms \
+            -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
+          chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
+
+      - name: Install MU normalizer and verify
+        shell: bash
+        run: |
+          set +e
+          SEO_PAYLOAD=/tmp/seo-payload.json SEO_RESULT=/tmp/seo-result.json \
+            python3 .github/seo/seo_h1_mu_install.py
+          code=$?
+          echo "$code" > /tmp/seo-exit-code
+          exit 0
+
+      - name: Publish sanitized result
+        shell: bash
+        env:
+          NONCE: ${{ steps.handshake.outputs.nonce }}
+        run: |
+          set -euo pipefail
+          git fetch origin main --quiet
+          git reset --hard origin/main
+          cp /tmp/seo-result.json ".seo-runner/result-${NONCE}.json"
+          git add ".seo-runner/result-${NONCE}.json"
+          git commit -m "Publish sanitized H1 normalizer result [skip ci]"
+          git push origin HEAD:main
+
+      - name: Enforce H1 verification gate
+        shell: bash
+        run: |
+          code="$(cat /tmp/seo-exit-code)"
+          [ "$code" = "0" ]
+
+      - name: Destroy ephemeral material
+        if: always()
+        shell: bash
+        run: |
+          rm -f /tmp/seo-private.pem /tmp/seo-cert.pem /tmp/seo-payload.b64 \
+            /tmp/seo-payload.cms /tmp/seo-payload.json /tmp/seo-result.json /tmp/seo-exit-code
