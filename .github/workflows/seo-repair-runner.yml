@@ -1,6 +1,5 @@
-name: Fleet 102 Completion and Bridge Discovery
+name: Dispatcher WordPress API Discovery
 
-# retry after robust report path fix
 on:
   push:
     branches: [main]
@@ -11,30 +10,30 @@ permissions:
   contents: write
 
 jobs:
-  complete-and-discover:
+  discover-dispatcher-api:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Audit resolved domains and discover REST bridge
+      - name: Inspect public Dispatcher frontend bundle
         shell: bash
         run: |
           set -euo pipefail
           cd .github/seo
-          python3 seo_fleet_completion.py
-          cp seo-fleet-completion.json /tmp/seo-fleet-completion.json
-      - name: Publish full fleet report
+          python3 dispatcher_api_discovery.py
+          cp dispatcher-api-discovery.json /tmp/dispatcher-api-discovery.json
+      - name: Publish sanitized route report
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-fleet-auditor"
+          git config user.name "dispatcher-api-auditor"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-fleet-completion.json .seo-runner/fleet-completion.json
-          git add .seo-runner/fleet-completion.json
-          git commit -m "Publish 102 portal completion and bridge discovery [skip ci]"
+          cp /tmp/dispatcher-api-discovery.json .seo-runner/dispatcher-api-discovery.json
+          git add .seo-runner/dispatcher-api-discovery.json
+          git commit -m "Publish Dispatcher API route discovery [skip ci]"
           git push origin HEAD:main
