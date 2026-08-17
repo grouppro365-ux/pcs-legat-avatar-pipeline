@@ -7,6 +7,12 @@ import seo_final_audit as base
 def audit_strict(site):
     out = base.audit(site)
     domain = out['domain']
+
+    # Homepage heading structure is a hard gate: exactly one non-empty H1.
+    h1s = out.get('homepage', {}).get('h1s', [])
+    out['checks']['single_h1'] = len(h1s) == 1 and bool((h1s[0] if h1s else '').strip())
+
+    # No tag archive sitemap is allowed in either normal or cache-busted XML index.
     plain_children = out.get('sitemap', {}).get('children', [])
     plain_tags = [u for u in plain_children if 'post_tag-sitemap' in u]
     stamp = str(int(time.time()))
@@ -18,13 +24,14 @@ def audit_strict(site):
     out['sitemap']['cache_busted_status'] = bust.get('status')
     out['checks']['no_tag_sitemaps_plain'] = not plain_tags
     out['checks']['no_tag_sitemaps_cache_busted'] = bust.get('status') == 200 and not bust_tags
+
     out['pass'] = all(out['checks'].values())
     return out
 
 
 def main():
     report = {
-        'mode': 'strict_final_regression',
+        'mode': 'strict_final_regression_with_h1',
         'started_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         'sites': [],
     }
@@ -44,6 +51,7 @@ def main():
     report['passed'] = sum(bool(x.get('pass')) for x in report['sites'])
     report['total'] = len(report['sites'])
     report['all_pass'] = report['passed'] == report['total']
+    report['single_h1_passed'] = sum(bool(x.get('checks', {}).get('single_h1')) for x in report['sites'])
     report['total_tag_sitemaps_plain'] = sum(len(x.get('sitemap', {}).get('tag_sitemaps_plain', [])) for x in report['sites'])
     report['total_tag_sitemaps_cache_busted'] = sum(len(x.get('sitemap', {}).get('tag_sitemaps_cache_busted', [])) for x in report['sites'])
     report['finished_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
@@ -52,6 +60,7 @@ def main():
         'all_pass': report['all_pass'],
         'passed': report['passed'],
         'total': report['total'],
+        'single_h1_passed': report['single_h1_passed'],
         'tag_sitemaps_plain': report['total_tag_sitemaps_plain'],
         'tag_sitemaps_cache_busted': report['total_tag_sitemaps_cache_busted'],
     }))
