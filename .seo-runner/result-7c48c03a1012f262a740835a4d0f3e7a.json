@@ -1,0 +1,379 @@
+{
+  "mode": "cache_purge",
+  "sites": [
+    {
+      "domain": "aspirix.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Aspirix News: мировые новости экономики и технологий",
+        "description": "Ваш гид в мире финансов и IT. Aspirix News публикует оперативную аналитику, обзоры рынков и прогнозы для инвесторов и предпринимателей.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "aspirix.ru",
+        "plugins": [
+          "auto-image-attributes-from-filename-with-bulk-updater/iaff_image-attributes-from-filename.php",
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "cyr2lat/cyr-to-lat.php",
+          "easy-svg/easy-svg.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "one-click-demo-import/one-click-demo-import.php",
+          "seo-by-rank-math/rank-math.php",
+          "visitor-counter/counter.php",
+          "w3-total-cache/w3-total-cache.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Aspirix о запуске идей и обновлении проектов",
+        "description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Aspirix о запуске идей и обновлении проектов",
+        "description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    },
+    {
+      "domain": "biz-focus.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Аналитический портал для малого и среднего бизнеса. Интервью с экспертами, разбор ниш и новости законодательства. Держим фокус на главном.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "biz-focus.ru",
+        "plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php",
+          "webte-core/webte-core.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+        "description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+        "description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    },
+    {
+      "domain": "bizupdate.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Будьте в курсе обновлений рынка. Свежие новости IT, цифровизация бизнеса и перспективные стартапы. Ежедневный мониторинг трендов на BizUpdate.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "bizupdate.ru",
+        "plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "elespare/elespare.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Bizupdate об изменениях компаний, продуктов и рынков",
+        "description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Bizupdate об изменениях компаний, продуктов и рынков",
+        "description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    },
+    {
+      "domain": "biz-world.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Практическое руководство по ведению бизнеса. Советы для ИП и самозанятых, разбор новых законов, идеи для стартапов и стратегии роста прибыли.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "biz-world.ru",
+        "plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "elespare/elespare.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Biz World о международных рынках и деловых возможностях",
+        "description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Biz World о международных рынках и деловых возможностях",
+        "description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    },
+    {
+      "domain": "business-arena.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "Территория бизнеса. Реальные кейсы, истории успеха, управленческие стратегии и конкурентный анализ. Практические советы для владельцев компаний.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "business-arena.ru",
+        "plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "really-simple-ssl/rlrsssl-really-simple-ssl.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php",
+          "webte-core/webte-core.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Business Arena о конкуренции, переговорах и сделках",
+        "description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Business Arena о конкуренции, переговорах и сделках",
+        "description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    },
+    {
+      "domain": "business-focus.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Новые статьи",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "business-focus.ru",
+        "plugins": [
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "elementor/elementor.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "seo-by-rank-math/rank-math.php",
+          "w3-total-cache/w3-total-cache.php",
+          "webte-core/webte-core.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Business Focus о проверке гипотез и фокусе собственника",
+        "description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Business Focus о проверке гипотез и фокусе собственника",
+        "description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    }
+  ]
+}
