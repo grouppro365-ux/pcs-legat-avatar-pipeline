@@ -1,5 +1,6 @@
 name: Fleet 102 Completion and Bridge Discovery
 
+# retry after robust report path fix
 on:
   push:
     branches: [main]
