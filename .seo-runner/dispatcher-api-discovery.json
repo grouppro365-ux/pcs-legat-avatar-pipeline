@@ -1,0 +1,11 @@
+{
+  "mode": "dispatcher_api_discovery",
+  "base": "https://ai-media-dispatcher.grouppro365.chatgpt.site",
+  "home_status": 200,
+  "scripts": [],
+  "all_routes": [],
+  "selected_routes": [],
+  "probes": [],
+  "snippets": [],
+  "finished_at": "2026-08-17T12:45:46Z"
+}
