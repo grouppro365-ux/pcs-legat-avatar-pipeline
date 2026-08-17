@@ -1,0 +1,1700 @@
+{
+  "mode": "audit",
+  "started_at": "2026-08-17T04:58:01Z",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "expected": {
+        "title": "Ambitix об амбициях, выборе и росте бизнеса",
+        "description": "Ambitix об амбициях, выборе и росте бизнеса. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "focus": "ambitix"
+      },
+      "variants": [
+        {
+          "input": "http://ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2433
+        },
+        {
+          "input": "https://ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 1724
+        },
+        {
+          "input": "http://www.ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3313
+        },
+        {
+          "input": "https://www.ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2672
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://ambitix.ru/",
+        "elapsed_ms": 1437,
+        "title": "Ambitix - Ambitix: новости бизнеса, технологий и инвестиций",
+        "description": "Деловой портал Ambitix. Оперативные новости и аналитика рынков: бизнес, технологии, стартапы. Читайте объективные обзоры и тренды экономики.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://ambitix.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Ambitix: новости бизнеса, технологий и инвестиций",
+          "Ambitix: новости бизнеса, технологий и инвестиций"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://ambitix.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://ambitix.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://ambitix.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 917,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://ambitix.ru/sitemap_index.xml",
+        "elapsed_ms": 770,
+        "locs": [
+          "https://ambitix.ru/post-sitemap.xml",
+          "https://ambitix.ru/page-sitemap.xml",
+          "https://ambitix.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Ambitix: новости бизнеса, технологий и инвестиций",
+        "description": "Деловой портал Ambitix. Оперативные новости и аналитика рынков: бизнес, технологии, стартапы. Читайте объективные обзоры и тренды экономики.",
+        "home": "https://ambitix.ru",
+        "url": "https://ambitix.ru",
+        "show_on_front": "page",
+        "page_on_front": 37,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-21T11:26:44",
+        "modified": "2026-06-21T11:26:46",
+        "status": "publish",
+        "link": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/",
+        "elapsed_ms": 1908,
+        "title": "Почему направление тёплого пола не запускается одной закупкой и что строительной компании проверить до старта - Ambitix: новости бизнеса, технологий и инвестиций",
+        "description": "Поэтому направление тёплого пола для строительной компании начинается не с первой закупки. Оно начинается с ответа на несколько вопросов. Кто будет объяснять",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему направление тёплого пола не запускается одной закупкой и что строительной компании проверить до старта"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 69,
+        "link": "https://ambitix.ru/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://ambitix.ru/business/",
+        "elapsed_ms": 1979,
+        "title": "Бизнес - Ambitix: новости бизнеса, технологий и инвестиций",
+        "description": "Бизнес — материалы про запуск, обновление модели и рост без потери управляемости. Редакция держит фокус на амбициях, выборе",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://ambitix.ru/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "aspirix.ru",
+      "expected": {
+        "title": "Aspirix о запуске идей и обновлении проектов",
+        "description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора.",
+        "focus": "aspirix"
+      },
+      "variants": [
+        {
+          "input": "http://aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3659
+        },
+        {
+          "input": "https://aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 1590
+        },
+        {
+          "input": "http://www.aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3537
+        },
+        {
+          "input": "https://www.aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2311
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://aspirix.ru/",
+        "elapsed_ms": 1633,
+        "title": "Главная - Aspirix News: мировые новости экономики и технологий",
+        "description": "Ваш гид в мире финансов и IT. Aspirix News публикует оперативную аналитику, обзоры рынков и прогнозы для инвесторов и предпринимателей.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://aspirix.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Aspirix News: мировые новости экономики и технологий",
+          "Aspirix News: мировые новости экономики и технологий"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://aspirix.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\nSitemap: https://aspirix.ru/sitemap_index.xml\r\n",
+        "sitemaps": [
+          "https://aspirix.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 577,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://aspirix.ru/sitemap_index.xml",
+        "elapsed_ms": 940,
+        "locs": [
+          "https://aspirix.ru/post-sitemap.xml",
+          "https://aspirix.ru/page-sitemap.xml",
+          "https://aspirix.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Aspirix News: мировые новости экономики и технологий",
+        "description": "Ваш гид в мире финансов и IT. Aspirix News публикует оперативную аналитику, обзоры рынков и прогнозы для инвесторов и предпринимателей.",
+        "home": "https://aspirix.ru",
+        "url": "https://aspirix.ru",
+        "show_on_front": "page",
+        "page_on_front": 37,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-20T13:49:08",
+        "modified": "2026-06-20T13:49:11",
+        "status": "publish",
+        "link": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/",
+        "elapsed_ms": 1881,
+        "title": "Почему инвестору важнее скорость получения фактов, чем идеальный план проекта - Aspirix News: мировые новости экономики и технологий",
+        "description": "Именно поэтому инвестору важнее не идеальный план, а скорость получения фактов. Сильный проект — не тот, который заранее знает все ответы. Сильный проект",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему инвестору важнее скорость получения фактов, чем идеальный план проекта"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 39,
+        "link": "https://aspirix.ru/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://aspirix.ru/business/",
+        "elapsed_ms": 2067,
+        "title": "Статьи Бизнес - Aspirix News: мировые новости экономики и технологий",
+        "description": null,
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://aspirix.ru/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "biz-focus.ru",
+      "expected": {
+        "title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+        "description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "focus": "biz-focus"
+      },
+      "variants": [
+        {
+          "input": "http://biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 6081
+        },
+        {
+          "input": "https://biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2847
+        },
+        {
+          "input": "http://www.biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 4521
+        },
+        {
+          "input": "https://www.biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3330
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-focus.ru/",
+        "elapsed_ms": 2857,
+        "title": "Главная - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Аналитический портал для малого и среднего бизнеса. Интервью с экспертами, разбор ниш и новости законодательства. Держим фокус на главном.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-focus.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz-focus: стратегии бизнеса и обзор инноваций"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://biz-focus.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://biz-focus.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://biz-focus.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 734,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://biz-focus.ru/sitemap_index.xml",
+        "elapsed_ms": 913,
+        "locs": [
+          "https://biz-focus.ru/post-sitemap.xml",
+          "https://biz-focus.ru/page-sitemap.xml",
+          "https://biz-focus.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Аналитический портал для малого и среднего бизнеса. Интервью с экспертами, разбор ниш и новости законодательства. Держим фокус на главном.",
+        "home": "https://biz-focus.ru",
+        "url": "https://biz-focus.ru",
+        "show_on_front": "page",
+        "page_on_front": 28,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T20:17:51",
+        "modified": "2026-06-14T20:17:56",
+        "status": "publish",
+        "link": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/",
+        "elapsed_ms": 3473,
+        "title": "Скрытые расходы при аренде кондо в Паттайе депозит свет вода и интернет - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Скрытые расходы при аренде кондо в Паттайе чаще всего появляются не потому, что квартира плохая, а потому что человек смотрит только на месячную цену аренды.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Скрытые расходы при аренде кондо в Паттайе депозит свет вода и интернет"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 4,
+        "link": "https://biz-focus.ru/art/",
+        "name": "Искусство"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-focus.ru/art/",
+        "elapsed_ms": 2855,
+        "title": "Статьи Искусство - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Откройте для себя обзоры выставок, интервью с художниками, статьи о тенденциях и исторических шедеврах. Узнавайте первыми о событиях, которые вдохновляют...",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-focus.ru/art/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Искусство"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "bizcenter-news.ru",
+      "expected": {
+        "title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+        "description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "focus": "bizcenter-news"
+      },
+      "variants": [
+        {
+          "input": "http://bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2865
+        },
+        {
+          "input": "https://bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 1623
+        },
+        {
+          "input": "http://www.bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3038
+        },
+        {
+          "input": "https://www.bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2237
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizcenter-news.ru/",
+        "elapsed_ms": 1494,
+        "title": "Главная - Biz Center News: Главные события делового мира сегодня",
+        "description": "Все важные новости бизнеса на одном экране. Технологии, стартапы и корпоративные события. Будьте в курсе того, что влияет на индустрию.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizcenter-news.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz Center News: Главные события делового мира сегодня",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://bizcenter-news.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://ambitix.ru/sitemap_index.xml\r\n\r\n\r\nSitemap: https://bizhubnews.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://ambitix.ru/sitemap_index.xml",
+          "https://bizhubnews.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 581,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://bizcenter-news.ru/sitemap_index.xml",
+        "elapsed_ms": 644,
+        "locs": [
+          "https://bizcenter-news.ru/post-sitemap.xml",
+          "https://bizcenter-news.ru/page-sitemap.xml",
+          "https://bizcenter-news.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Biz Center News: Главные события делового мира сегодня",
+        "description": "Все важные новости бизнеса на одном экране. Технологии, стартапы и корпоративные события. Будьте в курсе того, что влияет на индустрию.",
+        "home": "https://bizcenter-news.ru",
+        "url": "https://bizcenter-news.ru",
+        "show_on_front": "page",
+        "page_on_front": 10,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": null,
+        "ok": false,
+        "reason": "no_application_password_in_registry"
+      },
+      "sample_post_ref": {
+        "date": "2026-07-04T03:55:41",
+        "modified": "2026-07-04T09:46:18",
+        "status": "publish",
+        "link": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/",
+        "elapsed_ms": 1896,
+        "title": "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого - Biz Center News: Главные события делового мира сегодня",
+        "description": "Как избежать ошибок на международных переговорах? Разбираем, почему профессиональный переводчик помогает сохранить смысл",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого",
+          "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 33,
+        "link": "https://bizcenter-news.ru/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizcenter-news.ru/business/",
+        "elapsed_ms": 1881,
+        "title": "Статьи - Бизнес - Biz Center News: Главные события делового мира сегодня",
+        "description": "Новости и статьи о бизнес-стратегиях, управлении проектами, маркетинге и инновациях. Актуальные тенденции и успешные кейсы от экспертов.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizcenter-news.ru/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес",
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "biz-report.ru",
+      "expected": {
+        "title": "Biz Report о цифрах, рынках и результатах компаний",
+        "description": "Biz Report о цифрах, рынках и результатах компаний. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "focus": "biz-report"
+      },
+      "variants": [
+        {
+          "input": "http://biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 4211
+        },
+        {
+          "input": "https://biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2062
+        },
+        {
+          "input": "http://www.biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2860
+        },
+        {
+          "input": "https://www.biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3013
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-report.ru/",
+        "elapsed_ms": 2016,
+        "title": "Главная - Biz-report новости",
+        "description": "Biz-report — актуальные новости, аналитика и вдохновение для стартапов. Помогаем предпринимателям и инвесторам ориентироваться в мире инновационного бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-report.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://biz-report.ru/robots.txt",
+        "body": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+        "sitemaps": [
+          "https://startupchronicle.online/sitemap.xml"
+        ],
+        "elapsed_ms": 743,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://biz-report.ru/sitemap_index.xml",
+        "elapsed_ms": 1169,
+        "locs": [
+          "https://biz-report.ru/post-sitemap.xml",
+          "https://biz-report.ru/page-sitemap.xml",
+          "https://biz-report.ru/category-sitemap.xml",
+          "https://biz-report.ru/post_tag-sitemap1.xml",
+          "https://biz-report.ru/post_tag-sitemap2.xml",
+          "https://biz-report.ru/post_tag-sitemap3.xml",
+          "https://biz-report.ru/post_tag-sitemap4.xml",
+          "https://biz-report.ru/post_tag-sitemap5.xml",
+          "https://biz-report.ru/post_tag-sitemap6.xml",
+          "https://biz-report.ru/post_tag-sitemap7.xml",
+          "https://biz-report.ru/post_tag-sitemap8.xml",
+          "https://biz-report.ru/post_tag-sitemap9.xml",
+          "https://biz-report.ru/post_tag-sitemap10.xml",
+          "https://biz-report.ru/post_tag-sitemap11.xml",
+          "https://biz-report.ru/post_tag-sitemap12.xml",
+          "https://biz-report.ru/post_tag-sitemap13.xml",
+          "https://biz-report.ru/post_tag-sitemap14.xml",
+          "https://biz-report.ru/post_tag-sitemap15.xml",
+          "https://biz-report.ru/post_tag-sitemap16.xml",
+          "https://biz-report.ru/post_tag-sitemap17.xml"
+        ],
+        "count": 20,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Biz-report новости",
+        "description": "Biz-report — актуальные новости, аналитика и вдохновение для стартапов. Помогаем предпринимателям и инвесторам ориентироваться в мире инновационного бизнеса.",
+        "home": "https://biz-report.ru",
+        "url": "https://biz-report.ru",
+        "show_on_front": "page",
+        "page_on_front": 10,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:44:30",
+        "modified": "2026-06-28T18:45:12",
+        "status": "publish",
+        "link": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/",
+        "elapsed_ms": 2219,
+        "title": "Зачем франшизе CRM, если партнёров пока меньше десяти делиться \"Диалог Франшиз\" - Biz-report новости",
+        "description": "Пока в сети три партнёра, кажется, что всё можно удержать в одном чате.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Зачем франшизе CRM, если партнёров пока меньше десяти делиться «Диалог Франшиз»"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 72,
+        "link": "https://biz-report.ru/category/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-report.ru/category/business/",
+        "elapsed_ms": 1805,
+        "title": "Статьи - Бизнес - Biz-report новости",
+        "description": "Новости и статьи о бизнес-стратегиях, управлении проектами, маркетинге и инновациях. Актуальные тенденции и успешные кейсы от экспертов.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-report.ru/category/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "bizupdate.ru",
+      "expected": {
+        "title": "Bizupdate об изменениях компаний, продуктов и рынков",
+        "description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "focus": "bizupdate"
+      },
+      "variants": [
+        {
+          "input": "http://bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3487
+        },
+        {
+          "input": "https://bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 1410
+        },
+        {
+          "input": "http://www.bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2958
+        },
+        {
+          "input": "https://www.bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2430
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizupdate.ru/",
+        "elapsed_ms": 1497,
+        "title": "Главная - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Будьте в курсе обновлений рынка. Свежие новости IT, цифровизация бизнеса и перспективные стартапы. Ежедневный мониторинг трендов на BizUpdate.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizupdate.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://bizupdate.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://bizupdate.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://bizupdate.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 970,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://bizupdate.ru/sitemap_index.xml",
+        "elapsed_ms": 686,
+        "locs": [
+          "https://bizupdate.ru/post-sitemap.xml",
+          "https://bizupdate.ru/page-sitemap.xml",
+          "https://bizupdate.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Будьте в курсе обновлений рынка. Свежие новости IT, цифровизация бизнеса и перспективные стартапы. Ежедневный мониторинг трендов на BizUpdate.",
+        "home": "https://bizupdate.ru",
+        "url": "https://bizupdate.ru",
+        "show_on_front": "page",
+        "page_on_front": 10,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T21:21:08",
+        "modified": "2026-06-14T21:21:11",
+        "status": "publish",
+        "link": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/",
+        "elapsed_ms": 2093,
+        "title": "Аренда кондо в Паттайе в январе сколько стоит зимовка после Нового года - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Аренда кондо в Паттайе в январе — это уже не просто поиск квартиры на отдых, а попытка попасть в рынок после новогоднего пика, когда часть туристов уехала, но",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Аренда кондо в Паттайе в январе сколько стоит зимовка после Нового года"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 34,
+        "link": "https://bizupdate.ru/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://bizupdate.ru/business/",
+        "elapsed_ms": 1930,
+        "title": "Статьи - Бизнес - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Новости и статьи о бизнес-стратегиях, управлении проектами, маркетинге и инновациях. Актуальные тенденции и успешные кейсы от экспертов.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://bizupdate.ru/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "biz-world.ru",
+      "expected": {
+        "title": "Biz World о международных рынках и деловых возможностях",
+        "description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "focus": "biz-world"
+      },
+      "variants": [
+        {
+          "input": "http://biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3700
+        },
+        {
+          "input": "https://biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 1652
+        },
+        {
+          "input": "http://www.biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3254
+        },
+        {
+          "input": "https://www.biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2534
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-world.ru/",
+        "elapsed_ms": 1388,
+        "title": "Главная - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Практическое руководство по ведению бизнеса. Советы для ИП и самозанятых, разбор новых законов, идеи для стартапов и стратегии роста прибыли.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-world.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://biz-world.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://biz-world.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://biz-world.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 913,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://biz-world.ru/sitemap_index.xml",
+        "elapsed_ms": 904,
+        "locs": [
+          "https://biz-world.ru/post-sitemap.xml",
+          "https://biz-world.ru/page-sitemap.xml",
+          "https://biz-world.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Практическое руководство по ведению бизнеса. Советы для ИП и самозанятых, разбор новых законов, идеи для стартапов и стратегии роста прибыли.",
+        "home": "https://biz-world.ru",
+        "url": "https://biz-world.ru",
+        "show_on_front": "page",
+        "page_on_front": 10,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-21T13:03:37",
+        "modified": "2026-06-21T13:03:39",
+        "status": "publish",
+        "link": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/",
+        "elapsed_ms": 1758,
+        "title": "Почему антикризисный план не работает, пока компания не решила, что перестаёт делать - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Проблема в том, что антикризисный план компании не должен начинаться с вопроса: «Что ещё нам сделать?»",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему антикризисный план не работает, пока компания не решила, что перестаёт делать"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 20,
+        "link": "https://biz-world.ru/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://biz-world.ru/business/",
+        "elapsed_ms": 1981,
+        "title": "Статьи - Бизнес - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Новости и статьи о бизнес-стратегиях, управлении проектами, маркетинге и инновациях. Актуальные тенденции и успешные кейсы от экспертов.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://biz-world.ru/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес",
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "businessherald.ru",
+      "expected": {
+        "title": "Business Herald о репутации компаний и деловых партнёрствах",
+        "description": "Business Herald о репутации компаний и деловых партнёрствах. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "focus": "businessherald"
+      },
+      "variants": [
+        {
+          "input": "http://businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3368
+        },
+        {
+          "input": "https://businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2201
+        },
+        {
+          "input": "http://www.businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3271
+        },
+        {
+          "input": "https://www.businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2894
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://businessherald.ru/",
+        "elapsed_ms": 3028,
+        "title": "Главная - Businessherald новости",
+        "description": "Businessherald — актуальные новости, аналитика и вдохновение для стартапов. Помогаем предпринимателям и инвесторам ориентироваться в мире инновационного бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://businessherald.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://businessherald.ru/robots.txt",
+        "body": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+        "sitemaps": [
+          "https://startupchronicle.online/sitemap.xml"
+        ],
+        "elapsed_ms": 957,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://businessherald.ru/sitemap_index.xml",
+        "elapsed_ms": 802,
+        "locs": [
+          "https://businessherald.ru/post-sitemap.xml",
+          "https://businessherald.ru/page-sitemap.xml",
+          "https://businessherald.ru/category-sitemap.xml",
+          "https://businessherald.ru/post_tag-sitemap1.xml",
+          "https://businessherald.ru/post_tag-sitemap2.xml",
+          "https://businessherald.ru/post_tag-sitemap3.xml",
+          "https://businessherald.ru/post_tag-sitemap4.xml",
+          "https://businessherald.ru/post_tag-sitemap5.xml",
+          "https://businessherald.ru/post_tag-sitemap6.xml",
+          "https://businessherald.ru/post_tag-sitemap7.xml",
+          "https://businessherald.ru/post_tag-sitemap8.xml",
+          "https://businessherald.ru/post_tag-sitemap9.xml",
+          "https://businessherald.ru/post_tag-sitemap10.xml",
+          "https://businessherald.ru/post_tag-sitemap11.xml",
+          "https://businessherald.ru/post_tag-sitemap12.xml",
+          "https://businessherald.ru/post_tag-sitemap13.xml"
+        ],
+        "count": 16,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Businessherald новости",
+        "description": "Businessherald — актуальные новости, аналитика и вдохновение для стартапов. Помогаем предпринимателям и инвесторам ориентироваться в мире инновационного бизнеса.",
+        "home": "https://businessherald.ru",
+        "url": "https://businessherald.ru",
+        "show_on_front": "page",
+        "page_on_front": 10,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:18:19",
+        "modified": "2026-06-28T18:18:22",
+        "status": "publish",
+        "link": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/",
+        "elapsed_ms": 1845,
+        "title": "Как понять, готов ли ваш бизнес к франшизе делиться опытом \"Диалог Франшиз\" - Businessherald новости",
+        "description": "Какие признаки показывают готовность бизнеса к франшизе: финансовая модель, стандарты, документы, продажи, обучение партнёров",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Как понять, готов ли ваш бизнес к франшизе делиться опытом «Диалог Франшиз»"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 74,
+        "link": "https://businessherald.ru/category/business/",
+        "name": "Бизнес"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://businessherald.ru/category/business/",
+        "elapsed_ms": 1663,
+        "title": "Статьи - Бизнес - Businessherald новости",
+        "description": "Новости и статьи о бизнес-стратегиях, управлении проектами, маркетинге и инновациях. Актуальные тенденции и успешные кейсы от экспертов.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://businessherald.ru/category/business/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Бизнес"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "business-arena.ru",
+      "expected": {
+        "title": "Business Arena о конкуренции, переговорах и сделках",
+        "description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "focus": "business-arena"
+      },
+      "variants": [
+        {
+          "input": "http://business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3468
+        },
+        {
+          "input": "https://business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3020
+        },
+        {
+          "input": "http://www.business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 4350
+        },
+        {
+          "input": "https://www.business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3534
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-arena.ru/",
+        "elapsed_ms": 3032,
+        "title": "Главная - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "Территория бизнеса. Реальные кейсы, истории успеха, управленческие стратегии и конкурентный анализ. Практические советы для владельцев компаний.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-arena.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная",
+          "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://business-arena.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://business-arena.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://business-arena.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 601,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://business-arena.ru/sitemap_index.xml",
+        "elapsed_ms": 668,
+        "locs": [
+          "https://business-arena.ru/post-sitemap1.xml",
+          "https://business-arena.ru/post-sitemap2.xml",
+          "https://business-arena.ru/page-sitemap.xml",
+          "https://business-arena.ru/category-sitemap.xml"
+        ],
+        "count": 4,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "Территория бизнеса. Реальные кейсы, истории успеха, управленческие стратегии и конкурентный анализ. Практические советы для владельцев компаний.",
+        "home": "https://business-arena.ru",
+        "url": "https://business-arena.ru",
+        "show_on_front": "page",
+        "page_on_front": 1528,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": null,
+        "ok": false,
+        "reason": "no_application_password_in_registry"
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T21:29:51",
+        "modified": "2026-06-14T21:29:54",
+        "status": "publish",
+        "link": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/",
+        "elapsed_ms": 4688,
+        "title": "Atlantis Condo Pattaya аренда цены по месяцам и формат проживания - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "При дистанционной аренде Atlantis Condo Pattaya арендатор часто передаёт паспортные данные, контакты, сканы документов, подтверждения платежей и переписку.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Atlantis Condo Pattaya аренда цены по месяцам и формат проживания"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 1,
+        "link": "https://business-arena.ru/uncategorized/",
+        "name": "Uncategorized"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-arena.ru/uncategorized/",
+        "elapsed_ms": 4129,
+        "title": "Статьи - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": null,
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-arena.ru/uncategorized/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Uncategorized"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    },
+    {
+      "domain": "business-focus.ru",
+      "expected": {
+        "title": "Business Focus о проверке гипотез и фокусе собственника",
+        "description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "focus": "business-focus"
+      },
+      "variants": [
+        {
+          "input": "http://business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3711
+        },
+        {
+          "input": "https://business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 2667
+        },
+        {
+          "input": "http://www.business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 4329
+        },
+        {
+          "input": "https://www.business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "ok": true,
+          "error": null,
+          "elapsed_ms": 3831
+        }
+      ],
+      "homepage": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-focus.ru/",
+        "elapsed_ms": 2988,
+        "title": "Главная - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Новые статьи",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-focus.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная",
+          "Business Focus: Деловая аналитика, законы и экспертные мнения"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "robots": {
+        "status": 200,
+        "url": "https://business-focus.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://business-focus.ru/sitemap_index.xml",
+        "sitemaps": [
+          "https://business-focus.ru/sitemap_index.xml"
+        ],
+        "elapsed_ms": 746,
+        "error": null
+      },
+      "sitemap": {
+        "status": 200,
+        "url": "https://business-focus.ru/sitemap_index.xml",
+        "elapsed_ms": 665,
+        "locs": [
+          "https://business-focus.ru/post-sitemap.xml",
+          "https://business-focus.ru/page-sitemap.xml",
+          "https://business-focus.ru/category-sitemap.xml"
+        ],
+        "count": 3,
+        "error": null
+      },
+      "wp": {
+        "status": 200,
+        "name": "Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Фокус на главном. Глубокая аналитика экономических событий, изменения в законодательстве и прогнозы экспертов. Читайте на Business Focus.",
+        "home": "https://business-focus.ru",
+        "url": "https://business-focus.ru",
+        "show_on_front": "page",
+        "page_on_front": 28,
+        "page_for_posts": 0,
+        "rankmath_namespace": true
+      },
+      "wp_auth": {
+        "status": 200,
+        "ok": true,
+        "user_id": 1,
+        "error": null
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:38:36",
+        "modified": "2026-06-28T18:38:40",
+        "status": "publish",
+        "link": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/"
+      },
+      "sample_post": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/",
+        "elapsed_ms": 3831,
+        "title": "Почему горячие лиды не спасают слабую франшизу рассказывает \"Диалог Франшиз\" - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Почему заявки от потенциальных франчайзи не превращаются в сделки: ошибки в финансовой модели, отделе продаж, документах, поддержке",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему горячие лиды не спасают слабую франшизу рассказывает “Диалог Франшиз”"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ]
+      },
+      "sample_category_ref": {
+        "count": 4,
+        "link": "https://business-focus.ru/art/",
+        "name": "Искусство"
+      },
+      "sample_category": {
+        "ok": true,
+        "status": 200,
+        "url": "https://business-focus.ru/art/",
+        "elapsed_ms": 3111,
+        "title": "Архивы Искусство - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Откройте для себя обзоры выставок, интервью с художниками, статьи о тенденциях и исторических шедеврах. Узнавайте первыми о событиях, которые вдохновляют...",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "googlebot": null,
+        "canonical": "https://business-focus.ru/art/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Искусство"
+        ],
+        "jsonld_types": [
+          "BreadcrumbList",
+          "CollectionPage",
+          "ListItem",
+          "Person",
+          "WebSite"
+        ]
+      },
+      "ftp_wp_path": null
+    }
+  ],
+  "ftp": {
+    "connected": true,
+    "host": "legatbb9.beget.tech",
+    "attempt_errors": [],
+    "root_list_error": "error_perm: 522 SSL connection failed: session reuse required"
+  },
+  "finished_at": "2026-08-17T05:02:26Z"
+}
