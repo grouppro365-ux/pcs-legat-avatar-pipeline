@@ -1,6 +1,6 @@
 {
-  "mode": "strict_final_regression",
-  "started_at": "2026-08-17T11:58:12Z",
+  "mode": "strict_final_regression_with_h1",
+  "started_at": "2026-08-17T12:08:42Z",
   "sites": [
     {
       "domain": "ambitix.ru",
@@ -22,18 +22,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Ambitix: новости бизнеса, технологий и инвестиций",
-            "Ambitix: новости бизнеса, технологий и инвестиций"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://ambitix.ru/",
@@ -67,7 +60,6 @@
         "canonical": "https://ambitix.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Ambitix: новости бизнеса, технологий и инвестиций",
           "Ambitix: новости бизнеса, технологий и инвестиций"
         ],
         "jsonld_types": [
@@ -81,7 +73,7 @@
         ],
         "status": 200,
         "url": "https://ambitix.ru/",
-        "ms": 1597
+        "ms": 1204
       },
       "robots": {
         "status": 200,
@@ -153,7 +145,7 @@
         ],
         "status": 200,
         "url": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/",
-        "ms": 1686
+        "ms": 1952
       },
       "pass": true
     },
@@ -177,18 +169,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Aspirix News: мировые новости экономики и технологий",
-            "Aspirix News: мировые новости экономики и технологий"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://aspirix.ru/",
@@ -222,7 +207,6 @@
         "canonical": "https://aspirix.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Aspirix News: мировые новости экономики и технологий",
           "Aspirix News: мировые новости экономики и технологий"
         ],
         "jsonld_types": [
@@ -236,7 +220,7 @@
         ],
         "status": 200,
         "url": "https://aspirix.ru/",
-        "ms": 1446
+        "ms": 1252
       },
       "robots": {
         "status": 200,
@@ -308,7 +292,7 @@
         ],
         "status": 200,
         "url": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/",
-        "ms": 1941
+        "ms": 1818
       },
       "pass": true
     },
@@ -332,6 +316,7 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
@@ -382,7 +367,7 @@
         ],
         "status": 200,
         "url": "https://biz-focus.ru/",
-        "ms": 2298
+        "ms": 2233
       },
       "robots": {
         "status": 200,
@@ -454,7 +439,7 @@
         ],
         "status": 200,
         "url": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/",
-        "ms": 3397
+        "ms": 1740
       },
       "pass": true
     },
@@ -478,18 +463,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Biz Center News: Главные события делового мира сегодня",
-            "Главная"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://bizcenter-news.ru/",
@@ -523,8 +501,7 @@
         "canonical": "https://bizcenter-news.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Biz Center News: Главные события делового мира сегодня",
-          "Главная"
+          "Biz Center News: Главные события делового мира сегодня"
         ],
         "jsonld_types": [
           "Article",
@@ -537,7 +514,7 @@
         ],
         "status": 200,
         "url": "https://bizcenter-news.ru/",
-        "ms": 1301
+        "ms": 1113
       },
       "robots": {
         "status": 200,
@@ -610,7 +587,7 @@
         ],
         "status": 200,
         "url": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/",
-        "ms": 2008
+        "ms": 1599
       },
       "pass": true
     },
@@ -634,6 +611,7 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
@@ -684,7 +662,7 @@
         ],
         "status": 200,
         "url": "https://biz-report.ru/",
-        "ms": 2312
+        "ms": 1765
       },
       "robots": {
         "status": 200,
@@ -756,7 +734,7 @@
         ],
         "status": 200,
         "url": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/",
-        "ms": 1850
+        "ms": 1456
       },
       "pass": true
     },
@@ -780,18 +758,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
-            "Главная"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://bizupdate.ru/",
@@ -825,8 +796,7 @@
         "canonical": "https://bizupdate.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
-          "Главная"
+          "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы"
         ],
         "jsonld_types": [
           "Article",
@@ -839,7 +809,7 @@
         ],
         "status": 200,
         "url": "https://bizupdate.ru/",
-        "ms": 1389
+        "ms": 1145
       },
       "robots": {
         "status": 200,
@@ -911,7 +881,7 @@
         ],
         "status": 200,
         "url": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/",
-        "ms": 1625
+        "ms": 1469
       },
       "pass": true
     },
@@ -935,18 +905,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
-            "Главная"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://biz-world.ru/",
@@ -980,8 +943,7 @@
         "canonical": "https://biz-world.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
-          "Главная"
+          "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026"
         ],
         "jsonld_types": [
           "Article",
@@ -994,7 +956,7 @@
         ],
         "status": 200,
         "url": "https://biz-world.ru/",
-        "ms": 1409
+        "ms": 1406
       },
       "robots": {
         "status": 200,
@@ -1066,7 +1028,7 @@
         ],
         "status": 200,
         "url": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/",
-        "ms": 1911
+        "ms": 1670
       },
       "pass": true
     },
@@ -1090,6 +1052,7 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
@@ -1140,7 +1103,7 @@
         ],
         "status": 200,
         "url": "https://businessherald.ru/",
-        "ms": 1757
+        "ms": 2460
       },
       "robots": {
         "status": 200,
@@ -1212,7 +1175,7 @@
         ],
         "status": 200,
         "url": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/",
-        "ms": 1775
+        "ms": 1437
       },
       "pass": true
     },
@@ -1236,18 +1199,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Главная",
-            "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://business-arena.ru/",
@@ -1281,7 +1237,6 @@
         "canonical": "https://business-arena.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Главная",
           "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
         ],
         "jsonld_types": [
@@ -1295,7 +1250,7 @@
         ],
         "status": 200,
         "url": "https://business-arena.ru/",
-        "ms": 2203
+        "ms": 1997
       },
       "robots": {
         "status": 200,
@@ -1374,7 +1329,7 @@
         ],
         "status": 200,
         "url": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/",
-        "ms": 4262
+        "ms": 3878
       },
       "pass": true
     },
@@ -1398,18 +1353,11 @@
         "child_sitemaps_ok": true,
         "wp_rest_ok": true,
         "sample_post_ok": true,
+        "single_h1": true,
         "no_tag_sitemaps_plain": true,
         "no_tag_sitemaps_cache_busted": true
       },
-      "warnings": [
-        {
-          "h1_count": 2,
-          "h1s": [
-            "Главная",
-            "Business Focus: Деловая аналитика, законы и экспертные мнения"
-          ]
-        }
-      ],
+      "warnings": [],
       "variants": [
         {
           "input": "http://business-focus.ru/",
@@ -1443,7 +1391,6 @@
         "canonical": "https://business-focus.ru/",
         "lang": "ru-RU",
         "h1s": [
-          "Главная",
           "Business Focus: Деловая аналитика, законы и экспертные мнения"
         ],
         "jsonld_types": [
@@ -1457,7 +1404,7 @@
         ],
         "status": 200,
         "url": "https://business-focus.ru/",
-        "ms": 2552
+        "ms": 2083
       },
       "robots": {
         "status": 200,
@@ -1529,7 +1476,7 @@
         ],
         "status": 200,
         "url": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/",
-        "ms": 4216
+        "ms": 3283
       },
       "pass": true
     }
@@ -1537,7 +1484,8 @@
   "passed": 10,
   "total": 10,
   "all_pass": true,
+  "single_h1_passed": 10,
   "total_tag_sitemaps_plain": 0,
   "total_tag_sitemaps_cache_busted": 0,
-  "finished_at": "2026-08-17T11:59:14Z"
+  "finished_at": "2026-08-17T12:09:36Z"
 }
