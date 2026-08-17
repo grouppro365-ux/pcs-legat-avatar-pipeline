@@ -1,4 +1,4 @@
-name: Final Strict SEO and H1 Verification
+name: Fleet SEO Discovery
 
 on:
   push:
@@ -10,41 +10,32 @@ permissions:
   contents: write
 
 jobs:
-  final-verify:
+  fleet-discovery:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Run final strict read-only audit
-        shell: bash
-        run: |
-          set +e
-          cd .github/seo
-          python3 seo_final_audit_strict.py
-          code=$?
-          echo "$code" > /tmp/seo-final-code
-          cp seo-final-strict-report.json /tmp/seo-final-strict-report.json
-          exit 0
-
-      - name: Publish final strict report
+      - name: Audit all portal URLs read-only
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-final-verifier"
+          cd .github/seo
+          python3 seo_fleet_discovery.py
+          cp seo-fleet-discovery.json /tmp/seo-fleet-discovery.json
+
+      - name: Publish fleet discovery report
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "seo-fleet-auditor"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-final-strict-report.json .seo-runner/final-strict-report.json
-          git add .seo-runner/final-strict-report.json
-          git commit -m "Publish final strict SEO and H1 report [skip ci]"
+          cp /tmp/seo-fleet-discovery.json .seo-runner/fleet-discovery.json
+          git add .seo-runner/fleet-discovery.json
+          git commit -m "Publish fleet SEO discovery report [skip ci]"
           git push origin HEAD:main
-
-      - name: Enforce final all-pass gate
-        shell: bash
-        run: |
-          code="$(cat /tmp/seo-final-code)"
-          [ "$code" = "0" ]
