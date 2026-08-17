@@ -1,4 +1,4 @@
-name: Fleet SEO Repair Cohorts
+name: Fleet 102 Completion and Bridge Discovery
 
 on:
   push:
@@ -10,29 +10,30 @@ permissions:
   contents: write
 
 jobs:
-  build-plan:
+  complete-and-discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build repair cohorts
+      - name: Audit resolved domains and discover REST bridge
         shell: bash
         run: |
           set -euo pipefail
-          python3 .github/seo/seo_fleet_plan.py
-          cp seo-fleet-plan.json /tmp/seo-fleet-plan.json
-      - name: Publish repair plan
+          cd .github/seo
+          python3 seo_fleet_completion.py
+          cp seo-fleet-completion.json /tmp/seo-fleet-completion.json
+      - name: Publish full fleet report
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-fleet-planner"
+          git config user.name "seo-fleet-auditor"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-fleet-plan.json .seo-runner/fleet-plan.json
-          git add .seo-runner/fleet-plan.json
-          git commit -m "Publish fleet SEO repair cohorts [skip ci]"
+          cp /tmp/seo-fleet-completion.json .seo-runner/fleet-completion.json
+          git add .seo-runner/fleet-completion.json
+          git commit -m "Publish 102 portal completion and bridge discovery [skip ci]"
           git push origin HEAD:main
