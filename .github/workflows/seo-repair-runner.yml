@@ -1,4 +1,4 @@
-name: Native Rank Math Sitemap Cache Repair
+name: Strict Final SEO Verification
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  invalidate-rankmath-cache:
+  strict-verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -18,89 +18,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Publish one-time certificate
-        id: handshake
+      - name: Run strict read-only SEO audit
+        shell: bash
+        run: |
+          set +e
+          cd .github/seo
+          python3 seo_final_audit_strict.py
+          code=$?
+          echo "$code" > /tmp/seo-strict-code
+          cp seo-final-strict-report.json /tmp/seo-final-strict-report.json
+          exit 0
+
+      - name: Publish strict final report
         shell: bash
         run: |
           set -euo pipefail
-          NONCE="$(openssl rand -hex 16)"
-          echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
-          openssl req -x509 -newkey rsa:3072 -sha256 -nodes \
-            -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem \
-            -days 1 -subj "/CN=ephemeral-rankmath-cache-$NONCE" >/dev/null 2>&1
-          git config user.name "seo-ephemeral-runner"
+          git config user.name "seo-final-verifier"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          NONCE="$NONCE" python3 - <<'PY'
-          import base64, json, os
-          cert = open('/tmp/seo-cert.pem','rb').read()
-          open('.seo-runner/public.json','w').write(json.dumps({
-              'source_sha': os.environ['GITHUB_SHA'],
-              'nonce': os.environ['NONCE'],
-              'cert_b64': base64.b64encode(cert).decode()
-          }, indent=2))
-          PY
-          git add .seo-runner/public.json
-          git commit -m "Publish ephemeral Rank Math cache certificate [skip ci]"
+          cp /tmp/seo-final-strict-report.json .seo-runner/final-strict-report.json
+          git add .seo-runner/final-strict-report.json
+          git commit -m "Publish strict final SEO regression report [skip ci]"
           git push origin HEAD:main
 
-      - name: Wait for encrypted payload
-        shell: bash
-        env:
-          NONCE: ${{ steps.handshake.outputs.nonce }}
-        run: |
-          set -euo pipefail
-          P=".seo-runner/payload-${NONCE}.cms.b64"
-          found=0
-          for i in $(seq 1 120); do
-            git fetch origin main --quiet
-            if git show "origin/main:${P}" > /tmp/seo-payload.b64 2>/dev/null; then
-              found=1
-              break
-            fi
-            sleep 5
-          done
-          [ "$found" = "1" ] || exit 2
-          base64 -d /tmp/seo-payload.b64 > /tmp/seo-payload.cms
-          openssl cms -decrypt -binary -inform DER \
-            -in /tmp/seo-payload.cms -recip /tmp/seo-cert.pem \
-            -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
-          chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
-
-      - name: Invalidate Rank Math sitemap cache and verify
+      - name: Enforce strict all-pass gate
         shell: bash
         run: |
-          set +e
-          SEO_PAYLOAD=/tmp/seo-payload.json SEO_RESULT=/tmp/seo-result.json \
-            python3 .github/seo/seo_rankmath_cache_invalidate.py
-          code=$?
-          echo "$code" > /tmp/seo-exit-code
-          exit 0
-
-      - name: Publish sanitized result
-        shell: bash
-        env:
-          NONCE: ${{ steps.handshake.outputs.nonce }}
-        run: |
-          set -euo pipefail
-          git fetch origin main --quiet
-          git reset --hard origin/main
-          cp /tmp/seo-result.json ".seo-runner/result-${NONCE}.json"
-          git add ".seo-runner/result-${NONCE}.json"
-          git commit -m "Publish sanitized Rank Math cache repair result [skip ci]"
-          git push origin HEAD:main
-
-      - name: Enforce verification gate
-        shell: bash
-        run: |
-          code="$(cat /tmp/seo-exit-code)"
+          code="$(cat /tmp/seo-strict-code)"
           [ "$code" = "0" ]
-
-      - name: Destroy ephemeral material
-        if: always()
-        shell: bash
-        run: |
-          rm -f /tmp/seo-private.pem /tmp/seo-cert.pem /tmp/seo-payload.b64 \
-            /tmp/seo-payload.cms /tmp/seo-payload.json /tmp/seo-result.json /tmp/seo-exit-code
