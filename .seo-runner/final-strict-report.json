@@ -1,0 +1,1543 @@
+{
+  "mode": "strict_final_regression",
+  "started_at": "2026-08-17T11:58:12Z",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "expected": {
+        "title": "Ambitix об амбициях, выборе и росте бизнеса",
+        "description": "Ambitix об амбициях, выборе и росте бизнеса. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Ambitix: новости бизнеса, технологий и инвестиций",
+            "Ambitix: новости бизнеса, технологий и инвестиций"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "error": null
+        },
+        {
+          "input": "https://ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.ambitix.ru/",
+          "status": 200,
+          "final": "https://ambitix.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Ambitix об амбициях, выборе и росте бизнеса",
+        "description": "Ambitix об амбициях, выборе и росте бизнеса. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://ambitix.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Ambitix: новости бизнеса, технологий и инвестиций",
+          "Ambitix: новости бизнеса, технологий и инвестиций"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://ambitix.ru/",
+        "ms": 1597
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://ambitix.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://ambitix.ru/post-sitemap.xml",
+          "https://ambitix.ru/page-sitemap.xml",
+          "https://ambitix.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://ambitix.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 139,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://ambitix.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://ambitix.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-21T11:26:44",
+        "modified": "2026-06-21T11:26:46",
+        "status": "publish",
+        "link": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/"
+      },
+      "sample_post": {
+        "title": "Почему направление тёплого пола не запускается одной закупкой и что строительной компании проверить до старта - Ambitix: новости бизнеса, технологий и инвестиций",
+        "description": "Поэтому направление тёплого пола для строительной компании начинается не с первой закупки. Оно начинается с ответа на несколько вопросов. Кто будет объяснять",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему направление тёплого пола не запускается одной закупкой и что строительной компании проверить до старта"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://ambitix.ru/business/kak-zapustit-napravlenie-teplogo-pola-v-stroitelnoy-kompanii/",
+        "ms": 1686
+      },
+      "pass": true
+    },
+    {
+      "domain": "aspirix.ru",
+      "expected": {
+        "title": "Aspirix о запуске идей и обновлении проектов",
+        "description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Aspirix News: мировые новости экономики и технологий",
+            "Aspirix News: мировые новости экономики и технологий"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "error": null
+        },
+        {
+          "input": "https://aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.aspirix.ru/",
+          "status": 200,
+          "final": "https://aspirix.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Aspirix о запуске идей и обновлении проектов",
+        "description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Aspirix News: мировые новости экономики и технологий",
+          "Aspirix News: мировые новости экономики и технологий"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://aspirix.ru/",
+        "ms": 1446
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://aspirix.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://aspirix.ru/post-sitemap.xml",
+          "https://aspirix.ru/page-sitemap.xml",
+          "https://aspirix.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://aspirix.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 100,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://aspirix.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://aspirix.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-20T13:49:08",
+        "modified": "2026-06-20T13:49:11",
+        "status": "publish",
+        "link": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/"
+      },
+      "sample_post": {
+        "title": "Почему инвестору важнее скорость получения фактов, чем идеальный план проекта - Aspirix News: мировые новости экономики и технологий",
+        "description": "Именно поэтому инвестору важнее не идеальный план, а скорость получения фактов. Сильный проект — не тот, который заранее знает все ответы. Сильный проект",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему инвестору важнее скорость получения фактов, чем идеальный план проекта"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://aspirix.ru/business/skorost-proverki-gipotez-v-biznese-dlya-investora/",
+        "ms": 1941
+      },
+      "pass": true
+    },
+    {
+      "domain": "biz-focus.ru",
+      "expected": {
+        "title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+        "description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [],
+      "variants": [
+        {
+          "input": "http://biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "https://biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.biz-focus.ru/",
+          "status": 200,
+          "final": "https://biz-focus.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+        "description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz-focus: стратегии бизнеса и обзор инноваций"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-focus.ru/",
+        "ms": 2298
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://biz-focus.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://biz-focus.ru/post-sitemap.xml",
+          "https://biz-focus.ru/page-sitemap.xml",
+          "https://biz-focus.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://biz-focus.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 151,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-focus.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-focus.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T20:17:51",
+        "modified": "2026-06-14T20:17:56",
+        "status": "publish",
+        "link": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/"
+      },
+      "sample_post": {
+        "title": "Скрытые расходы при аренде кондо в Паттайе депозит свет вода и интернет - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Скрытые расходы при аренде кондо в Паттайе чаще всего появляются не потому, что квартира плохая, а потому что человек смотрит только на месячную цену аренды.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Скрытые расходы при аренде кондо в Паттайе депозит свет вода и интернет"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-focus.ru/skrytye-rashody-arenda-kondo-pattaya/",
+        "ms": 3397
+      },
+      "pass": true
+    },
+    {
+      "domain": "bizcenter-news.ru",
+      "expected": {
+        "title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+        "description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Biz Center News: Главные события делового мира сегодня",
+            "Главная"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "error": null
+        },
+        {
+          "input": "https://bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.bizcenter-news.ru/",
+          "status": 200,
+          "final": "https://bizcenter-news.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+        "description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz Center News: Главные события делового мира сегодня",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://bizcenter-news.ru/",
+        "ms": 1301
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://bizcenter-news.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://bizcenter-news.ru/post-sitemap.xml",
+          "https://bizcenter-news.ru/page-sitemap.xml",
+          "https://bizcenter-news.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://bizcenter-news.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 85,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://bizcenter-news.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://bizcenter-news.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-07-04T03:55:41",
+        "modified": "2026-07-04T09:46:18",
+        "status": "publish",
+        "link": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/"
+      },
+      "sample_post": {
+        "title": "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого - Biz Center News: Главные события делового мира сегодня",
+        "description": "Как избежать ошибок на международных переговорах? Разбираем, почему профессиональный переводчик помогает сохранить смысл",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого",
+          "Как не сорвать международные переговоры: ошибки, которые обходятся компаниям слишком дорого"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://bizcenter-news.ru/business/mezhdunarodnye-peregovory/",
+        "ms": 2008
+      },
+      "pass": true
+    },
+    {
+      "domain": "biz-report.ru",
+      "expected": {
+        "title": "Biz Report о цифрах, рынках и результатах компаний",
+        "description": "Biz Report о цифрах, рынках и результатах компаний. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [],
+      "variants": [
+        {
+          "input": "http://biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "error": null
+        },
+        {
+          "input": "https://biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.biz-report.ru/",
+          "status": 200,
+          "final": "https://biz-report.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Biz Report о цифрах, рынках и результатах компаний",
+        "description": "Biz Report о цифрах, рынках и результатах компаний. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-report.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-report.ru/",
+        "ms": 2312
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://biz-report.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://biz-report.ru/post-sitemap.xml",
+          "https://biz-report.ru/page-sitemap.xml",
+          "https://biz-report.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://biz-report.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 123,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-report.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-report.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:44:30",
+        "modified": "2026-06-28T18:45:12",
+        "status": "publish",
+        "link": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/"
+      },
+      "sample_post": {
+        "title": "Зачем франшизе CRM, если партнёров пока меньше десяти делиться \"Диалог Франшиз\" - Biz-report новости",
+        "description": "Пока в сети три партнёра, кажется, что всё можно удержать в одном чате.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Зачем франшизе CRM, если партнёров пока меньше десяти делиться «Диалог Франшиз»"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-report.ru/business/crm-dlya-franchayzinga-do-rosta-seti/",
+        "ms": 1850
+      },
+      "pass": true
+    },
+    {
+      "domain": "bizupdate.ru",
+      "expected": {
+        "title": "Bizupdate об изменениях компаний, продуктов и рынков",
+        "description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+            "Главная"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "error": null
+        },
+        {
+          "input": "https://bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.bizupdate.ru/",
+          "status": 200,
+          "final": "https://bizupdate.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Bizupdate об изменениях компаний, продуктов и рынков",
+        "description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://bizupdate.ru/",
+        "ms": 1389
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://bizupdate.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://bizupdate.ru/post-sitemap.xml",
+          "https://bizupdate.ru/page-sitemap.xml",
+          "https://bizupdate.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://bizupdate.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 80,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://bizupdate.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://bizupdate.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 7,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T21:21:08",
+        "modified": "2026-06-14T21:21:11",
+        "status": "publish",
+        "link": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/"
+      },
+      "sample_post": {
+        "title": "Аренда кондо в Паттайе в январе сколько стоит зимовка после Нового года - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Аренда кондо в Паттайе в январе — это уже не просто поиск квартиры на отдых, а попытка попасть в рынок после новогоднего пика, когда часть туристов уехала, но",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Аренда кондо в Паттайе в январе сколько стоит зимовка после Нового года"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://bizupdate.ru/travel/arenda-kondo-pattaya-yanvar-zimovka/",
+        "ms": 1625
+      },
+      "pass": true
+    },
+    {
+      "domain": "biz-world.ru",
+      "expected": {
+        "title": "Biz World о международных рынках и деловых возможностях",
+        "description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+            "Главная"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "error": null
+        },
+        {
+          "input": "https://biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.biz-world.ru/",
+          "status": 200,
+          "final": "https://biz-world.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Biz World о международных рынках и деловых возможностях",
+        "description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-world.ru/",
+        "ms": 1409
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://biz-world.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://biz-world.ru/post-sitemap.xml",
+          "https://biz-world.ru/page-sitemap.xml",
+          "https://biz-world.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://biz-world.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 65,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-world.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 5,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://biz-world.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-21T13:03:37",
+        "modified": "2026-06-21T13:03:39",
+        "status": "publish",
+        "link": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/"
+      },
+      "sample_post": {
+        "title": "Почему антикризисный план не работает, пока компания не решила, что перестаёт делать - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Проблема в том, что антикризисный план компании не должен начинаться с вопроса: «Что ещё нам сделать?»",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему антикризисный план не работает, пока компания не решила, что перестаёт делать"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://biz-world.ru/business/antikrizisnyy-plan-kompanii-chto-prekratit-delat/",
+        "ms": 1911
+      },
+      "pass": true
+    },
+    {
+      "domain": "businessherald.ru",
+      "expected": {
+        "title": "Business Herald о репутации компаний и деловых партнёрствах",
+        "description": "Business Herald о репутации компаний и деловых партнёрствах. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [],
+      "variants": [
+        {
+          "input": "http://businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "error": null
+        },
+        {
+          "input": "https://businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.businessherald.ru/",
+          "status": 200,
+          "final": "https://businessherald.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Business Herald о репутации компаний и деловых партнёрствах",
+        "description": "Business Herald о репутации компаний и деловых партнёрствах. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://businessherald.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://businessherald.ru/",
+        "ms": 1757
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://businessherald.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://businessherald.ru/post-sitemap.xml",
+          "https://businessherald.ru/page-sitemap.xml",
+          "https://businessherald.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://businessherald.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 128,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://businessherald.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://businessherald.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:18:19",
+        "modified": "2026-06-28T18:18:22",
+        "status": "publish",
+        "link": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/"
+      },
+      "sample_post": {
+        "title": "Как понять, готов ли ваш бизнес к франшизе делиться опытом \"Диалог Франшиз\" - Businessherald новости",
+        "description": "Какие признаки показывают готовность бизнеса к франшизе: финансовая модель, стандарты, документы, продажи, обучение партнёров",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Как понять, готов ли ваш бизнес к франшизе делиться опытом «Диалог Франшиз»"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://businessherald.ru/business/kak-ponyat-gotov-li-biznes-k-franshize/",
+        "ms": 1775
+      },
+      "pass": true
+    },
+    {
+      "domain": "business-arena.ru",
+      "expected": {
+        "title": "Business Arena о конкуренции, переговорах и сделках",
+        "description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Главная",
+            "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "error": null
+        },
+        {
+          "input": "https://business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.business-arena.ru/",
+          "status": 200,
+          "final": "https://business-arena.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Business Arena о конкуренции, переговорах и сделках",
+        "description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная",
+          "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://business-arena.ru/",
+        "ms": 2203
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://business-arena.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://business-arena.ru/post-sitemap1.xml",
+          "https://business-arena.ru/post-sitemap2.xml",
+          "https://business-arena.ru/page-sitemap.xml",
+          "https://business-arena.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://business-arena.ru/post-sitemap1.xml",
+            "status": 200,
+            "url_count": 200,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://business-arena.ru/post-sitemap2.xml",
+            "status": 200,
+            "url_count": 42,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://business-arena.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://business-arena.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 8,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-14T21:29:51",
+        "modified": "2026-06-14T21:29:54",
+        "status": "publish",
+        "link": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/"
+      },
+      "sample_post": {
+        "title": "Atlantis Condo Pattaya аренда цены по месяцам и формат проживания - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "При дистанционной аренде Atlantis Condo Pattaya арендатор часто передаёт паспортные данные, контакты, сканы документов, подтверждения платежей и переписку.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Atlantis Condo Pattaya аренда цены по месяцам и формат проживания"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://business-arena.ru/traveling/atlantis-condo-pattaya-arenda-ceny/",
+        "ms": 4262
+      },
+      "pass": true
+    },
+    {
+      "domain": "business-focus.ru",
+      "expected": {
+        "title": "Business Focus о проверке гипотез и фокусе собственника",
+        "description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума."
+      },
+      "checks": {
+        "preferred_host": true,
+        "home_200": true,
+        "title_exact": true,
+        "description_exact": true,
+        "canonical_self": true,
+        "indexable": true,
+        "robots_ok": true,
+        "robots_no_foreign_sitemap": true,
+        "robots_own_sitemap": true,
+        "sitemap_ok": true,
+        "child_sitemaps_ok": true,
+        "wp_rest_ok": true,
+        "sample_post_ok": true,
+        "no_tag_sitemaps_plain": true,
+        "no_tag_sitemaps_cache_busted": true
+      },
+      "warnings": [
+        {
+          "h1_count": 2,
+          "h1s": [
+            "Главная",
+            "Business Focus: Деловая аналитика, законы и экспертные мнения"
+          ]
+        }
+      ],
+      "variants": [
+        {
+          "input": "http://business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "https://business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "http://www.business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "error": null
+        },
+        {
+          "input": "https://www.business-focus.ru/",
+          "status": 200,
+          "final": "https://business-focus.ru/",
+          "error": null
+        }
+      ],
+      "homepage": {
+        "title": "Business Focus о проверке гипотез и фокусе собственника",
+        "description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Главная",
+          "Business Focus: Деловая аналитика, законы и экспертные мнения"
+        ],
+        "jsonld_types": [
+          "Article",
+          "ImageObject",
+          "Organization",
+          "Person",
+          "SearchAction",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://business-focus.ru/",
+        "ms": 2552
+      },
+      "robots": {
+        "status": 200,
+        "sitemaps": [
+          "https://business-focus.ru/sitemap_index.xml"
+        ],
+        "disallow_root": false
+      },
+      "sitemap": {
+        "status": 200,
+        "children": [
+          "https://business-focus.ru/post-sitemap.xml",
+          "https://business-focus.ru/page-sitemap.xml",
+          "https://business-focus.ru/category-sitemap.xml"
+        ],
+        "foreign_children": [],
+        "sample_children": [
+          {
+            "url": "https://business-focus.ru/post-sitemap.xml",
+            "status": 200,
+            "url_count": 195,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://business-focus.ru/page-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          },
+          {
+            "url": "https://business-focus.ru/category-sitemap.xml",
+            "status": 200,
+            "url_count": 6,
+            "foreign_urls": []
+          }
+        ],
+        "tag_sitemaps_plain": [],
+        "tag_sitemaps_cache_busted": [],
+        "cache_busted_status": 200
+      },
+      "wp": {
+        "status": 200,
+        "rankmath": true
+      },
+      "sample_post_ref": {
+        "date": "2026-06-28T18:38:36",
+        "modified": "2026-06-28T18:38:40",
+        "status": "publish",
+        "link": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/"
+      },
+      "sample_post": {
+        "title": "Почему горячие лиды не спасают слабую франшизу рассказывает \"Диалог Франшиз\" - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Почему заявки от потенциальных франчайзи не превращаются в сделки: ошибки в финансовой модели, отделе продаж, документах, поддержке",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/",
+        "lang": "ru-RU",
+        "h1s": [
+          "Почему горячие лиды не спасают слабую франшизу рассказывает “Диалог Франшиз”"
+        ],
+        "jsonld_types": [
+          "BlogPosting",
+          "BreadcrumbList",
+          "ImageObject",
+          "ListItem",
+          "Organization",
+          "Person",
+          "WebPage",
+          "WebSite"
+        ],
+        "status": 200,
+        "url": "https://business-focus.ru/pochemu-lidy-ne-spasayut-slabuyu-franshizu/",
+        "ms": 4216
+      },
+      "pass": true
+    }
+  ],
+  "passed": 10,
+  "total": 10,
+  "all_pass": true,
+  "total_tag_sitemaps_plain": 0,
+  "total_tag_sitemaps_cache_busted": 0,
+  "finished_at": "2026-08-17T11:59:14Z"
+}
