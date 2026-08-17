@@ -1,0 +1,5193 @@
+{
+  "source_rows": 102,
+  "audited_url_rows": 97,
+  "unresolved_sheet_entries": [
+    "Corporate View",
+    "Growvia",
+    "Genuity",
+    "Legat Herald новости",
+    "LegatProBiz"
+  ],
+  "known_done_in_sheet": [
+    "ambitix.ru",
+    "aspirix.ru",
+    "biz-focus.ru",
+    "biz-report.ru",
+    "biz-world.ru",
+    "bizupdate.ru",
+    "business-arena.ru",
+    "business-focus.ru",
+    "businessherald.ru"
+  ],
+  "remaining_url_domains_count": 88,
+  "clean_remaining": [
+    "industrydigest.ru",
+    "topambassador.ru"
+  ],
+  "repair_needed_remaining": [
+    "ampliv.ru",
+    "bizhubnews.ru",
+    "businessbrief.ru",
+    "businessjournalist.ru",
+    "businessherald.online",
+    "capitrx.ru",
+    "clariva.ru",
+    "commerce-hub.ru",
+    "contenia.ru",
+    "corporatenews.ru",
+    "corporatehub.ru",
+    "corporatepulse.ru",
+    "crescix.ru",
+    "journalprobiz.online",
+    "inspireo.ru",
+    "innoviq.ru",
+    "innovoe.ru",
+    "industry-digest.ru",
+    "industryreport.ru",
+    "industryfocus.ru",
+    "growvia.online",
+    "groviva.ru",
+    "fortunea.ru",
+    "focusix.ru",
+    "flourix.ru",
+    "excellix.ru",
+    "entreva.online",
+    "entreva.ru",
+    "entrepreneursphere.online",
+    "entrepreneursphere.ru",
+    "enterpriseupdate.ru",
+    "enterprisenews.ru",
+    "enterprisevoice.ru",
+    "empowix.ru",
+    "econreport.ru",
+    "prowessa.ru",
+    "proentrepreneur.ru",
+    "proentrepreneur.online",
+    "primevo.ru",
+    "pressarena.ru",
+    "pioneerx.ru",
+    "peakvia.ru",
+    "optivae.online",
+    "optivae.ru",
+    "newsida.ru",
+    "mediashot.ru",
+    "legat-herald.ru",
+    "legatpro.ru",
+    "legatbusiness.online",
+    "legatbusiness.ru",
+    "legatnews.ru",
+    "legatjournal.ru",
+    "legatpro.online",
+    "legatprobiz.ru",
+    "legatjournal.online",
+    "legacix.ru",
+    "jurnet.ru",
+    "journalprobiz.ru",
+    "journalbiz.ru",
+    "journalbiz.online",
+    "visiuma.ru",
+    "visiown.ru",
+    "vantagex.ru",
+    "vantagex.online",
+    "uptrive.ru",
+    "triumphx.ru",
+    "trenddigest.ru",
+    "trendupdate.ru",
+    "topentrepreneur.online",
+    "topentrepreneur.ru",
+    "topambassador.online",
+    "synerix.ru",
+    "successa.ru",
+    "striveon.ru",
+    "statusday.ru",
+    "startupchronicle.ru",
+    "startup-daily.ru",
+    "startupchronicle.online",
+    "startup-life.ru",
+    "startupdigest.ru",
+    "scrollix.ru",
+    "reputon.ru",
+    "questix.ru",
+    "publixis.ru",
+    "ignitix.ru",
+    "pressflow.ru"
+  ],
+  "bucket_counts": {
+    "reachable": 13,
+    "https_preferred": 21,
+    "title_present": 13,
+    "description_present": 14,
+    "canonical_self": 13,
+    "home_indexable": 0,
+    "single_h1": 16,
+    "robots_ok": 69,
+    "sitemap_ok": 13,
+    "no_tag_sitemaps": 79,
+    "rankmath_rest": 14,
+    "sample_post_ok": 16
+  },
+  "buckets": {
+    "reachable": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "https_preferred": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "capitrx.ru",
+      "contenia.ru",
+      "corporatepulse.ru",
+      "journalprobiz.online",
+      "industryreport.ru",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "enterprisevoice.ru",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "trendupdate.ru",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startup-daily.ru",
+      "startupchronicle.online",
+      "startup-life.ru"
+    ],
+    "title_present": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "description_present": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "capitrx.ru",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "canonical_self": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "home_indexable": [],
+    "single_h1": [
+      "ampliv.ru",
+      "bizhubnews.ru",
+      "businessbrief.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topentrepreneur.ru",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "robots_ok": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "clariva.ru",
+      "commerce-hub.ru",
+      "contenia.ru",
+      "corporatenews.ru",
+      "corporatehub.ru",
+      "crescix.ru",
+      "journalprobiz.online",
+      "inspireo.ru",
+      "innoviq.ru",
+      "innovoe.ru",
+      "industry-digest.ru",
+      "industryreport.ru",
+      "growvia.online",
+      "groviva.ru",
+      "fortunea.ru",
+      "focusix.ru",
+      "flourix.ru",
+      "excellix.ru",
+      "entreva.ru",
+      "entrepreneursphere.online",
+      "entrepreneursphere.ru",
+      "enterpriseupdate.ru",
+      "enterprisevoice.ru",
+      "empowix.ru",
+      "econreport.ru",
+      "prowessa.ru",
+      "proentrepreneur.ru",
+      "proentrepreneur.online",
+      "pressarena.ru",
+      "optivae.online",
+      "newsida.ru",
+      "mediashot.ru",
+      "legat-herald.ru",
+      "legatpro.ru",
+      "legatbusiness.online",
+      "legatnews.ru",
+      "legatjournal.ru",
+      "legatpro.online",
+      "legatprobiz.ru",
+      "legatjournal.online",
+      "legacix.ru",
+      "jurnet.ru",
+      "journalprobiz.ru",
+      "journalbiz.ru",
+      "journalbiz.online",
+      "visiuma.ru",
+      "visiown.ru",
+      "vantagex.online",
+      "uptrive.ru",
+      "triumphx.ru",
+      "trenddigest.ru",
+      "trendupdate.ru",
+      "topentrepreneur.online",
+      "topentrepreneur.ru",
+      "topambassador.online",
+      "successa.ru",
+      "startupchronicle.ru",
+      "startup-daily.ru",
+      "startupchronicle.online",
+      "startup-life.ru",
+      "startupdigest.ru",
+      "scrollix.ru",
+      "reputon.ru",
+      "questix.ru",
+      "publixis.ru",
+      "ignitix.ru",
+      "pressflow.ru"
+    ],
+    "sitemap_ok": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "no_tag_sitemaps": [
+      "bizhubnews.ru",
+      "businessjournalist.ru",
+      "businessherald.online",
+      "capitrx.ru",
+      "clariva.ru",
+      "commerce-hub.ru",
+      "contenia.ru",
+      "corporatenews.ru",
+      "corporatehub.ru",
+      "corporatepulse.ru",
+      "crescix.ru",
+      "journalprobiz.online",
+      "inspireo.ru",
+      "innoviq.ru",
+      "innovoe.ru",
+      "industry-digest.ru",
+      "industryreport.ru",
+      "industryfocus.ru",
+      "growvia.online",
+      "groviva.ru",
+      "fortunea.ru",
+      "focusix.ru",
+      "flourix.ru",
+      "excellix.ru",
+      "entreva.ru",
+      "entrepreneursphere.online",
+      "entrepreneursphere.ru",
+      "enterpriseupdate.ru",
+      "enterprisenews.ru",
+      "enterprisevoice.ru",
+      "empowix.ru",
+      "econreport.ru",
+      "prowessa.ru",
+      "proentrepreneur.ru",
+      "proentrepreneur.online",
+      "primevo.ru",
+      "pressarena.ru",
+      "pioneerx.ru",
+      "peakvia.ru",
+      "optivae.ru",
+      "newsida.ru",
+      "mediashot.ru",
+      "legat-herald.ru",
+      "legatpro.ru",
+      "legatbusiness.online",
+      "legatbusiness.ru",
+      "legatnews.ru",
+      "legatjournal.ru",
+      "legatpro.online",
+      "legatprobiz.ru",
+      "legatjournal.online",
+      "legacix.ru",
+      "jurnet.ru",
+      "journalprobiz.ru",
+      "journalbiz.ru",
+      "journalbiz.online",
+      "visiown.ru",
+      "vantagex.ru",
+      "triumphx.ru",
+      "trenddigest.ru",
+      "trendupdate.ru",
+      "topentrepreneur.online",
+      "topentrepreneur.ru",
+      "topambassador.online",
+      "synerix.ru",
+      "successa.ru",
+      "striveon.ru",
+      "statusday.ru",
+      "startupchronicle.ru",
+      "startup-daily.ru",
+      "startupchronicle.online",
+      "startup-life.ru",
+      "startupdigest.ru",
+      "scrollix.ru",
+      "reputon.ru",
+      "questix.ru",
+      "publixis.ru",
+      "ignitix.ru",
+      "pressflow.ru"
+    ],
+    "rankmath_rest": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "capitrx.ru",
+      "journalprobiz.online",
+      "growvia.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ],
+    "sample_post_ok": [
+      "bizhubnews.ru",
+      "businessherald.online",
+      "journalprobiz.online",
+      "growvia.online",
+      "entreva.online",
+      "entrepreneursphere.online",
+      "proentrepreneur.online",
+      "optivae.online",
+      "legatbusiness.online",
+      "legatpro.online",
+      "legatjournal.online",
+      "journalbiz.online",
+      "vantagex.online",
+      "topentrepreneur.online",
+      "topambassador.online",
+      "startupchronicle.online"
+    ]
+  },
+  "unreachable_details": [
+    {
+      "domain": "bizhubnews.ru",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "businessherald.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "journalprobiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "growvia.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatbusiness.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatpro.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatjournal.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "journalbiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topambassador.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "startupchronicle.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    }
+  ],
+  "h1_details": [
+    {
+      "domain": "ampliv.ru",
+      "issues": [
+        "single_h1"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная",
+        "Ampliv: журнал о развитии бизнеса и личной эффективности"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ampliv.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "bizhubnews.ru",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "businessbrief.ru",
+      "issues": [
+        "single_h1"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "BusinessBrief: Главное за день. Новости экономики и дайджесты",
+        "BusinessBrief: Главное за день. Новости экономики и дайджесты"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://businessbrief.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "businessherald.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "journalprobiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "growvia.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatbusiness.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatpro.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatjournal.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "journalbiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "issues": [
+        "single_h1",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Top Entrepreneur",
+        "Top Entrepreneur"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "topambassador.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "startupchronicle.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    }
+  ],
+  "robots_details": [
+    {
+      "domain": "bizhubnews.ru",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "businessherald.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "clariva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 10,
+      "tag_busted_count": 10,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "commerce-hub.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "contenia.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "corporatenews.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "corporatehub.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Corporate Hub"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "crescix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Crescix News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalprobiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "inspireo.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Inspireo News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "innoviq.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Innoviq News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "innovoe.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Innovoe News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "industry-digest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "industryreport.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 16,
+      "tag_busted_count": 16,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "growvia.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "groviva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Groviva News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 10,
+      "tag_busted_count": 10,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "fortunea.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Fortunea News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "focusix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Focusix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "flourix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Flourix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "excellix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Excellix News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "entreva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "entrepreneursphere.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "enterpriseupdate.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Enterpriseupdate"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "enterprisevoice.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "empowix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "econreport.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Econreport News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "prowessa.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Prowessa News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "proentrepreneur.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 13,
+      "tag_busted_count": 13,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "pressarena.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Pressarena"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "optivae.online",
+      "issues": [
+        "robots_ok",
+        "sample_post_ok"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Optivae"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "newsida.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "mediashot.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legat-herald.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Legat Herald"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatpro.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 12,
+      "tag_busted_count": 12,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatbusiness.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatnews.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatjournal.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatpro.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatprobiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatjournal.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legacix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Legacix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "jurnet.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Jurnet"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalprobiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalbiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalbiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "visiuma.ru",
+      "issues": [
+        "robots_ok"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ampliv.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "visiown.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "vantagex.online",
+      "issues": [
+        "robots_ok",
+        "sample_post_ok"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "uptrive.ru",
+      "issues": [
+        "robots_ok"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://https://uptrive.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "triumphx.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "TriumphX"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "trenddigest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Trenddigest"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "trendupdate.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Trendupdate"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "issues": [
+        "single_h1",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Top Entrepreneur",
+        "Top Entrepreneur"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "topambassador.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "successa.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Successa"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupchronicle.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startup-daily.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupchronicle.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "startup-life.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Startup Life"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupdigest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Startup Digest"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "scrollix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "reputon.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "questix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "publixis.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "ignitix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Ignitix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "pressflow.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Pressflow"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    }
+  ],
+  "tag_details": [
+    {
+      "domain": "bizhubnews.ru",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "businessjournalist.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://businessjournalist.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 13,
+      "tag_busted_count": 13,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "businessherald.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "capitrx.ru",
+      "issues": [
+        "https_preferred",
+        "description_present",
+        "no_tag_sitemaps",
+        "rankmath_rest"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Сapitrx News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "http://capitrx.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 2,
+      "tag_busted_count": 2,
+      "rankmath": false,
+      "wp_status": 200
+    },
+    {
+      "domain": "clariva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 10,
+      "tag_busted_count": 10,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "commerce-hub.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "contenia.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "corporatenews.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "corporatehub.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Corporate Hub"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "corporatepulse.ru",
+      "issues": [
+        "https_preferred",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://corporatepulse.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "crescix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Crescix News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalprobiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "inspireo.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Inspireo News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "innoviq.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Innoviq News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "innovoe.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Innovoe News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "industry-digest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "industryreport.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 16,
+      "tag_busted_count": 16,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "industryfocus.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://industryfocus.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "growvia.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "groviva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Groviva News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 10,
+      "tag_busted_count": 10,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "fortunea.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Fortunea News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "focusix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Focusix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "flourix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Flourix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "excellix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Excellix News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "entreva.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "entrepreneursphere.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "enterpriseupdate.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Enterpriseupdate"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "enterprisenews.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://enterprisenews.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "enterprisevoice.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "empowix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "econreport.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Econreport News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "prowessa.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Prowessa News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "proentrepreneur.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 13,
+      "tag_busted_count": 13,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "primevo.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://primevo.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "pressarena.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Pressarena"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "pioneerx.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://pioneerx.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 10,
+      "tag_busted_count": 10,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "peakvia.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://peakvia.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "optivae.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://optivae.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "newsida.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "mediashot.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legat-herald.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Legat Herald"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatpro.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 12,
+      "tag_busted_count": 12,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatbusiness.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatbusiness.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://legatbusiness.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 6,
+      "tag_busted_count": 6,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatnews.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatjournal.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatpro.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatprobiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "legatjournal.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legacix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Legacix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "jurnet.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Jurnet"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalprobiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalbiz.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalbiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "visiown.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "vantagex.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://vantagex.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "triumphx.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "TriumphX"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 7,
+      "tag_busted_count": 7,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "trenddigest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Trenddigest"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "trendupdate.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Trendupdate"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "issues": [
+        "single_h1",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Top Entrepreneur",
+        "Top Entrepreneur"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "topambassador.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "synerix.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://synerix.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "successa.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Successa"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "striveon.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://striveon.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 13,
+      "tag_busted_count": 13,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "statusday.ru",
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://statusday.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupchronicle.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startup-daily.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupchronicle.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "startup-life.ru",
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Startup Life"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "startupdigest.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Startup Digest"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 4,
+      "tag_busted_count": 4,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "scrollix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 11,
+      "tag_busted_count": 11,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "reputon.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 9,
+      "tag_busted_count": 9,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "questix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "publixis.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Главная"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 8,
+      "tag_busted_count": 8,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "ignitix.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Ignitix"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 5,
+      "tag_busted_count": 5,
+      "rankmath": true,
+      "wp_status": 200
+    },
+    {
+      "domain": "pressflow.ru",
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Pressflow"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 3,
+      "tag_busted_count": 3,
+      "rankmath": true,
+      "wp_status": 200
+    }
+  ],
+  "rankmath_details": [
+    {
+      "domain": "bizhubnews.ru",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "businessherald.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "capitrx.ru",
+      "issues": [
+        "https_preferred",
+        "description_present",
+        "no_tag_sitemaps",
+        "rankmath_rest"
+      ],
+      "homepage_status": 200,
+      "homepage_error": null,
+      "h1s": [
+        "Сapitrx News"
+      ],
+      "robots_status": 200,
+      "robots_sitemaps": [
+        "http://capitrx.ru/sitemap_index.xml"
+      ],
+      "robots_disallow_root": false,
+      "sitemap_status": 200,
+      "tag_plain_count": 2,
+      "tag_busted_count": 2,
+      "rankmath": false,
+      "wp_status": 200
+    },
+    {
+      "domain": "journalprobiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "growvia.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatbusiness.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatpro.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "legatjournal.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "journalbiz.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "topambassador.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    },
+    {
+      "domain": "startupchronicle.online",
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "homepage_status": null,
+      "homepage_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "h1s": [],
+      "robots_status": null,
+      "robots_sitemaps": [],
+      "robots_disallow_root": false,
+      "sitemap_status": null,
+      "tag_plain_count": 0,
+      "tag_busted_count": 0,
+      "rankmath": false,
+      "wp_status": null
+    }
+  ],
+  "issue_patterns": [
+    {
+      "issues": [
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "count": 45,
+      "domains": [
+        "clariva.ru",
+        "commerce-hub.ru",
+        "corporatenews.ru",
+        "corporatehub.ru",
+        "crescix.ru",
+        "inspireo.ru",
+        "innoviq.ru",
+        "innovoe.ru",
+        "industry-digest.ru",
+        "groviva.ru",
+        "fortunea.ru",
+        "focusix.ru",
+        "flourix.ru",
+        "excellix.ru",
+        "entreva.ru",
+        "entrepreneursphere.ru",
+        "enterpriseupdate.ru",
+        "empowix.ru",
+        "econreport.ru",
+        "prowessa.ru",
+        "proentrepreneur.ru",
+        "pressarena.ru",
+        "newsida.ru",
+        "mediashot.ru",
+        "legat-herald.ru",
+        "legatpro.ru",
+        "legatnews.ru",
+        "legatjournal.ru",
+        "legatprobiz.ru",
+        "legacix.ru",
+        "jurnet.ru",
+        "journalprobiz.ru",
+        "journalbiz.ru",
+        "visiown.ru",
+        "triumphx.ru",
+        "trenddigest.ru",
+        "successa.ru",
+        "startupchronicle.ru",
+        "startupdigest.ru",
+        "scrollix.ru",
+        "reputon.ru",
+        "questix.ru",
+        "publixis.ru",
+        "ignitix.ru",
+        "pressflow.ru"
+      ]
+    },
+    {
+      "issues": [
+        "reachable",
+        "https_preferred",
+        "title_present",
+        "description_present",
+        "canonical_self",
+        "single_h1",
+        "robots_ok",
+        "sitemap_ok",
+        "no_tag_sitemaps",
+        "rankmath_rest",
+        "sample_post_ok"
+      ],
+      "count": 13,
+      "domains": [
+        "bizhubnews.ru",
+        "businessherald.online",
+        "journalprobiz.online",
+        "growvia.online",
+        "entrepreneursphere.online",
+        "proentrepreneur.online",
+        "legatbusiness.online",
+        "legatpro.online",
+        "legatjournal.online",
+        "journalbiz.online",
+        "topentrepreneur.online",
+        "topambassador.online",
+        "startupchronicle.online"
+      ]
+    },
+    {
+      "issues": [
+        "no_tag_sitemaps"
+      ],
+      "count": 12,
+      "domains": [
+        "businessjournalist.ru",
+        "industryfocus.ru",
+        "enterprisenews.ru",
+        "primevo.ru",
+        "pioneerx.ru",
+        "peakvia.ru",
+        "optivae.ru",
+        "legatbusiness.ru",
+        "vantagex.ru",
+        "synerix.ru",
+        "striveon.ru",
+        "statusday.ru"
+      ]
+    },
+    {
+      "issues": [],
+      "count": 11,
+      "domains": [
+        "ambitix.ru",
+        "aspirix.ru",
+        "biz-focus.ru",
+        "biz-report.ru",
+        "bizupdate.ru",
+        "biz-world.ru",
+        "businessherald.ru",
+        "business-arena.ru",
+        "business-focus.ru",
+        "industrydigest.ru",
+        "topambassador.ru"
+      ]
+    },
+    {
+      "issues": [
+        "https_preferred",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "count": 6,
+      "domains": [
+        "contenia.ru",
+        "industryreport.ru",
+        "enterprisevoice.ru",
+        "trendupdate.ru",
+        "startup-daily.ru",
+        "startup-life.ru"
+      ]
+    },
+    {
+      "issues": [
+        "robots_ok"
+      ],
+      "count": 2,
+      "domains": [
+        "visiuma.ru",
+        "uptrive.ru"
+      ]
+    },
+    {
+      "issues": [
+        "robots_ok",
+        "sample_post_ok"
+      ],
+      "count": 2,
+      "domains": [
+        "optivae.online",
+        "vantagex.online"
+      ]
+    },
+    {
+      "issues": [
+        "single_h1"
+      ],
+      "count": 2,
+      "domains": [
+        "ampliv.ru",
+        "businessbrief.ru"
+      ]
+    },
+    {
+      "issues": [
+        "https_preferred",
+        "description_present",
+        "no_tag_sitemaps",
+        "rankmath_rest"
+      ],
+      "count": 1,
+      "domains": [
+        "capitrx.ru"
+      ]
+    },
+    {
+      "issues": [
+        "https_preferred",
+        "no_tag_sitemaps"
+      ],
+      "count": 1,
+      "domains": [
+        "corporatepulse.ru"
+      ]
+    },
+    {
+      "issues": [
+        "sample_post_ok"
+      ],
+      "count": 1,
+      "domains": [
+        "entreva.online"
+      ]
+    },
+    {
+      "issues": [
+        "single_h1",
+        "robots_ok",
+        "no_tag_sitemaps"
+      ],
+      "count": 1,
+      "domains": [
+        "topentrepreneur.ru"
+      ]
+    }
+  ]
+}
