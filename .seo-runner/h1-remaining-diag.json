@@ -1,0 +1,289 @@
+{
+  "mode": "remaining_h1_structure_diag",
+  "started_at": "2026-08-17T13:11:24Z",
+  "sites": [
+    {
+      "domain": "ampliv.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-header-main principal-color-border-top-color ",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header actunews-full-section general-border-color  page-header-has-title actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": " actunews-full-section-content site-content-width",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header-content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-content-container actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "content",
+              "class": "actunews-site-content actunews-full-section-content content-sidebar-container site-content-width content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "primary",
+              "class": "site-content-area actunews-simple-page site-content-area-style",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "main",
+              "class": "actunews-site-main",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "custom-seo-title",
+              "role": ""
+            }
+          ],
+          "text": "Ampliv: журнал о развитии бизнеса и личной эффективности"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1>Главная</h1>",
+        "<h1>Ampliv: журнал о развитии бизнеса и личной эффективности</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "businessbrief.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "site-title font-family-1",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "main-navigation-bar",
+              "class": "af-bottom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bottom-bar-flex",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "logo",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "site-branding uppercase-site-title",
+              "role": ""
+            }
+          ],
+          "text": "BusinessBrief: Главное за день. Новости экономики и дайджесты"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "html",
+              "id": "",
+              "class": "",
+              "role": ""
+            },
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-37 wp-custom-logo wp-embed-responsive wp-theme-morenews-pro wp-child-theme-morenews-pro-child aft-default-mode aft-header-layout-side header-image-default widget-title-border-bottom default-content-layout single-content-mode-boxed single-post-title-boxed align-content-left af-wide-layout",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site af-whole-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            }
+          ],
+          "text": "BusinessBrief: Главное за день. Новости экономики и дайджесты"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1 class=\"site-title font-family-1\"> <a href=\"https://businessbrief.ru/\" class=\"site-title-anchor\" rel=\"home\">BusinessBrief: Главное за день. Новости экономики и дайджесты</a> </h1>",
+        "<h1 class=\"\"> BusinessBrief: Главное за день. Новости экономики и дайджесты </h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "site-title font-family-1",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "af-middle-header ",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "af-middle-container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "logo",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "site-branding uppercase-site-title",
+              "role": ""
+            }
+          ],
+          "text": "Top Entrepreneur"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "site-title font-family-1",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "main-navigation-bar",
+              "class": "af-bottom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bottom-bar-flex",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "logo",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "site-branding uppercase-site-title",
+              "role": ""
+            }
+          ],
+          "text": "Top Entrepreneur"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1 class=\"site-title font-family-1\"> <a href=\"https://topentrepreneur.ru/\" class=\"site-title-anchor\" rel=\"home\">Top Entrepreneur</a> </h1>",
+        "<h1 class=\"site-title font-family-1\"> <a href=\"https://topentrepreneur.ru/\" class=\"site-title-anchor\" rel=\"home\">Top Entrepreneur</a> </h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    }
+  ],
+  "finished_at": "2026-08-17T13:11:27Z"
+}
