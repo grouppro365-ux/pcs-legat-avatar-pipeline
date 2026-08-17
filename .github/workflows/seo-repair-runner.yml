@@ -1,4 +1,4 @@
-name: Remaining H1 Diagnostics
+name: Actionable Fleet SEO Diagnostics
 
 on:
   push:
@@ -10,30 +10,29 @@ permissions:
   contents: write
 
 jobs:
-  diagnose-h1:
+  diagnose-actionable:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Inspect rendered H1 structure
+      - name: Classify robots HTTPS and post failures
         shell: bash
         run: |
           set -euo pipefail
-          cd .github/seo
-          python3 seo_h1_diag.py
-          cp seo-h1-diag.json /tmp/seo-h1-diag.json
-      - name: Publish H1 diagnostics
+          python3 .github/seo/seo_actionable_diagnostics.py
+          cp seo-actionable-diagnostics.json /tmp/seo-actionable-diagnostics.json
+      - name: Publish actionable diagnostics
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-h1-diagnostics"
+          git config user.name "seo-fleet-diagnostics"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-h1-diag.json .seo-runner/h1-remaining-diag.json
-          git add .seo-runner/h1-remaining-diag.json
-          git commit -m "Publish remaining H1 diagnostics [skip ci]"
+          cp /tmp/seo-actionable-diagnostics.json .seo-runner/actionable-diagnostics.json
+          git add .seo-runner/actionable-diagnostics.json
+          git commit -m "Publish actionable fleet SEO diagnostics [skip ci]"
           git push origin HEAD:main
