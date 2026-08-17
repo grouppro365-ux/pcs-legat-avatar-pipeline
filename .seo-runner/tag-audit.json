@@ -1,0 +1,350 @@
+{
+  "started_at": "2026-08-17T05:34:12Z",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 3369,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "aspirix.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 3000,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "biz-focus.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4039,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "bizcenter-news.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4183,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "biz-report.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 17,
+      "tag_urls_in_sitemaps": 3140,
+      "wp_tag_total": 5892,
+      "tag_sitemaps": [
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap1.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap2.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap3.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap4.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap5.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap6.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap7.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap8.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap9.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap10.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap11.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap12.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap13.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap14.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap15.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap16.xml",
+          "status": 200,
+          "count": 113
+        },
+        {
+          "url": "https://biz-report.ru/post_tag-sitemap17.xml",
+          "status": 200,
+          "count": 27
+        }
+      ],
+      "samples": [
+        {
+          "url": "https://biz-report.ru/tag/legat-business/",
+          "status": 200,
+          "title": "Статьи - Legat Business - Biz-report новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://biz-report.ru/tag/legat-business/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 16
+        },
+        {
+          "url": "https://biz-report.ru/tag/korporativnaya-kultura/",
+          "status": 200,
+          "title": "Статьи - корпоративная культура - Biz-report новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://biz-report.ru/tag/korporativnaya-kultura/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        },
+        {
+          "url": "https://biz-report.ru/tag/missiya-kompanii/",
+          "status": 200,
+          "title": "Статьи - миссия компании - Biz-report новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://biz-report.ru/tag/missiya-kompanii/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        },
+        {
+          "url": "https://biz-report.ru/tag/avtomatizacziya-proczessov/",
+          "status": 200,
+          "title": "Статьи - автоматизация процессов - Biz-report новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://biz-report.ru/tag/avtomatizacziya-proczessov/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        },
+        {
+          "url": "https://biz-report.ru/tag/optimizacziya-proczessov/",
+          "status": 200,
+          "title": "Статьи - оптимизация процессов - Biz-report новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://biz-report.ru/tag/optimizacziya-proczessov/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        }
+      ]
+    },
+    {
+      "domain": "bizupdate.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4198,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "biz-world.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4059,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "businessherald.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 13,
+      "tag_urls_in_sitemaps": 2234,
+      "wp_tag_total": 4946,
+      "tag_sitemaps": [
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap1.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap2.xml",
+          "status": 200,
+          "count": 14
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap3.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap4.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap5.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap6.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap7.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap8.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap9.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap10.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap11.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap12.xml",
+          "status": 200,
+          "count": 200
+        },
+        {
+          "url": "https://businessherald.ru/post_tag-sitemap13.xml",
+          "status": 200,
+          "count": 20
+        }
+      ],
+      "samples": [
+        {
+          "url": "https://businessherald.ru/tag/kpi/",
+          "status": 200,
+          "title": "Статьи - KPI - Businessherald новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://businessherald.ru/tag/kpi/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 16
+        },
+        {
+          "url": "https://businessherald.ru/tag/korporativnaya-kultura/",
+          "status": 200,
+          "title": "Статьи - корпоративная культура - Businessherald новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://businessherald.ru/tag/korporativnaya-kultura/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 19
+        },
+        {
+          "url": "https://businessherald.ru/tag/innovaczii-v-biznese/",
+          "status": 200,
+          "title": "Статьи - инновации в бизнесе - Businessherald новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://businessherald.ru/tag/innovaczii-v-biznese/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        },
+        {
+          "url": "https://businessherald.ru/tag/privlechenie-investiczij/",
+          "status": 200,
+          "title": "Статьи - привлечение инвестиций - Businessherald новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://businessherald.ru/tag/privlechenie-investiczij/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 15
+        },
+        {
+          "url": "https://businessherald.ru/tag/korporativnye-meropriyatiya/",
+          "status": 200,
+          "title": "Статьи - корпоративные мероприятия - Businessherald новости",
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "canonical": "https://businessherald.ru/tag/korporativnye-meropriyatiya/",
+          "indexable": true,
+          "same_canonical": true,
+          "approx_internal_content_links": 16
+        }
+      ]
+    },
+    {
+      "domain": "business-arena.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4227,
+      "tag_sitemaps": [],
+      "samples": []
+    },
+    {
+      "domain": "business-focus.ru",
+      "sitemap_status": 200,
+      "tag_sitemap_count": 0,
+      "tag_urls_in_sitemaps": 0,
+      "wp_tag_total": 4595,
+      "tag_sitemaps": [],
+      "samples": []
+    }
+  ],
+  "finished_at": "2026-08-17T05:34:44Z"
+}
