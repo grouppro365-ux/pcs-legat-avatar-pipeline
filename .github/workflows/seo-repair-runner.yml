@@ -1,4 +1,4 @@
-name: Fleet Repair Runner Validation
+name: Fleet Repair Runner PHP Validation
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
       - name: Compile Python repair runner
         shell: bash
         run: python3 -m py_compile .github/seo/seo_fleet_beget_repair.py
-      - name: Validate target planning without exposing secrets
+      - name: Validate target planning
         shell: bash
         run: |
           python3 - <<'PY'
@@ -28,4 +28,12 @@ jobs:
           t=m.build_targets()
           print(json.dumps({'targets':len(t),'tag':sum(x['fix_tag'] for x in t),'robots':sum(x['fix_robots'] for x in t),'https':sum(x['fix_https'] for x in t),'h1':sum(bool(x['h1_mode']) for x in t),'capitrx_excluded':all(x['domain']!='capitrx.ru' for x in t)}))
           assert t and all(x['ftp_wp_path']==x['domain']+'/public_html' for x in t)
+          cfg={'domain':'example.test','ftp_wp_path':'example.test/public_html','fix_tag':True,'fix_robots':True,'fix_https':True,'h1_mode':'keep_first_site_title','token':'dummy-token'}
+          open('/tmp/seo-fleet-installer.php','w',encoding='utf-8').write(m.make_php(cfg))
           PY
+      - name: Lint generated PHP installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v php
+          php -l /tmp/seo-fleet-installer.php
