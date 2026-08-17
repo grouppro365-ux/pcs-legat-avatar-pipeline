@@ -3,10 +3,7 @@ import json, re, ssl, time, urllib.request, urllib.error
 from html.parser import HTMLParser
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-SITES = [
-    'ambitix.ru', 'aspirix.ru', 'bizcenter-news.ru', 'bizupdate.ru',
-    'biz-world.ru', 'business-arena.ru', 'business-focus.ru'
-]
+SITES = ['ampliv.ru', 'businessbrief.ru', 'topentrepreneur.ru']
 
 class H1Parser(HTMLParser):
     def __init__(self):
@@ -25,7 +22,6 @@ class H1Parser(HTMLParser):
         if tag=='h1' and self.current is not None:
             self.current['text']=' '.join(''.join(self.current['text']).split())
             self.h1s.append(self.current);self.current=None
-        # HTML may be malformed; unwind to last matching tag.
         for i in range(len(self.stack)-1,-1,-1):
             if self.stack[i]['tag']==tag:
                 self.stack=self.stack[:i]
@@ -33,24 +29,23 @@ class H1Parser(HTMLParser):
 
 def fetch(domain):
     url='https://'+domain+'/'
-    q=urllib.request.Request(url,headers={'User-Agent':'SEOH1Diagnostics/1.0','Cache-Control':'no-cache'})
+    q=urllib.request.Request(url,headers={'User-Agent':'SEOH1Diagnostics/1.1','Cache-Control':'no-cache'})
     try:
         with urllib.request.urlopen(q,timeout=30,context=ssl.create_default_context()) as r:
             body=r.read(4_000_000).decode('utf-8','replace');status=r.status;headers=dict(r.headers)
     except urllib.error.HTTPError as e:
         body=e.read(1_000_000).decode('utf-8','replace');status=e.code;headers=dict(e.headers or {})
-    p=H1Parser();
+    p=H1Parser()
     try:p.feed(body)
     except Exception:pass
     raw=[]
     for m in re.finditer(r'<h1\b[^>]*>.*?</h1\s*>',body,re.I|re.S):
-        frag=re.sub(r'\s+',' ',m.group(0)).strip()
-        raw.append(frag[:1200])
+        frag=re.sub(r'\s+',' ',m.group(0)).strip();raw.append(frag[:1200])
     return {'domain':domain,'status':status,'h1_count':len(p.h1s),'h1s':p.h1s,'raw_h1_fragments':raw,'cache_headers':{k:v for k,v in headers.items() if k.lower() in ('server','cache-control','x-cache','x-cache-status')}}
 
 def main():
-    out={'mode':'h1_structure_diag','started_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'sites':[]}
-    with ThreadPoolExecutor(max_workers=7) as ex:
+    out={'mode':'remaining_h1_structure_diag','started_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'sites':[]}
+    with ThreadPoolExecutor(max_workers=3) as ex:
         fut={ex.submit(fetch,d):d for d in SITES}
         for f in as_completed(fut):
             try:out['sites'].append(f.result())
