@@ -1,4 +1,4 @@
-name: Ephemeral SEO Cache Purge
+name: Ephemeral SEO Guarded Repair
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  purge:
+  repair:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,7 +27,7 @@ jobs:
           echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
           openssl req -x509 -newkey rsa:3072 -sha256 -nodes \
             -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem \
-            -days 1 -subj "/CN=ephemeral-seo-purge-$NONCE" >/dev/null 2>&1
+            -days 1 -subj "/CN=ephemeral-seo-repair-$NONCE" >/dev/null 2>&1
           git config user.name "seo-ephemeral-runner"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
@@ -43,9 +43,9 @@ jobs:
           },indent=2))
           PY
           git add .seo-runner/public.json
-          git commit -m "Publish ephemeral SEO cache purge certificate [skip ci]"
+          git commit -m "Publish ephemeral guarded SEO repair certificate [skip ci]"
           git push origin HEAD:main
-      - name: Wait for encrypted purge payload
+      - name: Wait for encrypted repair payload
         shell: bash
         env:
           NONCE: ${{ steps.handshake.outputs.nonce }}
@@ -62,12 +62,12 @@ jobs:
           openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms \
             -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
           chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
-      - name: Purge page caches and verify
+      - name: Apply guarded repair and verify
         shell: bash
         run: |
           set -euo pipefail
           SEO_PAYLOAD=/tmp/seo-payload.json SEO_RESULT=/tmp/seo-result.json \
-            python3 .github/seo/seo_cache_purge_runner.py
+            python3 .github/seo/seo_repair_runner.py
       - name: Publish sanitized result
         shell: bash
         env:
@@ -78,7 +78,7 @@ jobs:
           git reset --hard origin/main
           cp /tmp/seo-result.json ".seo-runner/result-${NONCE}.json"
           git add ".seo-runner/result-${NONCE}.json"
-          git commit -m "Publish sanitized SEO cache purge result [skip ci]"
+          git commit -m "Publish sanitized guarded SEO repair result [skip ci]"
           git push origin HEAD:main
       - name: Destroy ephemeral material
         if: always()
