@@ -1,0 +1,68 @@
+{
+  "mode": "cache_purge",
+  "sites": [
+    {
+      "domain": "bizcenter-news.ru",
+      "before": {
+        "status": 200,
+        "title": "Главная - Biz Center News: Главные события делового мира сегодня",
+        "description": "Все важные новости бизнеса на одном экране. Технологии, стартапы и корпоративные события. Будьте в курсе того, что влияет на индустрию.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "purge": {
+        "ok": true,
+        "domain": "bizcenter-news.ru",
+        "plugins": [
+          "auto-image-attributes-from-filename-with-bulk-updater/iaff_image-attributes-from-filename.php",
+          "cf7-spam-protection/cf7-spam-protection.php",
+          "comments-plus/comments-plus.php",
+          "contact-form-7/wp-contact-form-7.php",
+          "counter/counter.php",
+          "cyr2lat/cyr-to-lat.php",
+          "ewww-image-optimizer/ewww-image-optimizer.php",
+          "fast-indexing-api/instant-indexing.php",
+          "luckywp-table-of-contents/luckywp-table-of-contents.php",
+          "random-views-counter/random-views-counter.php",
+          "seo-by-rank-math/rank-math.php",
+          "seo-optimized-images/seo-optimized-images.php",
+          "w3-total-cache/w3-total-cache.php"
+        ],
+        "actions": {
+          "wp_cache_flush": true,
+          "w3tc": true,
+          "litespeed_action": true,
+          "sg_action": true
+        },
+        "removed_cache_subtrees": [],
+        "self_deleted": true
+      },
+      "after": {
+        "status": 200,
+        "title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+        "description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      },
+      "root_after": {
+        "status": 200,
+        "title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+        "description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/",
+        "cache_headers": {
+          "Server": "nginx-reuseport/1.21.1"
+        }
+      }
+    }
+  ]
+}
