@@ -1,4 +1,4 @@
-name: Final SEO Verification
+name: Tag Archive SEO Audit
 
 on:
   push:
@@ -10,39 +10,25 @@ permissions:
   contents: write
 
 jobs:
-  verify:
+  audit-tags:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with: {fetch-depth: 0}
-      - name: Run read-only final audit
-        shell: bash
-        run: |
-          set +e
-          python3 .github/seo/seo_final_audit.py
-          echo $? > /tmp/seo-final-code
-          exit 0
-      - name: Publish final report
+      - name: Audit tag archives
+        run: python3 .github/seo/seo_tag_audit.py
+      - name: Publish tag audit
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name "seo-final-verifier"
+          git config user.name "seo-tag-auditor"
           git config user.email "actions@users.noreply.github.com"
-          cp seo-final-report.json /tmp/seo-final-report.json
+          cp seo-tag-audit.json /tmp/seo-tag-audit.json
           git fetch origin main --quiet
           git reset --hard origin/main
           mkdir -p .seo-runner
-          cp /tmp/seo-final-report.json .seo-runner/final-report.json
-          git add .seo-runner/final-report.json
-          git commit -m "Publish final SEO verification report [skip ci]"
+          cp /tmp/seo-tag-audit.json .seo-runner/tag-audit.json
+          git add .seo-runner/tag-audit.json
+          git commit -m "Publish tag archive SEO audit [skip ci]"
           git push origin HEAD:main
-      - name: Enforce all-pass gate
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import json,sys
-          r=json.load(open('/tmp/seo-final-report.json',encoding='utf-8'))
-          print({'all_pass':r['all_pass'],'passed':r['passed'],'total':r['total']})
-          sys.exit(0 if r['all_pass'] else 3)
-          PY
