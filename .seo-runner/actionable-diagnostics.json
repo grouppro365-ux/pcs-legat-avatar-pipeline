@@ -1,0 +1,1136 @@
+{
+  "mode": "actionable_repair_diagnostics",
+  "started_at": "2026-08-17T13:13:05Z",
+  "robots": [
+    {
+      "domain": "bizhubnews.ru",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -5] No address associated with hostname>"
+    },
+    {
+      "domain": "businessherald.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "clariva.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "commerce-hub.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "contenia.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "corporatenews.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "corporatehub.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "crescix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "journalprobiz.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "inspireo.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "innoviq.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "innovoe.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "industry-digest.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "industryreport.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "growvia.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>"
+    },
+    {
+      "domain": "groviva.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "fortunea.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "focusix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "flourix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "excellix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "entreva.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "entrepreneursphere.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "enterpriseupdate.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "enterprisevoice.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "empowix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "econreport.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "prowessa.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "proentrepreneur.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "pressarena.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "optivae.online",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "newsida.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "mediashot.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legat-herald.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatpro.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatbusiness.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatnews.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatjournal.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatpro.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatprobiz.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatjournal.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legacix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "jurnet.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "journalprobiz.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "journalbiz.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "journalbiz.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "visiuma.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ampliv.ru/sitemap_index.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\n\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nDisallow: /wp-includes/\nDisallow: /xmlrpc.php\nDisallow: /readme.html\nDisallow: /?s=\nDisallow: /search/\nDisallow: /trackback/\nDisallow: /feed/\nDisallow: /comments/\nDisallow: /tag/\nDisallow: /author/\nDisallow: /wp-content/cache/\n\nAllow: /*.css\nAllow: /*.js\nAllow: /wp-content/uploads/\n\n\n\nSitemap: https://ampliv.ru/sitemap_index.xml",
+      "error": null
+    },
+    {
+      "domain": "visiown.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "vantagex.online",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "uptrive.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://https://uptrive.ru/sitemap_index.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://https://uptrive.ru/sitemap_index.xml",
+      "error": null
+    },
+    {
+      "domain": "triumphx.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "trenddigest.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "trendupdate.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "topambassador.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "successa.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "startupchronicle.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "startup-daily.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "startupchronicle.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "startup-life.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "startupdigest.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "scrollix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "reputon.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "questix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "publixis.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://startupchronicle.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://startupchronicle.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "ignitix.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "pressflow.ru",
+      "kind": "foreign_or_wrong_sitemap",
+      "status": 200,
+      "sitemaps": [
+        "https://ambitix.online/sitemap.xml"
+      ],
+      "disallow_root": false,
+      "body_prefix": "User-agent: *\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\n\r\n# Блокировка нежелательных разделов\r\nDisallow: /cgi-bin/\r\nDisallow: /tmp/\r\nDisallow: /junk/\r\n\r\n# Разрешение индексации всех остальных страниц\r\nAllow: /\r\n\r\n# Указание на карту сайта\r\nSitemap: https://ambitix.online/sitemap.xml",
+      "error": null
+    },
+    {
+      "domain": "legatherald.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatprobiz.online",
+      "kind": "non200_or_unreachable",
+      "status": null,
+      "sitemaps": [],
+      "disallow_root": false,
+      "body_prefix": "",
+      "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    }
+  ],
+  "https": [
+    {
+      "domain": "bizhubnews.ru",
+      "http_status": null,
+      "http_final": "http://bizhubnews.ru/",
+      "https_status": null,
+      "https_final": "https://bizhubnews.ru/",
+      "http_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>",
+      "https_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>"
+    },
+    {
+      "domain": "businessherald.online",
+      "http_status": null,
+      "http_final": "http://businessherald.online/",
+      "https_status": null,
+      "https_final": "https://businessherald.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "capitrx.ru",
+      "http_status": 200,
+      "http_final": "http://capitrx.ru/",
+      "https_status": 200,
+      "https_final": "https://capitrx.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "contenia.ru",
+      "http_status": 200,
+      "http_final": "http://contenia.ru/",
+      "https_status": 200,
+      "https_final": "https://contenia.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "corporatepulse.ru",
+      "http_status": 200,
+      "http_final": "http://corporatepulse.ru/",
+      "https_status": 200,
+      "https_final": "https://corporatepulse.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "journalprobiz.online",
+      "http_status": null,
+      "http_final": "http://journalprobiz.online/",
+      "https_status": null,
+      "https_final": "https://journalprobiz.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "industryreport.ru",
+      "http_status": 200,
+      "http_final": "http://industryreport.ru/",
+      "https_status": 200,
+      "https_final": "https://industryreport.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "growvia.online",
+      "http_status": null,
+      "http_final": "http://growvia.online/",
+      "https_status": null,
+      "https_final": "https://growvia.online/",
+      "http_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>",
+      "https_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>"
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "http_status": null,
+      "http_final": "http://entrepreneursphere.online/",
+      "https_status": null,
+      "https_final": "https://entrepreneursphere.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "enterprisevoice.ru",
+      "http_status": 200,
+      "http_final": "http://enterprisevoice.ru/",
+      "https_status": 200,
+      "https_final": "https://enterprisevoice.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "http_status": null,
+      "http_final": "http://proentrepreneur.online/",
+      "https_status": null,
+      "https_final": "https://proentrepreneur.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatbusiness.online",
+      "http_status": null,
+      "http_final": "http://legatbusiness.online/",
+      "https_status": null,
+      "https_final": "https://legatbusiness.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatpro.online",
+      "http_status": null,
+      "http_final": "http://legatpro.online/",
+      "https_status": null,
+      "https_final": "https://legatpro.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatjournal.online",
+      "http_status": null,
+      "http_final": "http://legatjournal.online/",
+      "https_status": null,
+      "https_final": "https://legatjournal.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "journalbiz.online",
+      "http_status": null,
+      "http_final": "http://journalbiz.online/",
+      "https_status": null,
+      "https_final": "https://journalbiz.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "trendupdate.ru",
+      "http_status": 200,
+      "http_final": "http://trendupdate.ru/",
+      "https_status": 200,
+      "https_final": "https://trendupdate.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "http_status": null,
+      "http_final": "http://topentrepreneur.online/",
+      "https_status": null,
+      "https_final": "https://topentrepreneur.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "topambassador.online",
+      "http_status": null,
+      "http_final": "http://topambassador.online/",
+      "https_status": null,
+      "https_final": "https://topambassador.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "startup-daily.ru",
+      "http_status": 200,
+      "http_final": "http://startup-daily.ru/",
+      "https_status": 200,
+      "https_final": "https://startup-daily.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "startupchronicle.online",
+      "http_status": null,
+      "http_final": "http://startupchronicle.online/",
+      "https_status": null,
+      "https_final": "https://startupchronicle.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "startup-life.ru",
+      "http_status": 200,
+      "http_final": "http://startup-life.ru/",
+      "https_status": 200,
+      "https_final": "https://startup-life.ru/",
+      "http_error": null,
+      "https_error": null
+    },
+    {
+      "domain": "legatherald.online",
+      "http_status": null,
+      "http_final": "http://legatherald.online/",
+      "https_status": null,
+      "https_final": "https://legatherald.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatprobiz.online",
+      "http_status": null,
+      "http_final": "http://legatprobiz.online/",
+      "https_status": null,
+      "https_final": "https://legatprobiz.online/",
+      "http_error": "URLError: <urlopen error [Errno -2] Name or service not known>",
+      "https_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    }
+  ],
+  "sample_posts": [
+    {
+      "domain": "bizhubnews.ru",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -5] No address associated with hostname>"
+    },
+    {
+      "domain": "businessherald.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "journalprobiz.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "growvia.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -3] Temporary failure in name resolution>"
+    },
+    {
+      "domain": "entreva.online",
+      "rest_status": 200,
+      "posts_type": "list",
+      "posts_count": 0,
+      "rest_error": null
+    },
+    {
+      "domain": "entrepreneursphere.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "proentrepreneur.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "optivae.online",
+      "rest_status": 200,
+      "posts_type": "list",
+      "posts_count": 0,
+      "rest_error": null
+    },
+    {
+      "domain": "legatbusiness.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatpro.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatjournal.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "journalbiz.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "vantagex.online",
+      "rest_status": 200,
+      "posts_type": "list",
+      "posts_count": 0,
+      "rest_error": null
+    },
+    {
+      "domain": "topentrepreneur.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "topambassador.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "startupchronicle.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatherald.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    },
+    {
+      "domain": "legatprobiz.online",
+      "rest_status": null,
+      "posts_type": "NoneType",
+      "posts_count": null,
+      "rest_error": "URLError: <urlopen error [Errno -2] Name or service not known>"
+    }
+  ],
+  "capitrx": {
+    "domain": "capitrx.ru",
+    "home_status": 200,
+    "title": "Главная - Сapitrx News",
+    "description": null,
+    "canonical": "https://capitrx.ru/",
+    "robots": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+    "wp_status": 200,
+    "namespaces": [
+      "oembed/1.0",
+      "contact-form-7/v1",
+      "yoast/v1",
+      "mcp",
+      "wp/v2",
+      "wp-site-health/v1",
+      "wp-block-editor/v1",
+      "wp-abilities/v1"
+    ],
+    "wp_error": null
+  },
+  "summary": {
+    "robots_kinds": {
+      "non200_or_unreachable": 15,
+      "foreign_or_wrong_sitemap": 56
+    },
+    "https_live_nonredirect": [
+      "capitrx.ru",
+      "contenia.ru",
+      "corporatepulse.ru",
+      "industryreport.ru",
+      "enterprisevoice.ru",
+      "trendupdate.ru",
+      "startup-daily.ru",
+      "startup-life.ru"
+    ],
+    "sample_post_live_failures": [
+      "entreva.online",
+      "optivae.online",
+      "vantagex.online"
+    ]
+  },
+  "finished_at": "2026-08-17T13:13:49Z"
+}
