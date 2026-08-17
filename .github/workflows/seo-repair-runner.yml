@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  audit:
+  preflight:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -33,20 +33,16 @@ jobs:
           NONCE="$NONCE" python3 - <<'PY'
           import base64, json, os
           cert=open('/tmp/seo-cert.pem','rb').read()
-          data={
-              'source_sha': os.environ['GITHUB_SHA'],
-              'nonce': os.environ['NONCE'],
-              'cert_b64': base64.b64encode(cert).decode(),
-          }
+          data={'source_sha':os.environ['GITHUB_SHA'],'nonce':os.environ['NONCE'],'cert_b64':base64.b64encode(cert).decode()}
           open('.seo-runner/public.json','w',encoding='utf-8').write(json.dumps(data,indent=2))
           PY
           git config user.name "seo-ephemeral-runner"
           git config user.email "actions@users.noreply.github.com"
           git add .seo-runner/public.json
-          git commit -m "Publish ephemeral SEO runner certificate [skip ci]"
+          git commit -m "Publish ephemeral SEO preflight certificate [skip ci]"
           git push origin HEAD:main
 
-      - name: Wait for encrypted audit payload
+      - name: Wait for encrypted payload
         shell: bash
         env:
           NONCE: ${{ steps.handshake.outputs.nonce }}
@@ -56,29 +52,21 @@ jobs:
           found=0
           for i in $(seq 1 120); do
             git fetch origin main --quiet
-            if git show "origin/main:${PAYLOAD_PATH}" > /tmp/seo-payload.b64 2>/dev/null; then
-              found=1
-              break
-            fi
+            if git show "origin/main:${PAYLOAD_PATH}" > /tmp/seo-payload.b64 2>/dev/null; then found=1; break; fi
             sleep 5
           done
-          if [ "$found" != "1" ]; then
-            echo "Encrypted payload was not supplied before timeout" >&2
-            exit 2
-          fi
+          [ "$found" = "1" ] || { echo "Encrypted payload missing" >&2; exit 2; }
           base64 -d /tmp/seo-payload.b64 > /tmp/seo-payload.cms
-          openssl cms -decrypt -binary -inform DER \
-            -in /tmp/seo-payload.cms \
-            -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem \
-            -out /tmp/seo-payload.json
+          openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms \
+            -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
           chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
 
-      - name: Run live SEO audit
+      - name: Run write preflight
         shell: bash
         run: |
           set -euo pipefail
           SEO_PAYLOAD=/tmp/seo-payload.json SEO_RESULT=/tmp/seo-result.json \
-            python3 .github/seo/seo_audit_runner.py
+            python3 .github/seo/seo_preflight_runner.py
 
       - name: Publish sanitized result
         shell: bash
@@ -91,7 +79,7 @@ jobs:
           mkdir -p .seo-runner
           cp /tmp/seo-result.json ".seo-runner/result-${NONCE}.json"
           git add ".seo-runner/result-${NONCE}.json"
-          git commit -m "Publish sanitized SEO audit result [skip ci]"
+          git commit -m "Publish sanitized SEO write preflight [skip ci]"
           git push origin HEAD:main
 
       - name: Destroy ephemeral material
