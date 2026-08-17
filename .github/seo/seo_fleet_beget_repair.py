@@ -4,7 +4,7 @@ import urllib.error, urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from html.parser import HTMLParser
 
-UA='SEOFleetBegetRepair/1.0'
+UA='SEOFleetBegetRepair/1.1'
 FTP_HOST=os.getenv('BEGET_FTP_HOST','legatbb9.beget.tech')
 BEGET_USER=os.getenv('BEGET_USER','')
 BEGET_PASSWORD=os.getenv('BEGET_PASSWORD','')
@@ -19,10 +19,11 @@ H1_MODES={
 
 class PageParser(HTMLParser):
     def __init__(self):
-        super().__init__(convert_charrefs=True);self.h1=None;self.h1s=[];self.meta={};self.canonical=None
+        super().__init__(convert_charrefs=True)
+        self.h1=None;self.h1s=[];self.meta={};self.canonical=None
     def handle_starttag(self,t,a):
         d={k.lower():(v or '') for k,v in a};t=t.lower()
-        if t=='h1':self.h1=[]
+        if t=='h1': self.h1=[]
         elif t=='meta':
             k=(d.get('name') or d.get('property') or '').lower()
             if k:self.meta[k]=d.get('content','').strip()
@@ -58,88 +59,203 @@ def ftp_upload(remote,body):
         try:os.unlink(local)
         except:pass
 
+def make_robots_plugin():
+    return r'''<?php
+/**
+ * Plugin Name: SEO Robots Sitemap Guard
+ * Description: Keeps robots.txt directives intact and normalizes only the Sitemap line to the current host.
+ * Version: 1.0.0
+ */
+defined('ABSPATH') || exit;
+add_filter('robots_txt', static function ($output, $public) {
+    $own = 'Sitemap: ' . home_url('/sitemap_index.xml');
+    $output = preg_replace('/^\s*Sitemap:\s*\S+\s*$/mi', '', (string) $output);
+    return rtrim((string) $output) . "\n\n" . $own . "\n";
+}, 999, 2);
+'''
+
+def make_https_plugin():
+    return r'''<?php
+/**
+ * Plugin Name: SEO HTTPS Canonical Redirect Guard
+ * Description: Redirects only same-host frontend HTTP requests to the canonical HTTPS host.
+ * Version: 1.0.0
+ */
+defined('ABSPATH') || exit;
+add_action('template_redirect', static function () {
+    if (is_admin() || wp_doing_ajax()) {
+        return;
+    }
+    $xfp = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+    if (is_ssl() || $xfp === 'https') {
+        return;
+    }
+    $host = strtolower((string) parse_url(home_url('/'), PHP_URL_HOST));
+    $request_host = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if (!$host || $request_host !== $host) {
+        return;
+    }
+    $uri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    wp_safe_redirect('https://' . $host . $uri, 301);
+    exit;
+}, -1000);
+'''
+
+def make_h1_plugin(mode):
+    if mode not in {'demote_home_label','demote_site_title','keep_first_site_title'}:
+        raise ValueError('invalid h1 mode')
+    mode_literal=json.dumps(mode)
+    return r'''<?php
+/**
+ * Plugin Name: SEO Homepage H1 Normalizer v2
+ * Description: Keeps exactly one meaningful homepage H1 using a domain-specific guarded rule.
+ * Version: 2.0.0
+ */
+defined('ABSPATH') || exit;
+add_action('template_redirect', static function () {
+    if (is_admin() || !is_front_page() || wp_doing_ajax()) {
+        return;
+    }
+    ob_start(static function ($html) {
+        $mode = '''+mode_literal+r''';
+        $seen_site_titles = 0;
+        return preg_replace_callback(
+            '~<h1\b([^>]*)>(.*?)</h1\s*>~is',
+            static function ($m) use (&$seen_site_titles, $mode) {
+                $attrs = $m[1];
+                $inner = $m[2];
+                $text = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($inner)));
+                $class = '';
+                if (preg_match('/\bclass\s*=\s*(["\'])(.*?)\1/is', $attrs, $cm)) {
+                    $class = $cm[2];
+                }
+                $is_site_title = preg_match('/(?:^|\s)site-title(?:\s|$)/', $class) === 1;
+                $is_home_label = function_exists('mb_strtolower')
+                    ? mb_strtolower($text, 'UTF-8') === 'главная'
+                    : strtolower($text) === 'главная';
+                $demote = false;
+                if ($mode === 'demote_home_label') {
+                    $demote = $is_home_label;
+                } elseif ($mode === 'demote_site_title') {
+                    $demote = $is_site_title;
+                } elseif ($mode === 'keep_first_site_title' && $is_site_title) {
+                    $seen_site_titles++;
+                    $demote = $seen_site_titles > 1;
+                }
+                return $demote ? '<div' . $attrs . '>' . $inner . '</div>' : $m[0];
+            },
+            $html
+        );
+    });
+}, 0);
+'''
+
 def make_php(cfg):
+    cfg=dict(cfg)
+    if cfg.get('fix_robots'):
+        cfg['robots_plugin_b64']=base64.b64encode(make_robots_plugin().encode()).decode()
+    if cfg.get('fix_https'):
+        cfg['https_plugin_b64']=base64.b64encode(make_https_plugin().encode()).decode()
+    if cfg.get('h1_mode'):
+        cfg['h1_plugin_b64']=base64.b64encode(make_h1_plugin(cfg['h1_mode']).encode()).decode()
     enc=base64.b64encode(json.dumps(cfg,ensure_ascii=False).encode()).decode()
     return r'''<?php
 header('Content-Type: application/json; charset=utf-8');
-$cfg=json_decode(base64_decode('''+"'"+enc+"'"+r'''),true);
-$got=$_SERVER['HTTP_X_SEO_REPAIR_TOKEN']??'';
-if(!$got||!hash_equals($cfg['token'],$got)){http_response_code(403);echo json_encode(['ok'=>false,'error'=>'forbidden']);exit;}
-define('WP_USE_THEMES',false);require_once __DIR__.'/wp-load.php';
-$actual=strtolower((string)parse_url(home_url('/'),PHP_URL_HOST));$expected=strtolower((string)$cfg['domain']);
-if($actual!==$expected){http_response_code(409);echo json_encode(['ok'=>false,'error'=>'host_guard','actual'=>$actual,'expected'=>$expected]);@unlink(__FILE__);exit;}
-$result=['ok'=>true,'domain'=>$expected,'actions'=>[]];
+$cfg = json_decode(base64_decode('''+"'"+enc+"'"+r'''), true);
+$got = $_SERVER['HTTP_X_SEO_REPAIR_TOKEN'] ?? '';
+if (!$got || !hash_equals($cfg['token'], $got)) {
+    http_response_code(403);
+    echo json_encode(['ok' => false, 'error' => 'forbidden']);
+    exit;
+}
+define('WP_USE_THEMES', false);
+require_once __DIR__ . '/wp-load.php';
+$actual = strtolower((string) parse_url(home_url('/'), PHP_URL_HOST));
+$expected = strtolower((string) $cfg['domain']);
+if ($actual !== $expected) {
+    http_response_code(409);
+    echo json_encode(['ok' => false, 'error' => 'host_guard', 'actual' => $actual, 'expected' => $expected]);
+    @unlink(__FILE__);
+    exit;
+}
+$result = ['ok' => true, 'domain' => $expected, 'actions' => []];
 
-if(!empty($cfg['fix_tag'])){
-    $titles=get_option('rank-math-options-titles',[]);$sitemap=get_option('rank-math-options-sitemap',[]);
-    if(!is_array($titles))$titles=[];if(!is_array($sitemap))$sitemap=[];
-    $beforeRobots=$titles['tax_post_tag_robots']??null;$beforeMap=$sitemap['tax_post_tag_sitemap']??null;
-    $titles['tax_post_tag_robots']=['noindex'];$sitemap['tax_post_tag_sitemap']='off';
-    update_option('rank-math-options-titles',$titles,false);update_option('rank-math-options-sitemap',$sitemap,false);
-    if(!class_exists('\\RankMath\\Sitemap\\Cache')){
-        $f=WP_PLUGIN_DIR.'/seo-by-rank-math/includes/modules/sitemap/class-cache.php';if(is_file($f))require_once $f;
+if (!empty($cfg['fix_tag'])) {
+    $titles = get_option('rank-math-options-titles', []);
+    $sitemap = get_option('rank-math-options-sitemap', []);
+    if (!is_array($titles)) $titles = [];
+    if (!is_array($sitemap)) $sitemap = [];
+    $beforeRobots = $titles['tax_post_tag_robots'] ?? null;
+    $beforeMap = $sitemap['tax_post_tag_sitemap'] ?? null;
+    $titles['tax_post_tag_robots'] = ['noindex'];
+    $sitemap['tax_post_tag_sitemap'] = 'off';
+    update_option('rank-math-options-titles', $titles, false);
+    update_option('rank-math-options-sitemap', $sitemap, false);
+    if (!class_exists('RankMath\\Sitemap\\Cache')) {
+        $f = WP_PLUGIN_DIR . '/seo-by-rank-math/includes/modules/sitemap/class-cache.php';
+        if (is_file($f)) require_once $f;
     }
-    if(class_exists('\\RankMath\\Sitemap\\Cache')){\\RankMath\\Sitemap\\Cache::invalidate_storage();$cache='invalidated';}else{$cache='class_missing';}
-    $result['actions']['tag']=['before_robots'=>$beforeRobots,'before_sitemap'=>$beforeMap,'after_robots'=>$titles['tax_post_tag_robots'],'after_sitemap'=>$sitemap['tax_post_tag_sitemap'],'cache'=>$cache];
+    if (class_exists('RankMath\\Sitemap\\Cache')) {
+        \RankMath\Sitemap\Cache::invalidate_storage();
+        $cache = 'invalidated';
+    } else {
+        $cache = 'class_missing';
+    }
+    $result['actions']['tag'] = [
+        'before_robots' => $beforeRobots,
+        'before_sitemap' => $beforeMap,
+        'after_robots' => $titles['tax_post_tag_robots'],
+        'after_sitemap' => $sitemap['tax_post_tag_sitemap'],
+        'cache' => $cache,
+    ];
 }
 
-if(!empty($cfg['fix_robots'])){
-    $path=ABSPATH.'robots.txt';$own='Sitemap: '.home_url('/sitemap_index.xml');
-    if(is_file($path)){
-        $body=(string)file_get_contents($path);$before=hash('sha256',$body);
-        $body=preg_replace('/^\\s*Sitemap:\\s*\\S+\\s*$/mi','',$body);$body=rtrim($body)."\n\n".$own."\n";
-        $written=file_put_contents($path,$body,LOCK_EX);$after=$written===false?null:hash_file('sha256',$path);
-        $result['actions']['robots']=['mode'=>'physical','before_sha256'=>$before,'after_sha256'=>$after,'written'=>$written!==false];
-        if($written===false)$result['ok']=false;
-    }else{
-        $dir=defined('WPMU_PLUGIN_DIR')?WPMU_PLUGIN_DIR:(WP_CONTENT_DIR.'/mu-plugins');if(!is_dir($dir))wp_mkdir_p($dir);
-        $guard=<<<'PHP'
-<?php
-/** Plugin Name: SEO Robots Sitemap Guard */
-defined('ABSPATH')||exit;
-add_filter('robots_txt',static function($output,$public){
-    $own='Sitemap: '.home_url('/sitemap_index.xml');
-    $output=preg_replace('/^\\s*Sitemap:\\s*\\S+\\s*$/mi','',$output);
-    return rtrim((string)$output)."\n\n".$own."\n";
-},999,2);
-PHP;
-        $path=$dir.'/seo-robots-sitemap-guard.php';$written=file_put_contents($path,$guard,LOCK_EX);
-        $result['actions']['robots']=['mode'=>'mu_guard','written'=>$written!==false,'sha256'=>$written===false?null:hash_file('sha256',$path)];if($written===false)$result['ok']=false;
+if (!empty($cfg['fix_robots'])) {
+    $path = ABSPATH . 'robots.txt';
+    $own = 'Sitemap: ' . home_url('/sitemap_index.xml');
+    if (is_file($path)) {
+        $body = (string) file_get_contents($path);
+        $before = hash('sha256', $body);
+        $body = preg_replace('/^\s*Sitemap:\s*\S+\s*$/mi', '', $body);
+        $body = rtrim($body) . "\n\n" . $own . "\n";
+        $written = file_put_contents($path, $body, LOCK_EX);
+        $after = $written === false ? null : hash_file('sha256', $path);
+        $result['actions']['robots'] = ['mode' => 'physical', 'before_sha256' => $before, 'after_sha256' => $after, 'written' => $written !== false];
+        if ($written === false) $result['ok'] = false;
+    } else {
+        $dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (WP_CONTENT_DIR . '/mu-plugins');
+        if (!is_dir($dir)) wp_mkdir_p($dir);
+        $path = $dir . '/seo-robots-sitemap-guard.php';
+        $written = file_put_contents($path, base64_decode($cfg['robots_plugin_b64']), LOCK_EX);
+        $result['actions']['robots'] = ['mode' => 'mu_guard', 'written' => $written !== false, 'sha256' => $written === false ? null : hash_file('sha256', $path)];
+        if ($written === false) $result['ok'] = false;
     }
 }
 
-if(!empty($cfg['fix_https'])){
-    $dir=defined('WPMU_PLUGIN_DIR')?WPMU_PLUGIN_DIR:(WP_CONTENT_DIR.'/mu-plugins');if(!is_dir($dir))wp_mkdir_p($dir);
-    $guard=<<<'PHP'
-<?php
-/** Plugin Name: SEO HTTPS Canonical Redirect Guard */
-defined('ABSPATH')||exit;
-add_action('template_redirect',static function(){
-    if(is_admin()||wp_doing_ajax())return;
-    $xfp=strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO']??''));
-    if(is_ssl()||$xfp==='https')return;
-    $host=strtolower((string)parse_url(home_url('/'),PHP_URL_HOST));
-    $reqHost=strtolower(preg_replace('/:\\d+$/','',(string)($_SERVER['HTTP_HOST']??'')));
-    if(!$host||$reqHost!==$host)return;
-    $uri=(string)($_SERVER['REQUEST_URI']??'/');wp_safe_redirect('https://'.$host.$uri,301);exit;
-},-1000);
-PHP;
-    $path=$dir.'/seo-https-canonical-redirect.php';$written=file_put_contents($path,$guard,LOCK_EX);
-    $result['actions']['https']=['written'=>$written!==false,'sha256'=>$written===false?null:hash_file('sha256',$path)];if($written===false)$result['ok']=false;
+if (!empty($cfg['fix_https'])) {
+    $dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (WP_CONTENT_DIR . '/mu-plugins');
+    if (!is_dir($dir)) wp_mkdir_p($dir);
+    $path = $dir . '/seo-https-canonical-redirect.php';
+    $written = file_put_contents($path, base64_decode($cfg['https_plugin_b64']), LOCK_EX);
+    $result['actions']['https'] = ['written' => $written !== false, 'sha256' => $written === false ? null : hash_file('sha256', $path)];
+    if ($written === false) $result['ok'] = false;
 }
 
-if(!empty($cfg['h1_mode'])){
-    $dir=defined('WPMU_PLUGIN_DIR')?WPMU_PLUGIN_DIR:(WP_CONTENT_DIR.'/mu-plugins');if(!is_dir($dir))wp_mkdir_p($dir);
-    $mode=$cfg['h1_mode'];
-    $plugin="<?php\n/** Plugin Name: SEO Homepage H1 Normalizer v2 */\ndefined('ABSPATH')||exit;\n";
-    $plugin.="add_action('template_redirect',static function(){if(is_admin()||!is_front_page()||wp_doing_ajax())return;ob_start(static function(\\$html){\\$mode='".addslashes($mode)."';\\$seen=0;return preg_replace_callback('~<h1\\\\b([^>]*)>(.*?)</h1\\\\s*>~is',static function(\\$m)use(&\\$seen,\\$mode){\\$attrs=\\$m[1];\\$inner=\\$m[2];\\$text=trim(preg_replace('/\\\\s+/u',' ',wp_strip_all_tags(\\$inner)));\\$class='';if(preg_match('/\\\\bclass\\\\s*=\\\\s*([\"\\\\\'])(.*?)\\\\1/is',\\$attrs,\\$cm))\\$class=\\$cm[2];\\$site=preg_match('/(?:^|\\\\s)site-title(?:\\\\s|$)/',\\$class)===1;\\$home=function_exists('mb_strtolower')?mb_strtolower(\\$text,'UTF-8')==='главная':strtolower(\\$text)==='главная';\\$demote=false;if(\\$mode==='demote_home_label')\\$demote=\\$home;elseif(\\$mode==='demote_site_title')\\$demote=\\$site;elseif(\\$mode==='keep_first_site_title'&&\\$site){\\$seen++;\\$demote=\\$seen>1;}return \\$demote?'<div'.\\$attrs.'>'.\\$inner.'</div>':\\$m[0];},\\$html);});},0);\n";
-    $path=$dir.'/seo-home-h1-normalizer-v2.php';$written=file_put_contents($path,$plugin,LOCK_EX);
-    $result['actions']['h1']=['mode'=>$mode,'written'=>$written!==false,'sha256'=>$written===false?null:hash_file('sha256',$path)];if($written===false)$result['ok']=false;
+if (!empty($cfg['h1_mode'])) {
+    $dir = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : (WP_CONTENT_DIR . '/mu-plugins');
+    if (!is_dir($dir)) wp_mkdir_p($dir);
+    $path = $dir . '/seo-home-h1-normalizer-v2.php';
+    $written = file_put_contents($path, base64_decode($cfg['h1_plugin_b64']), LOCK_EX);
+    $result['actions']['h1'] = ['mode' => $cfg['h1_mode'], 'written' => $written !== false, 'sha256' => $written === false ? null : hash_file('sha256', $path)];
+    if ($written === false) $result['ok'] = false;
 }
 
-if(function_exists('w3tc_flush_all'))w3tc_flush_all();if(function_exists('wp_cache_flush'))wp_cache_flush();do_action('litespeed_purge_all');
-$deleted=@unlink(__FILE__);$result['self_deleted']=$deleted;
-echo json_encode($result,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+if (function_exists('w3tc_flush_all')) w3tc_flush_all();
+if (function_exists('wp_cache_flush')) wp_cache_flush();
+do_action('litespeed_purge_all');
+$deleted = @unlink(__FILE__);
+$result['self_deleted'] = $deleted;
+echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 ?>'''
 
 def parse_page(body):
@@ -159,10 +275,15 @@ def verify(site):
         try:tags=json.loads(body)
         except:tags=[]
         if st==200 and isinstance(tags,list) and tags:
-            st2,_,_,b2=req(tags[0].get('link','')+'?_seo_tag='+stamp);pp=parse_page(b2);out['tag_sample']={'status':st2,'robots':pp.meta.get('robots'),'noindex':'noindex' in (pp.meta.get('robots') or '').lower()};out['checks']['tag_noindex']=st2==200 and out['tag_sample']['noindex']
-        else:out['checks']['tag_noindex']=True
+            link=tags[0].get('link','');sep='&' if '?' in link else '?'
+            st2,_,_,b2=req(link+sep+'_seo_tag='+stamp);pp=parse_page(b2)
+            out['tag_sample']={'status':st2,'robots':pp.meta.get('robots'),'noindex':'noindex' in (pp.meta.get('robots') or '').lower()}
+            out['checks']['tag_noindex']=st2==200 and out['tag_sample']['noindex']
+        else:
+            out['checks']['tag_noindex']=True
     if site['fix_robots']:
-        st,_,_,body=req(f'https://{d}/robots.txt?_seo_robots={stamp}');maps=re.findall(r'(?im)^\s*Sitemap:\s*(\S+)',body);own=f'https://{d}/sitemap_index.xml';out['robots']={'status':st,'sitemaps':maps};out['checks']['robots']=st==200 and maps==[own]
+        st,_,_,body=req(f'https://{d}/robots.txt?_seo_robots={stamp}');maps=re.findall(r'(?im)^\s*Sitemap:\s*(\S+)',body);own=f'https://{d}/sitemap_index.xml'
+        out['robots']={'status':st,'sitemaps':maps};out['checks']['robots']=st==200 and maps==[own]
     if site['fix_https']:
         st,final,_,_=req(f'http://{d}/?_seo_https={stamp}');out['https']={'status':st,'final':final};out['checks']['https']=st==200 and final.startswith(f'https://{d}/')
     if site['h1_mode']:
@@ -175,7 +296,8 @@ def verify(site):
 
 def build_targets():
     comp=json.load(open(ROOT_COMPLETION,encoding='utf-8'));act=json.load(open(ROOT_ACTIONABLE,encoding='utf-8'))
-    unreachable=set(comp['issue_buckets'].get('reachable',[]));tags=set(comp['issue_buckets'].get('no_tag_sitemaps',[]))-unreachable
+    unreachable=set(comp['issue_buckets'].get('reachable',[]))
+    tags=set(comp['issue_buckets'].get('no_tag_sitemaps',[]))-unreachable
     robots={x['domain'] for x in act.get('robots',[]) if x.get('kind')=='foreign_or_wrong_sitemap'}
     https=set(act.get('summary',{}).get('https_live_nonredirect',[]))
     domains=sorted((tags|robots|https|set(H1_MODES))-{'capitrx.ru'})
@@ -183,7 +305,8 @@ def build_targets():
 
 def repair_one(site):
     d=site['domain'];token=hashlib.sha256(os.urandom(32)).hexdigest();name='.seo-fleet-'+hashlib.sha256((d+token).encode()).hexdigest()[:18]+'.php';cfg=dict(site,token=token);body=make_php(cfg)
-    ok,err=ftp_upload(site['ftp_wp_path'].rstrip('/')+'/'+name,body);item={'domain':d,'flags':{k:site[k] for k in ('fix_tag','fix_robots','fix_https','h1_mode')},'upload_ok':ok,'upload_error':err or None}
+    ok,err=ftp_upload(site['ftp_wp_path'].rstrip('/')+'/'+name,body)
+    item={'domain':d,'flags':{k:site[k] for k in ('fix_tag','fix_robots','fix_https','h1_mode')},'upload_ok':ok,'upload_error':err or None}
     if not ok:return item
     st,final,headers,res=req(f'https://{d}/{name}',{'X-SEO-Repair-Token':token});item['invoke_status']=st
     try:item['repair']=json.loads(res)
@@ -201,7 +324,8 @@ def main():
             try:out['sites'].append(f.result())
             except Exception as e:out['sites'].append({'domain':fut[f],'fatal':type(e).__name__+': '+str(e)[:300]})
     order=[x['domain'] for x in targets];out['sites'].sort(key=lambda x:order.index(x['domain']))
-    out['passed']=sum(x.get('invoke_status')==200 and x.get('verification',{}).get('pass') and x.get('installer_after_status')==404 for x in out['sites']);out['all_pass']=out['passed']==len(targets);out['finished_at']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
+    out['passed']=sum(x.get('invoke_status')==200 and x.get('verification',{}).get('pass') and x.get('installer_after_status')==404 for x in out['sites'])
+    out['all_pass']=out['passed']==len(targets);out['finished_at']=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())
     json.dump(out,open('seo-fleet-repair-result.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
     print(json.dumps({'all_pass':out['all_pass'],'passed':out['passed'],'total':len(targets)}));raise SystemExit(0 if out['all_pass'] else 3)
 if __name__=='__main__':main()
