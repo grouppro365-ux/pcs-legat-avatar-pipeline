@@ -1,0 +1,680 @@
+{
+  "mode": "h1_structure_diag",
+  "started_at": "2026-08-17T12:01:08Z",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "site-title font-family-1",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "main-navigation-bar",
+              "class": "af-bottom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bottom-bar-flex",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "logo",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "site-branding uppercase-site-title",
+              "role": ""
+            }
+          ],
+          "text": "Ambitix: новости бизнеса, технологий и инвестиций"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "html",
+              "id": "",
+              "class": "",
+              "role": ""
+            },
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-37 custom-background wp-custom-logo wp-embed-responsive wp-theme-morenews-pro wp-child-theme-morenews-pro-child aft-default-mode aft-header-layout-side header-image-default widget-title-border-bottom default-content-layout single-content-mode-boxed single-post-title-boxed align-content-left af-wide-layout",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site af-whole-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "my-custom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            }
+          ],
+          "text": "Ambitix: новости бизнеса, технологий и инвестиций"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1 class=\"site-title font-family-1\"> <a href=\"https://ambitix.ru/\" class=\"site-title-anchor\" rel=\"home\">Ambitix: новости бизнеса, технологий и инвестиций</a> </h1>",
+        "<h1>Ambitix: новости бизнеса, технологий и инвестиций</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1",
+        "Cache-Control": "max-age=3600, public"
+      }
+    },
+    {
+      "domain": "aspirix.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "site-title font-family-1",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "main-navigation-bar",
+              "class": "af-bottom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bottom-bar-flex",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "logo",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "site-branding uppercase-site-title",
+              "role": ""
+            }
+          ],
+          "text": "Aspirix News: мировые новости экономики и технологий"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "html",
+              "id": "",
+              "class": "",
+              "role": ""
+            },
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-37 wp-custom-logo wp-embed-responsive wp-theme-morenews-pro wp-child-theme-morenews-pro-child aft-default-mode aft-header-layout-side header-image-default widget-title-border-bottom default-content-layout single-content-mode-boxed single-post-title-boxed align-content-left af-wide-layout",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site af-whole-wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "my-custom-header",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container-wrapper",
+              "role": ""
+            }
+          ],
+          "text": "Aspirix News: мировые новости экономики и технологий"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1 class=\"site-title font-family-1\"> <a href=\"https://aspirix.ru/\" class=\"site-title-anchor\" rel=\"home\">Aspirix News: мировые новости экономики и технологий</a> </h1>",
+        "<h1>Aspirix News: мировые новости экономики и технологий</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "bizcenter-news.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "html",
+              "id": "",
+              "class": "",
+              "role": ""
+            },
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-10 wp-custom-logo wp-embed-responsive wp-theme-newsair wide  ta-hide-date-author-in-list defaultcolor",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            }
+          ],
+          "text": "Biz Center News: Главные события делового мира сегодня"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "entry-title title mb-0",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "content",
+              "class": "page-class content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bs-card-box page-entry-title",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "page-entry-title-box",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1 style=\"margin: 0; font-size: 28px; line-height: 1.2;\"> Biz Center News: Главные события делового мира сегодня </h1>",
+        "<h1 class=\"entry-title title mb-0\">Главная</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "bizupdate.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-10 wp-custom-logo wp-embed-responsive wp-theme-newsair wide  ta-hide-date-author-in-list defaultcolor elementor-default elementor-kit-8 elementor-page elementor-page-10",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "custom-seo-title",
+              "role": ""
+            }
+          ],
+          "text": "BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "entry-title title mb-0",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "content",
+              "class": "page-class content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bs-card-box page-entry-title",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "page-entry-title-box",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1>BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы</h1>",
+        "<h1 class=\"entry-title title mb-0\">Главная</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "biz-world.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "body",
+              "id": "",
+              "class": "home wp-singular page-template-default page page-id-10 wp-custom-logo wp-embed-responsive wp-theme-newsair wide  ta-hide-date-author-in-list defaultcolor elementor-default elementor-kit-8 elementor-page elementor-page-10",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "page",
+              "class": "site",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "custom-seo-title",
+              "role": ""
+            }
+          ],
+          "text": "Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "entry-title title mb-0",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "custom-background-css",
+              "class": "wrapper",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "content",
+              "class": "page-class content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "container",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "bs-card-box page-entry-title",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "page-entry-title-box",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1> Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026 </h1>",
+        "<h1 class=\"entry-title title mb-0\">Главная</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "business-arena.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-header-main principal-color-border-top-color ",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header actunews-full-section general-border-color  page-header-has-title actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": " actunews-full-section-content site-content-width",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header-content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-content-container actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "content",
+              "class": "actunews-site-content actunews-full-section-content content-sidebar-container site-content-width content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "primary",
+              "class": "site-content-area actunews-simple-page site-content-area-style",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "main",
+              "class": "actunews-site-main",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "custom-seo-title",
+              "role": ""
+            }
+          ],
+          "text": "Business Arena: Стратегии успеха, кейсы и советы предпринимателям"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1>Главная</h1>",
+        "<h1>Business Arena: Стратегии успеха, кейсы и советы предпринимателям</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    },
+    {
+      "domain": "business-focus.ru",
+      "status": 200,
+      "h1_count": 2,
+      "h1s": [
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-header-main principal-color-border-top-color ",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header actunews-full-section general-border-color  page-header-has-title actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": " actunews-full-section-content site-content-width",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-page-header-content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "",
+              "role": ""
+            }
+          ],
+          "text": "Главная"
+        },
+        {
+          "attrs": {
+            "tag": "h1",
+            "id": "",
+            "class": "",
+            "role": ""
+          },
+          "ancestors": [
+            {
+              "tag": "div",
+              "id": "",
+              "class": "actunews-content-container actunews-full-section",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "content",
+              "class": "actunews-site-content actunews-full-section-content content-sidebar-container site-content-width content",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "primary",
+              "class": "site-content-area actunews-simple-page site-content-area-style",
+              "role": ""
+            },
+            {
+              "tag": "main",
+              "id": "main",
+              "class": "actunews-site-main",
+              "role": ""
+            },
+            {
+              "tag": "div",
+              "id": "",
+              "class": "custom-seo-title",
+              "role": ""
+            }
+          ],
+          "text": "Business Focus: Деловая аналитика, законы и экспертные мнения"
+        }
+      ],
+      "raw_h1_fragments": [
+        "<h1>Главная</h1>",
+        "<h1>Business Focus: Деловая аналитика, законы и экспертные мнения</h1>"
+      ],
+      "cache_headers": {
+        "Server": "nginx-reuseport/1.21.1"
+      }
+    }
+  ],
+  "finished_at": "2026-08-17T12:01:16Z"
+}
