@@ -18,7 +18,7 @@ jobs:
       - name: Compile Python repair runner
         shell: bash
         run: python3 -m py_compile .github/seo/seo_fleet_beget_repair.py
-      - name: Validate target planning
+      - name: Validate target planning and render PHP
         shell: bash
         run: |
           python3 - <<'PY'
@@ -30,10 +30,19 @@ jobs:
           assert t and all(x['ftp_wp_path']==x['domain']+'/public_html' for x in t)
           cfg={'domain':'example.test','ftp_wp_path':'example.test/public_html','fix_tag':True,'fix_robots':True,'fix_https':True,'h1_mode':'keep_first_site_title','token':'dummy-token'}
           open('/tmp/seo-fleet-installer.php','w',encoding='utf-8').write(m.make_php(cfg))
+          open('/tmp/seo-robots.php','w',encoding='utf-8').write(m.make_robots_plugin())
+          open('/tmp/seo-https.php','w',encoding='utf-8').write(m.make_https_plugin())
+          for mode in ('demote_home_label','demote_site_title','keep_first_site_title'):
+              open('/tmp/seo-h1-'+mode+'.php','w',encoding='utf-8').write(m.make_h1_plugin(mode))
           PY
-      - name: Lint generated PHP installer
+      - name: Lint installer and MU plugins
         shell: bash
         run: |
           set -euo pipefail
           command -v php
           php -l /tmp/seo-fleet-installer.php
+          php -l /tmp/seo-robots.php
+          php -l /tmp/seo-https.php
+          php -l /tmp/seo-h1-demote_home_label.php
+          php -l /tmp/seo-h1-demote_site_title.php
+          php -l /tmp/seo-h1-keep_first_site_title.php
