@@ -1,0 +1,118 @@
+{
+  "mode": "rankmath_native_cache_invalidate",
+  "started_at": "2026-08-17T11:56:29Z",
+  "sites": [
+    {
+      "domain": "biz-report.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "invalidation": {
+        "ok": true,
+        "domain": "biz-report.ru",
+        "settings": {
+          "tag_robots": [
+            "noindex"
+          ],
+          "tag_sitemap": "off"
+        },
+        "cache_dir": "/home/l/legatbb9/biz-report.ru/public_html/wp-content/uploads/rank-math/",
+        "transients_before": 0,
+        "transients_after": 0,
+        "files_before_count": 21,
+        "files_after_count": 0,
+        "cached_files_before_count": 18,
+        "cached_files_after_count": 0,
+        "self_deleted": true
+      },
+      "verification": {
+        "sitemap_cache_busted": {
+          "status": 200,
+          "final": "https://biz-report.ru/sitemap_index.xml?_rm_native=1786967796",
+          "tag_sitemaps": [],
+          "child_count": 3,
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        },
+        "sitemap_plain": {
+          "status": 200,
+          "final": "https://biz-report.ru/sitemap_index.xml",
+          "tag_sitemaps": [],
+          "child_count": 3,
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        },
+        "sample_tag": {
+          "status": 200,
+          "final": "https://biz-report.ru/tag/legat-business/?_rm_native=1786967796",
+          "robots": "follow, noindex",
+          "canonical": null,
+          "noindex": true
+        },
+        "pass": true
+      },
+      "script_after_status": 404
+    },
+    {
+      "domain": "businessherald.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "invalidation": {
+        "ok": true,
+        "domain": "businessherald.ru",
+        "settings": {
+          "tag_robots": [
+            "noindex"
+          ],
+          "tag_sitemap": "off"
+        },
+        "cache_dir": "/home/l/legatbb9/businessherald.ru/public_html/wp-content/uploads/rank-math/",
+        "transients_before": 0,
+        "transients_after": 0,
+        "files_before_count": 17,
+        "files_after_count": 0,
+        "cached_files_before_count": 7,
+        "cached_files_after_count": 0,
+        "self_deleted": true
+      },
+      "verification": {
+        "sitemap_cache_busted": {
+          "status": 200,
+          "final": "https://businessherald.ru/sitemap_index.xml?_rm_native=1786967807",
+          "tag_sitemaps": [],
+          "child_count": 3,
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        },
+        "sitemap_plain": {
+          "status": 200,
+          "final": "https://businessherald.ru/sitemap_index.xml",
+          "tag_sitemaps": [],
+          "child_count": 3,
+          "cache_headers": {
+            "Server": "nginx-reuseport/1.21.1",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0"
+          }
+        },
+        "sample_tag": {
+          "status": 200,
+          "final": "https://businessherald.ru/tag/kpi/?_rm_native=1786967807",
+          "robots": "follow, noindex",
+          "canonical": null,
+          "noindex": true
+        },
+        "pass": true
+      },
+      "script_after_status": 404
+    }
+  ],
+  "all_pass": true,
+  "finished_at": "2026-08-17T11:56:52Z"
+}
