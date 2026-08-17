@@ -1,0 +1,430 @@
+{
+  "mode": "repair",
+  "started_at": "2026-08-17T05:15:29Z",
+  "sites": [
+    {
+      "domain": "ambitix.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-a26b94580b76cbf23b0b.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "ambitix.ru",
+        "front_id": 37,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": " %sitedesc%",
+          "rank_math_focus_keyword": "Главная,Econreport,Андрей Пережогин,бизнес,Legat Business"
+        },
+        "after": {
+          "rank_math_title": "Ambitix об амбициях, выборе и росте бизнеса",
+          "rank_math_description": "Ambitix об амбициях, выборе и росте бизнеса. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+          "rank_math_focus_keyword": "ambitix"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Ambitix об амбициях, выборе и росте бизнеса",
+        "description": "Ambitix об амбициях, выборе и росте бизнеса. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://ambitix.ru/",
+        "status": 200,
+        "url": "https://ambitix.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://ambitix.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://ambitix.ru/sitemap_index.xml"
+      },
+      "script_after_status": 404
+    },
+    {
+      "domain": "aspirix.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-0bb073956d825baa0ed2.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "aspirix.ru",
+        "front_id": 37,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": " %sitedesc%",
+          "rank_math_focus_keyword": "Главная,Econreport,Андрей Пережогин,бизнес,Legat Business"
+        },
+        "after": {
+          "rank_math_title": "Aspirix о запуске идей и обновлении проектов",
+          "rank_math_description": "Aspirix о запуске идей и обновлении проектов. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для осознанного выбора.",
+          "rank_math_focus_keyword": "aspirix"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Aspirix News: мировые новости экономики и технологий",
+        "description": "Ваш гид в мире финансов и IT. Aspirix News публикует оперативную аналитику, обзоры рынков и прогнозы для инвесторов и предпринимателей.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://aspirix.ru/",
+        "status": 200,
+        "url": "https://aspirix.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://aspirix.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\nSitemap: https://aspirix.ru/sitemap_index.xml\r\n"
+      },
+      "script_after_status": 200
+    },
+    {
+      "domain": "biz-focus.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-fa87bd7e36c32b33afa4.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "biz-focus.ru",
+        "front_id": 28,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "Аналитический портал для малого и среднего бизнеса. Интервью с экспертами, разбор ниш и новости законодательства. Держим фокус на главном.",
+          "rank_math_focus_keyword": "Главная,legat business,Андрей Пережогин,biz-focus"
+        },
+        "after": {
+          "rank_math_title": "Biz Focus о решениях собственников и цене управленческих ошибок",
+          "rank_math_description": "Biz Focus о решениях собственников и цене управленческих ошибок. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+          "rank_math_focus_keyword": "biz-focus"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Biz-focus: стратегии бизнеса и обзор инноваций",
+        "description": "Аналитический портал для малого и среднего бизнеса. Интервью с экспертами, разбор ниш и новости законодательства. Держим фокус на главном.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-focus.ru/",
+        "status": 200,
+        "url": "https://biz-focus.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://biz-focus.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://biz-focus.ru/sitemap_index.xml"
+      },
+      "script_after_status": 200
+    },
+    {
+      "domain": "biz-report.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-15a2649ba233ae38218d.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "biz-report.ru",
+        "front_id": 10,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "%sitedesc%",
+          "rank_math_focus_keyword": "Главная,startup chronicle,актуальные новости,Андрей Пережогин,Legat Business"
+        },
+        "after": {
+          "rank_math_title": "Biz Report о цифрах, рынках и результатах компаний",
+          "rank_math_description": "Biz Report о цифрах, рынках и результатах компаний. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+          "rank_math_focus_keyword": "biz-report"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": true,
+          "written": true,
+          "backup": "robots.txt.seo-backup-20260817051600"
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Biz Report о цифрах, рынках и результатах компаний",
+        "description": "Biz Report о цифрах, рынках и результатах компаний. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-report.ru/",
+        "status": 200,
+        "url": "https://biz-report.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://biz-report.ru/robots.txt",
+        "body": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\n# Блокировка нежелательных разделов\nDisallow: /cgi-bin/\nDisallow: /tmp/\nDisallow: /junk/\n\n# Разрешение индексации всех остальных страниц\nAllow: /\n\n# Указание на карту сайта\nSitemap: https://biz-report.ru/sitemap_index.xml\n"
+      },
+      "script_after_status": 404
+    },
+    {
+      "domain": "bizupdate.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-504a0b615a60e399b8b0.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "bizupdate.ru",
+        "front_id": 10,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "%sitedesc%",
+          "rank_math_focus_keyword": "Bizupdate"
+        },
+        "after": {
+          "rank_math_title": "Bizupdate об изменениях компаний, продуктов и рынков",
+          "rank_math_description": "Bizupdate об изменениях компаний, продуктов и рынков. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+          "rank_math_focus_keyword": "bizupdate"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - BizUpdate: Тренды бизнеса 2026, технологии и современные стартапы",
+        "description": "Будьте в курсе обновлений рынка. Свежие новости IT, цифровизация бизнеса и перспективные стартапы. Ежедневный мониторинг трендов на BizUpdate.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizupdate.ru/",
+        "status": 200,
+        "url": "https://bizupdate.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://bizupdate.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://bizupdate.ru/sitemap_index.xml"
+      },
+      "script_after_status": 200
+    },
+    {
+      "domain": "biz-world.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-20d57d5f8d40143ebb4a.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "biz-world.ru",
+        "front_id": 10,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "%sitedesc%",
+          "rank_math_focus_keyword": "Главная,актуальные новости,Андрей Пережогин,Legat Business,Biz World"
+        },
+        "after": {
+          "rank_math_title": "Biz World о международных рынках и деловых возможностях",
+          "rank_math_description": "Biz World о международных рынках и деловых возможностях. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+          "rank_math_focus_keyword": "biz-world"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Biz-World: Журнал для предпринимателей. Бизнес, налоги и право 2026",
+        "description": "Практическое руководство по ведению бизнеса. Советы для ИП и самозанятых, разбор новых законов, идеи для стартапов и стратегии роста прибыли.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://biz-world.ru/",
+        "status": 200,
+        "url": "https://biz-world.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://biz-world.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://biz-world.ru/sitemap_index.xml"
+      },
+      "script_after_status": 200
+    },
+    {
+      "domain": "businessherald.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-52deebe61b6f4829c1d6.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "businessherald.ru",
+        "front_id": 10,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "%sitedesc%",
+          "rank_math_focus_keyword": "Главная,актуальные новости,Андрей Пережогин,Legat Business,Businessherald"
+        },
+        "after": {
+          "rank_math_title": "Business Herald о репутации компаний и деловых партнёрствах",
+          "rank_math_description": "Business Herald о репутации компаний и деловых партнёрствах. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+          "rank_math_focus_keyword": "businessherald"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": true,
+          "written": true,
+          "backup": "robots.txt.seo-backup-20260817051627"
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Business Herald о репутации компаний и деловых партнёрствах",
+        "description": "Business Herald о репутации компаний и деловых партнёрствах. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://businessherald.ru/",
+        "status": 200,
+        "url": "https://businessherald.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://businessherald.ru/robots.txt",
+        "body": "User-agent: *\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\n\n# Блокировка нежелательных разделов\nDisallow: /cgi-bin/\nDisallow: /tmp/\nDisallow: /junk/\n\n# Разрешение индексации всех остальных страниц\nAllow: /\n\n# Указание на карту сайта\nSitemap: https://businessherald.ru/sitemap_index.xml\n"
+      },
+      "script_after_status": 404
+    },
+    {
+      "domain": "business-arena.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-c70f41a57e7c801a764a.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "business-arena.ru",
+        "front_id": 1528,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "Территория бизнеса. Реальные кейсы, истории успеха, управленческие стратегии и конкурентный анализ. Практические советы для владельцев компаний.",
+          "rank_math_focus_keyword": "Business arena,Путь к успешному бизнесу,Legat Business,Сергей Хмелинин,Андрей Пережогин"
+        },
+        "after": {
+          "rank_math_title": "Business Arena о конкуренции, переговорах и сделках",
+          "rank_math_description": "Business Arena о конкуренции, переговорах и сделках. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума. Для бизнеса.",
+          "rank_math_focus_keyword": "business-arena"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Business Arena: Стратегии успеха, кейсы и советы предпринимателям",
+        "description": "Территория бизнеса. Реальные кейсы, истории успеха, управленческие стратегии и конкурентный анализ. Практические советы для владельцев компаний.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-arena.ru/",
+        "status": 200,
+        "url": "https://business-arena.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://business-arena.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://business-arena.ru/sitemap_index.xml"
+      },
+      "script_after_status": 200
+    },
+    {
+      "domain": "business-focus.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-da2cb3a2e7dcb17d205f.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "business-focus.ru",
+        "front_id": 28,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "",
+          "rank_math_focus_keyword": ""
+        },
+        "after": {
+          "rank_math_title": "Business Focus о проверке гипотез и фокусе собственника",
+          "rank_math_description": "Business Focus о проверке гипотез и фокусе собственника. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+          "rank_math_focus_keyword": "business-focus"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": false,
+          "written": false,
+          "backup": null
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Business Focus: Деловая аналитика, законы и экспертные мнения",
+        "description": "Новые статьи",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://business-focus.ru/",
+        "status": 200,
+        "url": "https://business-focus.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://business-focus.ru/robots.txt",
+        "body": "User-agent: *\r\n\r\nDisallow: /wp-admin/\r\nAllow: /wp-admin/admin-ajax.php\r\nDisallow: /wp-includes/\r\nDisallow: /xmlrpc.php\r\nDisallow: /readme.html\r\nDisallow: /?s=\r\nDisallow: /search/\r\nDisallow: /trackback/\r\nDisallow: /feed/\r\nDisallow: /comments/\r\nDisallow: /tag/\r\nDisallow: /author/\r\nDisallow: /wp-content/cache/\r\n\r\nAllow: /*.css\r\nAllow: /*.js\r\nAllow: /wp-content/uploads/\r\n\r\n\r\n\r\nSitemap: https://business-focus.ru/sitemap_index.xml"
+      },
+      "script_after_status": 200
+    }
+  ],
+  "finished_at": "2026-08-17T05:16:52Z"
+}
