@@ -1,0 +1,54 @@
+{
+  "mode": "repair",
+  "started_at": "2026-08-17T05:26:58Z",
+  "sites": [
+    {
+      "domain": "bizcenter-news.ru",
+      "upload_ok": true,
+      "upload_error": null,
+      "script": ".seo-repair-780b272edfe2be17d624.php",
+      "invoke_status": 200,
+      "repair_response": {
+        "ok": true,
+        "domain": "bizcenter-news.ru",
+        "front_id": 10,
+        "before": {
+          "rank_math_title": "",
+          "rank_math_description": "%sitedesc%",
+          "rank_math_focus_keyword": "Главная,актуальные новости,Андрей Пережогин,Legat Business,Bizhubnews"
+        },
+        "after": {
+          "rank_math_title": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде",
+          "rank_math_description": "Bizcenter News о компаниях, деловой инфраструктуре и офисной среде. Бизнес, люди, сервисы и рынки. Факты, понятный контекст и выводы без рекламного шума.",
+          "rank_math_focus_keyword": "bizcenter-news"
+        },
+        "changes": {
+          "title": true,
+          "description": true,
+          "focus": true
+        },
+        "robots": {
+          "requested": true,
+          "written": true,
+          "backup": "robots.txt.seo-backup-20260817052702"
+        },
+        "self_deleted": true
+      },
+      "homepage_after": {
+        "title": "Главная - Biz Center News: Главные события делового мира сегодня",
+        "description": "Все важные новости бизнеса на одном экране. Технологии, стартапы и корпоративные события. Будьте в курсе того, что влияет на индустрию.",
+        "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+        "canonical": "https://bizcenter-news.ru/",
+        "status": 200,
+        "url": "https://bizcenter-news.ru/"
+      },
+      "robots_after": {
+        "status": 200,
+        "url": "https://bizcenter-news.ru/robots.txt",
+        "body": "User-agent: *\n\nDisallow: /wp-admin/\nAllow: /wp-admin/admin-ajax.php\nDisallow: /wp-includes/\nDisallow: /xmlrpc.php\nDisallow: /readme.html\nDisallow: /?s=\nDisallow: /search/\nDisallow: /trackback/\nDisallow: /feed/\nDisallow: /comments/\nDisallow: /tag/\nDisallow: /author/\nDisallow: /wp-content/cache/\n\nAllow: /*.css\nAllow: /*.js\nAllow: /wp-content/uploads/\n\n\nSitemap: https://bizcenter-news.ru/sitemap_index.xml\n"
+      },
+      "script_after_status": 200
+    }
+  ],
+  "finished_at": "2026-08-17T05:27:08Z"
+}
