@@ -1,6 +1,6 @@
 {
   "mode": "fleet_completion_102_and_bridge_discovery",
-  "started_from_report": "2026-08-17T12:26:43Z",
+  "started_from_report": "2026-08-19T13:54:41Z",
   "resolved_sheet_entries": {
     "Corporate View": "corporateview.ru",
     "Growvia": "growvia.ru",
@@ -9,18 +9,18 @@
     "LegatProBiz": "legatprobiz.online"
   },
   "audited_total": 102,
-  "clean_structural": 12,
-  "with_issues": 90,
+  "clean_structural": 83,
+  "with_issues": 19,
   "issue_bucket_counts": {
     "canonical_self": 15,
     "description_present": 16,
-    "https_preferred": 23,
-    "no_tag_sitemaps": 83,
+    "https_preferred": 16,
+    "no_tag_sitemaps": 16,
     "rankmath_rest": 16,
     "reachable": 15,
-    "robots_ok": 71,
+    "robots_ok": 15,
     "sample_post_ok": 18,
-    "single_h1": 18,
+    "single_h1": 15,
     "sitemap_ok": 15,
     "title_present": 15
   },
@@ -64,109 +64,35 @@
       "bizhubnews.ru",
       "businessherald.online",
       "capitrx.ru",
-      "contenia.ru",
-      "corporatepulse.ru",
       "journalprobiz.online",
-      "industryreport.ru",
       "growvia.online",
       "entrepreneursphere.online",
-      "enterprisevoice.ru",
       "proentrepreneur.online",
       "legatbusiness.online",
       "legatpro.online",
       "legatjournal.online",
       "journalbiz.online",
-      "trendupdate.ru",
       "topentrepreneur.online",
       "topambassador.online",
-      "startup-daily.ru",
       "startupchronicle.online",
-      "startup-life.ru",
       "legatherald.online",
       "legatprobiz.online"
     ],
     "no_tag_sitemaps": [
       "bizhubnews.ru",
-      "businessjournalist.ru",
       "businessherald.online",
       "capitrx.ru",
-      "clariva.ru",
-      "commerce-hub.ru",
-      "contenia.ru",
-      "corporatenews.ru",
-      "corporatehub.ru",
-      "corporatepulse.ru",
-      "crescix.ru",
       "journalprobiz.online",
-      "inspireo.ru",
-      "innoviq.ru",
-      "innovoe.ru",
-      "industry-digest.ru",
-      "industryreport.ru",
-      "industryfocus.ru",
       "growvia.online",
-      "groviva.ru",
-      "fortunea.ru",
-      "focusix.ru",
-      "flourix.ru",
-      "excellix.ru",
-      "entreva.ru",
       "entrepreneursphere.online",
-      "entrepreneursphere.ru",
-      "enterpriseupdate.ru",
-      "enterprisenews.ru",
-      "enterprisevoice.ru",
-      "empowix.ru",
-      "econreport.ru",
-      "prowessa.ru",
-      "proentrepreneur.ru",
       "proentrepreneur.online",
-      "primevo.ru",
-      "pressarena.ru",
-      "pioneerx.ru",
-      "peakvia.ru",
-      "optivae.ru",
-      "newsida.ru",
-      "mediashot.ru",
-      "legat-herald.ru",
-      "legatpro.ru",
       "legatbusiness.online",
-      "legatbusiness.ru",
-      "legatnews.ru",
-      "legatjournal.ru",
       "legatpro.online",
-      "legatprobiz.ru",
       "legatjournal.online",
-      "legacix.ru",
-      "jurnet.ru",
-      "journalprobiz.ru",
-      "journalbiz.ru",
       "journalbiz.online",
-      "visiown.ru",
-      "vantagex.ru",
-      "triumphx.ru",
-      "trenddigest.ru",
-      "trendupdate.ru",
       "topentrepreneur.online",
-      "topentrepreneur.ru",
       "topambassador.online",
-      "synerix.ru",
-      "successa.ru",
-      "striveon.ru",
-      "statusday.ru",
-      "startupchronicle.ru",
-      "startup-daily.ru",
       "startupchronicle.online",
-      "startup-life.ru",
-      "startupdigest.ru",
-      "scrollix.ru",
-      "reputon.ru",
-      "questix.ru",
-      "publixis.ru",
-      "ignitix.ru",
-      "pressflow.ru",
-      "corporateview.ru",
-      "growvia.ru",
       "legatherald.online",
       "legatprobiz.online"
     ],
@@ -208,73 +134,17 @@
     "robots_ok": [
       "bizhubnews.ru",
       "businessherald.online",
-      "clariva.ru",
-      "commerce-hub.ru",
-      "contenia.ru",
-      "corporatenews.ru",
-      "corporatehub.ru",
-      "crescix.ru",
       "journalprobiz.online",
-      "inspireo.ru",
-      "innoviq.ru",
-      "innovoe.ru",
-      "industry-digest.ru",
-      "industryreport.ru",
       "growvia.online",
-      "groviva.ru",
-      "fortunea.ru",
-      "focusix.ru",
-      "flourix.ru",
-      "excellix.ru",
-      "entreva.ru",
       "entrepreneursphere.online",
-      "entrepreneursphere.ru",
-      "enterpriseupdate.ru",
-      "enterprisevoice.ru",
-      "empowix.ru",
-      "econreport.ru",
-      "prowessa.ru",
-      "proentrepreneur.ru",
       "proentrepreneur.online",
-      "pressarena.ru",
-      "optivae.online",
-      "newsida.ru",
-      "mediashot.ru",
-      "legat-herald.ru",
-      "legatpro.ru",
       "legatbusiness.online",
-      "legatnews.ru",
-      "legatjournal.ru",
       "legatpro.online",
-      "legatprobiz.ru",
       "legatjournal.online",
-      "legacix.ru",
-      "jurnet.ru",
-      "journalprobiz.ru",
-      "journalbiz.ru",
       "journalbiz.online",
-      "visiuma.ru",
-      "visiown.ru",
-      "vantagex.online",
-      "uptrive.ru",
-      "triumphx.ru",
-      "trenddigest.ru",
-      "trendupdate.ru",
       "topentrepreneur.online",
-      "topentrepreneur.ru",
       "topambassador.online",
-      "successa.ru",
-      "startupchronicle.ru",
-      "startup-daily.ru",
       "startupchronicle.online",
-      "startup-life.ru",
-      "startupdigest.ru",
-      "scrollix.ru",
-      "reputon.ru",
-      "questix.ru",
-      "publixis.ru",
-      "ignitix.ru",
-      "pressflow.ru",
       "legatherald.online",
       "legatprobiz.online"
     ],
@@ -299,9 +169,7 @@
       "legatprobiz.online"
     ],
     "single_h1": [
-      "ampliv.ru",
       "bizhubnews.ru",
-      "businessbrief.ru",
       "businessherald.online",
       "journalprobiz.online",
       "growvia.online",
@@ -312,7 +180,6 @@
       "legatjournal.online",
       "journalbiz.online",
       "topentrepreneur.online",
-      "topentrepreneur.ru",
       "topambassador.online",
       "startupchronicle.online",
       "legatherald.online",
@@ -368,13 +235,11 @@
         "single_h1": true,
         "robots_ok": true,
         "sitemap_ok": true,
-        "no_tag_sitemaps": false,
+        "no_tag_sitemaps": true,
         "rankmath_rest": true,
         "sample_post_ok": true
       },
-      "issues": [
-        "no_tag_sitemaps"
-      ],
+      "issues": [],
       "host_variants": [
         {
           "input": "http://corporateview.ru/",
@@ -399,7 +264,7 @@
         ],
         "status": 200,
         "url": "https://corporateview.ru/",
-        "ms": 2959
+        "ms": 3230
       },
       "robots": {
         "status": 200,
@@ -413,34 +278,11 @@
         "children": [
           "https://corporateview.ru/post-sitemap.xml",
           "https://corporateview.ru/page-sitemap.xml",
-          "https://corporateview.ru/category-sitemap.xml",
-          "https://corporateview.ru/post_tag-sitemap1.xml",
-          "https://corporateview.ru/post_tag-sitemap2.xml",
-          "https://corporateview.ru/post_tag-sitemap3.xml",
-          "https://corporateview.ru/post_tag-sitemap4.xml",
-          "https://corporateview.ru/post_tag-sitemap5.xml",
-          "https://corporateview.ru/post_tag-sitemap6.xml",
-          "https://corporateview.ru/post_tag-sitemap7.xml"
+          "https://corporateview.ru/category-sitemap.xml"
         ],
-        "tag_sitemaps_plain": [
-          "https://corporateview.ru/post_tag-sitemap1.xml",
-          "https://corporateview.ru/post_tag-sitemap2.xml",
-          "https://corporateview.ru/post_tag-sitemap3.xml",
-          "https://corporateview.ru/post_tag-sitemap4.xml",
-          "https://corporateview.ru/post_tag-sitemap5.xml",
-          "https://corporateview.ru/post_tag-sitemap6.xml",
-          "https://corporateview.ru/post_tag-sitemap7.xml"
-        ],
+        "tag_sitemaps_plain": [],
         "cache_busted_status": 200,
-        "tag_sitemaps_cache_busted": [
-          "https://corporateview.ru/post_tag-sitemap1.xml",
-          "https://corporateview.ru/post_tag-sitemap2.xml",
-          "https://corporateview.ru/post_tag-sitemap3.xml",
-          "https://corporateview.ru/post_tag-sitemap4.xml",
-          "https://corporateview.ru/post_tag-sitemap5.xml",
-          "https://corporateview.ru/post_tag-sitemap6.xml",
-          "https://corporateview.ru/post_tag-sitemap7.xml"
-        ],
+        "tag_sitemaps_cache_busted": [],
         "foreign_children": []
       },
       "wp": {
@@ -463,10 +305,10 @@
         ],
         "status": 200,
         "url": "https://corporateview.ru/yuridicheskaya-proverka-reklamy-i-kontenta/",
-        "ms": 2434
+        "ms": 2763
       },
-      "issue_count": 1,
-      "pass_structural": false,
+      "issue_count": 0,
+      "pass_structural": true,
       "resolved_from_sheet_label": "Corporate View"
     },
     {
@@ -483,13 +325,11 @@
         "single_h1": true,
         "robots_ok": true,
         "sitemap_ok": true,
-        "no_tag_sitemaps": false,
+        "no_tag_sitemaps": true,
         "rankmath_rest": true,
         "sample_post_ok": true
       },
-      "issues": [
-        "no_tag_sitemaps"
-      ],
+      "issues": [],
       "host_variants": [
         {
           "input": "http://growvia.ru/",
@@ -514,7 +354,7 @@
         ],
         "status": 200,
         "url": "https://growvia.ru/",
-        "ms": 3040
+        "ms": 3144
       },
       "robots": {
         "status": 200,
@@ -528,40 +368,11 @@
         "children": [
           "https://growvia.ru/post-sitemap.xml",
           "https://growvia.ru/page-sitemap.xml",
-          "https://growvia.ru/category-sitemap.xml",
-          "https://growvia.ru/post_tag-sitemap1.xml",
-          "https://growvia.ru/post_tag-sitemap2.xml",
-          "https://growvia.ru/post_tag-sitemap3.xml",
-          "https://growvia.ru/post_tag-sitemap4.xml",
-          "https://growvia.ru/post_tag-sitemap5.xml",
-          "https://growvia.ru/post_tag-sitemap6.xml",
-          "https://growvia.ru/post_tag-sitemap7.xml",
-          "https://growvia.ru/post_tag-sitemap8.xml",
-          "https://growvia.ru/post_tag-sitemap9.xml"
+          "https://growvia.ru/category-sitemap.xml"
         ],
-        "tag_sitemaps_plain": [
-          "https://growvia.ru/post_tag-sitemap1.xml",
-          "https://growvia.ru/post_tag-sitemap2.xml",
-          "https://growvia.ru/post_tag-sitemap3.xml",
-          "https://growvia.ru/post_tag-sitemap4.xml",
-          "https://growvia.ru/post_tag-sitemap5.xml",
-          "https://growvia.ru/post_tag-sitemap6.xml",
-          "https://growvia.ru/post_tag-sitemap7.xml",
-          "https://growvia.ru/post_tag-sitemap8.xml",
-          "https://growvia.ru/post_tag-sitemap9.xml"
-        ],
+        "tag_sitemaps_plain": [],
         "cache_busted_status": 200,
-        "tag_sitemaps_cache_busted": [
-          "https://growvia.ru/post_tag-sitemap1.xml",
-          "https://growvia.ru/post_tag-sitemap2.xml",
-          "https://growvia.ru/post_tag-sitemap3.xml",
-          "https://growvia.ru/post_tag-sitemap4.xml",
-          "https://growvia.ru/post_tag-sitemap5.xml",
-          "https://growvia.ru/post_tag-sitemap6.xml",
-          "https://growvia.ru/post_tag-sitemap7.xml",
-          "https://growvia.ru/post_tag-sitemap8.xml",
-          "https://growvia.ru/post_tag-sitemap9.xml"
-        ],
+        "tag_sitemaps_cache_busted": [],
         "foreign_children": []
       },
       "wp": {
@@ -584,10 +395,10 @@
         ],
         "status": 200,
         "url": "https://growvia.ru/kondo-v-pattaye-ryadom-s-bolnicey/",
-        "ms": 2482
+        "ms": 2291
       },
-      "issue_count": 1,
-      "pass_structural": false,
+      "issue_count": 0,
+      "pass_structural": true,
       "resolved_from_sheet_label": "Growvia"
     },
     {
@@ -633,7 +444,7 @@
         ],
         "status": 200,
         "url": "https://genuity.ru/",
-        "ms": 3109
+        "ms": 3213
       },
       "robots": {
         "status": 200,
@@ -674,7 +485,7 @@
         ],
         "status": 200,
         "url": "https://genuity.ru/luchshie-rayony-pattayi-dlya-semi/",
-        "ms": 2180
+        "ms": 2163
       },
       "issue_count": 0,
       "pass_structural": true,
@@ -732,7 +543,7 @@
         "canonical": null,
         "h1s": [],
         "url": "https://legatherald.online/",
-        "ms": 82,
+        "ms": 84,
         "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
       },
       "robots": {
@@ -809,7 +620,7 @@
         "canonical": null,
         "h1s": [],
         "url": "https://legatprobiz.online/",
-        "ms": 85,
+        "ms": 77,
         "error": "URLError: <urlopen error [Errno -2] Name or service not known>"
       },
       "robots": {
@@ -17872,5 +17683,5 @@
       }
     ]
   },
-  "finished_at": "2026-08-17T12:39:26Z"
+  "finished_at": "2026-08-19T13:56:55Z"
 }
