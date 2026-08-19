@@ -1,0 +1,4622 @@
+{
+  "mode": "guarded_beget_fleet_repair",
+  "started_at": "2026-08-19T13:35:18Z",
+  "target_count": 73,
+  "sites": [
+    {
+      "domain": "ampliv.ru",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": "demote_home_label"
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "ampliv.ru",
+        "actions": {
+          "h1": {
+            "mode": "demote_home_label",
+            "written": true,
+            "sha256": "eb858df93e1bf4070f22d17d9fca617555b044dc886f7f4194a8ae7e2e0e5c2c"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "ampliv.ru",
+        "checks": {
+          "h1": true
+        },
+        "h1": [
+          {
+            "status": 200,
+            "h1s": [
+              "Ampliv: журнал о развитии бизнеса и личной эффективности"
+            ]
+          },
+          {
+            "status": 200,
+            "h1s": [
+              "Ampliv: журнал о развитии бизнеса и личной эффективности"
+            ]
+          }
+        ],
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "businessbrief.ru",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": "demote_site_title"
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "businessbrief.ru",
+        "actions": {
+          "h1": {
+            "mode": "demote_site_title",
+            "written": true,
+            "sha256": "37bfe3d1d4a7b4cec604c41112820cea3cc34b4e0a462818b4ecbe7f8ef42515"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "businessbrief.ru",
+        "checks": {
+          "h1": true
+        },
+        "h1": [
+          {
+            "status": 200,
+            "h1s": [
+              "BusinessBrief: Главное за день. Новости экономики и дайджесты"
+            ]
+          },
+          {
+            "status": 200,
+            "h1s": [
+              "BusinessBrief: Главное за день. Новости экономики и дайджесты"
+            ]
+          }
+        ],
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "businessjournalist.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "businessjournalist.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "businessjournalist.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "clariva.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "clariva.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "8745ef2f58131707ee63d85c018ef6d915959fa9f82989584d8b0a079d02c471",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "clariva.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://clariva.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "commerce-hub.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "commerce-hub.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "9739ac812d7f07b0274ea7351a5980b81cc802209588e33560c11940e218473b",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "commerce-hub.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://commerce-hub.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "contenia.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "contenia.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "42d09a8d62fafce6333c20685a6447dda25741058c2abe1431c457f926800445",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "contenia.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://contenia.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://contenia.ru/?_seo_https=1787146534"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "corporatehub.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "corporatehub.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "50cc239ff45b04b65a0aed635d8c93ae7929a4b74682b9182f083d7eb0807b5c",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "corporatehub.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://corporatehub.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "corporatenews.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "corporatenews.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "76914f2e285054aa530e994e065bfcd4c9c9ffe40421739058edff462a0a70d0",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "corporatenews.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://corporatenews.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "corporatepulse.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "corporatepulse.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "corporatepulse.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "https": {
+          "status": 200,
+          "final": "https://corporatepulse.ru/?_seo_https=1787146538"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "corporateview.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "corporateview.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "corporateview.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "crescix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "crescix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "e73716f01c93334ed7d1be779cc2c5f30991137e5e8c2ef7fb514df48fcf15f6",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "crescix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://crescix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "econreport.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "econreport.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "1508f089831b6d042b6dc2156146e12b6bec6663e5b6f6275fa48dcf454aeeb9",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "econreport.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://econreport.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "empowix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "empowix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "9272f496ebb4d888bbc6697c331a2af88676529bdb3479277640b6ff95993309",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "empowix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://empowix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "enterprisenews.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "enterprisenews.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "enterprisenews.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "enterpriseupdate.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "enterpriseupdate.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "52c44238f227f12cf5f1e4fee066544e8c85aaf9e19be3da936f6f3d85ae60bd",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "enterpriseupdate.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://enterpriseupdate.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "enterprisevoice.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "enterprisevoice.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "8fe5ce367dac7e0a01ed48cc165ddf509aa17346141ad776d48fd417b3ad1cbf",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "enterprisevoice.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://enterprisevoice.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://enterprisevoice.ru/?_seo_https=1787146558"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "entrepreneursphere.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "entrepreneursphere.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "e114016e2c83ac157ea03ce9cd2e8f015667dc80866892d95b282e770ff5ce78",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "entrepreneursphere.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://entrepreneursphere.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "entreva.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "entreva.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "4cabfc6fe6d185376c674a3a3d34e92484e26566b3f661db8797bb5f913e5311",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "entreva.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://entreva.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "excellix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "excellix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "876a92fc58914818bb4e24f3b49127fd218b93c277ee77b2c8f94cee7b2706e5",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "excellix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://excellix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "flourix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "flourix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "4ed3f7fa686f30704534296382b848f5bb8db2d95670d61020de11aeb9270f10",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "flourix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://flourix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "focusix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "focusix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "cfde2ad41a344bc01adba846ed792eef5a9e83586e4e7d8f2f7e141e6c52c279",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "focusix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://focusix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "fortunea.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "fortunea.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "5b07ff37e55ebdb99e98eac07601bf79cdf1140e6f4b67ec68ae857442b93b4b",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "fortunea.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://fortunea.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "groviva.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "groviva.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "11d10fb56cbcb2beaee4f88422131bb21c8b47c2842a4f66e4217bbb28e2729a",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "groviva.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://groviva.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "growvia.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "growvia.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "growvia.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "ignitix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "ignitix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "7ba8afd4c78d550645a295a7a874e1be8acfbeb2a64c40e639fcfcfd408cb0e5",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "ignitix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://ignitix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "industry-digest.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "industry-digest.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "d2700e4bff94d6598d37623cb70418890dd6b57996fb78faa6cfcc07ac5f618e",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "industry-digest.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://industry-digest.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "industryfocus.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "industryfocus.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "industryfocus.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "industryreport.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "industryreport.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "7bd05cda88102a6de094a42b6892296b36154bed46614fd48c42e89a93e224cb",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "industryreport.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://industryreport.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://industryreport.ru/?_seo_https=1787146584"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "innoviq.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "innoviq.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "ece1e5827871249da08a3c687abe6678775b56821d9a458fda0c2bd329992a2c",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "innoviq.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://innoviq.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "innovoe.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "innovoe.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "308e5acd46b5b6ca3c4ab8279717f985863bff224d828e4b87ebe9b044172945",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "innovoe.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://innovoe.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "inspireo.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "inspireo.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "ff21a6867453ca70fae6f44c515e85b382e083bd24ec8c1a7bcce0bc963cd9d8",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "inspireo.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://inspireo.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "journalbiz.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "journalbiz.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "1ae740435cd27a75f62c8158ea0d6ba662076b5334a1e13268ffd92124967533",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "journalbiz.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://journalbiz.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "journalprobiz.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "journalprobiz.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "44db47c759d3ecf103be24b4ceb4ded551e365adf69567457e317621146aec65",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "journalprobiz.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://journalprobiz.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "jurnet.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "jurnet.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "610129ab80b7075acf7e4e15e74649adc3dff13d5100bdab14f20df6ce2e5225",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "jurnet.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://jurnet.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legacix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legacix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "7c45de5a5b2917ac4abaa88e62d0bd9028c61b32f05cb2840c0200eacd78cf18",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legacix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://legacix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legat-herald.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 404,
+      "repair": {
+        "raw": "<!doctype html>\n<html lang=\"ru-RU\" prefix=\"og: https://ogp.me/ns#\">\n<head>\n\t<!-- Yandex.Metrika counter -->\n<script type=\"text/javascript\" >\n   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};\n   m[i].l=1*new Date();\n   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}\n   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})\n   (window, document, \"script\", \"https://mc.yandex.ru/metrika/tag.js\", \"ym\");\n\n   ym(98606856, \"init\", {\n        clickmap:true,\n        trackLinks:true,\n        accurateTrackBounce:true,\n        webvisor:true\n   });\n</script>\n<noscript><div><img src=\"https://mc.yandex.ru/watch/98606856\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>\n<!-- /Yandex.Metrika counter -->\n\t<meta name=\"yandex-verification\" content=\"cc405becfd45caf3\" />\n<!-- Yandex.Metrika counter -->\n<script type=\"text/javascript\">\n    (function(m,e,t,r,i,k,a){\n        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};\n        m[i].l=1*new Date();\n        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) {"
+      },
+      "verification": {
+        "domain": "legat-herald.ru",
+        "checks": {
+          "tag": false,
+          "tag_noindex": false,
+          "robots": false
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": [
+              "https://legat-herald.ru/post_tag-sitemap1.xml",
+              "https://legat-herald.ru/post_tag-sitemap2.xml",
+              "https://legat-herald.ru/post_tag-sitemap3.xml",
+              "https://legat-herald.ru/post_tag-sitemap4.xml"
+            ]
+          },
+          {
+            "status": 200,
+            "tag_maps": [
+              "https://legat-herald.ru/post_tag-sitemap1.xml",
+              "https://legat-herald.ru/post_tag-sitemap2.xml",
+              "https://legat-herald.ru/post_tag-sitemap3.xml",
+              "https://legat-herald.ru/post_tag-sitemap4.xml"
+            ]
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, index, max-snippet:-1, max-video-preview:-1, max-image-preview:large",
+          "noindex": false
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://ambitix.online/sitemap.xml"
+          ]
+        },
+        "pass": false
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legatbusiness.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legatbusiness.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legatbusiness.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legatjournal.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legatjournal.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "7898268f7642d367544a051c532e8f66ee50a2497c8f5f1e9f8235d653a5297f",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legatjournal.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://legatjournal.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legatnews.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legatnews.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "844d5c63a4590987b2af41723bb109a98bb746951cea91d95d2ad6053bb9178c",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legatnews.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://legatnews.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legatpro.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legatpro.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "9a0af3fac68c77c7f777651255d7c12d69e11991ff871b43db3e4de255f7c3bb",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legatpro.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://legatpro.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "legatprobiz.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "legatprobiz.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "6461494ac23eafd7864b7a4155471949758f27cd302f970a2d2aa48700c93163",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "legatprobiz.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://legatprobiz.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "mediashot.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "mediashot.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "d030d3ad7ec158385d0b7ff3cd04889c8f19ca782790b6b80441f09dc3f8f7aa",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "mediashot.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://mediashot.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "newsida.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "newsida.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "848e5264d80331d87ae5c235373b20f9a6c7da6b051767135a9c4a80380178d2",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "newsida.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://newsida.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "optivae.online",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "optivae.online",
+        "actions": {
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "a4a09fecd9359d7894be823edd7176de0cffe552f5f3b6317ce8ab7de2b05a62",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "optivae.online",
+        "checks": {
+          "robots": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://optivae.online/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "optivae.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "optivae.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "optivae.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "peakvia.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "peakvia.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "peakvia.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "pioneerx.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "pioneerx.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "pioneerx.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "pressarena.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "pressarena.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "844bfcfba19e9c6327eea103606852f48fd7eda1981d0750aa4f617ac031327d",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "pressarena.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://pressarena.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "pressflow.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "pressflow.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "c101ebd1b6d5ed40d684865b7d74c4d3af43bfa39edf1ce08352f6ab28b757c3",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "pressflow.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://pressflow.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "primevo.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "primevo.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "primevo.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "proentrepreneur.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "proentrepreneur.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "7677e9da113692aed866faf1f2e06c4a1ac694b6a37785c8bdf7be73c15600ff",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "proentrepreneur.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://proentrepreneur.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "prowessa.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "prowessa.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "0b97cf19a749a676420438abc2f2b13c473bbfc67380736f04223fe69bdb7751",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "prowessa.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://prowessa.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "publixis.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "publixis.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "6d718c5f9d865b0ced63a856d2376bfb7cb92cd2e2a3868ae128b07a24996e05",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "publixis.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://publixis.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "questix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "questix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "4ae2c8668a4107da9a5b9a1472c87c1dbef29d5693f7bafefe788e1170d7f4c7",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "questix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://questix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "reputon.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "reputon.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "dc9475700ffc7aa5a341adea9bc6249fdce9d1e16b176bef83fb4baa1144088d",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "reputon.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://reputon.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "scrollix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "scrollix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "7e2fdce249b285b0c49e34086d1b478b11bac6d1e7919196e7d9399f56fbbbcb",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "scrollix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://scrollix.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "startup-daily.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "startup-daily.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "6559eecc9e5948734c5e06764194571aa8dce0f808a29f39f2262ab1a3e55fce",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "startup-daily.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://startup-daily.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://startup-daily.ru/?_seo_https=1787146656"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "startup-life.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "startup-life.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "2ed04f4599390d6c53cc8b765c57f254e6d7b2ab19ff4fe71c404df13b047802",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "startup-life.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://startup-life.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://startup-life.ru/?_seo_https=1787146656"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "startupchronicle.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "startupchronicle.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "54532954e04b3ca29376091f3c91c1f1c67984e914b4550a96ff7ae2bfa1b056",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "startupchronicle.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://startupchronicle.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "startupdigest.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "startupdigest.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "3d265e8f17e3ce1e86fe2a60afbc70b6a52a157315cad31c0d1710d32f209a3e",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "startupdigest.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://startupdigest.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "statusday.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "statusday.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "statusday.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "striveon.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "striveon.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "striveon.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "successa.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "successa.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "4fab377c08d3554d595e873ee624dc7303f659c340f0baa177fe5216fda1919f",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "successa.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://successa.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "synerix.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "synerix.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "synerix.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "topentrepreneur.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": "keep_first_site_title"
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "topentrepreneur.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "d3d56839f0157c0c74599a7bad13815028b27ea5e5b39521c8989ccaa45d1bfc",
+            "written": true
+          },
+          "h1": {
+            "mode": "keep_first_site_title",
+            "written": true,
+            "sha256": "3666ffe0a11bfdd2eb32317bb15a40c9e24ca6593a77a42321384f948000799d"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "topentrepreneur.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "h1": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://topentrepreneur.ru/sitemap_index.xml"
+          ]
+        },
+        "h1": [
+          {
+            "status": 200,
+            "h1s": [
+              "Top Entrepreneur"
+            ]
+          },
+          {
+            "status": 200,
+            "h1s": [
+              "Top Entrepreneur"
+            ]
+          }
+        ],
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "trenddigest.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "trenddigest.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "667ecb1a1f42c465e070f696ab3b61d3a2eb666d055fb7415288bad396465cd2",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "trenddigest.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://trenddigest.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "trendupdate.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": true,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "trendupdate.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "fcf73e58732d161491d3b575f1da444bdfa62ac9d60b69c6de4ca72b983bd831",
+            "written": true
+          },
+          "https": {
+            "written": true,
+            "sha256": "44b38384eef1f26ec5f9be5033e5c802779f96d1abb5d956a0291c84b2c82e27"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "trendupdate.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true,
+          "https": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://trendupdate.ru/sitemap_index.xml"
+          ]
+        },
+        "https": {
+          "status": 200,
+          "final": "https://trendupdate.ru/?_seo_https=1787146681"
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "triumphx.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "triumphx.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+            "after_sha256": "8bfef57a26da1e543296dc6fcef9b02d21c91820baad8471ef4f6a3a28694d77",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "triumphx.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://triumphx.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "uptrive.ru",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "uptrive.ru",
+        "actions": {
+          "robots": {
+            "mode": "mu_guard",
+            "written": true,
+            "sha256": "ff49ee20387c4242860c55396a10fcff4c5638768bec22fb26898efb46355db5"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "uptrive.ru",
+        "checks": {
+          "robots": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://uptrive.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "vantagex.online",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "vantagex.online",
+        "actions": {
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "e5a637d1ebbddaa5b706aa1e93db7368195854c0f0f09e36b9c5f113ed3df7d9",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "vantagex.online",
+        "checks": {
+          "robots": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://vantagex.online/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "vantagex.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": false,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "vantagex.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "vantagex.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "visiown.ru",
+      "flags": {
+        "fix_tag": true,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "visiown.ru",
+        "actions": {
+          "tag": {
+            "before_robots": [
+              "index"
+            ],
+            "before_sitemap": "on",
+            "after_robots": [
+              "noindex"
+            ],
+            "after_sitemap": "off",
+            "cache": "invalidated"
+          },
+          "robots": {
+            "mode": "physical",
+            "before_sha256": "1e9dfc9761c76d7f96c26233175ee9800ba2a106be2ca880b8743bed838c6bfb",
+            "after_sha256": "21443dd2efb368c71af9e589f9e4fc7e2b2e3da80c761b3e3613a85b8826b93a",
+            "written": true
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "visiown.ru",
+        "checks": {
+          "tag": true,
+          "tag_noindex": true,
+          "robots": true
+        },
+        "tag": [
+          {
+            "status": 200,
+            "tag_maps": []
+          },
+          {
+            "status": 200,
+            "tag_maps": []
+          }
+        ],
+        "tag_sample": {
+          "status": 200,
+          "robots": "follow, noindex",
+          "noindex": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://visiown.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    },
+    {
+      "domain": "visiuma.ru",
+      "flags": {
+        "fix_tag": false,
+        "fix_robots": true,
+        "fix_https": false,
+        "h1_mode": null
+      },
+      "upload_ok": true,
+      "upload_error": null,
+      "invoke_status": 200,
+      "repair": {
+        "ok": true,
+        "domain": "visiuma.ru",
+        "actions": {
+          "robots": {
+            "mode": "mu_guard",
+            "written": true,
+            "sha256": "ff49ee20387c4242860c55396a10fcff4c5638768bec22fb26898efb46355db5"
+          }
+        },
+        "self_deleted": true
+      },
+      "verification": {
+        "domain": "visiuma.ru",
+        "checks": {
+          "robots": true
+        },
+        "robots": {
+          "status": 200,
+          "sitemaps": [
+            "https://visiuma.ru/sitemap_index.xml"
+          ]
+        },
+        "pass": true
+      },
+      "installer_after_status": 404
+    }
+  ],
+  "passed": 72,
+  "all_pass": false,
+  "finished_at": "2026-08-19T13:38:20Z"
+}
