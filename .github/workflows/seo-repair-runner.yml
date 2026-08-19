@@ -1,4 +1,4 @@
-name: Guarded Fleet SEO Repair
+name: Guarded Legat Herald Root Probe
 
 on:
   push:
@@ -10,9 +10,9 @@ permissions:
   contents: write
 
 jobs:
-  repair:
+  probe:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,9 +24,7 @@ jobs:
           set -euo pipefail
           NONCE="$(openssl rand -hex 16)"
           echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
-          openssl req -x509 -newkey rsa:3072 -sha256 -nodes \
-            -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem \
-            -days 1 -subj "/CN=ephemeral-fleet-seo-$NONCE" >/dev/null 2>&1
+          openssl req -x509 -newkey rsa:3072 -sha256 -nodes -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem -days 1 -subj "/CN=ephemeral-root-probe-$NONCE" >/dev/null 2>&1
           git config user.name "seo-ephemeral-runner"
           git config user.email "actions@users.noreply.github.com"
           git fetch origin main --quiet
@@ -35,14 +33,10 @@ jobs:
           NONCE="$NONCE" python3 - <<'PY'
           import base64,json,os
           cert=open('/tmp/seo-cert.pem','rb').read()
-          open('.seo-runner/public.json','w').write(json.dumps({
-            'source_sha':os.environ['GITHUB_SHA'],
-            'nonce':os.environ['NONCE'],
-            'cert_b64':base64.b64encode(cert).decode()
-          },indent=2))
+          open('.seo-runner/public.json','w').write(json.dumps({'source_sha':os.environ['GITHUB_SHA'],'nonce':os.environ['NONCE'],'cert_b64':base64.b64encode(cert).decode()},indent=2))
           PY
           git add .seo-runner/public.json
-          git commit -m "Publish ephemeral fleet SEO certificate [skip ci]"
+          git commit -m "Publish ephemeral root probe certificate [skip ci]"
           git push origin HEAD:main
       - name: Wait for encrypted payload
         shell: bash
@@ -56,36 +50,31 @@ jobs:
             if git show "origin/main:${P}" >/tmp/seo-payload.b64 2>/dev/null; then found=1; break; fi
             sleep 5
           done
-          [ "$found" = "1" ] || { echo "Encrypted payload missing" >&2; exit 2; }
+          [ "$found" = "1" ] || exit 2
           base64 -d /tmp/seo-payload.b64 >/tmp/seo-payload.cms
-          openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms \
-            -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
+          openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
           chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
-      - name: Run guarded fleet repair
+      - name: Probe live document root
         shell: bash
         run: |
           set -euo pipefail
           export BEGET_USER="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json'))['beget_user'])")"
           export BEGET_PASSWORD="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json'))['beget_password'])")"
           export BEGET_FTP_HOST="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json')).get('ftp_host','legatbb9.beget.tech'))")"
-          python3 .github/seo/seo_fleet_beget_repair.py
-      - name: Publish sanitized repair report
+          python3 .github/seo/seo_legat_herald_root_probe.py
+      - name: Publish sanitized root probe
         if: always()
         shell: bash
-        env:
-          NONCE: ${{ steps.handshake.outputs.nonce }}
         run: |
           set -euo pipefail
-          [ -f seo-fleet-repair-result.json ] || exit 0
-          cp seo-fleet-repair-result.json /tmp/seo-fleet-repair-result.json
+          [ -f seo-legat-herald-root-probe.json ] || exit 0
+          cp seo-legat-herald-root-probe.json /tmp/root-probe.json
           git fetch origin main --quiet
           git reset --hard origin/main
-          mkdir -p .seo-runner
-          cp /tmp/seo-fleet-repair-result.json .seo-runner/fleet-repair-result.json
-          git add .seo-runner/fleet-repair-result.json
-          git commit -m "Publish sanitized fleet SEO repair report [skip ci]"
+          cp /tmp/root-probe.json .seo-runner/legat-herald-root-probe.json
+          git add .seo-runner/legat-herald-root-probe.json
+          git commit -m "Publish sanitized Legat Herald root probe [skip ci]"
           git push origin HEAD:main
       - name: Destroy ephemeral material
         if: always()
-        shell: bash
-        run: rm -f /tmp/seo-private.pem /tmp/seo-cert.pem /tmp/seo-payload.b64 /tmp/seo-payload.cms /tmp/seo-payload.json /tmp/seo-fleet-repair-result.json
+        run: rm -f /tmp/seo-private.pem /tmp/seo-cert.pem /tmp/seo-payload.b64 /tmp/seo-payload.cms /tmp/seo-payload.json /tmp/root-probe.json
