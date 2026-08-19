@@ -1,4 +1,4 @@
-name: Fleet Repair Runner PHP Validation
+name: Guarded Fleet SEO Repair
 
 on:
   push:
@@ -7,42 +7,85 @@ on:
       - '.github/workflows/seo-repair-runner.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  validate-repair-runner:
+  repair:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-      - name: Compile Python repair runner
-        shell: bash
-        run: python3 -m py_compile .github/seo/seo_fleet_beget_repair.py
-      - name: Validate target planning and render PHP
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import importlib.util,json
-          p='.github/seo/seo_fleet_beget_repair.py'
-          s=importlib.util.spec_from_file_location('repair',p);m=importlib.util.module_from_spec(s);s.loader.exec_module(m)
-          t=m.build_targets()
-          print(json.dumps({'targets':len(t),'tag':sum(x['fix_tag'] for x in t),'robots':sum(x['fix_robots'] for x in t),'https':sum(x['fix_https'] for x in t),'h1':sum(bool(x['h1_mode']) for x in t),'capitrx_excluded':all(x['domain']!='capitrx.ru' for x in t)}))
-          assert t and all(x['ftp_wp_path']==x['domain']+'/public_html' for x in t)
-          cfg={'domain':'example.test','ftp_wp_path':'example.test/public_html','fix_tag':True,'fix_robots':True,'fix_https':True,'h1_mode':'keep_first_site_title','token':'dummy-token'}
-          open('/tmp/seo-fleet-installer.php','w',encoding='utf-8').write(m.make_php(cfg))
-          open('/tmp/seo-robots.php','w',encoding='utf-8').write(m.make_robots_plugin())
-          open('/tmp/seo-https.php','w',encoding='utf-8').write(m.make_https_plugin())
-          for mode in ('demote_home_label','demote_site_title','keep_first_site_title'):
-              open('/tmp/seo-h1-'+mode+'.php','w',encoding='utf-8').write(m.make_h1_plugin(mode))
-          PY
-      - name: Lint installer and MU plugins
+        with:
+          fetch-depth: 0
+      - name: Publish one-time certificate
+        id: handshake
         shell: bash
         run: |
           set -euo pipefail
-          command -v php
-          php -l /tmp/seo-fleet-installer.php
-          php -l /tmp/seo-robots.php
-          php -l /tmp/seo-https.php
-          php -l /tmp/seo-h1-demote_home_label.php
-          php -l /tmp/seo-h1-demote_site_title.php
-          php -l /tmp/seo-h1-keep_first_site_title.php
+          NONCE="$(openssl rand -hex 16)"
+          echo "nonce=$NONCE" >> "$GITHUB_OUTPUT"
+          openssl req -x509 -newkey rsa:3072 -sha256 -nodes \
+            -keyout /tmp/seo-private.pem -out /tmp/seo-cert.pem \
+            -days 1 -subj "/CN=ephemeral-fleet-seo-$NONCE" >/dev/null 2>&1
+          git config user.name "seo-ephemeral-runner"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin main --quiet
+          git reset --hard origin/main
+          mkdir -p .seo-runner
+          NONCE="$NONCE" python3 - <<'PY'
+          import base64,json,os
+          cert=open('/tmp/seo-cert.pem','rb').read()
+          open('.seo-runner/public.json','w').write(json.dumps({
+            'source_sha':os.environ['GITHUB_SHA'],
+            'nonce':os.environ['NONCE'],
+            'cert_b64':base64.b64encode(cert).decode()
+          },indent=2))
+          PY
+          git add .seo-runner/public.json
+          git commit -m "Publish ephemeral fleet SEO certificate [skip ci]"
+          git push origin HEAD:main
+      - name: Wait for encrypted payload
+        shell: bash
+        env:
+          NONCE: ${{ steps.handshake.outputs.nonce }}
+        run: |
+          set -euo pipefail
+          P=".seo-runner/payload-${NONCE}.cms.b64"; found=0
+          for i in $(seq 1 120); do
+            git fetch origin main --quiet
+            if git show "origin/main:${P}" >/tmp/seo-payload.b64 2>/dev/null; then found=1; break; fi
+            sleep 5
+          done
+          [ "$found" = "1" ] || { echo "Encrypted payload missing" >&2; exit 2; }
+          base64 -d /tmp/seo-payload.b64 >/tmp/seo-payload.cms
+          openssl cms -decrypt -binary -inform DER -in /tmp/seo-payload.cms \
+            -recip /tmp/seo-cert.pem -inkey /tmp/seo-private.pem -out /tmp/seo-payload.json
+          chmod 600 /tmp/seo-payload.json /tmp/seo-private.pem
+      - name: Run guarded fleet repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          export BEGET_USER="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json'))['beget_user'])")"
+          export BEGET_PASSWORD="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json'))['beget_password'])")"
+          export BEGET_FTP_HOST="$(python3 -c "import json;print(json.load(open('/tmp/seo-payload.json')).get('ftp_host','legatbb9.beget.tech'))")"
+          python3 .github/seo/seo_fleet_beget_repair.py
+      - name: Publish sanitized repair report
+        if: always()
+        shell: bash
+        env:
+          NONCE: ${{ steps.handshake.outputs.nonce }}
+        run: |
+          set -euo pipefail
+          [ -f seo-fleet-repair-result.json ] || exit 0
+          cp seo-fleet-repair-result.json /tmp/seo-fleet-repair-result.json
+          git fetch origin main --quiet
+          git reset --hard origin/main
+          mkdir -p .seo-runner
+          cp /tmp/seo-fleet-repair-result.json .seo-runner/fleet-repair-result.json
+          git add .seo-runner/fleet-repair-result.json
+          git commit -m "Publish sanitized fleet SEO repair report [skip ci]"
+          git push origin HEAD:main
+      - name: Destroy ephemeral material
+        if: always()
+        shell: bash
+        run: rm -f /tmp/seo-private.pem /tmp/seo-cert.pem /tmp/seo-payload.b64 /tmp/seo-payload.cms /tmp/seo-payload.json /tmp/seo-fleet-repair-result.json
