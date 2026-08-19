@@ -1,0 +1,64 @@
+{
+  "domain": "legat-herald.ru",
+  "candidates": [
+    {
+      "candidate": "legat-herald.ru/public_html",
+      "exists": true,
+      "wp_like": false,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    },
+    {
+      "candidate": "legatherald.ru/public_html",
+      "exists": true,
+      "wp_like": true,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    },
+    {
+      "candidate": "legatherald.online/public_html",
+      "exists": true,
+      "wp_like": true,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    },
+    {
+      "candidate": "legat-herald.ru",
+      "exists": true,
+      "wp_like": false,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    },
+    {
+      "candidate": "legatherald.ru",
+      "exists": true,
+      "wp_like": false,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    },
+    {
+      "candidate": "legatherald.online",
+      "exists": true,
+      "wp_like": false,
+      "upload_ok": true,
+      "upload_error": null,
+      "cleanup_ok": false,
+      "cleanup_error": "curl: (21) QUOT command failed with 550"
+    }
+  ],
+  "live_root": "legatherald.online/public_html",
+  "http_probe": {
+    "status": 200,
+    "body_prefix": "d5cfd9559b549740c01ce6af|2|legatherald.online/public_html"
+  }
+}
