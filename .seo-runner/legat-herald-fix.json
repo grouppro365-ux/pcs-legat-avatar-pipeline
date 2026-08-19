@@ -1,0 +1,101 @@
+{
+  "domain": "legat-herald.ru",
+  "flags": {
+    "fix_tag": true,
+    "fix_robots": true,
+    "fix_https": false,
+    "h1_mode": null
+  },
+  "upload_ok": true,
+  "upload_error": null,
+  "invoke_status": 200,
+  "repair": {
+    "ok": true,
+    "domain": "legat-herald.ru",
+    "actions": {
+      "tag": {
+        "before_robots": [
+          "index"
+        ],
+        "before_sitemap": "on",
+        "after_robots": [
+          "noindex"
+        ],
+        "after_sitemap": "off",
+        "cache": "invalidated"
+      },
+      "robots": {
+        "mode": "physical",
+        "before_sha256": "971073466f6f136cd7cf48bc40229f1ba51bf23ff07ca2f86d00bc3566a8d7ca",
+        "after_sha256": "3f80edee76d95dc74a81a34c85f2f6c997f29901b999ed012ad520d3448faefa",
+        "written": true
+      }
+    },
+    "self_deleted": true
+  },
+  "verification": {
+    "domain": "legat-herald.ru",
+    "checks": {
+      "tag": true,
+      "tag_noindex": true,
+      "robots": true
+    },
+    "tag": [
+      {
+        "status": 200,
+        "tag_maps": []
+      },
+      {
+        "status": 200,
+        "tag_maps": []
+      }
+    ],
+    "tag_sample": {
+      "status": 200,
+      "robots": "follow, noindex",
+      "noindex": true
+    },
+    "robots": {
+      "status": 200,
+      "sitemaps": [
+        "https://legat-herald.ru/sitemap_index.xml"
+      ]
+    },
+    "pass": true
+  },
+  "installer_after_status": 404,
+  "probe_cleanup": [
+    {
+      "path": "legat-herald.ru/public_html/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    },
+    {
+      "path": "legatherald.ru/public_html/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    },
+    {
+      "path": "legatherald.online/public_html/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    },
+    {
+      "path": "legat-herald.ru/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    },
+    {
+      "path": "legatherald.ru/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    },
+    {
+      "path": "legatherald.online/.seo-root-probe-d5cfd9559b549740c01ce6af.txt",
+      "deleted": true,
+      "error": null
+    }
+  ],
+  "probe_cleanup_remaining": 0,
+  "pass": true
+}
