@@ -1,0 +1,65 @@
+name: Agency Social Publisher CI
+
+on:
+  push:
+    branches: [agency-social-publisher]
+    paths:
+      - 'agency-social-publisher/**'
+      - '.agents/plugins/marketplace.json'
+      - '.github/workflows/agency-social-publisher.yml'
+  pull_request:
+    paths:
+      - 'agency-social-publisher/**'
+      - '.agents/plugins/marketplace.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agency-social-publisher
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: node --check src/postiz.mjs
+      - run: node --check src/openai.mjs
+      - run: node --check src/legat.mjs
+      - run: node --check src/source.mjs
+      - run: node --check src/secondary.mjs
+      - run: node --check src/reel.mjs
+      - run: node --check src/mcp.mjs
+      - run: node --check src/server.mjs
+      - name: Validate JSON configuration
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('config/legat-abc.json','utf8')); console.log('config ok')"
+          node -e "JSON.parse(require('fs').readFileSync('.codex-plugin/plugin.json','utf8')); console.log('plugin manifest ok')"
+          node -e "JSON.parse(require('fs').readFileSync('../.agents/plugins/marketplace.json','utf8')); console.log('marketplace ok')"
+      - name: Validate skill frontmatter
+        shell: bash
+        run: |
+          test -f skills/legat-abc-social/SKILL.md
+          head -n 1 skills/legat-abc-social/SKILL.md | grep -qx -- '---'
+          grep -q '^name: legat-abc-social$' skills/legat-abc-social/SKILL.md
+          grep -q '^description:' skills/legat-abc-social/SKILL.md
+      - name: Import MCP module
+        run: node -e "import('./src/mcp.mjs').then(()=>console.log('mcp import ok'))"
+      - name: Server and MCP initialize smoke test
+        shell: bash
+        run: |
+          node src/server.mjs >/tmp/agency-social-publisher.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID || true; cat /tmp/agency-social-publisher.log' EXIT
+          sleep 3
+          curl -fsS http://127.0.0.1:8787/health | tee /tmp/health.json
+          grep -q 'agency-social-publisher' /tmp/health.json
+          curl -fsS -X POST http://127.0.0.1:8787/mcp \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json, text/event-stream' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2026-07-28","capabilities":{},"clientInfo":{"name":"ci","version":"1.0.0"}}}' \
+            | tee /tmp/mcp-init.txt
+          grep -q 'agency-social-publisher' /tmp/mcp-init.txt
+      - name: Build Docker image with FFmpeg reel runtime
+        run: docker build -t agency-social-publisher-ci .
