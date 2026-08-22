@@ -44,7 +44,7 @@ jobs:
       OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
       AI_MODEL: test-primary
       AI_FALLBACK_MODEL: test-fallback
-      AUTH_SECRET: 01234567890123456789012345678901
+      AUTH_SECRET: "01234567890123456789012345678901"
       ADMIN_EMAIL: admin@example.test
       ADMIN_PASSWORD: test-password-not-production
       APP_URL: http://localhost:3000
