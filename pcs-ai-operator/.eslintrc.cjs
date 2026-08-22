@@ -8,6 +8,7 @@ module.exports = {
   ignorePatterns: ['node_modules/', 'dist/', '.next/', 'prisma/migrations/'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    'no-empty': ['error', { allowEmptyCatch: true }]
   }
 };
