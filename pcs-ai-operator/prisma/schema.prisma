@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContactStatus {
+  NEW
+  QUALIFYING
+  QUALIFIED
+  OFFER_SENT
+  WAITING_CLIENT
+  IN_PROGRESS
+  BOOKED
+  PAID
+  COMPLETED
+  LOST
+  SPAM
+}
+enum Priority {
+  LOW
+  NORMAL
+  HOT
+  URGENT
+}
+enum MessageDirection {
+  IN
+  OUT
+}
+enum MessageStatus {
+  RECEIVED
+  PROCESSING
+  DRAFTED
+  AWAITING_APPROVAL
+  QUEUED
+  SENT
+  FAILED
+  CANCELLED
+}
+enum KnowledgeStatus {
+  ACTIVE
+  DRAFT
+  OUTDATED
+  DISABLED
+}
+enum AutomationMode {
+  INHERIT
+  AUTO
+  APPROVAL
+  HUMAN
+  IGNORE
+}
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+enum AiGenerationStatus {
+  GENERATED
+  APPROVAL_REQUIRED
+  AUTO_QUEUED
+  SENT
+  REJECTED
+  FAILED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  @@map("users")
+}
+
+model TelegramConnection {
+  id             String   @id @default(cuid())
+  connectionId   String   @unique @map("connection_id")
+  businessUserId BigInt   @map("business_user_id")
+  userChatId     BigInt   @map("user_chat_id")
+  rights         Json?
+  enabled        Boolean  @default(true)
+  connectedAt    DateTime @map("connected_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  conversations  Conversation[]
+  @@map("telegram_connections")
+}
+
+model TelegramUpdate {
+  id          String   @id @default(cuid())
+  updateId    BigInt   @unique @map("update_id")
+  kind        String
+  payload     Json
+  receivedAt  DateTime @default(now()) @map("received_at")
+  processedAt DateTime? @map("processed_at")
+  failedAt    DateTime? @map("failed_at")
+  error       String?
+  @@map("telegram_updates")
+}
+
+model Contact {
+  id             String        @id @default(cuid())
+  telegramUserId BigInt        @unique @map("telegram_user_id")
+  username       String?
+  name           String?
+  phone          String?
+  language       String?
+  city           String?
+  country        String?
+  source         String        @default("telegram_business")
+  status         ContactStatus @default(NEW)
+  priority       Priority      @default(NORMAL)
+  category       String?
+  intent         String?
+  summary        String?
+  need           String?
+  budget         String?
+  deadline       String?
+  nextAction     String?       @map("next_action")
+  nextActionAt   DateTime?     @map("next_action_at")
+  firstContactAt DateTime      @default(now()) @map("first_contact_at")
+  lastContactAt  DateTime      @default(now()) @map("last_contact_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  conversations  Conversation[]
+  profile        CustomerProfile?
+  tasks          Task[]
+  @@map("contacts")
+}
+
+model CustomerProfile {
+  id        String   @id @default(cuid())
+  contactId String   @unique @map("contact_id")
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  facts     Json     @default("{}")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("customer_profiles")
+}
+
+model Conversation {
+  id            String             @id @default(cuid())
+  connectionId  String             @map("connection_id")
+  connection    TelegramConnection @relation(fields: [connectionId], references: [connectionId], onDelete: Cascade)
+  chatId        BigInt             @map("chat_id")
+  contactId     String             @map("contact_id")
+  contact       Contact            @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  title         String?
+  summary       String?
+  mode          AutomationMode     @default(INHERIT)
+  lastMessageAt DateTime           @default(now()) @map("last_message_at")
+  unreadCount   Int                @default(0) @map("unread_count")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  messages      Message[]
+  generations   AiGeneration[]
+  tasks         Task[]
+  @@unique([connectionId, chatId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+model Message {
+  id                   String           @id @default(cuid())
+  conversationId       String           @map("conversation_id")
+  conversation         Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  telegramMessageId    Int?             @map("telegram_message_id")
+  businessConnectionId String           @map("business_connection_id")
+  direction            MessageDirection
+  status               MessageStatus    @default(RECEIVED)
+  text                 String?
+  raw                  Json?
+  sentAt               DateTime?        @map("sent_at")
+  editedAt             DateTime?        @map("edited_at")
+  deletedAt            DateTime?        @map("deleted_at")
+  createdAt            DateTime         @default(now()) @map("created_at")
+  updatedAt            DateTime         @updatedAt @map("updated_at")
+  attachments          MessageAttachment[]
+  sourceGenerations    AiGeneration[]   @relation("source_message")
+  @@unique([businessConnectionId, telegramMessageId])
+  @@index([conversationId, telegramMessageId])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  id             String   @id @default(cuid())
+  messageId      String   @map("message_id")
+  message        Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  kind           String
+  telegramFileId String?  @map("telegram_file_id")
+  mimeType       String?  @map("mime_type")
+  fileName       String?  @map("file_name")
+  fileSize       BigInt?  @map("file_size")
+  transcript     String?
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+  @@map("message_attachments")
+}
+
+model KnowledgeItem {
+  id                String          @id @default(cuid())
+  title             String
+  category          String
+  description       String
+  country           String?
+  city              String?
+  price             Decimal?        @db.Decimal(14,2)
+  currency          String?
+  conditions        String?
+  restrictions      String?
+  validAt           DateTime?       @map("valid_at")
+  source            String?
+  status            KnowledgeStatus @default(DRAFT)
+  autoAnswerAllowed Boolean         @default(false) @map("auto_answer_allowed")
+  operatorComment   String?         @map("operator_comment")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+  @@index([category, status])
+  @@map("knowledge_items")
+}
+
+model AiGeneration {
+  id               String             @id @default(cuid())
+  conversationId   String             @map("conversation_id")
+  conversation     Conversation       @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sourceMessageId  String             @map("source_message_id")
+  sourceMessage    Message            @relation("source_message", fields: [sourceMessageId], references: [id], onDelete: Cascade)
+  provider         String
+  model            String
+  intent           String
+  confidence       Float
+  risk             String
+  requiresHuman    Boolean            @map("requires_human")
+  answer           String
+  nextAction       String?            @map("next_action")
+  crmUpdates       Json?              @map("crm_updates")
+  knowledgeItemIds Json?              @map("knowledge_item_ids")
+  policyDecision   String             @map("policy_decision")
+  policyReason     String             @map("policy_reason")
+  status           AiGenerationStatus @default(GENERATED)
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+  @@index([conversationId, createdAt])
+  @@map("ai_generations")
+}
+
+model AutomationRule {
+  id                String         @id @default(cuid())
+  scope             String         @unique
+  enabled           Boolean        @default(true)
+  autoSend          Boolean        @default(false) @map("auto_send")
+  minimumConfidence Float          @default(0.9) @map("minimum_confidence")
+  mode              AutomationMode @default(INHERIT)
+  workStart         String?        @map("work_start")
+  workEnd           String?        @map("work_end")
+  allowedCategories Json?          @map("allowed_categories")
+  blockedCategories Json?          @map("blocked_categories")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  @@map("automation_rules")
+}
+
+model Task {
+  id             String        @id @default(cuid())
+  contactId      String        @map("contact_id")
+  contact        Contact       @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  conversationId String?       @map("conversation_id")
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  title          String
+  comment        String?
+  priority       TaskPriority  @default(NORMAL)
+  dueAt          DateTime?     @map("due_at")
+  completedAt    DateTime?     @map("completed_at")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  @@index([dueAt])
+  @@map("tasks")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      String
+  action     String
+  entityType String?  @map("entity_type")
+  entityId   String?  @map("entity_id")
+  payload    Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@map("system_settings")
+}
+
+model FailedJob {
+  id        String   @id @default(cuid())
+  queue     String
+  jobId     String?  @map("job_id")
+  operation String
+  payload   Json?
+  error     String
+  attempts  Int
+  createdAt DateTime @default(now()) @map("created_at")
+  retriedAt DateTime? @map("retried_at")
+  @@index([createdAt])
+  @@map("failed_jobs")
+}

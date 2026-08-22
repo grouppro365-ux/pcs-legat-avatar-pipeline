@@ -1,0 +1,64 @@
+name: PCS AI Operator CI
+
+on:
+  push:
+    branches: ["feat/pcs-ai-operator"]
+    paths: ["pcs-ai-operator/**"]
+  pull_request:
+    paths: ["pcs-ai-operator/**"]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pcs-ai-operator
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: pcs
+          POSTGRES_PASSWORD: pcs
+          POSTGRES_DB: pcs
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U pcs -d pcs"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://pcs:pcs@localhost:5432/pcs?schema=public
+      REDIS_URL: redis://localhost:6379
+      TELEGRAM_BOT_TOKEN: test-token
+      TELEGRAM_WEBHOOK_SECRET: test-secret
+      TELEGRAM_WEBHOOK_URL: https://example.invalid/telegram/webhook
+      OPENROUTER_API_KEY: test-key
+      OPENROUTER_BASE_URL: https://openrouter.ai/api/v1
+      AI_MODEL: test-primary
+      AI_FALLBACK_MODEL: test-fallback
+      AUTH_SECRET: "01234567890123456789012345678901"
+      ADMIN_EMAIL: admin@example.test
+      ADMIN_PASSWORD: test-password-not-production
+      APP_URL: http://localhost:3000
+      API_URL: http://localhost:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run prisma:generate
+      - run: npx prisma db push --skip-generate
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

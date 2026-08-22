@@ -1,0 +1,5 @@
+{
+  "name":"@pcs/worker","version":"0.1.0-dev.1","private":true,"type":"module","main":"dist/index.js",
+  "scripts":{"build":"tsc -p tsconfig.json","start":"node dist/index.js"},
+  "dependencies":{"@pcs/backend":"*","@prisma/client":"^6.7.0","bullmq":"^5.53.0","ioredis":"^5.6.1"}
+}
