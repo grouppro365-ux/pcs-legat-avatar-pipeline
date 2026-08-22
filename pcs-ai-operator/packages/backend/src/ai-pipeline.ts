@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { decidePolicy } from '@pcs/core';
 import { buildConversationContext } from './context.js';
 import { generateAi } from './ai-provider.js';
@@ -20,7 +21,7 @@ export async function draftForMessage(messageId: string) {
     crm.intent = result.candidate.intent;
     if (result.candidate.next_action) crm.nextAction = result.candidate.next_action;
     await db.contact.update({where:{id:ctx.contact.id},data:crm as any});
-    const gen = await db.aiGeneration.create({data:{conversationId:ctx.conversation.id,sourceMessageId:messageId,provider:result.provider,model:result.model,intent:result.candidate.intent,confidence:result.candidate.confidence,risk:result.candidate.risk,requiresHuman:result.candidate.requires_human,answer:result.candidate.answer,nextAction:result.candidate.next_action,crmUpdates:result.candidate.crm_updates ?? {},knowledgeItemIds:sourceIds,policyDecision:decision.decision,policyReason:decision.reason,status:decision.decision==='auto'?'AUTO_QUEUED':'APPROVAL_REQUIRED'}});
+    const gen = await db.aiGeneration.create({data:{conversationId:ctx.conversation.id,sourceMessageId:messageId,provider:result.provider,model:result.model,intent:result.candidate.intent,confidence:result.candidate.confidence,risk:result.candidate.risk,requiresHuman:result.candidate.requires_human,answer:result.candidate.answer,nextAction:result.candidate.next_action,crmUpdates:(result.candidate.crm_updates ?? {}) as Prisma.InputJsonValue,knowledgeItemIds:sourceIds as Prisma.InputJsonValue,policyDecision:decision.decision,policyReason:decision.reason,status:decision.decision==='auto'?'AUTO_QUEUED':'APPROVAL_REQUIRED'}});
     await db.message.update({where:{id:messageId},data:{status:decision.decision==='auto'?'QUEUED':'AWAITING_APPROVAL'}});
     await db.auditLog.create({data:{actor:'ai',action:'AI generated response',entityType:'ai_generation',entityId:gen.id,payload:{decision:decision.decision,reason:decision.reason}}});
     if (decision.decision === 'auto') await messageSendQueue.add('send',{generationId:gen.id},{...queueOptions,jobId:`send:${gen.id}`});

@@ -14,5 +14,10 @@ await app.register(jwt,{secret:config.authSecret,cookie:{cookieName:'pcs_session
 await app.register(rateLimit,{max:300,timeWindow:'1 minute'});
 await registerAuth(app);
 await registerRoutes(app);
-app.setErrorHandler((error,_req,reply)=>{app.log.error(error);reply.code((error as any).statusCode??500).send({error:process.env.NODE_ENV==='production'?'Request failed':error.message});});
+app.setErrorHandler((error,_req,reply)=>{
+  app.log.error(error);
+  const statusCode=typeof (error as {statusCode?:unknown})?.statusCode==='number' ? (error as {statusCode:number}).statusCode : 500;
+  const message=error instanceof Error ? error.message : String(error);
+  reply.code(statusCode).send({error:process.env.NODE_ENV==='production'?'Request failed':message});
+});
 await app.listen({host:'0.0.0.0',port:Number(process.env.PORT??3001)});
