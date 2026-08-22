@@ -5,3 +5,6 @@ export * from './ingest.js';
 export * from './ai-pipeline.js';
 export * from './send.js';
 export * from './jobs.js';
+export * from './automation.js';
+export * from './manual-send.js';
+export * from './retry-failed.js';

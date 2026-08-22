@@ -2,11 +2,18 @@ import { Prisma } from '@prisma/client';
 import { decidePolicy } from '@pcs/core';
 import { buildConversationContext } from './context.js';
 import { generateAi } from './ai-provider.js';
+import { autoEligibility } from './automation.js';
 import { db, config, messageSendQueue, queueOptions } from './runtime.js';
 
 const ALLOWED_CRM_FIELDS = new Set(['language','city','country','category','intent','summary','need','budget','deadline','nextAction']);
 
 export async function draftForMessage(messageId: string) {
+  const global = await db.automationRule.findUnique({where:{scope:'global'}});
+  if (global && !global.enabled) {
+    await db.message.update({where:{id:messageId},data:{status:'AWAITING_APPROVAL'}});
+    await db.auditLog.create({data:{actor:'system',action:'AI skipped because automation disabled',entityType:'message',entityId:messageId}});
+    return null;
+  }
   await db.message.update({where:{id:messageId},data:{status:'PROCESSING'}});
   const ctx = await buildConversationContext(messageId);
   try {
@@ -14,8 +21,9 @@ export async function draftForMessage(messageId: string) {
     const activeIds = new Set(ctx.ai.knowledge.map(k => k.id));
     const sourceIds = (result.candidate.knowledge_item_ids ?? []).filter(id => activeIds.has(id));
     result.candidate.knowledge_item_ids = sourceIds;
-    const global = await db.automationRule.findUnique({where:{scope:'global'}});
-    const decision = decidePolicy({ candidate:result.candidate, globalAutoSend:global?.autoSend ?? config.defaultAutoSend, minimumConfidence:global?.minimumConfidence ?? config.minimumConfidence, chatMode:ctx.conversation.mode.toLowerCase() as any });
+    const eligibility = autoEligibility(global, result.candidate.intent);
+    const decision = decidePolicy({ candidate:result.candidate, globalAutoSend:(global?.autoSend ?? config.defaultAutoSend) && eligibility.allowed, minimumConfidence:global?.minimumConfidence ?? config.minimumConfidence, chatMode:ctx.conversation.mode.toLowerCase() as any });
+    if (!eligibility.allowed && decision.decision === 'approval' && decision.reason === 'global auto-send disabled') decision.reason = eligibility.reason ?? decision.reason;
     const crm: Record<string,unknown> = {};
     for (const [k,v] of Object.entries(result.candidate.crm_updates ?? {})) if (ALLOWED_CRM_FIELDS.has(k) && v !== undefined && v !== null) crm[k]=v;
     crm.intent = result.candidate.intent;
