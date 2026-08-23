@@ -3,7 +3,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'pcs-ai-operator-v2/**'
+      - 'pcs-ai-operator-v6/**'
       - '.github/workflows/pcs-ai-operator-pages.yml'
   workflow_dispatch:
 permissions:
@@ -11,7 +11,7 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  group: pcs-pages
   cancel-in-progress: true
 jobs:
   deploy:
@@ -21,10 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
         with:
-          path: pcs-ai-operator-v2
+          enablement: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload PCS v6
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pcs-ai-operator-v6
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
