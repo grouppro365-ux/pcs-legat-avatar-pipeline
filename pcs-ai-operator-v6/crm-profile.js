@@ -10,6 +10,10 @@
       ['Водительские права',c.license_no],['Адрес',c.address],['Line / Telegram',c.line_contact||c.username]
     ].filter(([,v])=>v);
     if(rows.length)box.insertAdjacentHTML('beforeend',rows.map(([k,v])=>`<span>${esc(k)}</span><b>${esc(v)}</b>`).join(''));
+    if(c.requested_catalog_item_id){
+      const marker=document.createElement('span');marker.textContent='Запрошенный вариант';const val=document.createElement('b');val.textContent='Проверяется…';val.className='requested-item';box.append(marker,val);
+      call('/catalog').then(items=>{const x=(items||[]).find(v=>v.id===c.requested_catalog_item_id);val.textContent=x?`${x.title} · ${x.status==='available'?'доступность подтверждена':x.status}`:'Вариант сохранён, но скрыт/архивирован'}).catch(()=>{val.textContent='Вариант сохранён — требуется проверка'});
+    }
   };
   window.editClient=function(id){
     const c=PCS.crm.find(x=>x.id===id)||{};
