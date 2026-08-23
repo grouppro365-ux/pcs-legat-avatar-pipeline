@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "respectReducedMotion": true,
+  "presets": {
+    "page": {"duration": 320, "easing": "cubic-bezier(.2,.8,.2,1)", "fromY": 10, "fromOpacity": 0},
+    "card": {"duration": 280, "easing": "cubic-bezier(.2,.8,.2,1)", "fromY": 12, "fromOpacity": 0, "stagger": 42},
+    "sheet": {"duration": 300, "easing": "cubic-bezier(.2,.85,.2,1)", "fromY": 28, "fromOpacity": 0},
+    "toast": {"duration": 220, "easing": "ease-out", "fromY": 12, "fromOpacity": 0},
+    "status": {"duration": 240, "easing": "ease-out", "fromScale": 0.96, "fromOpacity": 0},
+    "button": {"duration": 120, "easing": "ease-out", "pressScale": 0.98}
+  }
+}
