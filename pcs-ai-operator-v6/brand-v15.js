@@ -1,5 +1,5 @@
 (()=>{
-  const LOGO='/pcs-ai-operator-v6/pcs-mark.svg?v=20260824-25';
+  const LOGO='https://raw.githubusercontent.com/grouppro365-ux/pcs-legat-avatar-pipeline/main/pcs-ai-operator-v6/pcs-mark.svg?v=20260824-26';
   const BRAND='Premium Concierge Service Thailand';
   function apply(){
     document.title=BRAND;
