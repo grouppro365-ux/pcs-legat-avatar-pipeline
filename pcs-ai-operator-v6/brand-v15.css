@@ -1,0 +1,55 @@
+:root{
+  --pcs-brand-title-size:20px;
+  --pcs-body-size:18px;
+}
+body{font-size:var(--pcs-body-size)!important;}
+.top{min-height:88px!important;padding:10px 18px!important;gap:14px!important;}
+.logo{
+  width:68px!important;height:68px!important;min-width:68px!important;flex:0 0 68px!important;
+  padding:0!important;margin:0!important;background:transparent!important;border:0!important;
+  border-radius:50%!important;overflow:visible!important;box-shadow:none!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  color:transparent!important;font-size:0!important;
+}
+.logo img{width:68px!important;height:68px!important;display:block!important;object-fit:contain!important;border-radius:50%!important;box-shadow:0 7px 22px rgba(0,0,0,.14)!important;}
+.brand{font-size:var(--pcs-brand-title-size)!important;font-weight:700!important;line-height:1.18!important;letter-spacing:-.025em!important;white-space:normal!important;max-width:460px!important;}
+.title{font-size:clamp(34px,4vw,58px)!important;line-height:1.02!important;letter-spacing:-.045em!important;}
+.sub{font-size:18px!important;line-height:1.55!important;}
+.eyebrow{font-size:14px!important;font-weight:700!important;letter-spacing:.12em!important;}
+button,.btn,.ops-tab,.pill,input,select,textarea{font-size:17px!important;}
+.client-row b,.item b,.card b,.kv b{font-size:18px!important;}
+.client-row span,.item p,.muted,.kv span{font-size:16px!important;line-height:1.45!important;}
+.bottom button{font-size:13px!important;}
+
+/* Never allow dark text to disappear on dark surfaces. */
+html[data-theme="dark"] .top,
+html[data-theme="dark"] .side,
+html[data-theme="dark"] .bottom,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .item,
+html[data-theme="dark"] .client-row,
+html[data-theme="dark"] .bubble,
+html[data-theme="dark"] .sheetbox,
+html[data-theme="dark"] .dark-card,
+html[data-theme="dark"] .dark-panel{color:#fff!important;}
+html[data-theme="dark"] .top *,
+html[data-theme="dark"] .side *,
+html[data-theme="dark"] .bottom *,
+html[data-theme="dark"] .card *,
+html[data-theme="dark"] .item *,
+html[data-theme="dark"] .client-row *,
+html[data-theme="dark"] .sheetbox *{border-color:rgba(255,255,255,.12);}
+
+@media(max-width:760px){
+  :root{--pcs-body-size:18px;--pcs-brand-title-size:18px;}
+  .top{min-height:82px!important;padding:8px 12px!important;gap:10px!important;}
+  .logo,.logo img{width:60px!important;height:60px!important;min-width:60px!important;flex-basis:60px!important;}
+  .brand{max-width:220px!important;font-size:17px!important;}
+  .title{font-size:clamp(34px,10vw,48px)!important;}
+  .sub{font-size:18px!important;}
+  button,.btn,.ops-tab,.pill,input,select,textarea{font-size:18px!important;min-height:48px;}
+  .client-row b,.item b,.card b,.kv b{font-size:19px!important;}
+  .client-row span,.item p,.muted,.kv span{font-size:17px!important;}
+  .bottom{min-height:72px!important;}
+  .bottom button{font-size:13px!important;}
+}
