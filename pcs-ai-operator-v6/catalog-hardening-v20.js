@@ -3,6 +3,22 @@
   let fleetMode=false;
   let bindRaf=0,applyRaf=0;
 
+  function esc(s=''){
+    return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function css(){
+    if(document.querySelector('#pcsCatalogHardeningV20Css'))return;
+    const s=document.createElement('style');
+    s.id='pcsCatalogHardeningV20Css';
+    s.textContent=`
+      .pcs-v20-blocker{margin-top:10px;padding:10px 12px;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.10);border-radius:14px;font-size:12px;line-height:1.35;color:var(--text,#1f2937)}
+      .pcs-v20-blocker b{display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#92400e}
+      .pcs-v20-blocker small{display:block;margin-top:4px;opacity:.72}
+    `;
+    document.head.appendChild(s);
+  }
+
   function fleetKey(x){
     const m=x?.metadata||{};
     return String(m.ltc_id||m.fleet_id||x?.title||'').trim();
@@ -28,6 +44,32 @@
     return exact.find(x=>text.includes(CAT_LABEL[x.category]||x.category||''))||exact[0]||null;
   }
 
+  function blocker(row){
+    const s=row?.metadata?.ltc_master_snapshot;
+    if(!s)return null;
+    if(s.publication_allowed===true&&s.card_ready===true)return null;
+    return {
+      blocker:String(s.blocker||row.pricing_note||row.availability_note||'требуется проверка источников').trim(),
+      source:String(s.source||'LTC master').trim(),
+      checked:String(s.checked_at||row.last_checked_at||'').trim(),
+      cardReady:s.card_ready===true,
+      publicationAllowed:s.publication_allowed===true
+    };
+  }
+
+  function decorateBlockers(rows){
+    css();
+    document.querySelectorAll('#cat .catalog-card').forEach(card=>{
+      const row=cardRow(card,rows);
+      const b=blocker(row);
+      let box=card.querySelector('.pcs-v20-blocker');
+      if(!b){box?.remove();return;}
+      const html=`<b>Не готово к публикации без проверки</b>${esc(b.blocker)}<small>${esc(b.source)}${b.checked?' · проверка '+esc(b.checked):''}</small>`;
+      if(!box){box=document.createElement('div');box.className='pcs-v20-blocker';card.appendChild(box);}
+      if(box.innerHTML!==html)box.innerHTML=html;
+    });
+  }
+
   function applyFleet(){
     if(!fleetMode)return;
     const all=window.PCS?.catalog||[];
@@ -41,6 +83,7 @@
       if(card.hidden===show)card.hidden=!show;
       if(show)visible++;
     }
+    decorateBlockers(all);
     const oldEmpty=document.querySelector('#fleetEmptyV20');
     if(cards.length&&!visible){
       if(!oldEmpty){
@@ -60,6 +103,7 @@
     if(!root)return;
     const all=window.PCS?.catalog||[];
     const fleet=fleetRows(all);
+    decorateBlockers(all);
     const fleetBtn=root.querySelector('[data-kpi-cat="cars"]');
     if(fleetBtn){
       const label=fleetBtn.querySelector('span');if(label&&label.textContent!=='Автопарк')label.textContent='Автопарк';
@@ -91,5 +135,5 @@
 
   new MutationObserver(()=>{cancelAnimationFrame(bindRaf);bindRaf=requestAnimationFrame(bind)}).observe(document.documentElement,{subtree:true,childList:true});
   document.addEventListener('DOMContentLoaded',bind);setTimeout(bind,0);
-  window.PCSPhysicalFleet={rows:fleetRows,get active(){return fleetMode}};
+  window.PCSPhysicalFleet={rows:fleetRows,blocker,get active(){return fleetMode}};
 })();
