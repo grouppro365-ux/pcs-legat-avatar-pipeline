@@ -33,10 +33,13 @@
   .bottom{bottom:max(7px,env(safe-area-inset-bottom))!important;left:10px!important;right:10px!important;max-width:calc(100vw - 20px)!important;border-radius:21px!important;padding:5px!important;background:rgba(7,28,33,.96)!important;backdrop-filter:blur(18px)!important;box-shadow:0 12px 40px rgba(0,0,0,.24)!important}
   .bottom button{min-height:56px!important;font-size:11px!important;border-radius:16px!important;color:#9fb3b5!important}
   .bottom button .nav-icon,.bottom button .nav-icon svg,.bottom button svg{color:#d7e4e5!important;stroke:#d7e4e5!important}
-  .bottom button svg path,.bottom button .nav-icon svg path{stroke:currentColor!important}
+  .bottom button .nav-icon{opacity:1!important;filter:none!important}
+  .bottom button .nav-icon svg{opacity:1!important;fill:none!important}
+  .bottom button .nav-icon svg *{stroke:currentColor!important}
   .bottom button.on{background:#e7f7f5!important;color:#087b78!important}
-  .bottom button.on .nav-icon,.bottom button.on .nav-icon svg,.bottom button.on svg{color:#087b78!important;stroke:#087b78!important}
-  .bottom button.on svg path,.bottom button.on .nav-icon svg path{stroke:#087b78!important}
+  .bottom button.on .nav-icon,.bottom button.on .nav-icon svg,.bottom button.on svg{color:#087b78!important;stroke:#087b78!important;opacity:1!important;filter:none!important}
+  .bottom button.on .nav-icon svg *,.bottom button.on svg *{stroke:#087b78!important}
+  .bottom button.on .nav-icon svg,.bottom button.on svg{fill:none!important}
   .bottom .nav-icon{width:20px!important;height:20px!important}
 
   /* Settings/connect pages: equal buttons, no crooked wrapping. */
