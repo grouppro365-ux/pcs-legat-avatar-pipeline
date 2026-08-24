@@ -1,0 +1,37 @@
+name: PCS v20 regression
+
+on:
+  pull_request:
+    paths:
+      - 'pcs-ai-operator-v6/**'
+      - 'tests/pcs-regression-v20.mjs'
+      - 'index.html'
+      - 'telegram-webapp.html'
+      - '.github/workflows/pcs-v20-regression.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'pcs-ai-operator-v6/**'
+      - 'tests/pcs-regression-v20.mjs'
+      - 'index.html'
+      - 'telegram-webapp.html'
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check v20 modules
+        run: |
+          node --check pcs-ai-operator-v6/catalog-hardening-v20.js
+          node --check pcs-ai-operator-v6/locale-currency-v20.js
+          node --check tests/pcs-regression-v20.mjs
+      - name: Run deterministic PCS regression
+        run: node tests/pcs-regression-v20.mjs
