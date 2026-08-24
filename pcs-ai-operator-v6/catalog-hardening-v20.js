@@ -1,7 +1,7 @@
 (()=>{
   const CAT_LABEL={car_rent:'Аренда авто',car_buy:'Продажа авто'};
   let fleetMode=false;
-  let raf=0;
+  let bindRaf=0,applyRaf=0;
 
   function fleetKey(x){
     const m=x?.metadata||{};
@@ -38,20 +38,22 @@
     for(const card of cards){
       const row=cardRow(card,all);
       const show=!!row&&ids.has(row.id);
-      card.hidden=!show;
+      if(card.hidden===show)card.hidden=!show;
       if(show)visible++;
     }
-    document.querySelector('#fleetEmptyV20')?.remove();
+    const oldEmpty=document.querySelector('#fleetEmptyV20');
     if(cards.length&&!visible){
-      const empty=document.createElement('div');
-      empty.id='fleetEmptyV20';empty.className='empty';empty.textContent='В физическом автопарке нет позиций с выбранным статусом';
-      document.querySelector('#cat')?.appendChild(empty);
-    }
+      if(!oldEmpty){
+        const empty=document.createElement('div');
+        empty.id='fleetEmptyV20';empty.className='empty';empty.textContent='В физическом автопарке нет позиций с выбранным статусом';
+        document.querySelector('#cat')?.appendChild(empty);
+      }
+    }else oldEmpty?.remove();
     const b=document.querySelector('#fleetKpi [data-kpi-cat="cars"]');
-    if(b){b.classList.add('on');b.setAttribute('aria-pressed','true')}
+    if(b){b.classList.add('on');if(b.getAttribute('aria-pressed')!=='true')b.setAttribute('aria-pressed','true')}
   }
 
-  function schedule(){cancelAnimationFrame(raf);raf=requestAnimationFrame(applyFleet)}
+  function schedule(){cancelAnimationFrame(applyRaf);applyRaf=requestAnimationFrame(applyFleet)}
 
   function bind(){
     const root=document.querySelector('#fleetKpi');
@@ -60,8 +62,8 @@
     const fleet=fleetRows(all);
     const fleetBtn=root.querySelector('[data-kpi-cat="cars"]');
     if(fleetBtn){
-      const label=fleetBtn.querySelector('span');if(label)label.textContent='Автопарк';
-      const count=fleetBtn.querySelector('b');if(count)count.textContent=String(fleet.length);
+      const label=fleetBtn.querySelector('span');if(label&&label.textContent!=='Автопарк')label.textContent='Автопарк';
+      const count=fleetBtn.querySelector('b'),next=String(fleet.length);if(count&&count.textContent!==next)count.textContent=next;
       if(!fleetBtn.dataset.v20Bound){
         fleetBtn.dataset.v20Bound='1';
         fleetBtn.title='Показать физические машины автопарка без дублей объявлений';
@@ -87,7 +89,7 @@
     if(fleetMode)schedule();
   }
 
-  new MutationObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(bind)}).observe(document.documentElement,{subtree:true,childList:true});
+  new MutationObserver(()=>{cancelAnimationFrame(bindRaf);bindRaf=requestAnimationFrame(bind)}).observe(document.documentElement,{subtree:true,childList:true});
   document.addEventListener('DOMContentLoaded',bind);setTimeout(bind,0);
   window.PCSPhysicalFleet={rows:fleetRows,get active(){return fleetMode}};
 })();
