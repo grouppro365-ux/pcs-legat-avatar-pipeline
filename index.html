@@ -1,53 +1,47 @@
-<!doctype html>
-<html lang="ru" data-theme="light">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f8f7">
-<meta name="description" content="Premium Concierge Service Thailand — ИИ-оператор, CRM, бронирования, каталог и финансы">
-<title>Premium Concierge Service Thailand</title>
-<link rel="stylesheet" href="/pcs-ai-operator-v6/style.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/ownima.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/travel-premium.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/release-hardening.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/ui-fixes.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/runtime-v9.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/runtime-v10.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/runtime-v11.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/travel-admin-v12.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/accessibility-v14.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/brand-v15.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/mobile-v16.css?v=20260824-35">
-<link rel="stylesheet" href="/pcs-ai-operator-v6/mobile-v18.css?v=20260824-35">
+<meta name="theme-color" content="#061819">
+<title>PCS Manager</title>
+<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+<style>
+:root{--bg:#061819;--card:#0b3032;--line:#1b4d50;--text:#f4ffff;--muted:#a8c4c6;--accent:#e8fbf9;--accentText:#006c69;--danger:#ffb4a8}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,system-ui,-apple-system,Segoe UI,sans-serif}button,input,textarea{font:inherit}.top{height:72px;background:#263033;display:flex;align-items:center;padding:0 18px;position:sticky;top:0;z-index:10}.top b{font-size:28px}.wrap{padding:24px 18px 110px}.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:22px;margin:16px 0}.title{font-size:44px;line-height:1;margin:16px 0}.sub{font-size:22px;line-height:1.35;color:#bfe6ff;margin:0 0 18px}.muted{color:var(--muted)}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-weight:800;color:var(--muted);font-size:13px}.btn{border:0;border-radius:16px;background:var(--accent);color:var(--accentText);font-weight:800;padding:14px 16px}.btn.danger{background:#3a1717;color:var(--danger);border:1px solid #78322c}.field{display:grid;gap:8px;margin:12px 0}.field input,.field textarea{border-radius:16px;border:1px solid var(--line);background:#052122;color:var(--text);padding:16px;font-size:16px}.bottom{position:fixed;left:8px;right:8px;bottom:10px;background:#082326;border:1px solid var(--line);border-radius:28px;padding:9px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;z-index:20}.bottom button{border:0;background:transparent;color:var(--muted);border-radius:20px;padding:10px 4px;font-weight:800;font-size:12px}.bottom button.on{background:var(--accent);color:var(--accentText)}.bottom i{display:block;font-size:22px;font-style:normal;margin-bottom:3px}.row{width:100%;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:20px;padding:16px;margin:10px 0}.row b{display:block}.row small{display:block;color:var(--muted);margin-top:6px;line-height:1.35}.err{color:var(--danger);white-space:pre-wrap}.pill{display:inline-block;background:var(--accent);color:var(--accentText);border-radius:999px;padding:4px 9px;font-size:12px;font-weight:800;margin:8px 6px 0 0}pre{white-space:pre-wrap;overflow:auto}
+</style>
 </head>
 <body>
-<div id="root"></div>
-<div id="sheet" class="sheet"><div id="sheetbox" class="sheetbox"></div></div>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="https://telegram.org/js/telegram-web-app.js" defer></script>
-<script src="/pcs-ai-operator-v6/app.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/crm-profile.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/catalog-safety.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/media.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/ops.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/contracts.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/knowledge-editor.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/errors.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/connections.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/localization.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/premium-ui.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/release-hardening.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/ui-fixes.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/runtime-v9.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/runtime-v10.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/runtime-v11.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/travel-admin-v12.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/connections-v14.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/rich-text-v13.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/brand-v15.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/mobile-v16.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/fleet-kpi-v17.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/mobile-v18.js?v=20260824-35" defer></script>
-<script src="/pcs-ai-operator-v6/hotfix-loading-v21.js?v=20260824-46" defer></script>
+<div id="app"><div class="top"><b>pcs_manager</b></div><main class="wrap"><div class="card"><h1 class="title">Загрузка</h1><p class="sub">PCS Manager запускается…</p></div></main></div>
+<script>
+(function(){
+var UI='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-ui-api';
+var OPS='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-ops-api';
+var token=localStorage.pcsToken||'';
+var page='dashboard';
+function q(s){return document.querySelector(s)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+function fetchJson(base,path,opt,ms){opt=opt||{};ms=ms||8000;var c=new AbortController();var t=setTimeout(function(){c.abort()},ms);var h={'content-type':'application/json'};if(token)h.authorization='Bearer '+token;return fetch(base+path,{method:opt.method||'GET',headers:h,body:opt.body,signal:c.signal,cache:'no-store'}).then(function(r){return r.text().then(function(tx){var d={};try{d=tx?JSON.parse(tx):{}}catch(e){}if(r.status===401){localStorage.removeItem('pcsToken');token='';throw new Error('Сессия истекла. Войдите заново.')}if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})}).catch(function(e){if(e.name==='AbortError')throw new Error('Таймаут загрузки. Нажмите повторить.');throw e}).finally(function(){clearTimeout(t)})}
+function api(p,o,m){return fetchJson(UI,p,o,m)}function ops(p,o,m){return fetchJson(OPS,p,o,m)}
+function shell(){var items=[['dashboard','▦','Главная'],['inbox','▣','Входящие'],['bookings','▣','Брони'],['catalog','▦','Каталог'],['more','•••','Ещё']];return '<div class="top"><b>pcs_manager</b></div><main class="wrap" id="main"></main><nav class="bottom">'+items.map(function(x){var on=page===x[0]||(x[0]==='more'&&['approvals','status'].indexOf(page)>=0);return '<button class="'+(on?'on':'')+'" onclick="go(\''+x[0]+'\')"><i>'+x[1]+'</i>'+x[2]+'</button>'}).join('')+'</nav>'}
+function set(x){q('#main').innerHTML=x}function h(k,t,s){return '<div class="eyebrow">'+esc(k)+'</div><h1 class="title">'+esc(t)+'</h1><p class="sub">'+esc(s)+'</p>'}
+function login(msg){q('#app').innerHTML='<div class="top"><b>pcs_manager</b></div><main class="wrap"><div class="card"><h1 class="title">Вход</h1><p class="sub">Рабочая панель PCS</p><div class="field"><label>Пароль администратора</label><input id="pw" type="password" autocomplete="current-password"></div><button class="btn" onclick="doLogin()">Войти</button><p class="err">'+esc(msg||'')+'</p></div></main>'}
+window.doLogin=function(){api('/login',{method:'POST',body:JSON.stringify({password:q('#pw').value})},9000).then(function(d){token=d.token;localStorage.pcsToken=token;boot()}).catch(function(e){login(e.message)})}
+function boot(){try{if(window.Telegram&&Telegram.WebApp){Telegram.WebApp.ready();Telegram.WebApp.expand()}}catch(e){}if(!token)return login();api('/session',{},7000).then(function(){page='dashboard';q('#app').innerHTML=shell();dashboard()}).catch(function(){localStorage.removeItem('pcsToken');token='';login('Сессия истекла. Войдите заново.')})}
+window.go=function(p){if(p==='more')return more();page=p;q('#app').innerHTML=shell();if(p==='dashboard')dashboard();if(p==='inbox')inbox();if(p==='bookings')bookings();if(p==='catalog')catalog();if(p==='approvals')approvals();if(p==='status')status()}
+function err(e,p){return '<div class="card"><b>Ошибка загрузки</b><p class="err">'+esc(e.message||e)+'</p><button class="btn" onclick="go(\''+p+'\')">Повторить</button></div>'}
+function clientRow(c){return '<button class="row" onclick="openClient(\''+c.id+'\')"><b>'+esc(c.name||c.username||c.telegram_chat_id||'Клиент')+'</b><small>'+esc(c.need||c.summary||c.intent||'')+'</small><span class="pill">'+esc(c.status||'NEW')+'</span>'+(c.priority==='HOT'?'<span class="pill">HOT</span>':'')+'</button>'}
+function itemRow(x){return '<div class="row"><b>'+esc(x.title||'Позиция')+'</b><small>'+esc((x.category||'')+' · '+(x.status||''))+'</small><span class="pill">'+esc(x.customer_visible===false?'скрыто':'видно')+'</span></div>'}
+function dashboard(){set(h('Telegram для бизнеса','Главная','Стабильный режим без старого Vercel-фронта.')+'<div class="card"><b>Последние обращения</b><div id="clients" class="muted">Загрузка…</div></div><div class="card"><b>Ближайшие брони</b><div id="books" class="muted">Загрузка…</div></div><div class="card"><b>Каталог</b><div id="cat" class="muted">Загрузка…</div></div>');api('/crm').then(function(d){var rows=Array.isArray(d)?d:[];q('#clients').innerHTML=rows.slice(0,5).map(clientRow).join('')||'Обращений нет'}).catch(function(e){q('#clients').innerHTML=err(e,'dashboard')});ops('/reservations').then(function(d){var rows=Array.isArray(d)?d:[];q('#books').innerHTML=rows.slice(0,5).map(function(x){return '<div class="row"><b>'+esc(x.pcs_catalog_items&&x.pcs_catalog_items.title||'Бронь')+'</b><small>'+esc((x.start_date||'')+' → '+(x.end_date||''))+'</small></div>'}).join('')||'Броней нет'}).catch(function(){q('#books').innerHTML='Брони не загрузились. Остальная система работает.'});api('/catalog').then(function(d){var rows=Array.isArray(d)?d:[];q('#cat').innerHTML=rows.filter(function(x){return !x.deleted_at}).slice(0,5).map(itemRow).join('')||'Каталог пуст'}).catch(function(e){q('#cat').innerHTML=err(e,'dashboard')})}
+function inbox(){set(h('Telegram для бизнеса','Входящие','Реальные обращения клиентов.')+'<div id="list" class="muted">Загрузка…</div>');api('/crm').then(function(d){var rows=Array.isArray(d)?d:[];q('#list').innerHTML=rows.map(clientRow).join('')||'Пока нет обращений'}).catch(function(e){q('#list').innerHTML=err(e,'inbox')})}
+window.openClient=function(id){page='inbox';q('#app').innerHTML=shell();set(h('Клиент','Карточка','Диалог и ручной ответ.')+'<div id="client" class="muted">Загрузка…</div>');api('/crm/'+id).then(function(d){var c=d.contact||d;var msgs=d.messages||[];q('#client').innerHTML='<div class="card"><h2>'+esc(c.name||c.username||'Клиент')+'</h2><p class="muted">'+esc(c.summary||c.need||'')+'</p><div class="field"><label>Ответ клиенту</label><textarea id="reply" rows="4"></textarea></div><button class="btn" onclick="sendReply(\''+c.id+'\')">Отправить</button></div><div class="card"><b>Диалог</b>'+((msgs||[]).map(function(m){return '<div class="row"><small>'+esc(m.direction)+':</small><b>'+esc(m.text||'[медиа]')+'</b></div>'}).join('')||'<p class="muted">История пуста</p>')+'</div>'}).catch(function(e){q('#client').innerHTML=err(e,'inbox')})}
+window.sendReply=function(id){var text=q('#reply').value.trim();if(!text)return;api('/crm/'+id+'/send',{method:'POST',body:JSON.stringify({text:text})},9000).then(function(){openClient(id)}).catch(function(e){alert(e.message)})}
+function bookings(){set(h('Операции','Брони','Заявки и статусы.')+'<div id="bookList" class="muted">Загрузка…</div>');ops('/reservations').then(function(d){var rows=Array.isArray(d)?d:[];q('#bookList').innerHTML=rows.map(function(x){return '<div class="row"><b>'+esc(x.pcs_catalog_items&&x.pcs_catalog_items.title||'Бронь')+'</b><small>'+esc((x.start_date||'')+' → '+(x.end_date||'')+' · '+(x.status||''))+'</small></div>'}).join('')||'Броней нет'}).catch(function(e){q('#bookList').innerHTML=err(e,'bookings')})}
+function catalog(){set(h('Каталог','Каталог','Админский список.')+'<div id="catList" class="muted">Загрузка…</div>');api('/catalog').then(function(d){var rows=Array.isArray(d)?d:[];q('#catList').innerHTML=rows.filter(function(x){return !x.deleted_at}).map(itemRow).join('')||'Каталог пуст'}).catch(function(e){q('#catList').innerHTML=err(e,'catalog')})}
+function approvals(){set(h('AI','Требуют ответа','Черновики на согласование.')+'<div id="ap" class="muted">Загрузка…</div>');api('/approvals').then(function(d){var rows=Array.isArray(d)?d:[];q('#ap').innerHTML=rows.map(function(x){return '<div class="row"><b>'+esc(x.contact_name||'Клиент')+'</b><small>'+esc(x.answer||x.source_text||'')+'</small></div>'}).join('')||'Нет черновиков'}).catch(function(e){q('#ap').innerHTML=err(e,'approvals')})}
+function status(){set(h('Система','Состояние','Диагностика.')+'<div id="st" class="card">Загрузка…</div>');api('/status').then(function(d){q('#st').innerHTML='<pre>'+esc(JSON.stringify(d,null,2))+'</pre>'}).catch(function(e){q('#st').innerHTML=err(e,'status')})}
+function more(){page='more';q('#app').innerHTML=shell();set(h('Меню','Ещё','Дополнительные разделы.')+'<div class="card"><button class="btn" onclick="go(\'approvals\')">Требуют ответа</button> <button class="btn" onclick="go(\'status\')">Состояние</button></div><div class="card"><button class="btn danger" onclick="localStorage.removeItem(\'pcsToken\');location.reload()">Выйти</button></div>')}
+boot();
+})();
+</script>
 </body>
 </html>
