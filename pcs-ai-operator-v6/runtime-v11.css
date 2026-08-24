@@ -1,0 +1,28 @@
+/* PCS Telegram/Web dark-mode contrast hardening. Dark surface = light text, no exceptions. */
+html[data-theme="dark"],html[data-theme="dark"] body,html[data-theme="dark"] #root,html[data-theme="dark"] .layout,html[data-theme="dark"] main{background:#061421!important;color:#f8fbff!important;color-scheme:dark}
+html[data-theme="dark"] .top,html[data-theme="dark"] .side,html[data-theme="dark"] .bottom{background:#071827!important;border-color:rgba(196,222,242,.14)!important;color:#f8fbff!important}
+html[data-theme="dark"] :is(.card,.item,.client-row,.status-row,.ops-stat,.premium-kpi,.pricing-method,.quote-box,.calendar-toolbar,.calendar-day,.sheetbox,.sheethead,.loginbox,.contract-hero,.contract-version,.toggle-row,.inset-card,.answer-box,.catalog-card,.finance-currency,.payment-hint,.agenda-event,.more-grid>*,.action-group,.action-grid>*){background:#0d2133!important;border-color:rgba(196,222,242,.14)!important;color:#f8fbff!important}
+html[data-theme="dark"] :is(h1,h2,h3,h4,h5,h6,p,span,b,strong,small,label,em,li,dt,dd,th,td,.title,.brand,.section-title,.eyebrow,.calendar-num,.calendar-dow,.agenda-date,.catalog-copy,.price-strip,.period-price-strip,.kv,.info-grid,.payment-row,.finance-row-v9){color:#f8fbff!important}
+html[data-theme="dark"] :is(.muted,.sub,.field label,.client-row span,.item p,.kv span:nth-child(odd),.price-strip small,.period-price-strip small,.finance-currency span,.calendar-day small,.agenda-event small){color:#b8c8d8!important}
+html[data-theme="dark"] :is(input,textarea,select,.ops-select,.time-grid select){background:#10283d!important;color:#fff!important;border-color:rgba(196,222,242,.18)!important;caret-color:#fff!important}
+html[data-theme="dark"] :is(input,textarea)::placeholder{color:#93a9be!important;opacity:1!important}
+html[data-theme="dark"] option{background:#10283d!important;color:#fff!important}
+html[data-theme="dark"] .bubble{background:#132b40!important;color:#fff!important}
+html[data-theme="dark"] .bubble.out{background:#0a6f78!important;color:#fff!important}
+html[data-theme="dark"] .pill{background:#17364f!important;color:#eef8ff!important;border-color:rgba(196,222,242,.14)!important}
+html[data-theme="dark"] .pill.warn{background:#5a4317!important;color:#ffe8a8!important}
+html[data-theme="dark"] .pill.bad{background:#552634!important;color:#ffd0d8!important}
+html[data-theme="dark"] .pill.ok{background:#123f38!important;color:#c9fff0!important}
+html[data-theme="dark"] :is(.btn,.iconbtn,.ops-tab){border-color:rgba(196,222,242,.16)!important}
+html[data-theme="dark"] .btn:not(.danger):not(.sage):not(.blue),html[data-theme="dark"] .ops-tab{background:#142b3f!important;color:#fff!important}
+html[data-theme="dark"] .btn.soft,html[data-theme="dark"] .btn.ghost{background:#142b3f!important;color:#fff!important}
+html[data-theme="dark"] .btn.sage,html[data-theme="dark"] .ops-tab.on{background:#0b7d81!important;color:#fff!important}
+html[data-theme="dark"] .btn.blue{background:#245a99!important;color:#fff!important}
+html[data-theme="dark"] .btn.danger{background:#8e3142!important;color:#fff!important}
+html[data-theme="dark"] a{color:#bfe5ff!important}
+html[data-theme="dark"] .calendar-day.out{background:#081a29!important;color:#7f94a7!important}
+html[data-theme="dark"] .calendar-day.today{outline:2px solid #37c1c5!important}
+html[data-theme="dark"] .empty,html[data-theme="dark"] .premium-empty{color:#c5d4e1!important}
+html[data-theme="dark"] .logo{background:#08212c!important}
+/* Telegram sometimes injects its scheme before our JS runs. */
+body.tg-dark,body.tg-dark #root{background:#061421!important;color:#f8fbff!important}
