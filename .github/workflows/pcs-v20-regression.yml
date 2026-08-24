@@ -5,6 +5,8 @@ on:
     paths:
       - 'pcs-ai-operator-v6/**'
       - 'tests/pcs-regression-v20.mjs'
+      - 'tests/pcs-intent-regression-v20.mjs'
+      - 'supabase/migrations/**'
       - 'index.html'
       - 'telegram-webapp.html'
       - '.github/workflows/pcs-v20-regression.yml'
@@ -13,6 +15,8 @@ on:
     paths:
       - 'pcs-ai-operator-v6/**'
       - 'tests/pcs-regression-v20.mjs'
+      - 'tests/pcs-intent-regression-v20.mjs'
+      - 'supabase/migrations/**'
       - 'index.html'
       - 'telegram-webapp.html'
 
@@ -33,5 +37,8 @@ jobs:
           node --check pcs-ai-operator-v6/catalog-hardening-v20.js
           node --check pcs-ai-operator-v6/locale-currency-v20.js
           node --check tests/pcs-regression-v20.mjs
+          node --check tests/pcs-intent-regression-v20.mjs
       - name: Run deterministic PCS regression
-        run: node tests/pcs-regression-v20.mjs
+        run: |
+          node tests/pcs-regression-v20.mjs
+          node tests/pcs-intent-regression-v20.mjs
