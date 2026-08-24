@@ -1,0 +1,156 @@
+:root{
+  --pcs-bg:#071523;
+  --pcs-panel:#0d1d2d;
+  --pcs-panel-2:#12263a;
+  --pcs-text:#f4f8fc;
+  --pcs-muted:#a9b8c9;
+  --pcs-line:rgba(166,198,226,.18);
+  --pcs-accent:#3b82f6;
+  --pcs-accent-soft:rgba(59,130,246,.14);
+  --pcs-radius:18px;
+}
+
+/* The application is an internal Russian-language operator console. */
+html,body{min-height:100%;}
+html[data-theme="dark"] body,
+html[data-theme="dark"] .layout,
+html[data-theme="dark"] main{
+  background:#071523!important;
+  color:var(--pcs-text)!important;
+}
+html[data-theme="dark"] .top,
+html[data-theme="dark"] .side,
+html[data-theme="dark"] .bottom{
+  background:rgba(7,21,35,.96)!important;
+  color:var(--pcs-text)!important;
+  border-color:var(--pcs-line)!important;
+}
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .item,
+html[data-theme="dark"] .client-row,
+html[data-theme="dark"] .status-row,
+html[data-theme="dark"] .ops-stat,
+html[data-theme="dark"] .premium-kpi,
+html[data-theme="dark"] .pricing-method,
+html[data-theme="dark"] .quote-box,
+html[data-theme="dark"] .calendar-toolbar,
+html[data-theme="dark"] .calendar-day,
+html[data-theme="dark"] .sheetbox,
+html[data-theme="dark"] .sheethead,
+html[data-theme="dark"] .loginbox,
+html[data-theme="dark"] .contract-hero,
+html[data-theme="dark"] .contract-version,
+html[data-theme="dark"] .toggle-row,
+html[data-theme="dark"] .inset-card,
+html[data-theme="dark"] .answer-box{
+  background:#0d1d2d!important;
+  color:var(--pcs-text)!important;
+  border-color:var(--pcs-line)!important;
+}
+html[data-theme="dark"] .card h1,
+html[data-theme="dark"] .card h2,
+html[data-theme="dark"] .card h3,
+html[data-theme="dark"] .item h1,
+html[data-theme="dark"] .item h2,
+html[data-theme="dark"] .item h3,
+html[data-theme="dark"] .client-row,
+html[data-theme="dark"] .client-row b,
+html[data-theme="dark"] .title,
+html[data-theme="dark"] .brand,
+html[data-theme="dark"] .sheethead h2,
+html[data-theme="dark"] .quote-total,
+html[data-theme="dark"] .ops-stat b,
+html[data-theme="dark"] .premium-kpi b,
+html[data-theme="dark"] .price-strip b,
+html[data-theme="dark"] .pricing-summary b,
+html[data-theme="dark"] .kv b,
+html[data-theme="dark"] .section-title{
+  color:var(--pcs-text)!important;
+}
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .sub,
+html[data-theme="dark"] .field label,
+html[data-theme="dark"] .item p,
+html[data-theme="dark"] .client-row span,
+html[data-theme="dark"] small,
+html[data-theme="dark"] .kv span:nth-child(odd){
+  color:var(--pcs-muted)!important;
+}
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select,
+html[data-theme="dark"] .ops-select,
+html[data-theme="dark"] .time-grid select{
+  background:#102337!important;
+  color:var(--pcs-text)!important;
+  border-color:var(--pcs-line)!important;
+}
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{color:#7f91a6!important;opacity:1;}
+html[data-theme="dark"] option{background:#102337;color:var(--pcs-text);}
+html[data-theme="dark"] .bubble{background:#13273b!important;color:var(--pcs-text)!important;}
+html[data-theme="dark"] .bubble.out{background:#1b4f8f!important;color:#fff!important;}
+html[data-theme="dark"] .pill{background:#173149!important;color:#dcecff!important;border:1px solid rgba(154,196,235,.12)!important;}
+html[data-theme="dark"] .pill.warn{background:#4b3d19!important;color:#ffe19a!important;}
+html[data-theme="dark"] .pill.bad{background:#49232d!important;color:#ffc4ce!important;}
+
+/* Clean premium structure: less visual noise, more hierarchy. */
+.top{box-shadow:none!important;}
+.logo{border-radius:12px!important;box-shadow:none!important;}
+.card,.item,.client-row,.ops-stat,.premium-kpi{box-shadow:0 14px 36px rgba(0,0,0,.12)!important;}
+.title{max-width:980px;}
+main{max-width:1500px!important;min-width:0!important;}
+.grid2,.grid3,.split,.catalog-card,.booking-row{min-width:0!important;}
+.card,.item,.client-row,.catalog-copy,.field,.kv,.conversation{min-width:0!important;}
+.card h2,.card h3,.item h3,.client-row b,.client-row span,.muted,.sub,.kv b{overflow-wrap:anywhere;}
+
+/* Navigation: real line icons, no typographic glyphs. */
+.nav button,.bottom button{display:flex!important;align-items:center!important;gap:10px!important;}
+.nav-icon{width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 19px;color:currentColor;opacity:.92;}
+.nav-icon svg{width:19px;height:19px;display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.bottom button{justify-content:center!important;flex-direction:column!important;gap:3px!important;}
+.bottom button>i{display:none!important;}
+.bottom .nav-icon{width:20px;height:20px;flex-basis:20px;}
+.iconbtn .nav-icon{width:20px;height:20px;}
+
+/* Scroll areas must be usable with wheel and pointer drag. */
+.ops-tabs,.premium-fleet,.media-grid,.queue-grid,.calendar-toolbar,.scroll-x{
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  overscroll-behavior-x:contain;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.ops-tabs{flex-wrap:nowrap!important;max-width:100%!important;}
+.ops-tab{white-space:nowrap!important;flex:0 0 auto!important;}
+.pcs-drag-scroll{cursor:grab;user-select:none;}
+.pcs-drag-scroll.pcs-dragging{cursor:grabbing;}
+.sheetbox,.conversation,.scroll-y{
+  overflow:auto!important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.sheetbox{max-height:94dvh!important;}
+.conversation{max-height:min(48dvh,520px)!important;}
+
+/* No clipped cards or invisible controls on narrower desktop screens. */
+@media (max-width:1180px){
+  .layout{grid-template-columns:210px minmax(0,1fr)!important;}
+  .grid3{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .ops-stat-grid,.premium-kpis,.finance-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .catalog-card{grid-template-columns:160px minmax(0,1fr)!important;}
+  .cover{width:160px!important;}
+}
+@media (max-width:860px){
+  .grid2,.grid3,.split{grid-template-columns:1fr!important;}
+  .catalog-card{grid-template-columns:1fr!important;}
+  .cover{width:100%!important;max-height:260px;}
+}
+
+/* Explicit contrast protection for any dark inline block introduced later. */
+[style*="background:#0"],[style*="background: #0"],[style*="background:#1"],[style*="background: #1"],.dark-card,.dark-panel{
+  color:#f4f8fc!important;
+}
+[style*="background:#0"] .muted,[style*="background: #0"] .muted,[style*="background:#1"] .muted,[style*="background: #1"] .muted,.dark-card .muted,.dark-panel .muted{
+  color:#a9b8c9!important;
+}
