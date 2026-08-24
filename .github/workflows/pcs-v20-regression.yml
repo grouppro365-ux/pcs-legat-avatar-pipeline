@@ -36,6 +36,7 @@ jobs:
         run: |
           node --check pcs-ai-operator-v6/catalog-hardening-v20.js
           node --check pcs-ai-operator-v6/locale-currency-v20.js
+          node --check pcs-ai-operator-v6/connections-v20.js
           node --check tests/pcs-regression-v20.mjs
           node --check tests/pcs-intent-regression-v20.mjs
       - name: Run deterministic PCS regression
