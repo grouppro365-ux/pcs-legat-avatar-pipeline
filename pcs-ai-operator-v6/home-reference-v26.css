@@ -15,33 +15,33 @@ body.pcs-home-v26 main{width:100%!important;max-width:none!important;margin:0!im
 
 .pcs-home26{position:relative;width:min(100%,432px);min-height:900px;margin:0 auto;background:var(--h-bg);overflow:hidden}
 .pcs-home26-hero{position:relative;height:405px;overflow:hidden;background:var(--h-bg)}
-.pcs-home26-scene{position:absolute;z-index:0;top:17px;right:-2px;width:62%;height:315px;background-image:var(--home-photo);background-repeat:no-repeat;background-size:cover;background-position:58% 46%;pointer-events:none}
+.pcs-home26-scene{position:absolute;z-index:0;top:14px;right:-4px;width:68%;height:330px;background-image:var(--home-photo);background-repeat:no-repeat;background-size:cover;background-position:56% 46%;pointer-events:none}
 .pcs-home26-scene:after{content:"";position:absolute;inset:-2px;background:linear-gradient(90deg,var(--h-bg) 0%,color-mix(in srgb,var(--h-bg) 88%,transparent) 22%,rgba(255,255,255,0) 57%),linear-gradient(180deg,transparent 70%,var(--h-bg) 100%)}
 html[data-theme="dark"] .pcs-home26-scene{filter:brightness(.64) saturate(1.18) contrast(1.04)}
 html[data-theme="dark"] .pcs-home26-scene:after{background:linear-gradient(90deg,#061522 0%,rgba(6,21,34,.94) 24%,rgba(6,21,34,.20) 61%,transparent 100%),linear-gradient(180deg,transparent 68%,#061522 100%)}
 
-.pcs-home26-top{position:relative;z-index:4;display:flex;align-items:center;justify-content:space-between;height:62px;padding:12px 22px 0}
+.pcs-home26-top{position:relative;z-index:4;display:flex;align-items:center;justify-content:space-between;height:58px;padding:11px 22px 0}
 .pcs-home26-icon{position:relative;width:34px;height:34px;border:0;padding:0;background:transparent;color:var(--h-ink);display:grid;place-items:center}
 .pcs-home26-icon svg{width:27px;height:27px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .pcs-home26-badge{position:absolute;right:0;top:1px;width:8px;height:8px;border-radius:50%;background:#ff4052;border:1.5px solid var(--h-bg);display:none}.pcs-home26-badge.on{display:block}
 
-.pcs-home26-copy{position:relative;z-index:3;width:58%;padding:10px 0 0 29px}
-.pcs-home26-script{font-family:"Segoe Script","Brush Script MT","Comic Sans MS",cursive;color:#08aaa8;font-size:24px;line-height:1;font-weight:500;font-style:italic;margin-bottom:14px;white-space:nowrap}
-.pcs-home26-title{margin:0;color:var(--h-ink);font-size:35px;line-height:1.02;letter-spacing:-.048em;font-weight:800}
-.pcs-home26-title span{display:block;color:var(--h-teal);margin-top:5px}
-.pcs-home26-sub{margin:16px 0 0;width:185px;color:var(--h-muted);font-size:12px;line-height:1.52;font-weight:500}
+.pcs-home26-copy{position:relative;z-index:3;width:57%;padding:7px 0 0 29px}
+.pcs-home26-script{font-family:"Segoe Script","Brush Script MT","Comic Sans MS",cursive;color:#08aaa8;font-size:18px;line-height:1;font-weight:500;font-style:italic;margin-bottom:10px;white-space:nowrap}
+.pcs-home26-title{margin:0;color:var(--h-ink);font-size:29px;line-height:1.045;letter-spacing:-.046em;font-weight:800}
+.pcs-home26-title span{display:block;color:var(--h-teal);margin-top:4px}
+.pcs-home26-sub{margin:13px 0 0;width:182px;color:var(--h-muted);font-size:10.5px;line-height:1.48;font-weight:500}
 
-.pcs-home26-search{position:absolute;z-index:5;left:26px;right:26px;bottom:50px;height:37px;display:flex;align-items:center;gap:8px;padding:4px 5px 4px 12px;border-radius:15px;background:var(--h-card);border:1px solid var(--h-line);box-shadow:var(--h-shadow);backdrop-filter:blur(18px) saturate(140%)}
+.pcs-home26-search{position:absolute;z-index:5;left:26px;right:26px;bottom:84px;height:37px;display:flex;align-items:center;gap:8px;padding:4px 5px 4px 12px;border-radius:15px;background:var(--h-card);border:1px solid var(--h-line);box-shadow:var(--h-shadow);backdrop-filter:blur(18px) saturate(140%)}
 .pcs-home26-search>svg{width:15px;height:15px;stroke:#8792a2;fill:none;stroke-width:1.8;flex:0 0 auto}
 .pcs-home26-search input{flex:1;min-width:0;height:100%;border:0!important;background:transparent!important;box-shadow:none!important;outline:none!important;color:var(--h-ink)!important;font:500 11px/1.2 inherit!important;padding:0!important}
 .pcs-home26-search input::placeholder{color:#8792a2!important}
 .pcs-home26-search button{width:31px;height:31px;min-width:31px;border:0;border-radius:50%;background:var(--h-teal);color:#fff;display:grid;place-items:center;padding:0}
 .pcs-home26-search button svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.9}
 
-.pcs-home26-quick{position:absolute;z-index:5;left:26px;right:26px;bottom:0;height:43px;display:grid;grid-template-columns:repeat(4,1fr);padding:6px 10px;border-radius:15px;background:var(--h-card);border:1px solid var(--h-line);box-shadow:var(--h-shadow);backdrop-filter:blur(20px) saturate(145%)}
-.pcs-home26-quick button{appearance:none;border:0;background:transparent;color:var(--h-ink);display:flex;align-items:center;justify-content:center;gap:6px;font-size:10px;font-weight:600;padding:0}
-.pcs-home26-qico{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:0 0 auto}
-.pcs-home26-qico svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pcs-home26-quick{position:absolute;z-index:5;left:26px;right:26px;bottom:0;height:75px;display:grid;grid-template-columns:repeat(4,1fr);padding:8px 10px;border-radius:15px;background:var(--h-card);border:1px solid var(--h-line);box-shadow:var(--h-shadow);backdrop-filter:blur(20px) saturate(145%)}
+.pcs-home26-quick button{appearance:none;border:0;background:transparent;color:var(--h-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:600;padding:0}
+.pcs-home26-qico{width:35px;height:35px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+.pcs-home26-qico svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .pcs-home26-quick button:nth-child(1) .pcs-home26-qico{background:linear-gradient(145deg,#0c827f,#18b4ae)}
 .pcs-home26-quick button:nth-child(2) .pcs-home26-qico{background:linear-gradient(145deg,#b97b09,#f1a313)}
 .pcs-home26-quick button:nth-child(3) .pcs-home26-qico{background:linear-gradient(145deg,#17678f,#2998cc)}
