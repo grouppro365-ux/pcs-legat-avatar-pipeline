@@ -58,6 +58,29 @@
     catch(e){box.innerHTML=sectionError(e.message,"inbox()")}
   };
 
+  function rootBlank(){const root=document.querySelector('#root');if(!root)return false;return !root.querySelector('#main') && !(root.textContent||'').trim();}
+  async function recoverBlankRoot(){
+    const root=document.querySelector('#root');if(!root||!rootBlank())return;
+    try{
+      if(!localStorage.pcsToken){
+        if(typeof window.login==='function')return window.login();
+        root.innerHTML='<div class="login"><div class="loginbox"><div class="eyebrow">Premium Concierge Service Thailand</div><h1 class="title">Вход</h1><p class="sub">Закройте и откройте PCS Manager заново.</p></div></div>';
+        return;
+      }
+      await hotCall('/session');
+      if(typeof window.shell==='function'){
+        window.PCS=window.PCS||{};
+        window.PCS.page=window.PCS.page||'inbox';
+        root.innerHTML=window.shell();
+        return window.PCS.page==='dashboard'&&window.dashboardPage?window.dashboardPage():window.inbox?.();
+      }
+      if(typeof window.go==='function')return window.go('inbox');
+    }catch(e){
+      localStorage.removeItem('pcsToken');
+      if(typeof window.login==='function')return window.login();
+      root.innerHTML='<div class="login"><div class="loginbox"><div class="eyebrow">Premium Concierge Service Thailand</div><h1 class="title">Сессия истекла</h1><p class="sub">Закройте и откройте PCS Manager заново.</p></div></div>';
+    }
+  }
   function currentLooksStuck(){const main=document.querySelector('#main');if(!main)return false;const txt=main.textContent||'';return /Загрузка|Загружаю|Loading/i.test(txt)}
   function rerunStuckScreen(){
     if(!localStorage.pcsToken)return;
@@ -66,7 +89,9 @@
     if(p==='dashboard'||txt.includes('главная')) return window.dashboardPage?.();
     if(p==='inbox'||txt.includes('входящие')) return window.inbox?.();
   }
-  setTimeout(()=>{if(currentLooksStuck())rerunStuckScreen()},250);
-  setTimeout(()=>{if(currentLooksStuck())rerunStuckScreen()},1400);
-  setTimeout(()=>{if(currentLooksStuck())rerunStuckScreen()},4500);
+  function guard(){recoverBlankRoot(); if(currentLooksStuck())rerunStuckScreen();}
+  setTimeout(guard,150);
+  setTimeout(guard,700);
+  setTimeout(guard,1800);
+  setTimeout(guard,4500);
 })();
