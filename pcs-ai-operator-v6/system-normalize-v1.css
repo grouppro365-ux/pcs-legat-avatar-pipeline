@@ -1,0 +1,55 @@
+/* PCS system normalizer v1 — presentation-only */
+:root{--sys-nav-h:68px}
+html,body,#root{max-width:100%;overflow-x:hidden}
+#root *,#sheet *{box-sizing:border-box;min-width:0}
+img,video,canvas{max-width:100%}
+button,select,input,textarea{max-width:100%}
+.sheet:not(.on){display:none!important;pointer-events:none!important}.sheet.on{pointer-events:auto!important}.sheetbox{max-width:100vw!important}
+.bottom svg,.nav-icon svg,.pcs-sp-navbtn svg,.pcs-h2-bottom svg,.in25-nav svg,.cal25-nav svg{width:20px!important;height:20px!important;max-width:20px!important;max-height:20px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+.bottom button>i{font-style:normal;line-height:1;display:grid;place-items:center;max-height:24px;overflow:hidden}
+body.pcs-system-ready main,body.pcs-system-ready .pcs-ap-screen,body.pcs-system-ready .pcs-sp-screen,body.pcs-system-ready .in25,body.pcs-system-ready .cal25,body.pcs-system-ready .pcs-h2-screen{max-width:100vw}
+body.pcs-system-ready .pcs-ap-card,body.pcs-system-ready .pcs-sp-card,body.pcs-system-ready .card,body.pcs-system-ready .item{overflow-wrap:anywhere}
+body.pcs-system-ready .pcs-ap-filter,body.pcs-system-ready .pcs-ap-seg,body.pcs-system-ready .pcs-ap-subseg,body.pcs-system-ready .pcs-ap-chipbar,body.pcs-system-ready .in25-tabs{scrollbar-width:none}
+body.pcs-system-ready .pcs-ap-filter::-webkit-scrollbar,body.pcs-system-ready .pcs-ap-chipbar::-webkit-scrollbar,body.pcs-system-ready .in25-tabs::-webkit-scrollbar{display:none}
+@media(max-width:820px){
+ html,body,#root,.layout,main{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+ body.pcs-system-ready{overscroll-behavior-x:none}
+ body.pcs-system-ready main{min-width:0!important}
+ body.pcs-system-ready input,body.pcs-system-ready textarea,body.pcs-system-ready select{font-size:16px}
+ body.pcs-system-ready .sheetbox{width:100%!important;max-width:100%!important;border-radius:22px 22px 0 0!important;padding-left:14px!important;padding-right:14px!important}
+ body.pcs-system-ready .grid2,body.pcs-system-ready .grid3,body.pcs-system-ready .split,body.pcs-system-ready .dt-control{grid-template-columns:1fr!important}
+ body.pcs-system-ready .action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.pcs-system-ready .bottom{grid-template-columns:repeat(5,minmax(0,1fr))!important;left:8px!important;right:8px!important;bottom:calc(7px + env(safe-area-inset-bottom))!important;transform:none!important;width:auto!important;max-width:none!important;height:68px!important;padding:5px!important;border-radius:21px!important;overflow:hidden!important;z-index:120!important}
+ body.pcs-system-ready .bottom button{min-width:0!important;width:100%!important;min-height:54px!important;padding:3px 1px!important;display:grid!important;justify-items:center!important;align-content:center!important;gap:4px!important;font-size:9px!important;line-height:1!important;overflow:hidden!important;white-space:normal!important}
+ body.pcs-system-ready .bottom button span{font-size:9px!important;line-height:1!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;max-width:100%!important}
+ body.pcs-system-ready .bottom button svg{width:20px!important;height:20px!important;display:block!important}
+ body.pcs-system-ready .title{font-size:32px!important;line-height:1.02!important}
+ body.pcs-system-ready .sub{font-size:14px!important;line-height:1.4!important}
+ body.pcs-system-ready .catalog-card{grid-template-columns:1fr!important}
+ body.pcs-system-ready .cover{width:100%!important}
+ body.pcs-system-ready .media-grid,body.pcs-system-ready .queue-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.pcs-system-ready .price-strip,body.pcs-system-ready .pricing-summary{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.pcs-system-ready .client-head,body.pcs-system-ready .ops-head{gap:10px!important;flex-wrap:wrap!important}
+ body.pcs-system-ready .client-row,body.pcs-system-ready .booking-row,body.pcs-system-ready .item{max-width:100%!important;overflow:hidden!important}
+ body.pcs-system-ready .pills{max-width:100%!important}
+ body.pcs-system-ready .pill{max-width:100%!important;overflow-wrap:anywhere!important}
+ body.pcs-system-ready .kv{grid-template-columns:105px minmax(0,1fr)!important}
+ body.pcs-system-ready .conversation{max-height:52vh!important}
+ body.pcs-inbox-v25 .in25-work{padding-top:18px!important;padding-left:12px!important;padding-right:12px!important}
+ body.pcs-inbox-v25 .in25-search{width:100%!important}
+ body.pcs-inbox-v25 .in25-tabs{width:100%!important;overflow-x:auto!important;flex-wrap:nowrap!important}
+ body.pcs-inbox-v25 .in25-tab{flex:0 0 auto!important}
+ body.pcs-inbox-v25 .in25-contact{max-width:100%!important;overflow:hidden!important}
+ body.pcs-approved-page .pcs-ap-screen,body.pcs-secondary-v2 .pcs-sp-screen{width:100%!important;max-width:100%!important;overflow:hidden!important}
+ body.pcs-approved-page .pcs-ap-body,body.pcs-secondary-v2 .pcs-sp-content{width:100%!important;max-width:100%!important}
+ body.pcs-approved-page .pcs-ap-filter{width:100%!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;overflow:hidden!important}
+ body.pcs-approved-page .pcs-ap-filter button{min-width:0!important;width:100%!important;white-space:normal!important}
+ body.pcs-approved-page .pcs-ap-service-grid,body.pcs-approved-page .pcs-ap-fin-kpis{grid-template-columns:1fr!important}
+ body.pcs-approved-page .pcs-ap-price-grid,body.pcs-approved-page .pcs-ap-season-mini{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.pcs-secondary-v2 .pcs-sp-status-grid,body.pcs-secondary-v2 .pcs-sp-future{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.pcs-secondary-v2 .pcs-sp-days{grid-template-columns:repeat(7,minmax(0,1fr))!important}
+ body.pcs-calendar-v25 .cal25-grid{grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%!important}
+ body.pcs-calendar-v25 .cal25-day{min-width:0!important;overflow:hidden!important}
+ body.pcs-home-v2 .pcs-h2-screen{width:100%!important;max-width:100%!important;overflow:hidden!important}
+}
+@media(max-width:390px){body.pcs-system-ready .action-grid{grid-template-columns:1fr!important}body.pcs-system-ready .kv{grid-template-columns:90px minmax(0,1fr)!important}.login{padding:12px!important}.loginbox{padding:22px!important;border-radius:24px!important}}
