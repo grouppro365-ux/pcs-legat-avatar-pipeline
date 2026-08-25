@@ -1,0 +1,1 @@
+(()=>{const bind=()=>{if(document.body.classList.contains('pcs-home-exact'))document.body.classList.add('pcs-home-ref')};bind();let n=0;const t=setInterval(()=>{bind();if(++n>120)clearInterval(t)},100);document.addEventListener('click',()=>setTimeout(bind,0),true)})();
