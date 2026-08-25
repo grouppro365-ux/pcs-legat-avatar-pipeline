@@ -1,0 +1,24 @@
+/* Pixel-ratio correction against the approved 853px-wide reference screenshots. */
+@media(max-width:430px){
+ .pcs-exact-shell{width:100%!important}
+ .pcs-exact-hero{height:376px!important;min-height:376px!important;overflow:hidden!important}
+ .home-photo-layer{top:36px!important;right:-34px!important;width:78%!important;height:304px!important;background-position:53% center!important;background-size:cover!important;filter:none!important}
+ html[data-theme=dark] .home-photo-layer{filter:brightness(.68) saturate(1.12) contrast(1.04)!important}
+ .home-photo-layer:after{background:linear-gradient(90deg,var(--hx-bg) 0%,color-mix(in srgb,var(--hx-bg) 90%,transparent) 12%,transparent 42%,transparent 100%),linear-gradient(180deg,transparent 78%,var(--hx-bg) 100%)!important}
+ html[data-theme=dark] .home-photo-layer:after{background:linear-gradient(90deg,#061522 0%,rgba(6,21,34,.92) 13%,rgba(6,21,34,.18) 45%,transparent 100%),linear-gradient(180deg,transparent 78%,#061522 100%)!important}
+ .home-exact-top{height:52px!important;padding:12px 24px 0!important}
+ .home-exact-icon{width:28px!important;height:28px!important}.home-exact-icon svg{width:21px!important;height:21px!important}
+ .home-exact-copy{position:absolute!important;left:29px!important;top:63px!important;width:52%!important;padding:0!important;z-index:3!important}
+ .home-exact-script{font-size:18px!important;line-height:1!important;margin:0 0 9px!important}
+ .home-exact-title{font-size:30px!important;line-height:.99!important;letter-spacing:-.048em!important}
+ .home-exact-title span{margin-top:4px!important}
+ .home-exact-sub{font-size:11px!important;line-height:1.52!important;margin-top:14px!important;max-width:188px!important}
+ .home-exact-search{left:24px!important;right:92px!important;top:242px!important;bottom:auto!important;height:37px!important;border-radius:15px!important;padding:4px 5px 4px 12px!important;gap:7px!important}
+ .home-exact-search>svg{width:15px!important;height:15px!important}.home-exact-search input{font-size:11px!important;height:29px!important;padding:0!important}.home-exact-search button{position:absolute!important;right:-57px!important;top:-1px!important;width:39px!important;height:39px!important;min-width:39px!important;border-radius:50%!important}.home-exact-search button svg{width:17px!important;height:17px!important}
+ .home-exact-quick{left:24px!important;right:24px!important;top:289px!important;bottom:auto!important;height:80px!important;border-radius:20px!important;padding:9px 10px!important}
+ .home-exact-quick .qico{width:38px!important;height:38px!important}.home-exact-quick .qico svg{width:19px!important;height:19px!important}.home-exact-quick button{font-size:10px!important;gap:5px!important}
+ .home-exact-content{padding:9px 24px 28px!important;gap:10px!important}
+ .home-exact-kpis{gap:8px!important}.home-exact-kpi{min-height:93px!important;padding:14px!important;border-radius:16px!important}.home-exact-kpi .kl{font-size:7px!important}.home-exact-kpi .kv{font-size:27px!important;margin-top:7px!important}.home-exact-kpi .kn{font-size:8px!important;margin-top:7px!important;max-width:66%!important}.home-exact-kpi .ki{right:13px!important;width:36px!important;height:36px!important;border-radius:12px!important}.home-exact-kpi .ki svg{width:18px!important;height:18px!important}
+ .home-exact-panel{padding:13px 14px!important;border-radius:17px!important}.home-exact-panel-head{margin-bottom:8px!important}.home-exact-panel-head h2{font-size:12px!important}.home-exact-panel-head button{font-size:10px!important}.home-exact-row{padding:9px 10px!important;border-radius:13px!important;gap:8px!important}.home-exact-row b{font-size:10px!important}.home-exact-row small{font-size:8px!important}.home-exact-status{font-size:9px!important}.home-exact-dot{width:7px!important;height:7px!important}
+ body.pcs-home-exact .bottom{height:68px!important;width:calc(100vw - 18px)!important;padding:5px!important;border-radius:21px!important}body.pcs-home-exact .bottom button{min-height:58px!important;font-size:10px!important;border-radius:16px!important;gap:4px!important}body.pcs-home-exact .bottom .nav-icon svg{width:18px!important;height:18px!important}
+}
