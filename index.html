@@ -9,11 +9,8 @@
 <script>
 (()=>{
   const host=location.hostname;
-  const canonical='pcs-ai-operator-live.vercel.app';
-  const isProjectDeployment=host.endsWith('.vercel.app')&&host!==canonical&&(
-    host.startsWith('pcs-ai-operator-live-')||
-    host==='pcs-ai-operator-live-grouppro365-2288s-projects.vercel.app'
-  );
+  const canonical='pcs-ai-operator-live-grouppro365-2288s-projects.vercel.app';
+  const isProjectDeployment=host.endsWith('.vercel.app')&&host!==canonical&&host.startsWith('pcs-ai-operator-live-');
   if(isProjectDeployment){
     location.replace('https://'+canonical+location.pathname+location.search+location.hash);
     return;
