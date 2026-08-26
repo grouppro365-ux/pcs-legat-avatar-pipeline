@@ -6,7 +6,21 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta name="theme-color" content="#f8faf9">
 <title>PCS — Premium Concierge Service Thailand</title>
-<script>document.documentElement.dataset.theme=localStorage.pcsTheme||'light';</script>
+<script>
+(()=>{
+  const host=location.hostname;
+  const canonical='pcs-ai-operator-live.vercel.app';
+  const isProjectDeployment=host.endsWith('.vercel.app')&&host!==canonical&&(
+    host.startsWith('pcs-ai-operator-live-')||
+    host==='pcs-ai-operator-live-grouppro365-2288s-projects.vercel.app'
+  );
+  if(isProjectDeployment){
+    location.replace('https://'+canonical+location.pathname+location.search+location.hash);
+    return;
+  }
+  document.documentElement.dataset.theme=localStorage.pcsTheme||'light';
+})();
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@74a28c662775a4f13b707adec77ef24f6df102de/pcs-ai-operator-v6/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@74a28c662775a4f13b707adec77ef24f6df102de/pcs-ai-operator-v6/ui-fixes.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@a276af785739ccb227860b0c70a3856067e9b302/pcs-ai-operator-v6/design-restore-v21.css">
@@ -46,6 +60,5 @@
 <script src="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@9fe7d68e297795026811911efd9dfad035f6926f/pcs-ai-operator-v6/calendar-seasons-fix-v4.js" defer></script>
 <script src="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@a2eb9524bda7751d6abb75c628d72ff0a2440f4a/pcs-ai-operator-v6/inbox-v25.js" defer></script>
 <script src="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@a2eb9524bda7751d6abb75c628d72ff0a2440f4a/pcs-ai-operator-v6/system-normalizer-v1.js" defer></script>
-<script src="https://cdn.jsdelivr.net/gh/grouppro365-ux/pcs-legat-avatar-pipeline@dd8494fdbf08943b4da8e868999ae01333bc9608/pcs-ai-operator-v6/login-direct-v1.js" defer></script>
 </body>
 </html>
