@@ -1,5 +1,5 @@
 (()=>{
-  const LOGO='./pcs-ai-operator-v6/pcs-mark.svg?v=20260827-21';
+  const LOGO='https://vipthaiconcierge.com/img/footer/Frame%201321317656.png';
   const BRAND='Premium Concierge Service Thailand';
   function apply(){
     document.title=BRAND;
@@ -7,7 +7,7 @@
       let img=el.querySelector('img');
       if(!img){img=document.createElement('img');el.replaceChildren(img)}
       if(img.getAttribute('src')!==LOGO)img.src=LOGO;
-      img.alt=BRAND;img.decoding='async';
+      img.alt='PCS Premium Concierge Service';img.decoding='async';
     });
     document.querySelectorAll('.brand').forEach(el=>{el.textContent='';el.setAttribute('aria-hidden','true')});
     document.querySelectorAll('.loginbox .title').forEach(el=>{el.textContent='Панель PCS'});
