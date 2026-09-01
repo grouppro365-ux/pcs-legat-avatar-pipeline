@@ -13,6 +13,7 @@ window.go=function(page){
  if(page==='calendar'&&typeof window.pcsCalendar25==='function')return window.pcsCalendar25();
  if(page==='connect'&&typeof window.pcsConnections25==='function')return window.pcsConnections25();
  if(page==='kb'&&typeof window.pcsKnowledge26==='function')return window.pcsKnowledge26();
+ if(page==='finance'&&typeof window.pcsFinance26==='function')return window.pcsFinance26();
  const r=typeof fallback==='function'?fallback(page):undefined;navLater();return r;
 };
 window.moreMenu=function(){if(typeof window.openSheet!=='function')return;window.openSheet('Ещё',`<div class="v26-more"><button class="lav" onclick="closeSheet();go('crm')">Клиенты</button><button class="blue" onclick="closeSheet();go('approvals')">Требуют ответа</button><button class="sage" onclick="closeSheet();go('kb')">База знаний</button><button class="butter" onclick="closeSheet();go('calendar')">Календарь</button><button class="peach" onclick="closeSheet();go('finance')">Финансы</button><button class="lav" onclick="closeSheet();go('connect')">Подключения</button><button class="ghost" onclick="closeSheet();go('errors')">Ошибки и повторы</button><button class="ghost" onclick="closeSheet();go('status')">Состояние системы</button><button class="danger" onclick="logout()">Выйти</button></div>`)};
