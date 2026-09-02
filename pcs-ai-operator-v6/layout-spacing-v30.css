@@ -1,0 +1,32 @@
+/* PCS v30 — prevent dashboard overlap and restore finance vertical rhythm. */
+body.pcs-dashboard-v25 .pcs25-hero{height:457px!important;min-height:457px!important}
+body.pcs-dashboard-v25 .pcs25-search{top:314px!important}
+body.pcs-dashboard-v25 .pcs25-quick{top:364px!important}
+body.pcs-dashboard-v25 .pcs25-sub{position:relative!important;z-index:4!important;margin-top:14px!important}
+
+body.pcs-approved-page #pcsApFinance{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:18px!important;
+  min-width:0!important;
+}
+body.pcs-approved-page #pcsApFinance>.pcs-ap-fin-total,
+body.pcs-approved-page #pcsApFinance>.pcs-ap-fin-kpis,
+body.pcs-approved-page #pcsApFinance>.pcs-ap-section-head,
+body.pcs-approved-page #pcsApFinance>.pcs-ap-list{margin:0!important}
+body.pcs-approved-page #pcsApFinance>.pcs-ap-section-head{padding-top:4px!important}
+body.pcs-approved-page .pcs-ap-fin-kpis{gap:12px!important}
+
+@media(max-width:430px){
+ body.pcs-dashboard-v25 .pcs25-hero{height:457px!important;min-height:457px!important}
+ body.pcs-dashboard-v25 .pcs25-search{top:314px!important}
+ body.pcs-dashboard-v25 .pcs25-quick{top:364px!important}
+ body.pcs-approved-page #pcsApFinance{gap:16px!important}
+ body.pcs-approved-page .pcs-ap-fin-kpis{gap:10px!important}
+}
+
+@media(max-width:360px){
+ body.pcs-dashboard-v25 .pcs25-hero{height:446px!important;min-height:446px!important}
+ body.pcs-dashboard-v25 .pcs25-search{top:304px!important}
+ body.pcs-dashboard-v25 .pcs25-quick{top:354px!important}
+}
