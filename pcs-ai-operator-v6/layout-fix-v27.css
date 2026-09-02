@@ -1,0 +1,33 @@
+/* PCS v27 production geometry hotfix.
+   Loaded last to neutralize legacy fixed-nav and WebView scaling conflicts. */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;width:100%;overflow-x:hidden}
+body{width:100%;min-width:0;overflow-x:hidden}
+body.pcs-dashboard-v25,body.pcs-approved-page{--pcs-travel-photo:url('./hero-travel-v27.webp')}
+body.pcs-dashboard-v25 .pcs25-photo{display:block!important;background-image:var(--pcs-travel-photo)!important}
+body.pcs-approved-page .pcs-ap-hero-art{display:block!important;background-image:var(--pcs-travel-photo)!important}
+
+body.pcs-dashboard-v25 .bottom,
+body.pcs-approved-page .bottom{
+ left:max(8px,env(safe-area-inset-left))!important;
+ right:max(8px,env(safe-area-inset-right))!important;
+ bottom:calc(8px + env(safe-area-inset-bottom))!important;
+ transform:none!important;
+ width:auto!important;
+ max-width:414px!important;
+ margin:0 auto!important;
+ grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ overflow:hidden!important;
+}
+body.pcs-dashboard-v25 .bottom button,
+body.pcs-approved-page .bottom button{min-width:0!important;width:100%!important;overflow:hidden!important}
+
+@media(max-width:430px){
+ .pcs25{width:100%!important;max-width:430px!important}
+ .pcs25-hero{width:100%!important}
+ .pcs25-photo{right:-20%!important;width:101%!important}
+ .pcs25-search{left:20px!important;right:20px!important;width:auto!important}
+ .pcs25-quick{left:20px!important;right:20px!important;width:auto!important}
+ body.pcs-approved-page .pcs-ap-screen{width:100%!important;max-width:430px!important}
+ body.pcs-approved-page .pcs-ap-body{width:100%!important;min-width:0!important}
+ body.pcs-approved-page .pcs-ap-hero-art{right:-22%!important;width:96%!important}
+}
