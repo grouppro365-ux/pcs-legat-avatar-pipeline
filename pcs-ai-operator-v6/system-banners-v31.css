@@ -1,0 +1,70 @@
+/* PCS v31 — one banner and spacing system for secondary screens. */
+.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero{
+  position:relative;box-sizing:border-box;overflow:hidden;isolation:isolate;
+  min-height:230px;padding:30px 28px;color:#0b2038;
+  background-repeat:no-repeat;background-size:cover;background-position:68% 50%;
+}
+.in25-hero:before,.cal25-hero:before,.cx25-hero:before,.v24-hero:before,.v26-hero:before,.ops-system-hero:before{
+  content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,#f7faf9 0 31%,rgba(247,250,249,.92) 44%,rgba(247,250,249,.1) 80%),linear-gradient(180deg,transparent 66%,#f7f8fa 100%);
+}
+.in25-hero{background-image:url('./banner-inbox-v31.webp')}
+.cal25-hero,.ops-system-hero{background-image:url('./banner-tariffs-v29.webp')}
+.cx25-hero{background-image:url('./banner-extras-v29.webp')}
+.v24-hero{background-image:url('./banner-finance-v29.webp')}
+.v26-hero{background-image:url('./banner-clients-v29.webp')}
+.pcs-system-brand{margin-bottom:43px;color:#079f9d;font:italic 600 20px/1 "Segoe Print","Bradley Hand",cursive}
+
+body.pcs-inbox-v25 .in25-work,body.pcs-calendar-v25 .cal25-work,body.pcs-connect-v25 .cx25-work{padding-top:0!important}
+body.pcs-inbox-v25 .in25-hero,body.pcs-calendar-v25 .cal25-hero,body.pcs-connect-v25 .cx25-hero{margin:0 -28px 22px}
+body.pcs-inbox-v25 .in25-toolbar,body.pcs-inbox-v25 .in25-grid,
+body.pcs-calendar-v25 .cal25-head,body.pcs-calendar-v25 .cal25-card,
+body.pcs-connect-v25 .cx25-section{width:100%;max-width:1180px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+body.pcs-inbox-v25 .in25-grid{height:calc(100dvh - 332px)}
+body.pcs-inbox-v25 .in25-toolbar{align-items:stretch}
+body.pcs-inbox-v25 .in25-search{height:44px;flex:0 1 360px}
+body.pcs-inbox-v25 .in25-tabs{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr));flex:1}
+body.pcs-inbox-v25 .in25-tab{height:44px;padding:0 10px}
+
+body.pcs-approved-page .pcs-ap-popular{align-items:stretch}
+body.pcs-approved-page .pcs-ap-product{display:grid;grid-template-rows:auto 1fr;min-width:0;height:100%}
+body.pcs-approved-page .pcs-ap-product div{display:flex;flex-direction:column;min-width:0}
+body.pcs-approved-page .pcs-ap-product b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.25;min-height:2.5em}
+body.pcs-approved-page .pcs-ap-product strong{margin-top:auto;padding-top:8px}
+
+html[data-theme=dark] .in25-hero:before,html[data-theme=dark] .cal25-hero:before,
+html[data-theme=dark] .cx25-hero:before,html[data-theme=dark] .v24-hero:before,
+html[data-theme=dark] .v26-hero:before,html[data-theme=dark] .ops-system-hero:before{
+  background:linear-gradient(90deg,#071522 0 31%,rgba(7,21,34,.91) 45%,rgba(7,21,34,.18) 80%),linear-gradient(180deg,transparent 60%,#071522 100%)
+}
+
+@media(max-width:760px){
+  .in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero{
+    min-height:252px;margin-left:-14px!important;margin-right:-14px!important;padding:24px 20px;background-position:68% 50%;
+  }
+  .in25-hero:before,.cal25-hero:before,.cx25-hero:before,.v24-hero:before,.v26-hero:before,.ops-system-hero:before{
+    background:linear-gradient(90deg,#f7faf9 0 29%,rgba(247,250,249,.91) 46%,rgba(247,250,249,.08) 82%),linear-gradient(180deg,transparent 64%,#f7f8fa 100%)
+  }
+  .pcs-system-brand{margin-bottom:43px;font-size:18px}
+  body.pcs-inbox-v25 .in25-title,body.pcs-calendar-v25 .cal25-title,body.pcs-connect-v25 .cx25-title{font-size:38px!important;max-width:62%;line-height:1.02}
+  body.pcs-inbox-v25 .in25-sub,body.pcs-calendar-v25 .cal25-sub,body.pcs-connect-v25 .cx25-sub{max-width:58%;font-size:14px!important;line-height:1.45}
+  body.pcs-inbox-v25 .in25-toolbar{margin-top:-27px;position:relative;z-index:3;gap:10px}
+  body.pcs-inbox-v25 .in25-search{width:100%;height:56px;border-radius:18px;padding:0 16px;box-shadow:0 12px 28px rgba(22,38,45,.1)}
+  body.pcs-inbox-v25 .in25-search input{font-size:15px!important}
+  body.pcs-inbox-v25 .in25-tabs{width:100%;grid-template-columns:repeat(5,minmax(104px,1fr));overflow-x:auto;padding-bottom:2px}
+  body.pcs-inbox-v25 .in25-tab{height:48px;border-radius:12px;font-size:12px}
+  body.pcs-inbox-v25 .in25-grid{height:auto}
+  body.pcs-inbox-v25 .in25-list{min-height:calc(100dvh - 430px);border-radius:20px}
+  body.pcs-inbox-v25 .in25-contact{padding:16px 14px;margin-bottom:4px;border-radius:14px}
+  body.pcs-inbox-v25 .in25-contact-name{font-size:15px}
+  body.pcs-inbox-v25 .in25-contact-msg{font-size:13px;line-height:1.45}
+  body.pcs-approved-page .pcs-ap-popular{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+  body.pcs-approved-page .pcs-ap-product img{height:auto;aspect-ratio:4/3}
+  body.pcs-approved-page .pcs-ap-product div{padding:10px}
+  body.pcs-approved-page .pcs-ap-product b{font-size:12px}
+  body.pcs-approved-page .pcs-ap-product small,body.pcs-approved-page .pcs-ap-product strong{font-size:11px}
+}
+@media(max-width:430px){
+  body.pcs-approved-page .pcs-ap-popular{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 1px 12px}
+  body.pcs-approved-page .pcs-ap-product{flex:0 0 72%;scroll-snap-align:start}
+}
