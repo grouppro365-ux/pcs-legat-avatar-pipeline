@@ -1,0 +1,68 @@
+/* PCS v28 — final mobile composition for approved production screens. */
+body.pcs-approved-page .pcs-ap-screen{max-width:711px!important;overflow:clip!important}
+body.pcs-approved-page .pcs-ap-hero{
+  height:286px!important;
+  background-color:var(--ap-bg)!important;
+  background-image:
+    linear-gradient(90deg,var(--ap-bg) 0 25%,color-mix(in srgb,var(--ap-bg) 92%,transparent) 39%,color-mix(in srgb,var(--ap-bg) 16%,transparent) 72%),
+    linear-gradient(180deg,transparent 58%,var(--ap-bg) 100%),
+    url('./hero-travel-v27.webp')!important;
+  background-repeat:no-repeat!important;
+  background-size:100% 100%,100% 100%,cover!important;
+  background-position:center,center,62% 50%!important;
+}
+body.pcs-approved-page .pcs-ap-hero::after,
+body.pcs-approved-page .pcs-ap-hero-art{display:none!important}
+body.pcs-approved-page .pcs-ap-copy{padding-top:38px!important}
+body.pcs-approved-page .pcs-ap-copy h1{max-width:350px}
+body.pcs-approved-page .pcs-ap-body{padding-bottom:112px!important}
+body.pcs-approved-page .pcs-ap-body>*{min-width:0}
+body.pcs-approved-page .pcs-ap-body svg{fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+body.pcs-approved-page .pcs-ap-catrow>div svg{width:38px!important;height:38px!important}
+body.pcs-approved-page .pcs-ap-client p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;overflow-wrap:anywhere}
+body.pcs-approved-page .pcs-ap-tags{max-width:100%;overflow:hidden}
+body.pcs-approved-page .pcs-ap-tag{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.pcs-approved-page .pcs-ap-fin-hero-card{margin-top:-54px!important;position:relative;z-index:4;max-width:360px!important}
+body.pcs-approved-page .pcs-ap-charticon svg,
+body.pcs-approved-page .pcs-ap-fin-hero-card svg{width:54px!important;height:54px!important}
+
+@media(max-width:560px){
+ body.pcs-approved-page .pcs-ap-hero{height:252px!important;background-position:center,center,67% 50%!important}
+ body.pcs-approved-page .pcs-ap-head{padding:14px 16px 0!important}
+ body.pcs-approved-page .pcs-ap-copy{padding:28px 0 0 18px!important;width:63%!important}
+ body.pcs-approved-page .pcs-ap-copy h1{font-size:34px!important;line-height:1!important}
+ body.pcs-approved-page .pcs-ap-copy p{font-size:13px!important;line-height:1.38!important}
+ body.pcs-approved-page .pcs-ap-body{padding:0 14px 112px!important;gap:11px!important}
+ body.pcs-approved-page .pcs-ap-search{height:52px!important;border-radius:20px!important;padding-left:15px!important}
+ body.pcs-approved-page .pcs-ap-search input{font-size:15px!important;min-width:0!important;text-overflow:ellipsis}
+ body.pcs-approved-page .pcs-ap-search button{width:42px!important;height:42px!important;flex:0 0 42px}
+ body.pcs-approved-page .pcs-ap-filter button{font-size:13px!important;padding:11px 4px!important}
+ body.pcs-approved-page .pcs-ap-catrow{grid-template-columns:104px minmax(0,1fr) auto!important;padding:8px!important;gap:10px!important;min-height:92px}
+ body.pcs-approved-page .pcs-ap-catrow img{width:104px!important;height:76px!important}
+ body.pcs-approved-page .pcs-ap-catrow>div{min-height:76px!important}
+ body.pcs-approved-page .pcs-ap-catrow b{font-size:14px!important}
+ body.pcs-approved-page .pcs-ap-catrow p{font-size:11px!important;margin-top:4px!important}
+ body.pcs-approved-page .pcs-ap-count{font-size:10px!important;padding:6px 8px!important;white-space:nowrap}
+ body.pcs-approved-page .pcs-ap-client{grid-template-columns:48px minmax(0,1fr)!important;gap:11px!important;padding:13px 12px!important}
+ body.pcs-approved-page .pcs-ap-client b{font-size:15px!important}
+ body.pcs-approved-page .pcs-ap-client p{font-size:12px!important;line-height:1.35!important;-webkit-line-clamp:2}
+ body.pcs-approved-page .pcs-ap-tag{font-size:9px!important;padding:4px 7px!important;max-width:108px}
+ body.pcs-approved-page .pcs-ap-fin-hero-card{margin-top:-44px!important;padding:13px 15px!important;font-size:13px!important;line-height:1.35!important}
+ body.pcs-approved-page .pcs-ap-fin-hero-card svg{width:38px!important;height:38px!important;flex:0 0 38px}
+ body.pcs-approved-page .pcs-ap-fin-total{padding:18px!important}
+ body.pcs-approved-page .pcs-ap-fin-total b{font-size:32px!important}
+ body.pcs-approved-page .pcs-ap-charticon{width:82px!important;height:82px!important}
+ body.pcs-approved-page .pcs-ap-charticon svg{width:42px!important;height:42px!important}
+ body.pcs-approved-page .pcs-ap-fin-kpi{min-height:112px!important;padding:12px 9px!important}
+ body.pcs-approved-page .pcs-ap-fin-kpi b{font-size:17px!important;margin-top:12px!important}
+ body.pcs-approved-page .bottom{height:66px!important;bottom:calc(8px + env(safe-area-inset-bottom))!important}
+}
+
+@media(max-width:360px){
+ body.pcs-approved-page .pcs-ap-logo{width:160px!important}
+ body.pcs-approved-page .pcs-ap-head-actions{gap:6px!important}
+ body.pcs-approved-page .pcs-ap-filter button{font-size:11px!important}
+ body.pcs-approved-page .pcs-ap-catrow{grid-template-columns:88px minmax(0,1fr)!important}
+ body.pcs-approved-page .pcs-ap-catrow img{width:88px!important}
+ body.pcs-approved-page .pcs-ap-count{display:none}
+}
