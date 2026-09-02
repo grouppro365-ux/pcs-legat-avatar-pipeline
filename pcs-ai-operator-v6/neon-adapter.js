@@ -8,6 +8,7 @@
   directly to Neon Data API and never receives database credentials.
 */
 const MANAGER='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-manager-live2';
+const SETTINGS='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-admin-config-v15';
 const nativeFetch=window.fetch.bind(window);
 const jsonResponse=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store'}});
 const parseBody=async init=>{if(!init?.body)return{};if(typeof init.body==='string'){try{return JSON.parse(init.body)}catch{return{}}}try{return JSON.parse(await new Response(init.body).text())}catch{return{}}};
@@ -28,6 +29,19 @@ async function manager(op,{method='GET',body=null,id=null,auth=true}={}){
   });
   const text=await r.text();
   let d={};
+  try{d=text?JSON.parse(text):{}}catch{d={error:text||`HTTP ${r.status}`}}
+  if(!r.ok)throw new Error(d?.error||d?.message||`HTTP ${r.status}`);
+  return d;
+}
+
+async function settingsApi(path,{method='GET',body=null}={}){
+  const headers={'accept':'application/json'};
+  if(body!=null)headers['content-type']='application/json';
+  if(currentToken())headers.authorization='Bearer '+currentToken();
+  const r=await nativeFetch(SETTINGS+'/'+String(path||'').replace(/^\/+/,''),{
+    method,headers,body:body==null?undefined:JSON.stringify(body),cache:'no-store'
+  });
+  const text=await r.text();let d={};
   try{d=text?JSON.parse(text):{}}catch{d={error:text||`HTTP ${r.status}`}}
   if(!r.ok)throw new Error(d?.error||d?.message||`HTTP ${r.status}`);
   return d;
@@ -107,20 +121,12 @@ async function uiRoute(path,init){
     });
   }
   if(path==='/settings'&&method==='GET'){
-    const s=await manager('status');
-    return jsonResponse({
-      configured:{telegram_bot_token:Boolean(s.telegram_configured),tokenrouter_key:false,openrouter_key:false},
-      telegram_bot_username:s.telegram_username||null,
-      telegram_webhook_url:s.telegram_webhook_url||null,
-      telegram_business_connected:Boolean(s.connection),
-      telegram_can_read:Boolean(s.connection?.can_read),
-      telegram_can_reply:Boolean(s.connection?.can_reply),
-      auto_send:false
-    });
+    return jsonResponse(await settingsApi('settings'));
   }
-  if(path==='/settings'&&method==='PUT')return appError('Секреты не сохраняются из браузера.',409);
+  if(path==='/settings'&&method==='PUT')return jsonResponse(await settingsApi('settings',{method:'PUT',body}));
   if(path==='/test/telegram'&&method==='POST')return jsonResponse(await manager('telegram-test'));
-  if(/^\/test\/(tokenrouter|openrouter)$/.test(path))return appError('AI provider проверяется на сервере, не в браузере.',409);
+  m=path.match(/^\/test\/(tokenrouter|openrouter)$/);
+  if(m&&method==='POST')return jsonResponse(await settingsApi('test/'+m[1],{method:'POST',body:{}}));
   if(path==='/telegram/install-webhook'&&method==='POST')return appError('Webhook управляется сервером PCS.',409);
 
   return appError(`Маршрут ${method} ${path} пока не подключён к стабильному Mini App`,404);
@@ -150,7 +156,7 @@ async function errorsRoute(path,init){
   return appError('Повтор задания пока выполняется из основной панели.',409);
 }
 
-window.__PCS_BACKEND_ADAPTER__={api:MANAGER,version:'2026-08-31.1'};
+window.__PCS_BACKEND_ADAPTER__={api:MANAGER,settingsApi:SETTINGS,version:'2026-09-02.1'};
 try{Object.defineProperty(window,'PCS_API',{configurable:true,get(){return 'https://pcs-stable.local/pcs-ui-api'},set(){}})}catch{}
 
 window.fetch=async function(input,init={}){
