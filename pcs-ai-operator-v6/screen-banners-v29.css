@@ -1,0 +1,52 @@
+/* PCS v29 — route-specific approved travel banners and dashboard conflict reset. */
+body.pcs-approved-page .ref-clients{--pcs-screen-banner:url('./banner-clients-v29.webp')}
+body.pcs-approved-page .ref-catalog{--pcs-screen-banner:url('./banner-catalog-v29.webp')}
+body.pcs-approved-page .ref-finance{--pcs-screen-banner:url('./banner-finance-v29.webp')}
+body.pcs-approved-page .ref-extras{--pcs-screen-banner:url('./banner-extras-v29.webp')}
+body.pcs-approved-page .ref-tariffs,
+body.pcs-approved-page .ref-seasons{--pcs-screen-banner:url('./banner-tariffs-v29.webp')}
+
+body.pcs-approved-page .pcs-ap-hero{
+  background-image:
+    linear-gradient(90deg,var(--ap-bg) 0 24%,color-mix(in srgb,var(--ap-bg) 92%,transparent) 39%,color-mix(in srgb,var(--ap-bg) 10%,transparent) 76%),
+    linear-gradient(180deg,transparent 58%,var(--ap-bg) 100%),
+    var(--pcs-screen-banner)!important;
+}
+body.pcs-approved-page .ref-finance .pcs-ap-hero{background-position:center,center,64% 58%!important}
+body.pcs-approved-page .ref-catalog .pcs-ap-hero{background-position:center,center,68% 55%!important}
+body.pcs-approved-page .ref-clients .pcs-ap-hero{background-position:center,center,67% 53%!important}
+body.pcs-approved-page .ref-extras .pcs-ap-hero{background-position:center,center,70% 48%!important}
+body.pcs-approved-page .ref-tariffs .pcs-ap-hero,
+body.pcs-approved-page .ref-seasons .pcs-ap-hero{background-position:center,center,66% 54%!important}
+
+body.pcs-dashboard-v25 main{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0 0 calc(112px + env(safe-area-inset-bottom))!important;
+  overflow-x:clip!important;
+}
+body.pcs-dashboard-v25 .pcs25{width:100%!important;max-width:430px!important;margin:0 auto!important;overflow:clip!important}
+body.pcs-dashboard-v25 .pcs25-hero{
+  width:100%!important;
+  background-color:var(--d-bg)!important;
+  background-image:
+    linear-gradient(90deg,var(--d-bg) 0 24%,color-mix(in srgb,var(--d-bg) 91%,transparent) 39%,color-mix(in srgb,var(--d-bg) 8%,transparent) 76%),
+    linear-gradient(180deg,transparent 68%,var(--d-bg) 100%),
+    url('./hero-travel-v27.webp')!important;
+  background-repeat:no-repeat!important;
+  background-size:100% 100%,100% 100%,cover!important;
+  background-position:center,center,66% 50%!important;
+}
+body.pcs-dashboard-v25 .pcs25-photo{display:none!important}
+body.pcs-dashboard-v25 .pcs25-search,
+body.pcs-dashboard-v25 .pcs25-quick{box-sizing:border-box!important}
+
+@media(max-width:430px){
+ body.pcs-dashboard-v25 .pcs25{max-width:none!important}
+ body.pcs-dashboard-v25 .pcs25-hero{min-height:390px!important}
+ body.pcs-dashboard-v25 .pcs25-search{left:14px!important;right:14px!important}
+ body.pcs-dashboard-v25 .pcs25-quick{left:14px!important;right:14px!important}
+ body.pcs-dashboard-v25 .pcs25-copy{left:18px!important}
+ body.pcs-approved-page .pcs-ap-hero{background-size:100% 100%,100% 100%,cover!important}
+}
