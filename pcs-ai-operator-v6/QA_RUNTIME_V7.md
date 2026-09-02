@@ -55,3 +55,11 @@ Reference reviewed: `spider863644/PhoneNumber-OSINT` (MIT). Reuse only the non-i
 - run only on phone numbers already supplied to PCS or lawfully present in CRM.
 
 Phone enrichment is P1 and must not delay the P0 Telegram Business E2E pass.
+
+## Regression: greeting and follow-up date
+
+1. Customer: «Здравствуйте. Нужна машина в Паттайе, на месяц».
+   Expected: the reply starts with a greeting and asks only for the missing start date.
+2. Customer: «С 11 сентября».
+   Expected: the date is stored as an answer to the previous question; the bot must not ask «С какой даты?» again.
+3. The next reply must either show confirmed matching cars or say that PCS will check availability and return in the same chat.
