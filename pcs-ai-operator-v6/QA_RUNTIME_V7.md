@@ -63,3 +63,13 @@ Phone enrichment is P1 and must not delay the P0 Telegram Business E2E pass.
 2. Customer: «С 11 сентября».
    Expected: the date is stored as an answer to the previous question; the bot must not ask «С какой даты?» again.
 3. The next reply must either show confirmed matching cars or say that PCS will check availability and return in the same chat.
+
+## Regression: contextual slots and topic switching
+
+1. Start a housing request, then reply in separate messages: «Паттайя», «30 000 бат», «2».
+   Expected: the final answer fills the rooms field and the bot advances instead of repeating the rooms question.
+2. Start a car request, switch to a housing request, then say «Вернёмся к машине».
+   Expected: car and housing facts remain isolated; the car scenario resumes with its saved facts.
+3. If the same missing-field question would be sent twice in a row, send a concrete format hint instead of repeating it verbatim.
+4. Switch from housing to transfer or visa, then answer with a short follow-up.
+   Expected: the short follow-up remains delegated to the active service scenario and is never consumed by the previous housing scenario.
