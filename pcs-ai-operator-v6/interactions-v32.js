@@ -3,6 +3,8 @@
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const money=(v,c='THB')=>{const n=Number(v||0);return n?new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(n)+' '+(c==='THB'?'฿':esc(c)):'—'};
 const groupLabels={housing:['Недвижимость'],cars:['Автомобили'],services:['Трансферы','Визы и документы','Медицина и страховка','Допуслуги']};
+let extrasData=[],extrasFilter='all';
+const extraGroups={transfers:['transfer'],visas:['visa'],medicine:['medical','medicine','insurance'],household:['cleaning','repair'],popular:[]};
 
 function activeCatalogKey(){
   const t=document.querySelector('.ref-catalog .pcs-ap-filter button.on')?.textContent.trim();
@@ -56,13 +58,44 @@ function openCategory(row){
   window.openSheet?.(title,`<div class="pcs-v32-category">${list.map(productCard).join('')||'<div class="pcs-ap-empty">В этой категории пока нет позиций</div>'}</div>`);
 }
 function filterExtras(button){
-  const label=button.textContent.trim().toLowerCase();
+  const label=button.textContent.trim().toLowerCase(),keys={'все':'all','популярные':'popular','трансферы':'transfers','визы':'visas','медицина':'medicine','бытовые':'household'};
+  extrasFilter=keys[label]||'all';
   document.querySelectorAll('.pcs-ap-chipbar .pcs-ap-chip').forEach(x=>x.classList.toggle('on',x===button));
-  const tests={
-    'популярные':/популяр|premium|vip/i,'трансферы':/трансфер|авто|водител/i,
-    'визы':/виз|документ|легализ/i,'медицина':/медицин|страхов|клиник/i,'бытовые':/уборк|клининг|быт|ремонт/i
-  };
-  document.querySelectorAll('.pcs-ap-service').forEach(card=>card.hidden=Boolean(tests[label]&&!tests[label].test(card.textContent)));
+  drawExtrasFromData();
+}
+function extraCard(x){return `<button class="pcs-ap-service" type="button" data-extra-id="${esc(x.id)}"><span class="ico">${esc(String(x.category||'service').slice(0,1).toUpperCase())}</span><span><b>${esc(x.name||'Услуга')}</b><p>${esc(x.description||'Дополнительная услуга PCS')}</p><strong>от ${money(x.price,x.currency)}</strong></span></button>`}
+function drawExtrasFromData(){
+  const box=document.getElementById('pcsApServices');if(!box||!extrasData.length)return;
+  let list=extrasData.filter(x=>x.is_active!==false);
+  if(extrasFilter==='popular')list=list.slice(0,8);
+  else if(extrasFilter!=='all')list=list.filter(x=>(extraGroups[extrasFilter]||[]).includes(String(x.category||'').toLowerCase()));
+  box.innerHTML=list.map(extraCard).join('')||'<div class="pcs-ap-empty">В этой категории услуг пока нет</div>';
+}
+async function hydrateExtras(){
+  const box=document.getElementById('pcsApServices');if(!box||box.dataset.v32Hydrated)return;
+  box.dataset.v32Hydrated='loading';
+  try{const r=await window.opsCall('/extras');extrasData=(Array.isArray(r)?r:r?.items||[]).filter(x=>x.is_active!==false);box.dataset.v32Hydrated='yes';drawExtrasFromData()}catch(e){delete box.dataset.v32Hydrated;box.innerHTML=`<div class="pcs-ap-empty">${esc(e.message)}</div>`}
+}
+function openExtra(id){
+  const x=extrasData.find(v=>String(v.id)===String(id));if(!x)return;
+  window.openSheet?.(x.name||'Услуга',`<div class="pcs-v32-extra"><p>${esc(x.description||'Описание пока не добавлено')}</p><div><span>Стоимость</span><b>${money(x.price,x.currency)}</b></div><div><span>Расчёт</span><b>${esc(x.price_mode||'по запросу')}</b></div>${x.requires_approval?'<small>Требуется подтверждение менеджера</small>':''}</div>`);
+}
+function normalizeCity(v){const s=String(v||'').toLowerCase();if(/pattaya|паттай|bang saray/.test(s))return'Паттайя';if(/phuket|пхукет/.test(s))return'Пхукет';if(/bangkok|бангкок/.test(s))return'Бангкок';return'Таиланд'}
+function locationOptions(){const cities=new Set(['Паттайя','Пхукет','Бангкок','Таиланд']);(window.PCS?.catalog||[]).forEach(x=>cities.add(normalizeCity(x.city)));return [...cities]}
+function installLocationPicker(){
+  const place=document.querySelector('.pcs-ap-place');if(!place||place.dataset.v32Picker)return;place.dataset.v32Picker='yes';
+  const city=place.querySelector('span:first-child')?.textContent.replace('⌾','').trim()||'Паттайя';
+  place.innerHTML=`<button type="button" class="pcs-v32-location"><span><i>⌾</i><b>${esc(city)}</b></span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7 5 5 5-5"/></svg></button>`;
+}
+function openLocations(){
+  window.openSheet?.('Выберите локацию',`<div class="pcs-v32-locations">${locationOptions().map(x=>`<button type="button" data-location="${esc(x)}">${esc(x)}</button>`).join('')}</div>`)
+}
+async function chooseLocation(city){
+  window.closeSheet?.();const label=document.querySelector('.pcs-v32-location b');if(label)label.textContent=city;
+  const aliases={Паттайя:/pattaya|паттай|bang saray/i,Пхукет:/phuket|пхукет/i,Бангкок:/bangkok|бангкок/i,Таиланд:/.*/i},match=aliases[city]||/.*/i;
+  const products=(window.PCS?.catalog||[]).filter(x=>match.test(String(x.city||'')));
+  const cats=[['car_rent'],['housing_rent'],['housing_rent'],['transfer']];
+  document.querySelectorAll('.pcs-ap-pricecard').forEach((card,i)=>{const x=products.find(v=>cats[i].includes(String(v.category||''))&&Number(v.base_price??v.price)>0);const b=card.querySelector('b');if(b)b.textContent=x?`от ${money(x.final_price??x.base_price??x.price,x.currency)}`:'—'});
 }
 function iso(d){return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 let priceMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1),priceRules=[];
@@ -97,10 +130,16 @@ document.addEventListener('click',e=>{
   const row=e.target.closest('.ref-catalog .pcs-ap-catrow');
   if(row){e.preventDefault();e.stopImmediatePropagation();openCategory(row);return}
   const chip=e.target.closest('.pcs-ap-chipbar .pcs-ap-chip');if(chip){filterExtras(chip);return}
+  const extra=e.target.closest('.pcs-ap-service[data-extra-id]');if(extra){e.preventDefault();e.stopImmediatePropagation();openExtra(extra.dataset.extraId);return}
+  const loc=e.target.closest('.pcs-v32-location');if(loc){e.preventDefault();openLocations();return}
+  const locChoice=e.target.closest('[data-location]');if(locChoice){chooseLocation(locChoice.dataset.location);return}
   const calendar=[...document.querySelectorAll('.pcs-ap-subseg button')].find(x=>x.textContent.trim()==='Календарь цен');
   if(calendar&&calendar.contains(e.target)){e.preventDefault();e.stopImmediatePropagation();showPriceCalendar(calendar);return}
   if(e.target.closest('.ref-catalog .pcs-ap-filter'))requestAnimationFrame(applyCatalogRows);
 },true);
 
-new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(applyCatalogRows)}).observe(document.documentElement,{subtree:true,childList:true});
+document.addEventListener('wheel',e=>{const rail=e.target.closest('.pcs-ap-popular');if(rail&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){rail.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
+
+new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(applyCatalogRows);if(document.getElementById('pcsApServices'))requestAnimationFrame(hydrateExtras);if(document.querySelector('.pcs-ap-place'))requestAnimationFrame(installLocationPicker)}).observe(document.documentElement,{subtree:true,childList:true});
+hydrateExtras();installLocationPicker();
 })();
