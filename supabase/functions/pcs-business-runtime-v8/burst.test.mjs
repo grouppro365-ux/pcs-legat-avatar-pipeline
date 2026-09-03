@@ -12,6 +12,11 @@ assert.match(source, /miss\[0\]/);
 assert.match(source, /greetingLike/);
 assert.match(source, /Здравствуйте! /);
 assert.match(source, /На какой день этой недели планируете\?/);
+assert.doesNotMatch(source, /setMessageReaction/);
+assert.match(source, /emoji_response_v2/);
+assert.match(source, /👋 Добрый день! Чем можем помочь\?/);
+assert.match(source, /reply_parameters:\{message_id:m\.message_id/);
+assert.match(source, /const emoji=await handleEmoji\(m\)/);
 
 function shouldSend(sourceMessageId, latestInboundId) {
   return !latestInboundId || latestInboundId === sourceMessageId;
@@ -23,5 +28,10 @@ assert.equal(shouldSend('second', 'second'), true, 'latest handler remains respo
 const greetingLike = (text = '') => /(^|[.!?\s])(здравствуй(?:те)?|привет(?:ствую)?)([.!?,\s]|$)/iu.test(text);
 assert.equal(greetingLike('Приветствую, хочу на экскурсию'), true);
 assert.equal(greetingLike('Хочу на экскурсию'), false);
+
+const emojiOnly = (text = '') => !!text.trim() && /\p{Extended_Pictographic}/u.test(text) && !/[\p{L}\p{N}]/u.test(text);
+assert.equal(emojiOnly('🙌'), true);
+assert.equal(emojiOnly('❤️🙏'), true);
+assert.equal(emojiOnly('Хочу 🙌'), false);
 
 console.log('pcs-business-runtime-v8 burst regression: ok');
