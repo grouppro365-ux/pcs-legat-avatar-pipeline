@@ -13,6 +13,6 @@ assert.match(js,/catalogItemsForActiveFilter/,'popular products must follow the 
 assert.match(js,/pcs-v32-cover-empty/,'products without photos need a stable placeholder');
 assert.match(css,/\.pcs-ap-filter\{display:flex!important;overflow-x:auto!important/,'mobile filters must not merge labels');
 assert.match(css,/\.pcs-ap-service-grid\{grid-template-columns:1fr!important/,'mobile service cards must be a readable single column');
-assert.match(html,/interactions-v32\.js\?v=20260903-v34a/,'browser cache key must be bumped');
+assert.match(html,/interactions-v32\.js\?v=20260903-v35a/,'browser cache key must be bumped');
 
 console.log('catalog presentation checks passed');

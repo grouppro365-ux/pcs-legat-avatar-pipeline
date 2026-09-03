@@ -134,7 +134,11 @@ async function uiRoute(path,init){
 
 async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
-  if(path==='/reservations'&&method==='GET')return jsonResponse(await manager('applications'));
+  if(path==='/reservations'&&method==='GET')return jsonResponse((await manager('applications')).map(x=>({...x,status:String(x.operational_status||'NEW').toLowerCase(),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
+  if(path==='/reservations'&&method==='POST'){
+    const b=await parseBody(init),clients=await manager('clients'),client=clients.find(x=>String(x.id)===String(b.contact_id||''));
+    return jsonResponse(await manager('application-save',{method:'POST',body:{item_id:b.catalog_item_id||null,client_name:client?.name||client?.username||null,client_contact:client?.phone||client?.username||null,category:'booking',operational_status:String(b.status||'hold').toUpperCase(),priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null}}));
+  }
   if(path==='/extras'&&method==='GET')return jsonResponse(await manager('services'));
   if(path==='/duration-rules'&&method==='GET')return jsonResponse(await manager('durations'));
   if(path==='/seasonal-rules'&&method==='GET')return jsonResponse(await manager('seasons'));

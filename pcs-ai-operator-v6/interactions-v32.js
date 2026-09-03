@@ -157,6 +157,6 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('wheel',e=>{const rail=e.target.closest('.pcs-ap-popular');if(rail&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){rail.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 
-new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(()=>{applyCatalogRows();refreshPopular()});if(document.getElementById('pcsApServices'))requestAnimationFrame(hydrateExtras);if(document.querySelector('.pcs-ap-place'))requestAnimationFrame(installLocationPicker)}).observe(document.documentElement,{subtree:true,childList:true});
+new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(()=>{applyCatalogRows();refreshPopular()});const services=document.getElementById('pcsApServices');if(services)requestAnimationFrame(()=>{if(!services.dataset.v32Hydrated)hydrateExtras();else if(services.querySelector('.pcs-ap-service:not([data-extra-id])'))drawExtrasFromData()});if(document.querySelector('.pcs-ap-place'))requestAnimationFrame(installLocationPicker)}).observe(document.documentElement,{subtree:true,childList:true});
 hydrateExtras();installLocationPicker();
 })();
