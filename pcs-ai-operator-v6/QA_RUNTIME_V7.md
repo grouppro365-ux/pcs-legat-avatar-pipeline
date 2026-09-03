@@ -73,3 +73,11 @@ Phone enrichment is P1 and must not delay the P0 Telegram Business E2E pass.
 3. If the same missing-field question would be sent twice in a row, send a concrete format hint instead of repeating it verbatim.
 4. Switch from housing to transfer or visa, then answer with a short follow-up.
    Expected: the short follow-up remains delegated to the active service scenario and is never consumed by the previous housing scenario.
+
+## Regression: grounded service replies
+
+1. Customer asks for tours in Pattaya, then narrows the request to culture, museum or art exhibition.
+2. If no matching customer-visible catalog item exists, the bot must not invent a venue or claim availability.
+3. The bot must say that PCS will check current options and return in the same chat with names, time and prices.
+4. Phrases that shift the search back to the customer, including «уточните, что вас интересует», are forbidden.
+5. A follow-up classified as "other" inherits the last explicit service intent from recent dialogue.
