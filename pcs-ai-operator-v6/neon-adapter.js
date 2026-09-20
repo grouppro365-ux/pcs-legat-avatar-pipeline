@@ -9,6 +9,7 @@
 */
 const MANAGER='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-manager-live2';
 const SETTINGS='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-admin-config-v15';
+const CATALOG_ADMIN='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-catalog-admin';
 const nativeFetch=window.fetch.bind(window);
 const jsonResponse=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store'}});
 const parseBody=async init=>{if(!init?.body)return{};if(typeof init.body==='string'){try{return JSON.parse(init.body)}catch{return{}}}try{return JSON.parse(await new Response(init.body).text())}catch{return{}}};
@@ -148,10 +149,54 @@ async function opsRoute(path,init){
   return appError(`Операция ${method} ${path} пока не подключена к стабильному Mini App`,409);
 }
 
+async function catalogAdminProxy(body){
+  const headers={'accept':'application/json','content-type':'application/json'};
+  if(currentToken())headers.authorization='Bearer '+currentToken();
+  const r=await nativeFetch(CATALOG_ADMIN,{method:'POST',headers,body:JSON.stringify(body),cache:'no-store'});
+  const text=await r.text();let data={};
+  try{data=text?JSON.parse(text):{}}catch{data={error:text||`HTTP ${r.status}`}}
+  if(!r.ok)throw new Error(data?.error||data?.message||`HTTP ${r.status}`);
+  return data;
+}
+
+async function saveCatalogPricing(body){
+  const id=String(body.id||'');
+  const price=Number(body.base_price);
+  if(!id)throw new Error('Не выбрана карточка каталога');
+  if(!Number.isFinite(price)||price<0)throw new Error('Укажите корректную цену');
+
+  const detail=await manager('catalog-detail',{id});
+  const item=detail.item||{};
+  const hasDeposit=body.deposit_thb!==undefined&&body.deposit_thb!==null&&body.deposit_thb!=='';
+  const deposit=hasDeposit?Number(body.deposit_thb):Number(item.deposit_thb??0);
+  if(!Number.isFinite(deposit)||deposit<0)throw new Error('Укажите корректный депозит');
+  const revision=detail.revision?.ui||detail.revision?.legacy||detail.revision?.legacy_extra||{};
+  const saved=await manager('catalog-save',{method:'POST',body:{
+    id,
+    entity_type:item.entity_type,
+    title:item.title,
+    city:item.city,
+    publication_status:item.publication_status,
+    moderation_status:item.moderation_status,
+    availability_status:item.availability_status,
+    client_price_thb:price,
+    deposit_thb:deposit,
+    internal_net_thb:item.internal_net_thb,
+    description:revision.description||'',
+    category:revision.category||'',
+    conditions:revision.conditions||'',
+    source:revision.source||''
+  }});
+  const verified=await manager('catalog-detail',{id});
+  if(Number(verified.item?.client_price_thb)!==price||Number(verified.item?.deposit_thb)!==deposit)throw new Error('Сервер не подтвердил сохранение цены и депозита');
+  return {ok:true,item:{...saved.item,...verified.item,base_price:price,price,deposit:deposit,deposit_thb:deposit}};
+}
+
 async function catalogAdminRoute(init){
   const body=await parseBody(init);
-  if(body.action==='rules')return jsonResponse([]);
-  return appError('Редактирование каталога из Mini App временно ограничено.',409);
+  if(body.action==='pricing')return jsonResponse(await saveCatalogPricing(body));
+  if(['delete','rules','upsert_rule','delete_rule'].includes(String(body.action||'')))return jsonResponse(await catalogAdminProxy(body));
+  return appError('Это действие каталога пока не поддерживается в Mini App.',409);
 }
 
 async function errorsRoute(path,init){
