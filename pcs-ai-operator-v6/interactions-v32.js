@@ -4,7 +4,9 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const money=(v,c='THB')=>{const n=Number(v);return Number.isFinite(n)&&n>0?new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(n)+' '+(String(c||'THB').toUpperCase()==='THB'?'฿':esc(c)):'Цена по запросу'};
 const titleOf=x=>String(x?.title||x?.name||x?.metadata?.title||'').trim();
 const imageOf=x=>x?.media_items?.[0]?.public_url||x?.image_url||x?.cover_url||x?.metadata?.image_url||'';
-const priceOf=x=>x?.final_price??x?.client_price_thb??x?.price??x?.base_price??x?.monthly_price??x?.weekly_price??x?.daily_price;
+// A zero final price means that the derived-price refresh has not run; it is
+// not a commercial price and must not hide a positive saved tariff.
+const priceOf=x=>[x?.final_price,x?.client_price_thb,x?.price,x?.base_price,x?.monthly_price,x?.weekly_price,x?.daily_price].map(Number).find(n=>Number.isFinite(n)&&n>0)||0;
 const periodOf=x=>x?.base_price_period==='day'||x?.daily_price&&priceOf(x)===x.daily_price?' / сутки':x?.base_price_period==='week'||x?.weekly_price&&priceOf(x)===x.weekly_price?' / неделю':x?.base_price_period==='month'||x?.monthly_price&&priceOf(x)===x.monthly_price?' / месяц':'';
 const groupLabels={housing:['Недвижимость'],cars:['Автомобили'],services:['Трансферы','Визы и документы','Медицина и страховка','Допуслуги']};
 let extrasData=[],extrasFilter='all';

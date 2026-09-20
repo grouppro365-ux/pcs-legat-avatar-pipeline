@@ -6,7 +6,8 @@ const css=fs.readFileSync(new URL('./interactions-v32.css',import.meta.url),'utf
 const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
 
 assert.match(js,/titleOf=x=>String\(x\?\.title\|\|x\?\.name/,'service title must support both catalog and extras payloads');
-assert.match(js,/final_price\?\?x\?\.client_price_thb\?\?x\?\.price\?\?x\?\.base_price\?\?x\?\.monthly_price/,'price fallback chain must include saved catalog prices');
+assert.match(js,/const priceOf=x=>\[x\?\.final_price,x\?\.client_price_thb,x\?\.price,x\?\.base_price,x\?\.monthly_price/,'price fallback chain must include saved catalog prices');
+assert.match(js,/Number\.isFinite\(n\)&&n>0/,'zero derived prices must not hide a valid saved tariff');
 assert.doesNotMatch(js,/от \$\{money\(x\.price/,'cards must not render the broken "от —" fallback');
 assert.match(js,/Цена по запросу/,'missing prices need a human-readable state');
 assert.match(js,/catalogItemsForActiveFilter/,'popular products must follow the selected catalog category');

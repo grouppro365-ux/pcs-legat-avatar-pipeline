@@ -1,7 +1,9 @@
 (()=>{
 'use strict';
 const esc37=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-const money37=(v,c='THB')=>{const n=Number(v);return Number.isFinite(n)&&n>0?new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(n)+' '+(c==='THB'?'฿':esc37(c)):'Цена по запросу'};// A zero final price means that the derived-price refresh has not run; it is not a commercial price and must not hide a positive saved tariff.
+const money37=(v,c='THB')=>{const n=Number(v);return Number.isFinite(n)&&n>0?new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(n)+' '+(c==='THB'?'฿':esc37(c)):'Цена по запросу'};
+// A recalculation may leave final_price at 0 while the saved tariff is valid.
+// Treat zero as an unset display value; never let it hide a positive tariff.
 const catalogPrice37=x=>[x?.final_price,x?.price,x?.base_price,x?.daily_price,x?.weekly_price,x?.monthly_price].map(Number).find(n=>Number.isFinite(n)&&n>0)||0;
 const groups37={housing:['housing_rent','housing_sale'],cars:['car_rent','car_sale'],services:['service','cleaning','translation','legal','education','excursion'],transfer:['transfer'],visa:['visa','documents'],medicine:['medicine','insurance']};
 let catalogFilter37='all',extrasFilter37='all';
