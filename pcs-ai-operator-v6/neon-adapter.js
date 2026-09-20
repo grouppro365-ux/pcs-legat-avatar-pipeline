@@ -63,6 +63,9 @@ const normalizeCatalog=x=>({
   currency:x.currency||'THB',
   media_items:x.media_items||(x.image_url?[{public_url:x.image_url}]:[])
 });
+const directBookable=x=>String(x?.status||x?.availability_status||'REQUIRES_CONFIRMATION').toLowerCase()==='available';
+const cancelledReservation=x=>['cancelled','cancelled_by_client','declined','completed'].includes(String(x?.operational_status||x?.status||'').toLowerCase());
+const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<=bEnd&&bStart<=aEnd;
 
 function pathOf(url,prefix){const i=url.indexOf(prefix);return i<0?null:url.slice(i+prefix.length)||'/'}
 function routeKind(url){
@@ -137,7 +140,16 @@ async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
   if(path==='/reservations'&&method==='GET')return jsonResponse((await manager('applications')).map(x=>({...x,status:String(x.operational_status||'NEW').toLowerCase(),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
   if(path==='/reservations'&&method==='POST'){
-    const b=await parseBody(init),clients=await manager('clients'),client=clients.find(x=>String(x.id)===String(b.contact_id||''));
+    const b=await parseBody(init);
+    if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<String(b.start_date))return appError('Укажите корректный период бронирования.',400);
+    const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
+    const item=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
+    if(!item)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
+    if(!directBookable(item))return appError('Этот объект сейчас не доступен для бронирования. Сначала подтвердите его доступность в каталоге.',409);
+    const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
+    if(conflict)return appError('На выбранные даты уже есть активная бронь или холд. Проверьте календарь.',409);
+    const client=clients.find(x=>String(x.id)===String(b.contact_id||''));
     return jsonResponse(await manager('application-save',{method:'POST',body:{item_id:b.catalog_item_id||null,client_name:client?.name||client?.username||null,client_contact:client?.phone||client?.username||null,category:'booking',operational_status:String(b.status||'hold').toUpperCase(),priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null}}));
   }
   if(path==='/extras'&&method==='GET')return jsonResponse(await manager('services'));
