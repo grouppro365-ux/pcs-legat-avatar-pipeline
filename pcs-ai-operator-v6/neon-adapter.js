@@ -64,6 +64,7 @@ const normalizeCatalog=x=>({
   media_items:x.media_items||(x.image_url?[{public_url:x.image_url}]:[])
 });
 const directBookable=x=>String(x?.status||x?.availability_status||'REQUIRES_CONFIRMATION').toLowerCase()==='available';
+const directRental=x=>directBookable(x)&&String(x?.category||'').toLowerCase()==='car_rent'&&['day','daily'].includes(String(x?.base_price_period??x?.price_period??x?.rate_period??'').toLowerCase());
 const cancelledReservation=x=>['cancelled','cancelled_by_client','declined','completed'].includes(String(x?.operational_status||x?.status||'').toLowerCase());
 const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<bEnd&&bStart<aEnd;
 const bookingStatusToServer={requested:'NEW',hold:'AWAITING_PARTNER_CONFIRMATION',confirmed:'CONFIRMED',active:'SERVICE_IN_PROGRESS',completed:'COMPLETED',cancelled:'CANCELLED_BY_CLIENT'};
@@ -148,7 +149,7 @@ async function opsRoute(path,init){
     const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
     const item=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
     if(!item)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
-    if(!directBookable(item))return appError('Этот объект сейчас не доступен для бронирования. Сначала подтвердите его доступность в каталоге.',409);
+    if(!directRental(item))return appError('Для прямой брони доступен только автомобиль со статусом «Доступно» и посуточным тарифом.',409);
     const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
     if(conflict)return appError('На выбранные даты уже есть активная бронь или холд. Проверьте календарь.',409);
     const status=bookingStatusToServer[b.status||'hold'];if(!status)return appError('Неизвестный статус брони.',400);

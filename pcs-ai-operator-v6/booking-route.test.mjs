@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const source=fs.readFileSync(new URL('./neon-adapter.js',import.meta.url),'utf8');
 const writes=[];
 let applications=[];
-const catalog=[{id:'car-1',title:'Ford Fiesta',status:'available'}];
+const catalog=[{id:'car-1',title:'Ford Fiesta',status:'available',category:'car_rent',base_price_period:'day'}];
 const context={console,URL,URLSearchParams,Response,Headers,Request,JSON,window:null,localStorage:{pcsToken:'test'}};
 context.window=context;
 context.fetch=async(input,init={})=>{
@@ -31,5 +31,7 @@ assert.equal((await post({...valid,start_date:'2026-12-25',end_date:'2026-12-27'
 assert.equal((await post({...valid,start_date:'2026-12-26',end_date:'2026-12-27'})).status,200,'end-exclusive handover must remain bookable');
 catalog[0].status='requires_confirmation';
 assert.equal((await post({...valid,start_date:'2027-01-01',end_date:'2027-01-02'})).status,409);
+catalog[0].status='available';catalog[0].base_price_period='one_time';
+assert.equal((await post({...valid,start_date:'2027-01-01',end_date:'2027-01-02'})).status,409,'sale items must not enter the rental booking flow');
 
 console.log('booking route checks passed');
