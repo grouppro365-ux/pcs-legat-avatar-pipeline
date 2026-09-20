@@ -18,6 +18,9 @@ assert.match(adapter,/path==='\/reservations'&&method==='POST'/,'stable adapter 
 assert.match(adapter,/manager\('application-save'/,'booking must persist through the stable manager');
 assert.match(adapter,/directBookable\(item\)/,'server adapter must refuse non-available catalog items');
 assert.match(adapter,/datesOverlap\(/,'server adapter must guard against an active overlapping booking');
+assert.match(adapter,/AWAITING_PARTNER_CONFIRMATION/,'hold status must use the server booking lifecycle');
+assert.match(adapter,/application-status/,'booking status controls must persist through the stable manager');
+assert.match(ops,/e<=s/,'return date must be later than rental start date');
 assert.match(interactions,/\.pcs-ap-service:not\(\[data-extra-id\]\)/,'legacy service redraw must be replaced');
 
 console.log('booking flow checks passed');

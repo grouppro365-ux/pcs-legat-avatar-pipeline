@@ -65,7 +65,9 @@ const normalizeCatalog=x=>({
 });
 const directBookable=x=>String(x?.status||x?.availability_status||'REQUIRES_CONFIRMATION').toLowerCase()==='available';
 const cancelledReservation=x=>['cancelled','cancelled_by_client','declined','completed'].includes(String(x?.operational_status||x?.status||'').toLowerCase());
-const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<=bEnd&&bStart<=aEnd;
+const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<bEnd&&bStart<aEnd;
+const bookingStatusToServer={requested:'NEW',hold:'AWAITING_PARTNER_CONFIRMATION',confirmed:'CONFIRMED',active:'SERVICE_IN_PROGRESS',completed:'COMPLETED',cancelled:'CANCELLED_BY_CLIENT'};
+const bookingStatusFromServer=s=>({NEW:'requested',AWAITING_PARTNER_CONFIRMATION:'hold',CONFIRMED:'confirmed',SERVICE_IN_PROGRESS:'active',COMPLETED:'completed',CANCELLED_BY_CLIENT:'cancelled',CANCELLED_BY_PARTNER:'cancelled',REJECTED:'cancelled',EXPIRED:'cancelled',FAILED:'cancelled'})[String(s||'NEW').toUpperCase()]||'requested';
 
 function pathOf(url,prefix){const i=url.indexOf(prefix);return i<0?null:url.slice(i+prefix.length)||'/'}
 function routeKind(url){
@@ -138,19 +140,31 @@ async function uiRoute(path,init){
 
 async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
-  if(path==='/reservations'&&method==='GET')return jsonResponse((await manager('applications')).map(x=>({...x,status:String(x.operational_status||'NEW').toLowerCase(),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
+  if(path==='/reservations'&&method==='GET')return jsonResponse((await manager('applications')).filter(x=>x.category==='booking'||(x.qualification_data?.start_date&&x.qualification_data?.end_date)).map(x=>({...x,status:bookingStatusFromServer(x.operational_status),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
   if(path==='/reservations'&&method==='POST'){
     const b=await parseBody(init);
     if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
-    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<String(b.start_date))return appError('Укажите корректный период бронирования.',400);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<=String(b.start_date))return appError('Дата возврата должна быть позже даты начала аренды.',400);
     const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
     const item=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
     if(!item)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
     if(!directBookable(item))return appError('Этот объект сейчас не доступен для бронирования. Сначала подтвердите его доступность в каталоге.',409);
     const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
     if(conflict)return appError('На выбранные даты уже есть активная бронь или холд. Проверьте календарь.',409);
+    const status=bookingStatusToServer[b.status||'hold'];if(!status)return appError('Неизвестный статус брони.',400);
     const client=clients.find(x=>String(x.id)===String(b.contact_id||''));
-    return jsonResponse(await manager('application-save',{method:'POST',body:{item_id:b.catalog_item_id||null,client_name:client?.name||client?.username||null,client_contact:client?.phone||client?.username||null,category:'booking',operational_status:String(b.status||'hold').toUpperCase(),priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null}}));
+    return jsonResponse(await manager('application-save',{method:'POST',body:{item_id:b.catalog_item_id||null,client_name:client?.name||client?.username||null,client_contact:client?.phone||client?.username||null,category:'booking',operational_status:status,priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null}}));
+  }
+  const reservationMatch=path.match(/^\/reservations\/([^/]+)$/);
+  if(reservationMatch&&method==='PATCH'){
+    const b=await parseBody(init),status=bookingStatusToServer[b.status],id=decodeURIComponent(reservationMatch[1]);
+    if(!status)return appError('Неизвестный статус брони.',400);
+    const existing=(await manager('applications')).find(x=>String(x.id)===id);
+    if(!existing)return appError('Бронь не найдена.',404);
+    await manager('application-status',{method:'POST',body:{id,status}});
+    const updated=(await manager('applications')).find(x=>String(x.id)===id);
+    if(updated?.operational_status!==status)return appError('Сервер не подтвердил изменение статуса.',502);
+    return jsonResponse({ok:true,id});
   }
   if(path==='/extras'&&method==='GET')return jsonResponse(await manager('services'));
   if(path==='/duration-rules'&&method==='GET')return jsonResponse(await manager('durations'));
