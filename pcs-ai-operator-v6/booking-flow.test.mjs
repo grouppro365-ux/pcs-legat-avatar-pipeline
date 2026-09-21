@@ -22,6 +22,7 @@ assert.match(adapter,/positiveCatalogPrice=x=>\[x\?\.daily_price,x\?\.final_pric
 assert.match(adapter,/path==='\/reservations'&&method==='POST'/,'stable adapter must allow creating bookings');
 assert.match(adapter,/manager\('application-save'/,'booking must persist through the stable manager');
 assert.match(adapter,/directRental\(item\)/,'server adapter must refuse non-available and non-rental catalog items');
+assert.match(adapter,/const item=normalizeCatalog\(rawItem\)/,'server booking validation must use the same normalized catalog shape as the Mini App');
 assert.match(adapter,/datesOverlap\(/,'server adapter must guard against an active overlapping booking');
 assert.match(adapter,/AWAITING_PARTNER_CONFIRMATION/,'hold status must use the server booking lifecycle');
 assert.match(adapter,/application-status/,'booking status controls must persist through the stable manager');

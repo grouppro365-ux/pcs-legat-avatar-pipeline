@@ -158,8 +158,12 @@ async function opsRoute(path,init){
     if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<=String(b.start_date))return appError('Дата возврата должна быть позже даты начала аренды.',400);
     const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
-    const item=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
-    if(!item)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
+    const rawItem=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
+    if(!rawItem)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
+    // The manager can return entity_type=VEHICLE without a legacy category.
+    // Apply the same catalog normalization used by the booking form before
+    // validating the direct-rental policy.
+    const item=normalizeCatalog(rawItem);
     if(!directRental(item))return appError('Для прямой брони доступен только автомобиль со статусом «Доступно» и посуточным тарифом.',409);
     const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
     if(conflict)return appError('На выбранные даты уже есть активная бронь или холд. Проверьте календарь.',409);
