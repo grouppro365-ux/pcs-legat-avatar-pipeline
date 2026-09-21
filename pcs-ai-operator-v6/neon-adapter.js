@@ -59,12 +59,22 @@ const normalizeCatalog=x=>({
   price:x.price??x.client_price_thb??null,
   base_price:x.base_price??x.client_price_thb??null,
   final_price:x.final_price??x.client_price_thb??null,
+  // The booking form must retain the actual tariff metadata returned by the
+  // manager.  Reducing a daily rental to only client_price_thb made every
+  // otherwise available car fail the direct-rental eligibility check.
+  base_price_period:x.base_price_period??x.price_period??x.rate_period??null,
+  price_period:x.price_period??x.base_price_period??x.rate_period??null,
+  rate_period:x.rate_period??x.base_price_period??x.price_period??null,
+  daily_price:x.daily_price??null,
+  weekly_price:x.weekly_price??null,
+  monthly_price:x.monthly_price??null,
   deposit:x.deposit??x.deposit_thb??null,
   currency:x.currency||'THB',
   media_items:x.media_items||(x.image_url?[{public_url:x.image_url}]:[])
 });
 const directBookable=x=>String(x?.status||x?.availability_status||'REQUIRES_CONFIRMATION').toLowerCase()==='available';
-const directRental=x=>directBookable(x)&&String(x?.category||'').toLowerCase()==='car_rent'&&['day','daily'].includes(String(x?.base_price_period??x?.price_period??x?.rate_period??'').toLowerCase());
+const hasDailyTariff=x=>['day','daily'].includes(String(x?.base_price_period??x?.price_period??x?.rate_period??'').toLowerCase())||Number(x?.daily_price)>0;
+const directRental=x=>directBookable(x)&&String(x?.category||'').toLowerCase()==='car_rent'&&hasDailyTariff(x);
 const cancelledReservation=x=>['cancelled','cancelled_by_client','declined','completed'].includes(String(x?.operational_status||x?.status||'').toLowerCase());
 const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<bEnd&&bStart<aEnd;
 const bookingStatusToServer={requested:'NEW',hold:'AWAITING_PARTNER_CONFIRMATION',confirmed:'CONFIRMED',active:'SERVICE_IN_PROGRESS',completed:'COMPLETED',cancelled:'CANCELLED_BY_CLIENT'};

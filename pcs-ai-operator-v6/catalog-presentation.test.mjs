@@ -22,6 +22,6 @@ assert.match(adapter,/saveCatalogPricing/,'Mini App must send approved price and
 assert.match(adapter,/\['delete','rules','upsert_rule','delete_rule'\]/,'Mini App must forward archive and seasonal catalog actions');
 assert.match(safety,/depositThb/,'rental editor must expose a separate vehicle security deposit');
 assert.match(catalogUx,/confirmDeleteCatalog/,'catalog cards must expose archive action');
-assert.match(html,/neon-adapter\.js\?v=20260921-booking3/,'rental-only booking adapter cache key must be bumped');
+assert.match(html,/neon-adapter\.js\?v=20260921-booking4/,'daily-rental adapter cache key must be bumped');
 
 console.log('catalog presentation checks passed');
