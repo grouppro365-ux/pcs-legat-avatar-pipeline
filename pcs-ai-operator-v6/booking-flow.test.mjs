@@ -27,6 +27,8 @@ assert.match(adapter,/datesOverlap\(/,'server adapter must guard against an acti
 assert.match(adapter,/AWAITING_PARTNER_CONFIRMATION/,'hold status must use the server booking lifecycle');
 assert.match(adapter,/application-status/,'booking status controls must persist through the stable manager');
 assert.match(ops,/e<=s/,'return date must be later than rental start date');
+assert.match(ops,/Автомобиль:<\/b> \$\{esc\(itemLabel\)\}/,'preview must identify the selected vehicle before creation');
+assert.match(ops,/Клиент:<\/b> \$\{esc\(clientLabel\)\}/,'preview must identify the selected client before creation');
 assert.match(interactions,/\.pcs-ap-service:not\(\[data-extra-id\]\)/,'legacy service redraw must be replaced');
 
 console.log('booking flow checks passed');
