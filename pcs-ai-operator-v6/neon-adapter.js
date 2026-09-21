@@ -73,7 +73,8 @@ const normalizeCatalog=x=>({
   media_items:x.media_items||(x.image_url?[{public_url:x.image_url}]:[])
 });
 const directBookable=x=>String(x?.status||x?.availability_status||'REQUIRES_CONFIRMATION').toLowerCase()==='available';
-const hasDailyTariff=x=>['day','daily'].includes(String(x?.base_price_period??x?.price_period??x?.rate_period??'').toLowerCase())||Number(x?.daily_price)>0||Number(x?.final_price??x?.price??x?.base_price??x?.client_price_thb??0)>0;
+const positiveCatalogPrice=x=>[x?.daily_price,x?.final_price,x?.price,x?.base_price,x?.client_price_thb].map(Number).find(n=>Number.isFinite(n)&&n>0)||0;
+const hasDailyTariff=x=>['day','daily'].includes(String(x?.base_price_period??x?.price_period??x?.rate_period??'').toLowerCase())||positiveCatalogPrice(x)>0;
 const directRental=x=>directBookable(x)&&String(x?.category||'').toLowerCase()==='car_rent'&&hasDailyTariff(x);
 const cancelledReservation=x=>['cancelled','cancelled_by_client','declined','completed'].includes(String(x?.operational_status||x?.status||'').toLowerCase());
 const datesOverlap=(aStart,aEnd,bStart,bEnd)=>aStart<bEnd&&bStart<aEnd;

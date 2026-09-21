@@ -18,7 +18,7 @@ assert.match(ops,/x\.daily_price,x\.final_price,x\.price,x\.base_price,x\.client
 assert.match(ops,/data-price="\$\{rate\(x\)\}"/,'the booking price must use the recovered daily tariff');
 assert.match(adapter,/daily_price:x\.daily_price/,'catalog normalization must retain the daily tariff');
 assert.match(adapter,/base_price_period:x\.base_price_period/,'catalog normalization must retain the tariff period');
-assert.match(adapter,/x\?\.client_price_thb/,'the server booking guard must accept the approved client tariff when the legacy period field is absent');
+assert.match(adapter,/positiveCatalogPrice=x=>\[x\?\.daily_price,x\?\.final_price,x\?\.price,x\?\.base_price,x\?\.client_price_thb\]/,'the server booking guard must ignore zero placeholder prices and use the approved client tariff');
 assert.match(adapter,/path==='\/reservations'&&method==='POST'/,'stable adapter must allow creating bookings');
 assert.match(adapter,/manager\('application-save'/,'booking must persist through the stable manager');
 assert.match(adapter,/directRental\(item\)/,'server adapter must refuse non-available and non-rental catalog items');
