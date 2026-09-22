@@ -8,3 +8,8 @@
   body.sheet-open .bottom{visibility:hidden!important;pointer-events:none!important}
   body.sheet-open .sheetbox{padding-bottom:calc(32px + env(safe-area-inset-bottom))!important}
 }
+
+/* Telegram miniapp: one filter row and one brand label. */
+body.pcs-approved-page .pcs-ap-filter.v37-native-filter-hidden{display:none!important}
+body.pcs-approved-page .pcs-ap-logo{font-size:0!important;color:transparent!important}
+body.pcs-approved-page .pcs-ap-logo::before{content:none!important;display:none!important}
