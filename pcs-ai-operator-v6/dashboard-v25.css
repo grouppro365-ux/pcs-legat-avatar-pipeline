@@ -85,3 +85,12 @@ body.pcs-dashboard-v25 .bottom .nav-icon{display:grid!important;place-items:cent
 #main .pcs25-qicon{width:42px!important;height:42px!important}
 #main .pcs25-content{padding:12px 20px calc(86px + env(safe-area-inset-bottom))!important;gap:10px!important}
 }
+
+/* Keep the dashboard shortcuts above Telegram’s fixed navigation on short screens. */
+@media (max-width:768px) and (max-height:700px){
+#main .pcs25-hero{gap:10px!important}
+#main .pcs25-script{margin-bottom:6px!important}
+#main .pcs25-title{font-size:34px!important}
+#main .pcs25-title span{margin-top:4px!important}
+#main .pcs25-sub{margin-top:9px!important}
+}
