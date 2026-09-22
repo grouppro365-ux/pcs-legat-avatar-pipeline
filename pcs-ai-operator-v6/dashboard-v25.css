@@ -71,17 +71,17 @@ body.pcs-dashboard-v25 .bottom .nav-icon{display:grid!important;place-items:cent
 
 /* Mobile miniapp: stack hero copy, search, and shortcuts in document flow. */
 @media(max-width:768px){
-body.pcs-dashboard-v25 #main .pcs25-hero{display:grid!important;grid-template-columns:minmax(0,1fr)!important;height:auto!important;min-height:0!important;gap:14px!important;padding:0 20px 18px!important;overflow:hidden!important}
-body.pcs-dashboard-v25 #main .pcs25-top{height:58px!important;min-height:58px!important;padding:10px 0 0!important}
-body.pcs-dashboard-v25 #main .pcs25-copy{position:relative!important;inset:auto!important;width:min(68%,260px)!important;margin:0 0 2px 4px!important}
-body.pcs-dashboard-v25 #main .pcs25-title{font-size:clamp(32px,9vw,40px)!important;line-height:1!important;letter-spacing:-.045em!important}
-body.pcs-dashboard-v25 #main .pcs25-sub{width:min(100%,260px)!important;max-width:260px!important;margin:14px 0 0!important;font-size:13px!important;line-height:1.45!important}
-body.pcs-dashboard-v25 #main .pcs25-search,body.pcs-dashboard-v25 #main .pcs25-quick{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;margin:0!important;min-width:0!important}
-body.pcs-dashboard-v25 #main .pcs25-search{min-height:52px!important;padding:0 7px 0 14px!important;border-radius:24px!important}
-body.pcs-dashboard-v25 #main .pcs25-search input{font-size:15px!important}
-body.pcs-dashboard-v25 #main .pcs25-search button{width:40px!important;height:40px!important;min-width:40px!important}
-body.pcs-dashboard-v25 #main .pcs25-quick{min-height:94px!important;padding:11px 6px!important;border-radius:22px!important}
-body.pcs-dashboard-v25 #main .pcs25-quick button{min-height:68px!important;font-size:11px!important}
-body.pcs-dashboard-v25 #main .pcs25-qicon{width:42px!important;height:42px!important}
-body.pcs-dashboard-v25 #main .pcs25-content{padding:12px 20px calc(86px + env(safe-area-inset-bottom))!important;gap:10px!important}
+#main .pcs25-hero{display:grid!important;grid-template-columns:minmax(0,1fr)!important;height:auto!important;min-height:0!important;gap:14px!important;padding:0 20px 18px!important;overflow:hidden!important}
+#main .pcs25-top{height:58px!important;min-height:58px!important;padding:10px 0 0!important}
+#main .pcs25-copy{position:relative!important;inset:auto!important;width:min(68%,260px)!important;margin:0 0 2px 4px!important}
+#main .pcs25-title{font-size:clamp(32px,9vw,40px)!important;line-height:1!important;letter-spacing:-.045em!important}
+#main .pcs25-sub{width:min(100%,260px)!important;max-width:260px!important;margin:14px 0 0!important;font-size:13px!important;line-height:1.45!important}
+#main .pcs25-search,#main .pcs25-quick{position:relative!important;inset:auto!important;width:100%!important;height:auto!important;margin:0!important;min-width:0!important}
+#main .pcs25-search{min-height:52px!important;padding:0 7px 0 14px!important;border-radius:24px!important}
+#main .pcs25-search input{font-size:15px!important}
+#main .pcs25-search button{width:40px!important;height:40px!important;min-width:40px!important}
+#main .pcs25-quick{min-height:94px!important;padding:11px 6px!important;border-radius:22px!important}
+#main .pcs25-quick button{min-height:68px!important;font-size:11px!important}
+#main .pcs25-qicon{width:42px!important;height:42px!important}
+#main .pcs25-content{padding:12px 20px calc(86px + env(safe-area-inset-bottom))!important;gap:10px!important}
 }
