@@ -34,23 +34,28 @@ async function notifyConfirmedCustomer(requestId:string,publicId:string){
   }
 }
 
-async function finalizeIfReady(requestId:string,adminChat:any){
+export async function reconcileBookingRequest(requestId:string){
   const {data:request,error}=await sb.from('pcs_booking_requests').select('id,status,reservation_id').eq('id',requestId).maybeSingle();
   if(error)throw error;
-  if(!request){await send(adminChat,'Заявка не найдена.');return}
-  if(!['ready_for_booking','booked'].includes(request.status)){await send(adminChat,`Заявка пока не готова к брони: ${request.status}. Нужны проверенные документы и поступление предоплаты.`);return}
+  if(!request)throw Error('booking_request_not_found');
+  if(!['ready_for_booking','booked'].includes(request.status))return{status:request.status,skipped:true};
   const secret=await sec('internal_retry_secret');
   if(!secret)throw Error('internal_booking_secret_missing');
   const response=await fetch(RUNTIME+'/booking-finalize',{method:'POST',headers:{'content-type':'application/json','x-pcs-internal-secret':secret},body:JSON.stringify({request_id:requestId})});
   const body=await response.json().catch(()=>({}));
-  if(!response.ok||!body?.ok){await send(adminChat,`Операционная бронь пока не создана: ${body?.error||response.status}. Проверьте доступность автомобиля; повторить можно командой /bfinalize ${requestId}.`);return}
+  if(!response.ok||!body?.ok)throw Error(String(body?.error||`booking_runtime_${response.status}`));
   const result=body.result;
-  if(result.status==='booked'){
-    try{const notification=await notifyConfirmedCustomer(requestId,result.public_id||'');await send(adminChat,`Операционная бронь ${result.public_id||result.reservation_id} подтверждена. Уведомление клиенту: ${notification}.`)}
-    catch(e){await send(adminChat,`Бронь подтверждена, но уведомление клиенту не доставлено: ${e instanceof Error?e.message:String(e)}. Повторите /bfinalize ${requestId}.`)}
-    return;
-  }
-  await send(adminChat,`Операционная заявка ${result.public_id||result.reservation_id} создана, но её статус ${result.operational_status}. Клиенту не сообщать, что машина подтверждена, пока статус не станет CONFIRMED.`);
+  if(result.status==='booked')return{...result,notification:await notifyConfirmedCustomer(requestId,result.public_id||'')};
+  return result;
+}
+
+async function finalizeIfReady(requestId:string,adminChat:any){
+  try{
+    const result=await reconcileBookingRequest(requestId);
+    if(result.skipped){await send(adminChat,`Заявка пока не готова к брони: ${result.status}. Нужны проверенные документы и поступление предоплаты.`);return}
+    if(result.status==='booked'){await send(adminChat,`Операционная бронь ${result.public_id||result.reservation_id} подтверждена. Уведомление клиенту: ${result.notification}.`);return}
+    await send(adminChat,`Операционная заявка ${result.public_id||result.reservation_id} создана, но её статус ${result.operational_status}. Клиенту не сообщать, что машина подтверждена, пока статус не станет CONFIRMED.`);
+  }catch(e){await send(adminChat,`Сверка брони не завершилась: ${e instanceof Error?e.message:String(e)}. Повторите /bfinalize ${requestId} после проверки доступности и платежа.`)}
 }
 
 // Admin-only command, called after the gateway has checked pcs_admin_chats.

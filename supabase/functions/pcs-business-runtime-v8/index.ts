@@ -124,6 +124,10 @@ async function operationalFree(itemId:string,start:string,end:string){
   try{return await readOperationalAvailability(await operationalDb(),itemId,start,end)}
   catch{console.error('operational_availability_unavailable');return false}
 }
+async function queueBookingConfirmation(id:string){
+  const {error}=await sb.from('pcs_booking_confirmation_outbox').insert({request_id:id});
+  if(error&&error.code!=='23505')throw error;
+}
 async function finalizeBookingRequest(id:string){
   if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('invalid_booking_request_id');
   const {data:r,error:re}=await sb.from('pcs_booking_requests').select('*').eq('id',id).single();
@@ -133,6 +137,7 @@ async function finalizeBookingRequest(id:string){
     if(!existing||String(existing.id)!==String(r.reservation_id))throw Error('booking_operational_identity_mismatch');
     const current=operationalBookingProjection(existing.status);
     if(current.requestStatus!=='booked')throw Error('booking_operational_status_not_confirmed');
+    await queueBookingConfirmation(id);
     return{request_id:id,reservation_id:r.reservation_id,public_id:existing.public_id,operational_status:current.operationalStatus,status:'booked',already_recorded:true};
   }
   if(r.status!=='ready_for_booking')throw Error('booking_request_not_verified');
@@ -166,6 +171,7 @@ async function finalizeBookingRequest(id:string){
   if(financeError)throw financeError;
   const {error:updateError}=await sb.from('pcs_booking_requests').update({reservation_id:reservationId,status:requestStatus,updated_at:new Date().toISOString()}).eq('id',r.id).eq('status','ready_for_booking');
   if(updateError)throw updateError;
+  if(requestStatus==='booked')await queueBookingConfirmation(id);
   await sb.from('pcs_audit_logs').insert({actor:'pcs-business-runtime-v8',action:'booking_operational_created',entity_type:'pcs_booking_requests',entity_id:r.id,payload:{reservation_id:reservationId,operational_status:state,request_status:requestStatus}});
   return{request_id:id,reservation_id:reservationId,public_id:booking.public_id,operational_status:state,status:requestStatus};
 }
