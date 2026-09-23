@@ -14,7 +14,7 @@ assert.match(source, /Здравствуйте! /);
 assert.match(source, /На какой день этой недели планируете\?/);
 assert.doesNotMatch(source, /setMessageReaction/);
 assert.match(source, /emoji_response_v2/);
-assert.match(source, /👋 Добрый день! Чем можем помочь\?/);
+assert.match(source, /Здравствуйте! Чем можем помочь\?/);
 assert.match(source, /reply_parameters:\{message_id:m\.message_id/);
 assert.match(source, /const emoji=await handleEmoji\(m\)/);
 
