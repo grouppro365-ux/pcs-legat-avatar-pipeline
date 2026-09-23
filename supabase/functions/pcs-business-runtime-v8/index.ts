@@ -1,7 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { neon } from 'npm:@neondatabase/serverless@1.0.1';
 import { readOperationalAvailability } from './operational-availability.mjs';
-import { findVehicleBooking, createVehicleBooking } from '../_shared/vehicle-booking.mjs';
+import { findVehicleBooking } from '../_shared/vehicle-booking.mjs';
 import { rentalEnd, rentalDays, rentalDurationLabel } from '../_shared/rental-period.mjs';
 import { processMessage } from '../_shared/message-processing.mjs';
 import { specificVehicleIntent, specificVehicleModel } from './vehicle-model.mjs';
@@ -156,7 +156,7 @@ async function handleOfferSelection(m:any){
       reply=existing.status==='CANCELLED_BY_CLIENT'||existing.status==='CANCELLED_BY_PARTNER'?
         'Эта бронь уже отменена. Напишите даты аренды — подготовлю новое предложение.':
         'По этому предложению уже есть бронь '+existing.public_id+'. Вторую не создаю.';
-    }else if(confirming&&offer.stage!=='awaiting_confirmation'){
+    }else if(confirming&&!['awaiting_confirmation','awaiting_documents'].includes(offer.stage)){
       reply='Сначала выберите автомобиль из предложенных вариантов. Одного подтверждения без выбора недостаточно.';
     }else if(!selected){
       reply='Не нашёл такой вариант в предложении. Напишите номер от 1 до '+offer.items.length+'.';
@@ -175,24 +175,31 @@ async function handleOfferSelection(m:any){
         await task(c.id,'Подтвердить выбор у партнёра','Клиент выбрал '+item.title+'. Нужны подтверждённые условия партнёра.');
         reply='Вы выбрали '+publicVehicleName(item.title)+'. Уточню доступность и условия у партнёра. Пока ничего не забронировано.';
       }else if(!confirming){
-        const {error:updateError}=await sb.from('pcs_contacts').update({requested_catalog_item_id:selected.id,next_action:'Клиент выбрал автомобиль; ожидаем отдельного подтверждения брони'}).eq('id',c.id);
+        const {error:updateError}=await sb.from('pcs_contacts').update({requested_catalog_item_id:selected.id,next_action:'Клиент выбрал автомобиль; ожидаем согласия на оформление с документами и предоплатой'}).eq('id',c.id);
         if(updateError)throw updateError;
         m._pcs_offer={...offer,id:offerId,stage:'awaiting_confirmation',selected_index:selectedIndex,selected_at:new Date().toISOString()};
         reply=selectedVehicleReply(offer,selected,item);
       }else{
-        try{
-          booking=await createVehicleBooking(db,{key,offerId,itemId:selected.id,clientId:c.id,name:c.name,contact:c.phone||c.username||String(m.chat.id),start:offer.start,end:offer.end,total:selected.total,currency:selected.currency});
-        }catch(e){
-          if((e as any)?.code==='23P01'||['vehicle_not_available','vehicle_period_unavailable'].includes((e as any)?.message)){
-            reply='Эта машина уже недоступна на выбранные даты. Напишите даты ещё раз — найду другие варианты.';
-          }else throw e;
+        const {data:prior,error:priorError}=await sb.from('pcs_booking_requests').select('id,status,booking_deposit_amount').eq('contact_id',c.id).eq('offer_id',offerId).maybeSingle();
+        if(priorError)throw priorError;
+        let request=prior;
+        if(!request){
+          const {data:created,error:createError}=await sb.from('pcs_booking_requests').insert({contact_id:c.id,offer_id:offerId,catalog_item_id:selected.id,start_date:offer.start,end_date:offer.end,rental_total:selected.total,currency:selected.currency}).select('id,status,booking_deposit_amount').single();
+          if(createError?.code==='23505'){
+            const {data:again,error:againError}=await sb.from('pcs_booking_requests').select('id,status,booking_deposit_amount').eq('contact_id',c.id).eq('offer_id',offerId).single();
+            if(againError)throw againError;
+            request=again;
+          }else if(createError)throw createError;
+          else request=created;
         }
-        if(booking){
-          const {error:updateError}=await sb.from('pcs_contacts').update({selected_catalog_item_id:selected.id,requested_catalog_item_id:selected.id,next_action:'Предварительная бронь '+booking.public_id+'; собрать документы и подтвердить условия'}).eq('id',c.id);
-          if(updateError)throw updateError;
-          m._pcs_offer={...offer,id:offerId,stage:'booking_created',booking_id:booking.id};
-          reply='Создала предварительную бронь '+booking.public_id+' на '+publicVehicleName(item.title)+'. Документы и оплата ещё не подтверждены.';
+        if(!prior&&request?.status==='collecting'){
+          await task(c.id,'Подготовить бронь собственного автомобиля','Заявка '+request.id+'. Клиент согласился перейти к оформлению '+publicVehicleName(item.title)+'. Проверить паспорт и именно МВУ; согласовать сумму бронировочной предоплаты для этой заявки, затем проверить поступление денег. Не подтверждать бронь по сообщению или чеку без проверки.','HIGH');
+          await notifyAdmin('Новая заявка на '+publicVehicleName(item.title)+' ('+offer.start+' — '+offer.end+'). Укажите предоплату отдельно для этой заявки: /bdeposit '+request.id+' СУММА. Паспорт, МВУ и платёж требуют проверки.',{inline_keyboard:[[{text:'Открыть клиента',callback_data:'client:'+c.id}]]});
         }
+        const {error:updateError}=await sb.from('pcs_contacts').update({requested_catalog_item_id:selected.id,next_action:'Заявка '+request.id+': проверить паспорт и МВУ, назначить предоплату и подтвердить поступление'}).eq('id',c.id);
+        if(updateError)throw updateError;
+        m._pcs_offer={...offer,id:offerId,stage:'awaiting_documents',selected_index:selectedIndex,selected_at:offer.selected_at,booking_request_id:request.id};
+        reply=request.status==='booked'?'Бронь по этому запросу уже оформлена. Повторно её не создаю.':`Приняла заявку на ${publicVehicleName(item.title)}. Для оформления пришлите, пожалуйста, фото паспорта и международного водительского удостоверения (МВУ). После проверки документов сообщим точную сумму бронировочной предоплаты и реквизиты. Залог за сохранность автомобиля не равен предоплате. Бронь будет подтверждена только после проверки поступления оплаты; пока машина не забронирована.`;
       }
     }
     await managedSend(m,reply,'catalog_booking_v2');

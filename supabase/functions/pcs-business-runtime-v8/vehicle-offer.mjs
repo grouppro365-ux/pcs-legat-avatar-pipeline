@@ -51,7 +51,7 @@ export function vehicleOffersReply(period, items, city = '') {
 }
 
 export function isBookingConfirmation(text) {
-  return /^(?:да,?\s*)?(?:подтверждаю\s+(?:бронь|бронирование)|бронируйте)[.!]?$/iu.test(String(text || '').trim());
+  return /^(?:да,?\s*)?(?:подтверждаю\s+(?:бронь|бронирование)|бронируйте|хочу\s+оформить)[.!]?$/iu.test(String(text || '').trim());
 }
 
 export function selectedVehicleReply(offer, item, catalogItem) {
@@ -59,5 +59,5 @@ export function selectedVehicleReply(offer, item, catalogItem) {
   const name = publicVehicleName(catalogItem.title || item.title);
   const depositAmount = Number(catalogItem.metadata?.security_deposit_thb);
   const deposit = Number.isFinite(depositAmount) && depositAmount >= 0 && catalogItem.metadata?.security_deposit_thb != null ? ` Залог за сохранность авто — ${money(depositAmount, item.currency)}.` : '';
-  return `Вы выбрали ${name} на ${dates}. Аренда — ${money(item.total, item.currency)}.${deposit}\n\nЕсли всё подходит, напишите «Подтверждаю бронь». До этого машина не забронирована.`;
+  return `Вы выбрали ${name} на ${dates}. Аренда — ${money(item.total, item.currency)}.${deposit}\n\nДля оформления нужны паспорт, международное водительское удостоверение и бронировочная предоплата. Её сумму согласуем отдельно для этой заявки; залог за сохранность авто — другая сумма. Если хотите продолжить, напишите «Хочу оформить». Пока автомобиль не забронирован.`;
 }
