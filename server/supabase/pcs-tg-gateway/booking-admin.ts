@@ -1,18 +1,56 @@
 import {sb,tg,send,sec,RUNTIME} from './common.ts';
+import {bookingConfirmationText} from './booking-confirmation.mjs';
+
+async function notifyConfirmedCustomer(requestId:string,publicId:string){
+  const {data:request,error}=await sb.from('pcs_booking_requests').select('id,status,contact_id,start_date,end_date,rental_total,booking_deposit_amount,currency,pcs_catalog_items(title),pcs_contacts(telegram_chat_id,business_connection_id,detected_language,language)').eq('id',requestId).single();
+  if(error)throw error;
+  if(request.status!=='booked')throw Error('booking_confirmation_requires_confirmed_status');
+  const {data:claim,error:claimError}=await sb.rpc('pcs_claim_booking_confirmation',{p_request_id:requestId});
+  if(claimError)throw claimError;
+  if(!claim?.claimed)return claim?.reason==='already_sent'?'уже отправлено':'отправка уже выполняется';
+  const claimId=claim.claim_id;
+  try{
+    const {data:prior,error:priorError}=await sb.from('pcs_messages').select('telegram_message_id').contains('raw',{source:'booking_confirmation',booking_request_id:requestId}).limit(1).maybeSingle();
+    if(priorError)throw priorError;
+    if(prior?.telegram_message_id){
+      const {data:completed,error:finishError}=await sb.rpc('pcs_finish_booking_confirmation',{p_request_id:requestId,p_claim_id:claimId,p_message_id:prior.telegram_message_id,p_error:null});
+      if(finishError||!completed)throw finishError||Error('booking_confirmation_finish_failed');
+      return 'уже отправлено';
+    }
+    const contact=request.pcs_contacts as any;
+    if(!contact?.telegram_chat_id||!contact?.business_connection_id)throw Error('booking_customer_telegram_address_missing');
+    const language=String(contact.detected_language||contact.language||'ru').slice(0,2);
+    const title=String((request.pcs_catalog_items as any)?.title||'автомобиль');
+    const text=bookingConfirmationText(request,title,publicId,language);
+    const sent=await tg('sendMessage',{business_connection_id:contact.business_connection_id,chat_id:String(contact.telegram_chat_id),text});
+    const {error:messageError}=await sb.from('pcs_messages').insert({telegram_message_id:sent.message_id,business_connection_id:contact.business_connection_id,contact_id:request.contact_id,chat_id:contact.telegram_chat_id,direction:'out',text,status:'sent',raw:{...sent,source:'booking_confirmation',booking_request_id:requestId}});
+    if(messageError)throw messageError;
+    const {data:completed,error:finishError}=await sb.rpc('pcs_finish_booking_confirmation',{p_request_id:requestId,p_claim_id:claimId,p_message_id:sent.message_id,p_error:null});
+    if(finishError||!completed)throw finishError||Error('booking_confirmation_finish_failed');
+    return 'отправлено';
+  }catch(e){
+    await sb.rpc('pcs_finish_booking_confirmation',{p_request_id:requestId,p_claim_id:claimId,p_message_id:null,p_error:e instanceof Error?e.message:String(e)});
+    throw e;
+  }
+}
 
 async function finalizeIfReady(requestId:string,adminChat:any){
   const {data:request,error}=await sb.from('pcs_booking_requests').select('id,status,reservation_id').eq('id',requestId).maybeSingle();
   if(error)throw error;
   if(!request){await send(adminChat,'Заявка не найдена.');return}
-  if(request.status==='booked'){await send(adminChat,`Бронь уже связана с заявкой: ${request.reservation_id}. Повторно не создаю.`);return}
-  if(request.status!=='ready_for_booking'){await send(adminChat,`Заявка пока не готова к брони: ${request.status}. Нужны проверенные документы и поступление предоплаты.`);return}
+  if(!['ready_for_booking','booked'].includes(request.status)){await send(adminChat,`Заявка пока не готова к брони: ${request.status}. Нужны проверенные документы и поступление предоплаты.`);return}
   const secret=await sec('internal_retry_secret');
   if(!secret)throw Error('internal_booking_secret_missing');
   const response=await fetch(RUNTIME+'/booking-finalize',{method:'POST',headers:{'content-type':'application/json','x-pcs-internal-secret':secret},body:JSON.stringify({request_id:requestId})});
   const body=await response.json().catch(()=>({}));
   if(!response.ok||!body?.ok){await send(adminChat,`Операционная бронь пока не создана: ${body?.error||response.status}. Проверьте доступность автомобиля; повторить можно командой /bfinalize ${requestId}.`);return}
   const result=body.result;
-  await send(adminChat,result.status==='booked'?`Операционная бронь ${result.public_id||result.reservation_id} подтверждена и связана с заявкой.`:`Операционная заявка ${result.public_id||result.reservation_id} создана, но её статус ${result.operational_status}. Клиенту не сообщать, что машина подтверждена, пока статус не станет CONFIRMED.`);
+  if(result.status==='booked'){
+    try{const notification=await notifyConfirmedCustomer(requestId,result.public_id||'');await send(adminChat,`Операционная бронь ${result.public_id||result.reservation_id} подтверждена. Уведомление клиенту: ${notification}.`)}
+    catch(e){await send(adminChat,`Бронь подтверждена, но уведомление клиенту не доставлено: ${e instanceof Error?e.message:String(e)}. Повторите /bfinalize ${requestId}.`)}
+    return;
+  }
+  await send(adminChat,`Операционная заявка ${result.public_id||result.reservation_id} создана, но её статус ${result.operational_status}. Клиенту не сообщать, что машина подтверждена, пока статус не станет CONFIRMED.`);
 }
 
 // Admin-only command, called after the gateway has checked pcs_admin_chats.

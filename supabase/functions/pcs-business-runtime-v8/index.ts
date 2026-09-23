@@ -128,7 +128,13 @@ async function finalizeBookingRequest(id:string){
   if(!/^[0-9a-f-]{36}$/i.test(id))throw Error('invalid_booking_request_id');
   const {data:r,error:re}=await sb.from('pcs_booking_requests').select('*').eq('id',id).single();
   if(re||!r)throw Error('booking_request_not_found');
-  if(r.status==='booked'&&r.reservation_id)return{request_id:id,reservation_id:r.reservation_id,status:'booked',already_recorded:true};
+  if(r.status==='booked'&&r.reservation_id){
+    const existing=await findVehicleBooking(await operationalDb(),'booking:telegram:'+r.contact_id+':'+r.offer_id);
+    if(!existing||String(existing.id)!==String(r.reservation_id))throw Error('booking_operational_identity_mismatch');
+    const current=operationalBookingProjection(existing.status);
+    if(current.requestStatus!=='booked')throw Error('booking_operational_status_not_confirmed');
+    return{request_id:id,reservation_id:r.reservation_id,public_id:existing.public_id,operational_status:current.operationalStatus,status:'booked',already_recorded:true};
+  }
   if(r.status!=='ready_for_booking')throw Error('booking_request_not_verified');
   const {data:finance,error:fe}=await sb.from('pcs_finance_entries').select('id,contact_id,amount,currency,status,paid_at,payment_kind,metadata,reservation_id').eq('id',r.finance_entry_id).single();
   if(fe)throw fe;
