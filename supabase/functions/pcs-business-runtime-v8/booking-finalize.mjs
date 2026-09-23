@@ -1,4 +1,4 @@
-export function validateBookingFinalization(request, finance, item) {
+export function validateBookingFinalization(request, finance, item, intakes) {
   if (!request || request.status !== 'ready_for_booking' ||
       request.passport_status !== 'approved' || request.international_permit_status !== 'approved' ||
       request.payment_status !== 'paid' || !request.finance_entry_id ||
@@ -15,6 +15,20 @@ export function validateBookingFinalization(request, finance, item) {
   }
   if (!item || item.id !== request.catalog_item_id || item.ownership_type !== 'pcs_owned') {
     throw new Error('booking_vehicle_not_owned');
+  }
+  const byId = new Map((intakes || []).map(row => [row.id, row]));
+  for (const [id, classification] of [
+    [request.passport_media_intake_id, 'passport'],
+    [request.permit_media_intake_id, 'international_permit'],
+  ]) {
+    const row = byId.get(id);
+    if (!id || !row || row.review_status !== 'approved' ||
+        row.classification !== classification || row.contact_id !== request.contact_id ||
+        row.extracted?.booking_request_id !== request.id ||
+        row.extracted?.storage_bucket !== 'pcs-contracts' ||
+        !String(row.extracted?.storage_path || '').startsWith(`booking-requests/${request.id}/`)) {
+      throw new Error('booking_document_evidence_invalid');
+    }
   }
 }
 

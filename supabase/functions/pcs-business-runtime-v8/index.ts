@@ -134,7 +134,10 @@ async function finalizeBookingRequest(id:string){
   if(fe)throw fe;
   const {data:item,error:ie}=await sb.from('pcs_catalog_items').select('id,status,ownership_type,customer_visible,deleted_at').eq('id',r.catalog_item_id).single();
   if(ie)throw ie;
-  validateBookingFinalization(r,finance,item);
+  const documentIds=[r.passport_media_intake_id,r.permit_media_intake_id].filter(Boolean);
+  const {data:intakes,error:documentError}=documentIds.length?await sb.from('pcs_media_intake').select('id,contact_id,classification,review_status,extracted').in('id',documentIds):{data:[],error:null};
+  if(documentError)throw documentError;
+  validateBookingFinalization(r,finance,item,intakes);
   const {data:contact,error:ce}=await sb.from('pcs_contacts').select('id,name,phone,username,telegram_chat_id').eq('id',r.contact_id).single();
   if(ce||!contact)throw Error('booking_contact_missing');
   const key='booking:telegram:'+r.contact_id+':'+r.offer_id;
