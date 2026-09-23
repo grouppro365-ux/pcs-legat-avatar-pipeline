@@ -5,7 +5,7 @@ import { publicVehicleName, securityDepositLine, humanRentalDates, vehicleOffers
 
 test('hides internal fleet code but keeps the vehicle distinguishable', () => {
   assert.equal(publicVehicleName('LTC-001 · Ford Fiesta · красный · 3675'), 'Ford Fiesta · красный · 3675');
-  assert.equal(publicVehicleName('MG MG5 Pro 1.5 CVT K-BRIT 2025'), 'MG MG5 Pro 1.5 CVT K-BRIT 2025');
+  assert.equal(publicVehicleName('MG MG5 Pro 1.5 CVT K-BRIT 2025'), 'MG5 Pro 1.5 CVT K-BRIT 2025');
 });
 
 test('shows the security deposit without inventing a missing value', () => {
