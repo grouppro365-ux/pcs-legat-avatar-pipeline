@@ -72,4 +72,3 @@ Deno.serve(async req=>{
   return J({ok:true,processed,bookings});
 });
 
-
