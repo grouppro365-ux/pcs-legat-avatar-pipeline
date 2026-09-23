@@ -1,9 +1,60 @@
-import {sb,tg,send} from './common.ts';
+import {sb,tg,send,sec,RUNTIME} from './common.ts';
+
+async function finalizeIfReady(requestId:string,adminChat:any){
+  const {data:request,error}=await sb.from('pcs_booking_requests').select('id,status,reservation_id').eq('id',requestId).maybeSingle();
+  if(error)throw error;
+  if(!request){await send(adminChat,'Заявка не найдена.');return}
+  if(request.status==='booked'){await send(adminChat,`Бронь уже связана с заявкой: ${request.reservation_id}. Повторно не создаю.`);return}
+  if(request.status!=='ready_for_booking'){await send(adminChat,`Заявка пока не готова к брони: ${request.status}. Нужны проверенные документы и поступление предоплаты.`);return}
+  const secret=await sec('internal_retry_secret');
+  if(!secret)throw Error('internal_booking_secret_missing');
+  const response=await fetch(RUNTIME+'/booking-finalize',{method:'POST',headers:{'content-type':'application/json','x-pcs-internal-secret':secret},body:JSON.stringify({request_id:requestId})});
+  const body=await response.json().catch(()=>({}));
+  if(!response.ok||!body?.ok){await send(adminChat,`Операционная бронь пока не создана: ${body?.error||response.status}. Проверьте доступность автомобиля; повторить можно командой /bfinalize ${requestId}.`);return}
+  const result=body.result;
+  await send(adminChat,result.status==='booked'?`Операционная бронь ${result.public_id||result.reservation_id} подтверждена и связана с заявкой.`:`Операционная заявка ${result.public_id||result.reservation_id} создана, но её статус ${result.operational_status}. Клиенту не сообщать, что машина подтверждена, пока статус не станет CONFIRMED.`);
+}
 
 // Admin-only command, called after the gateway has checked pcs_admin_chats.
 // A quote is saved before it is sent, so retries do not invent or change money.
 export async function bookingAdminText(m:any){
   const text=String(m?.text||'').trim();
+  if(text.startsWith('/bfinalize')){
+    const id=text.match(/^\/bfinalize\s+([0-9a-f-]{36})$/i)?.[1];
+    if(!id){await send(m.chat.id,'Формат: /bfinalize ID_ЗАЯВКИ');return true}
+    await finalizeIfReady(id,m.chat.id);
+    return true;
+  }
+  if(text.startsWith('/breceipt')){
+    const match=text.match(/^\/breceipt\s+([0-9a-f-]{36})\s+(approved|rejected)$/i);
+    if(!match){await send(m.chat.id,'Формат: /breceipt ID_ЗАЯВКИ approved|rejected. Сначала откройте /brequest ID и проверьте чек.');return true}
+    const [,id,decision]=match;
+    const {data:r,error}=await sb.from('pcs_booking_requests').select('id,status,payment_status,receipt_media_intake_id').eq('id',id).maybeSingle();
+    if(error)throw error;
+    if(!r||r.status!=='collecting'||r.payment_status!=='receipt_pending'||!r.receipt_media_intake_id){await send(m.chat.id,'Нет чека, ожидающего проверки по этой заявке.');return true}
+    const {data:receipt,error:receiptError}=await sb.from('pcs_media_intake').select('id,classification,review_status,extracted').eq('id',r.receipt_media_intake_id).maybeSingle();
+    if(receiptError)throw receiptError;
+    if(!receipt||receipt.classification!=='receipt'||receipt.review_status!=='needs_review'||receipt.extracted?.booking_request_id!==id){await send(m.chat.id,'Чек не совпадает с заявкой или уже проверен.');return true}
+    const {data:updated,error:updateError}=await sb.from('pcs_media_intake').update({review_status:decision,updated_at:new Date().toISOString()}).eq('id',receipt.id).eq('review_status','needs_review').select('id').maybeSingle();
+    if(updateError)throw updateError;
+    if(!updated){await send(m.chat.id,'Чек уже изменился. Откройте заявку заново.');return true}
+    if(decision==='rejected'){
+      const {error:resetError}=await sb.from('pcs_booking_requests').update({payment_status:'requested',updated_at:new Date().toISOString()}).eq('id',id).eq('receipt_media_intake_id',receipt.id).eq('payment_status','receipt_pending');
+      if(resetError)throw resetError;
+    }
+    await sb.from('pcs_audit_logs').insert({actor:`telegram:${m.from?.id??m.chat.id}`,action:'booking_receipt_review',entity_type:'pcs_booking_requests',entity_id:id,payload:{decision,media_intake_id:receipt.id}});
+    await send(m.chat.id,decision==='approved'?'Чек просмотрен. Это НЕ подтверждение поступления денег. Сверьте банк и затем отправьте /bpaid ID НОМЕР_ТРАНЗАКЦИИ.':'Чек отклонён. Ожидаем новый чек от клиента.');
+    return true;
+  }
+  if(text.startsWith('/bpaid')){
+    const match=text.match(/^\/bpaid\s+([0-9a-f-]{36})\s+([^\s]{6,120})$/i);
+    if(!match){await send(m.chat.id,'Формат: /bpaid ID_ЗАЯВКИ НОМЕР_ТРАНЗАКЦИИ. Команда означает, что вы лично сверили поступление с банковской выпиской PCS; один чек без выписки недостаточен.');return true}
+    const {data,error}=await sb.rpc('pcs_confirm_booking_deposit',{p_request_id:match[1],p_bank_reference:match[2],p_actor:`telegram:${m.from?.id??m.chat.id}`});
+    if(error){await send(m.chat.id,'Не удалось подтвердить поступление: '+error.message);return true}
+    await send(m.chat.id,`Поступление записано в финансах. Заявка: ${data.status}. Это ещё не созданная бронь; доступность автомобиля нужно перепроверить.`);
+    if(data.status==='ready_for_booking')await finalizeIfReady(match[1],m.chat.id);
+    return true;
+  }
   if(text.startsWith('/brequest')){
     const id=text.match(/^\/brequest\s+([0-9a-f-]{36})$/i)?.[1];
     if(!id){await send(m.chat.id,'Формат: /brequest ID_ЗАЯВКИ');return true}
@@ -44,6 +95,11 @@ export async function bookingAdminText(m:any){
     if(reviewError)throw reviewError;
     await sb.from('pcs_audit_logs').insert({actor:`telegram:${m.from?.id??m.chat.id}`,action:'booking_document_review',entity_type:'pcs_booking_requests',entity_id:id,payload:{kind,decision,media_intake_id:record.id}});
     await send(m.chat.id,`${kind==='passport'?'Паспорт':'МВУ'}: ${decision}. Это не подтверждает оплату и не создаёт бронь.`);
+    if(decision==='approved'){
+      const {data:ready,error:readyError}=await sb.from('pcs_booking_requests').update({status:'ready_for_booking',updated_at:new Date().toISOString()}).eq('id',id).eq('status','collecting').eq('payment_status','paid').eq('passport_status','approved').eq('international_permit_status','approved').select('id').maybeSingle();
+      if(readyError)throw readyError;
+      if(ready)await finalizeIfReady(id,m.chat.id);
+    }
     return true;
   }
   if(!text.startsWith('/bdeposit'))return false;

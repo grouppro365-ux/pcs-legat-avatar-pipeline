@@ -12,6 +12,10 @@ assert.match(source, /if\(!contact\)fields\.push\(\{path:'renter\.contact',label
 assert.doesNotMatch(source, /\['renter\.phone','Телефон'\]/);
 assert.match(source, /op=session/);
 assert.match(source, /syncNeonReservation\(req,m\[1\]\)/);
+assert.match(source, /q\.payment_kind==='booking_deposit'/);
+assert.match(source, /booking_deposit:booking/);
+assert.match(source, /booking_snapshot_diverged/);
+assert.match(source, /payment_status:linked\?\.payment_status==='paid'\?'partial'/);
 assert.match(source, /managerConflict\(req,r\.catalog_item_id/);
 const manager = fs.readFileSync(path.resolve(__dirname, '../server/supabase/pcs-manager-live2/index.ts'), 'utf8');
 assert.match(manager, /opName==='application-detail'/);

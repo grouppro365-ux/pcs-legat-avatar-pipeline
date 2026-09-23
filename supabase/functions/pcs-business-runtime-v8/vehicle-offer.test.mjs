@@ -64,6 +64,10 @@ test('a numeric choice is not consent to create a booking', () => {
   assert.match(source, /else if\(!confirming\)\{/);
   assert.match(source, /stage:'awaiting_confirmation'/);
   assert.match(source, /pcs_booking_requests/);
-  assert.doesNotMatch(source, /createVehicleBooking\(/);
+  const selection = source.split('async function handleOfferSelection')[1]?.split('async function handleEmoji')[0] || '';
+  assert.doesNotMatch(selection, /createVehicleBooking\(/);
+  const finalization = source.split('async function finalizeBookingRequest')[1]?.split('async function availableItems')[0] || '';
+  assert.match(finalization, /booking_request_not_verified/);
+  assert.match(finalization, /createVehicleBooking\(/);
   assert.match(source, /not\('raw->pcs_offer','is',null\)/);
 });
