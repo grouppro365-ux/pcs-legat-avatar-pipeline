@@ -5,7 +5,8 @@ import { findVehicleBooking, createVehicleBooking } from '../_shared/vehicle-boo
 import { rentalEnd, rentalDays, rentalDurationLabel } from '../_shared/rental-period.mjs';
 import { processMessage } from '../_shared/message-processing.mjs';
 import { specificVehicleIntent, specificVehicleModel } from './vehicle-model.mjs';
-import { publicVehicleName, securityDepositLine } from './vehicle-offer.mjs';
+import { publicVehicleName, securityDepositLine, vehicleOffersReply, isBookingConfirmation, selectedVehicleReply } from './vehicle-offer.mjs';
+import { offerPhotos } from './catalog-photo.mjs';
 const sb=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
 const V7='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-business-runtime-v7';
 const J=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{'content-type':'application/json;charset=utf-8'}});
@@ -16,7 +17,7 @@ async function managedReply(m:any,c:any,work:any){
   return processMessage({db:sb,channel:'telegram',key:'runtime:'+JSON.stringify([m.business_connection_id,String(m.chat.id),String(m.message_id)]),
     handle:async(run:any)=>{replyRuns.set(m,run);try{return await work()}finally{replyRuns.delete(m)}},
     send:(out:any)=>tg('sendMessage',out.request),
-    record:async(out:any,receipt:any)=>{m._pcs_offer=out.offer;await saveOut(m,c,receipt,out.text,out.source)},
+    record:async(out:any,receipt:any)=>{m._pcs_offer=out.offer;await saveOut(m,c,receipt,out.text,out.source);if(out.source==='qualification_engine_v4'&&out.offer?.intent==='car_rent')await sendOfferMedia(m,c,out.offer)},
     review:(eventId:string)=>task(c.id,'Проверить доставку ответа · '+eventId,'Не удалось однозначно подтвердить доставку. Проверить переписку перед повторной отправкой. Событие Conversation Hub: '+eventId)
   });
 }
@@ -72,6 +73,31 @@ async function saveOut(m:any,c:any,sent:any,text:string,source='qualification_en
   }else if(error)throw error;
   const updated=await sb.from('pcs_contacts').update({last_contact_at:new Date().toISOString()}).eq('id',c.id);if(updated.error)throw updated.error;
 }
+async function sendOfferMedia(m:any,c:any,offer:any){
+  const ids=(offer.items||[]).map((x:any)=>x.id).filter(Boolean);
+  if(!ids.length)return {sent:false,no_media:true};
+  const {data,error}=await sb.from('pcs_catalog_media').select('id,catalog_item_id,media_type,public_url,customer_visible,sort_order').in('catalog_item_id',ids).eq('customer_visible',true).eq('media_type','photo').order('sort_order',{ascending:true}).limit(40);
+  if(error)throw error;
+  const photos=offerPhotos(offer,data||[]);
+  if(!photos.length)return {sent:false,no_media:true};
+  const key='runtime-media:'+JSON.stringify([m.business_connection_id,String(m.chat.id),String(m.message_id)]);
+  return processMessage({db:sb,channel:'telegram',key,
+    handle:async(run:any)=>{
+      const method=photos.length===1?'sendPhoto':'sendMediaGroup';
+      const request=photos.length===1?{business_connection_id:m.business_connection_id,chat_id:String(m.chat.id),photo:photos[0].url,caption:photos[0].caption}:{business_connection_id:m.business_connection_id,chat_id:String(m.chat.id),media:photos.map((x:any)=>({type:'photo',media:x.url,...(x.caption?{caption:x.caption}:{})}))};
+      await run.send({method,request,photos});
+      return {sent:true,photo_count:photos.length};
+    },
+    send:(out:any)=>tg(out.method,out.request),
+    record:async(out:any,receipt:any)=>{
+      const sent=Array.isArray(receipt)?receipt:[receipt];
+      if(sent.length!==out.photos.length)throw Error('photo_receipt_count_mismatch');
+      const photoMessage={...m,_pcs_offer:null};
+      for(let i=0;i<sent.length;i++)await saveOut(photoMessage,c,sent[i],out.photos[i].caption||'', 'catalog_photo_v1');
+    },
+    review:(eventId:string)=>task(c.id,'Проверить доставку фото · '+eventId,'Не удалось подтвердить отправку фотографий. Сверить Telegram перед повторной попыткой.')
+  });
+}
 async function ctxFor(c:any){const {data:h,error}=await sb.from('pcs_messages').select('direction,text,created_at,intent').eq('contact_id',c.id).not('text','is',null).order('created_at',{ascending:false}).limit(40);if(error)throw error;const active=c.intent&&c.intent!=='other'?String(c.intent):'other';const seg:any[]=[];for(const x of h||[]){const mi=String(x.intent||'other');if(x.direction==='in'&&mi!=='other'&&active!=='other'&&mi!==active)break;seg.push(x)}const txt=seg.filter((x:any)=>x.direction==='in').map((x:any)=>x.text).filter(Boolean).join('\n');return {history:h||[],segment:seg,txt,intent:active!=='other'?active:fallbackIntent(txt),city:c.city||cityFrom(txt),budget:budgetNum(txt),duration:durationFrom(txt),start:startDateFrom(txt),rooms:roomsFrom(txt),people:peopleFrom(txt),vehicle:vehicleTypeFrom(txt),model:vehicleModelFrom(txt),from:pointFrom(txt,'from'),to:pointFrom(txt,'to')}}
 async function task(contactId:string,title:string,comment:string,priority='HIGH'){
   const {data:e,error}=await sb.from('pcs_tasks').select('id').eq('contact_id',contactId).eq('title',title).is('completed_at',null).limit(1).maybeSingle();
@@ -103,66 +129,74 @@ function nextQuestion(key:string,label:string,p:any){if(key==='start'&&/этой
 function cityWhere(city=''){if(/бангкок|bangkok/iu.test(city))return' в Бангкоке';if(/паттай|pattaya/iu.test(city))return' в Паттайе';if(/пхукет|phuket/iu.test(city))return' на Пхукете';return city?` в ${city}`:''}
 function needsReply(intent:string,p:any,miss:any[]){const lead:any={housing_rent:'Помогу подобрать жильё',housing_buy:'Помогу подобрать недвижимость',car_rent:'Помогу подобрать автомобиль',car_buy:'Помогу подобрать автомобиль',bike_rent:'Помогу подобрать байк',transfer:'Организуем трансфер',tour:'Подберём экскурсию',yacht:'Подберём яхту'};const [key,title]=miss[0]||[];return `${p.greet?'Здравствуйте! ':''}${lead[intent]||'Разберёмся'}${cityWhere(p.city)}. ${nextQuestion(key,title,p)}`}
 function noItemsReply(intent:string,p:any){return `Проверим свободные варианты${cityWhere(p.city)} на ваши даты и вернёмся сюда с конкретными предложениями.`}
-function foundItemsReply(intent:string,p:any,items:any[]){const period=intent==='car_rent'?`Выдача: ${p.start}. Возврат: ${p.end}. Расчётный срок: ${rentalDurationLabel(rentalDays(p.start,p.end)||0)}.\n\n`:'';return `${period}Вот подходящие варианты по каталогу. Наличие и итоговые условия подтвердим перед бронью:\n\n${itemText(p,items)}\n\nНапишите номер подходящего варианта.`}
+function foundItemsReply(intent:string,p:any,items:any[]){if(intent==='car_rent')return vehicleOffersReply({start:p.start,end:p.end,days:rentalDays(p.start,p.end)},items,p.city||'');return `Вот подходящие варианты. Наличие и итоговые условия подтвердим перед бронью:\n\n${itemText(p,items)}\n\nКакой вариант вам нравится?`}
 async function sameRecentReply(contactId:string,text:string){const {data,error}=await sb.from('pcs_messages').select('text,created_at').eq('contact_id',contactId).eq('direction','out').not('text','is',null).order('created_at',{ascending:false}).limit(1).maybeSingle();if(error)throw error;if(!data||String(data.text)!==text)return false;return Date.now()-new Date(data.created_at).getTime()<90000}
 function offeredIndex(text:string){const m=String(text||'').trim().match(/^(?:(?:вариант|выбираю|беру|номер)\s*)?([1-9])\s*[.!]?$/iu);return m?Number(m[1])-1:null}
 async function handleOfferSelection(m:any){
-  const index=offeredIndex(m.text||m.caption||'');if(index===null)return null;
+  const message=String(m.text||m.caption||'');
+  const index=offeredIndex(message),confirming=isBookingConfirmation(message);
+  if(index===null&&!confirming)return null;
   const c=await contactFor(m);if(c.intent!=='car_rent')return null;
-  const {data:last,error}=await sb.from('pcs_messages').select('id,raw,created_at').eq('contact_id',c.id).eq('direction','out').order('created_at',{ascending:false}).limit(1).maybeSingle();
+  const {data:last,error}=await sb.from('pcs_messages').select('id,raw,created_at').eq('contact_id',c.id).eq('direction','out').not('raw->pcs_offer','is',null).order('created_at',{ascending:false}).limit(1).maybeSingle();
   if(error)throw error;let offer=last?.raw?.pcs_offer;
   if(!offer||offer.intent!=='car_rent'||!Array.isArray(offer.items))return null;
   return managedReply(m,c,async()=>{
-  m._pcs_offer={...offer,id:offer.id||last.id,created_at:offer.created_at||last.created_at};
-  const saved=await saveIn(m,c,String(m.text||m.caption),'car_rent');if(!saved)return {duplicate:true};
-  // A resumed selection stays tied to the offer visible when it was received.
-  offer=saved.raw?._pcs_offer||m._pcs_offer;
-  const selected=offer.items[index],offerId=offer.id||last.id,key='booking:telegram:'+c.id+':'+offerId;
-  if(!offerId)throw Error('offer_identity_missing');
-  const db=await operationalDb();
-  const existing=await findVehicleBooking(db,key);
-  let reply='',booking:any=null;
-  if(existing){
-    booking=existing;
-    if(!c.selected_catalog_item_id&&existing.item_id&&['AWAITING_PARTNER_CONFIRMATION','CONFIRMED','SERVICE_IN_PROGRESS'].includes(existing.status)){
-      const repaired=await sb.from('pcs_contacts').update({selected_catalog_item_id:existing.item_id,requested_catalog_item_id:existing.item_id,next_action:'Предварительная бронь '+existing.public_id+'; собрать документы и подтвердить условия'}).eq('id',c.id).is('selected_catalog_item_id',null);
-      if(repaired.error)throw repaired.error;
-    }
-    reply=existing.status==='CANCELLED_BY_CLIENT'||existing.status==='CANCELLED_BY_PARTNER'?
-      'Эта бронь уже отменена. Напишите даты аренды — подготовлю новое предложение.':
-      'По этому предложению уже создана бронь '+existing.public_id+'. Повторную бронь не создаю. Если хотите изменить автомобиль или даты, напишите об этом.';
-  }else if(!selected){reply='В предложении нет такого номера. Выберите номер из последнего списка.'}
-  else if(Date.now()-new Date(offer.created_at||last.created_at).getTime()>24*3600000){reply='Предложение устарело. Напишите даты аренды ещё раз — проверю наличие и стоимость.'}
-  else{
-    const {data:item,error:itemError}=await sb.from('pcs_catalog_items').select('id,title,status,customer_visible,deleted_at,ownership_type').eq('id',selected.id).maybeSingle();
-    if(itemError)throw itemError;
-    const {data:conflict,error:conflictError}=await sb.rpc('pcs_reservation_conflicts',{p_item:selected.id,p_start:offer.start,p_end:offer.end,p_exclude:null});
-    const {data:quote,error:quoteError}=await sb.rpc('pcs_booking_quote',{p_item:selected.id,p_start:offer.start,p_end:offer.end});
-    if(!item||item.status!=='available'||!item.customer_visible||item.deleted_at||conflictError||conflict!==false||!(await operationalFree(selected.id,offer.start,offer.end))){
-      reply='Сейчас не могу подтвердить доступность этого автомобиля. Напишите даты аренды — проверю варианты заново.';
-    }else if(quoteError||quote?.ok!==true||quote.manual_required||!Number.isFinite(Number(selected.total))||Number(selected.total)<=0||Number(quote.total_before_extras)!==Number(selected.total)||(quote.currency||'THB')!==selected.currency){
-      reply='Стоимость требует повторной проверки. Напишите даты аренды ещё раз — подготовлю актуальное предложение.';
-    }else if(item.ownership_type!=='pcs_owned'){
-      await task(c.id,'Подтвердить бронирование у партнёра','Клиент выбрал '+item.title+'. Нужны подтверждённые условия партнёра.');
-      reply='Выбор принят. Уточню подтверждение и условия бронирования у партнёра.';
+    m._pcs_offer={...offer,id:offer.id||last.id,created_at:offer.created_at||last.created_at};
+    const saved=await saveIn(m,c,message,'car_rent');if(!saved)return {duplicate:true};
+    // A resumed response stays tied to the exact offer visible when it was received.
+    offer=saved.raw?._pcs_offer||m._pcs_offer;
+    const selectedIndex=confirming?Number(offer.selected_index):index;
+    const selected=offer.items[selectedIndex],offerId=offer.id||last.id,key='booking:telegram:'+c.id+':'+offerId;
+    if(!offerId)throw Error('offer_identity_missing');
+    const db=await operationalDb();
+    const existing=await findVehicleBooking(db,key);
+    let reply='',booking:any=null;
+    if(existing){
+      booking=existing;
+      reply=existing.status==='CANCELLED_BY_CLIENT'||existing.status==='CANCELLED_BY_PARTNER'?
+        'Эта бронь уже отменена. Напишите даты аренды — подготовлю новое предложение.':
+        'По этому предложению уже есть бронь '+existing.public_id+'. Вторую не создаю.';
+    }else if(confirming&&offer.stage!=='awaiting_confirmation'){
+      reply='Сначала выберите автомобиль из предложенных вариантов. Одного подтверждения без выбора недостаточно.';
+    }else if(!selected){
+      reply='Не нашёл такой вариант в предложении. Напишите номер от 1 до '+offer.items.length+'.';
+    }else if(Date.now()-new Date((confirming&&offer.selected_at)||offer.created_at||last.created_at).getTime()>24*3600000){
+      reply='Предложение устарело. Напишите даты ещё раз — проверю цену и наличие.';
     }else{
-      try{
-        booking=await createVehicleBooking(db,{key,offerId,itemId:selected.id,clientId:c.id,name:c.name,contact:c.phone||c.username||String(m.chat.id),start:offer.start,end:offer.end,total:selected.total,currency:selected.currency});
-      }catch(e){
-        if((e as any)?.code==='23P01'||['vehicle_not_available','vehicle_period_unavailable'].includes((e as any)?.message)){
-          reply='Этот автомобиль уже недоступен на выбранные даты. Напишите даты аренды — подберу другие варианты.';
-        }else throw e;
-      }
-      if(booking){
-        const {error:updateError}=await sb.from('pcs_contacts').update({selected_catalog_item_id:selected.id,requested_catalog_item_id:selected.id,next_action:'Предварительная бронь '+booking.public_id+'; собрать документы и подтвердить условия'}).eq('id',c.id);
+      const {data:item,error:itemError}=await sb.from('pcs_catalog_items').select('id,title,status,customer_visible,deleted_at,ownership_type,metadata').eq('id',selected.id).maybeSingle();
+      if(itemError)throw itemError;
+      const {data:conflict,error:conflictError}=await sb.rpc('pcs_reservation_conflicts',{p_item:selected.id,p_start:offer.start,p_end:offer.end,p_exclude:null});
+      const {data:quote,error:quoteError}=await sb.rpc('pcs_booking_quote',{p_item:selected.id,p_start:offer.start,p_end:offer.end});
+      if(!item||item.status!=='available'||!item.customer_visible||item.deleted_at||conflictError||conflict!==false||!(await operationalFree(selected.id,offer.start,offer.end))){
+        reply='Пока не могу подтвердить доступность этой машины. Напишите даты ещё раз — подберу другой вариант.';
+      }else if(quoteError||quote?.ok!==true||quote.manual_required||!Number.isFinite(Number(selected.total))||Number(selected.total)<=0||Number(quote.total_before_extras)!==Number(selected.total)||(quote.currency||'THB')!==selected.currency){
+        reply='Цена изменилась или требует проверки. Подготовлю новое предложение — бронь не создаю.';
+      }else if(item.ownership_type!=='pcs_owned'){
+        await task(c.id,'Подтвердить выбор у партнёра','Клиент выбрал '+item.title+'. Нужны подтверждённые условия партнёра.');
+        reply='Вы выбрали '+publicVehicleName(item.title)+'. Уточню доступность и условия у партнёра. Пока ничего не забронировано.';
+      }else if(!confirming){
+        const {error:updateError}=await sb.from('pcs_contacts').update({requested_catalog_item_id:selected.id,next_action:'Клиент выбрал автомобиль; ожидаем отдельного подтверждения брони'}).eq('id',c.id);
         if(updateError)throw updateError;
-        reply='Предварительная бронь '+booking.public_id+' создана: '+item.title+', '+offer.start+' — '+offer.end+', '+selected.total+' '+selected.currency+', без дополнительных услуг. Оплата и документы ещё не подтверждены.';
+        m._pcs_offer={...offer,id:offerId,stage:'awaiting_confirmation',selected_index:selectedIndex,selected_at:new Date().toISOString()};
+        reply=selectedVehicleReply(offer,selected,item);
+      }else{
+        try{
+          booking=await createVehicleBooking(db,{key,offerId,itemId:selected.id,clientId:c.id,name:c.name,contact:c.phone||c.username||String(m.chat.id),start:offer.start,end:offer.end,total:selected.total,currency:selected.currency});
+        }catch(e){
+          if((e as any)?.code==='23P01'||['vehicle_not_available','vehicle_period_unavailable'].includes((e as any)?.message)){
+            reply='Эта машина уже недоступна на выбранные даты. Напишите даты ещё раз — найду другие варианты.';
+          }else throw e;
+        }
+        if(booking){
+          const {error:updateError}=await sb.from('pcs_contacts').update({selected_catalog_item_id:selected.id,requested_catalog_item_id:selected.id,next_action:'Предварительная бронь '+booking.public_id+'; собрать документы и подтвердить условия'}).eq('id',c.id);
+          if(updateError)throw updateError;
+          m._pcs_offer={...offer,id:offerId,stage:'booking_created',booking_id:booking.id};
+          reply='Создала предварительную бронь '+booking.public_id+' на '+publicVehicleName(item.title)+'. Документы и оплата ещё не подтверждены.';
+        }
       }
     }
-  }
-  m._pcs_offer={...offer,id:offerId,created_at:offer.created_at||last.created_at};
-  await managedSend(m,reply,'catalog_booking_v1');
-  return {sent:true,booking_id:booking?.id||null};
+    await managedSend(m,reply,'catalog_booking_v2');
+    return {sent:true,booking_id:booking?.id||null,awaiting_confirmation:m._pcs_offer?.stage==='awaiting_confirmation'};
   });
 }
 async function handleEmoji(m:any){const text=String(m.text||m.caption||'').trim();if(!emojiOnly(text))return null;const c=await contactFor(m);return managedReply(m,c,async()=>{const saved=await saveIn(m,c,text,c.intent||'other');if(!saved)return {sent:false,duplicate:true};const reply=emojiAction(text);await managedSend(m,reply,'emoji_response_v2',{reply_parameters:{message_id:m.message_id,allow_sending_without_reply:true}});return {sent:true,emoji_reply:true,reply}});}
