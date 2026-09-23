@@ -1,0 +1,10 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const source = fs.readFileSync(path.resolve(__dirname, '../server/supabase/pcs-contract-files/index.ts'), 'utf8');
+assert.match(source, /await auth\(req\)/);
+assert.match(source, /const seen=new Set<string>\(\)/);
+assert.match(source, /crypto\.subtle\.digest\('SHA-256',a\)/);
+assert.match(source, /if\(seen\.has\(digest\)\)continue/);
+assert.match(source, /seen\.size>8/);
+console.log('Private document OCR source checks passed');

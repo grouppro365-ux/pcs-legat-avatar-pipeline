@@ -3,8 +3,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.resolve(__dirname, '../server/supabase/pcs-contract-api/index.ts'), 'utf8');
-assert.match(source, /deposit:m\.security_deposit_thb==null\?null:Number\(m\.security_deposit_thb\)/);
+assert.match(source, /trustedCatalog\.deposit_thb==null\?null:Number\(trustedCatalog\.deposit_thb\)/);
 assert.doesNotMatch(source, /deposit:Number\(r\.deposit_amount/);
 assert.match(source, /registration_no:m\.registration_no\|\|m\.reg_no\|\|m\.plate/);
 assert.match(source, /\['renter\.license_no','Водительские права'\]/);
+assert.match(source, /op=session/);
+assert.match(source, /syncNeonReservation\(req,m\[1\]\)/);
+assert.match(source, /managerConflict\(req,r\.catalog_item_id/);
+const manager = fs.readFileSync(path.resolve(__dirname, '../server/supabase/pcs-manager-live2/index.ts'), 'utf8');
+assert.match(manager, /opName==='application-detail'/);
+assert.match(manager, /opName==='application-conflict'/);
+assert.match(manager, /tokenPayload\(req,cfg\.edge_session_secret\)/);
 console.log('Contract snapshot source checks passed');
