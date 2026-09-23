@@ -1,7 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
-import { publicVehicleName, securityDepositLine, humanRentalDates, vehicleOffersReply, isBookingConfirmation, selectedVehicleReply } from './vehicle-offer.mjs';
+import { publicVehicleName, securityDepositLine, humanRentalDates, vehicleOffersReply, isBookingConfirmation, selectedVehicleReply, bookingPaymentReply } from './vehicle-offer.mjs';
+
+test('booking payment reply never invents a universal advance or confirms booking', () => {
+  const unknown = bookingPaymentReply({booking_deposit_amount: null, payment_status: 'not_requested'});
+  assert.match(unknown, /уточним именно для вашей заявки/);
+  assert.doesNotMatch(unknown, /2\s?000 бат/);
+  const assigned = bookingPaymentReply({booking_deposit_amount: 650, payment_status: 'not_requested'});
+  assert.match(assigned, /650 бат/);
+  assert.match(assigned, /не переводите деньги по старым реквизитам/);
+  const requested = bookingPaymentReply({booking_deposit_amount: 650, payment_status: 'requested'});
+  assert.match(requested, /поступление проверим отдельно/);
+  assert.match(requested, /не забронирован/);
+});
 
 test('hides internal fleet code but keeps the vehicle distinguishable', () => {
   assert.equal(publicVehicleName('LTC-001 · Ford Fiesta · красный · 3675'), 'Ford Fiesta · красный · 3675');

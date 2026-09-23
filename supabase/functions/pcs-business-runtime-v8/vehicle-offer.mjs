@@ -10,6 +10,14 @@ export function securityDepositLine(metadata, currency = 'THB') {
   return `\nЗалог за сохранность авто: ${new Intl.NumberFormat('ru-RU').format(amount)} ${currency}`;
 }
 
+export function bookingPaymentReply(request) {
+  const amount = request?.booking_deposit_amount == null ? null : Number(request.booking_deposit_amount);
+  const formatted = Number.isFinite(amount) && amount > 0 ? `${new Intl.NumberFormat('ru-RU').format(amount)} бат` : null;
+  if (!formatted) return 'Сумму бронировочной предоплаты уточним именно для вашей заявки и сообщим вместе с проверенными реквизитами. Паспорт и МВУ тоже нужно проверить. Пока автомобиль не забронирован.';
+  if (request.payment_status === 'requested') return `По вашей заявке предоплата — ${formatted}. Реквизиты мы уже прислали выше. После оплаты отправьте чек сюда; поступление проверим отдельно. Пока автомобиль не забронирован.`;
+  return `По вашей заявке предоплата — ${formatted}. Реквизиты сообщим после проверки. Пожалуйста, не переводите деньги по старым реквизитам. Пока автомобиль не забронирован.`;
+}
+
 const MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
 
 export function humanRentalDates(start, end, currentYear = new Date().getUTCFullYear()) {
