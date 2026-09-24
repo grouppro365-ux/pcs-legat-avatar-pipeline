@@ -14,6 +14,7 @@ const META_SEND = BASE + '/functions/v1/pcs-channel-send-v1';
 const BOTHELP_WEBHOOK = BASE + '/functions/v1/pcs-meta-webhook-v1?channel=instagram&source=bothelp';
 const MAX_BODY_BYTES = 1_048_576;
 const ADMIN_ORIGINS = new Set([
+  'https://grouppro365-ux.github.io',
   'https://pcs-concierge-stable.grouppro365.chatgpt.site',
   'https://pcs-ai-operator-grouppro365-2288s-projects.vercel.app',
   'https://pcs-ai-operator-f6gz02q7t-grouppro365-2288s-projects.vercel.app',
