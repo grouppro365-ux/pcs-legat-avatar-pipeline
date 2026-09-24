@@ -2,18 +2,20 @@
 'use strict';
 const ADMIN='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-admin-config-v15';
 const TELEGRAM_MENU='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-telegram-set-menu';
+const BOTHELP_ADMIN='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-meta-webhook-v1/bothelp-admin/';
 const E=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const state={channels:[],settings:null};
 const h=()=>{const t=localStorage.pcsToken||'';return {'content-type':'application/json',...(t?{authorization:'Bearer '+t}:{})}};
 async function admin(path,opt={}){const r=await fetch(ADMIN+path,{...opt,headers:{...h(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d}
+async function botHelpAdmin(path,opt={}){const r=await fetch(BOTHELP_ADMIN+path,{...opt,headers:{...h(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'HTTP '+r.status);return d}
 const statusLabel=s=>({active:'Подключено',credentials_ok:'Данные проверены',configured:'Настроено',error:'Ошибка'})[s]||'Не подключено';
 const cls=s=>s==='active'||s==='credentials_ok'?'ok':s==='error'?'error':'';
 const channel=ch=>state.channels.find(x=>x.channel===ch)||{};
-function card(ch,label,logoClass,logoText,desc){const c=channel(ch);return `<article class="cx25-card"><div class="cx25-logo ${logoClass}">${logoText}</div><div><h3>${label}</h3><p>${desc}</p><div class="cx25-status ${cls(c.status)}">${statusLabel(c.status)}</div></div><div class="cx25-actions"><button class="cx25-btn primary" onclick="pcsConnectSetup25('${ch}')">${c.status?'Настроить':'Подключить'}</button><button class="cx25-btn" onclick="pcsConnectTest25('${ch}')">Проверить</button></div></article>`}
+function card(ch,label,logoClass,logoText,desc){const c=channel(ch);return `<article class="cx25-card" data-channel="${ch}"><div class="cx25-logo ${logoClass}">${logoText}</div><div><h3>${label}</h3><p>${desc}</p><div class="cx25-status ${cls(c.status)}">${statusLabel(c.status)}</div></div><div class="cx25-actions"><button class="cx25-btn primary" onclick="pcsConnectSetup25('${ch}')">${c.status?'Настроить':'Подключить'}</button><button class="cx25-btn" onclick="pcsConnectTest25('${ch}')">Проверить</button></div></article>`}
 function side(){return `<aside class="cx25-side"><div class="cx25-brand">PCS</div><nav class="cx25-nav"><button onclick="go('dashboard')">Главная</button><button onclick="go('inbox')">Входящие</button><button onclick="go('crm')">Клиенты</button><button onclick="go('bookings')">Брони</button><button onclick="go('catalog')">Каталог</button><button onclick="go('calendar')">Календарь</button><button onclick="go('finance')">Финансы</button><button class="on" onclick="go('connect')">Подключения</button></nav></aside>`}
 function renderCards(){const box=document.getElementById('cx25Channels');if(box)box.innerHTML=card('whatsapp','WhatsApp','wa','WA','Сообщения клиентов из WhatsApp в общей CRM.')+card('instagram','Instagram','ig','IG','Входящие Direct и ответы через единый кабинет.')+card('facebook','Facebook','fb','f','Messenger и сообщения со страницы.')+card('line','LINE','line','LINE','LINE Official Account для клиентов в Таиланде.');const tg=document.getElementById('cx25TelegramStatus');if(tg&&state.settings)tg.className='cx25-status '+(state.settings.configured?.telegram_bot_token?'ok':'');if(tg&&state.settings)tg.textContent=state.settings.configured?.telegram_bot_token?'Токен сохранён':'Не подключено';const ai=document.getElementById('cx25AiStatus');if(ai&&state.settings){const n=(state.settings.configured?.tokenrouter_key?1:0)+(state.settings.configured?.openrouter_key?1:0);ai.className='cx25-status '+(n?'ok':'');ai.textContent=n===2?'Основной и резерв настроены':n===1?'Настроен один провайдер':'Не настроено'}const a=document.getElementById('cx25Auto');if(a&&state.settings)a.checked=!!state.settings.auto_send}
 function renderTelegramMenuAction(){const status=document.getElementById('cx25TelegramStatus');const actions=status?.closest('.cx25-card')?.querySelector('.cx25-actions');if(actions&&!actions.querySelector('#cx25MenuButton'))actions.insertAdjacentHTML('beforeend','<button id="cx25MenuButton" class="cx25-btn" onclick="pcsTelegramMenu25()">Обновить меню</button>')}
-async function load(){const r=await Promise.allSettled([window.call('/settings'),admin('/channels')]);state.settings=r[0].status==='fulfilled'?r[0].value:{};state.channels=r[1].status==='fulfilled'?r[1].value:[];renderCards();renderTelegramMenuAction()}
+async function load(){const r=await Promise.allSettled([window.call('/settings'),admin('/channels')]);state.settings=r[0].status==='fulfilled'?r[0].value:{};state.channels=r[1].status==='fulfilled'?r[1].value:[];renderCards();renderTelegramMenuAction();window.pcsBotHelpRefresh25?.()}
 function render(){if(!localStorage.pcsToken)return;document.body.classList.remove('pcs-dashboard-v25','pcs-home-ref','pcs-home-exact','pcs-inbox-v25','pcs-calendar-v25');document.body.classList.add('pcs-connect-v25');if(window.PCS)window.PCS.page='connect';const root=document.getElementById('root');if(!root)return;root.innerHTML=`<div class="cx25">${side()}<main class="cx25-work"><div class="cx25-kicker">Настройки</div><h1 class="cx25-title">Подключения</h1><p class="cx25-sub">Все каналы подключаются здесь. Вставляете данные, нажимаете «Подключить», затем «Проверить». Секреты после сохранения обратно не показываются.</p><section class="cx25-section"><div class="cx25-section-head"><div><h2>Основной канал и ИИ</h2><p>Нужны для работы оператора</p></div></div><div class="cx25-grid"><article class="cx25-card"><div class="cx25-logo tg">TG</div><div><h3>Telegram</h3><p>Бот PCS Manager и Telegram Business.</p><div id="cx25TelegramStatus" class="cx25-status">Проверяю…</div></div><div class="cx25-actions"><button class="cx25-btn primary" onclick="pcsTelegramSetup25()">Настроить</button><button class="cx25-btn" onclick="pcsTelegramTest25()">Проверить</button></div></article><article class="cx25-card"><div class="cx25-logo ai">AI</div><div><h3>ИИ-провайдеры</h3><p>TokenRouter — основной, OpenRouter — резерв.</p><div id="cx25AiStatus" class="cx25-status">Проверяю…</div></div><div class="cx25-actions"><button class="cx25-btn primary" onclick="pcsAiSetup25()">Настроить</button><button class="cx25-btn" onclick="pcsAiTest25()">Проверить</button></div></article></div></section><section class="cx25-section"><div class="cx25-section-head"><div><h2>Каналы клиентов</h2><p>Подключаются к общей CRM PCS</p></div></div><div id="cx25Channels" class="cx25-grid"><div class="cx25-card">Загружаю…</div></div></section><section class="cx25-section"><div class="cx25-auto"><div><b>Автоматические ответы</b><span>После включения ИИ отвечает сам. Рисковые запросы всё равно отправляются на согласование.</span></div><label class="cx25-switch"><input id="cx25Auto" type="checkbox" onchange="pcsAutoSend25(this.checked)"><i></i></label></div></section></main></div><nav class="bottom"></nav>`;if(window.pcsInstallNav25)window.pcsInstallNav25();load()}
 window.pcsConnections25=render;
 function field(id,label,type='text',hint=''){return `<div class="cx25-field"><label>${label}</label>${hint?`<small>${hint}</small>`:''}<input id="${id}" type="${type}" autocomplete="off"></div>`}
@@ -29,5 +31,60 @@ window.pcsAiSave25=async function(){try{const b={tokenrouter_model:document.getE
 window.pcsAiTest25=async function(){let ok=0,err=[];for(const p of ['tokenrouter','openrouter']){try{await window.call('/test/'+p,{method:'POST',body:'{}'});ok++}catch(e){err.push(p+': '+e.message)}}if(window.toast)toast(ok?`Работает провайдеров: ${ok}`:err.join(' · '));await load()};
 window.pcsAutoSend25=async function(v){try{await window.call('/settings',{method:'PUT',body:JSON.stringify({auto_send:!!v})});if(window.toast)toast(v?'Автоответы включены':'Автоответы выключены');state.settings=await window.call('/settings')}catch(e){document.getElementById('cx25Auto').checked=!v;if(window.toast)toast(e.message)}};
 window.pcsCopy25=async s=>{try{await navigator.clipboard.writeText(s);if(window.toast)toast('Скопировано')}catch{if(window.toast)toast('Не удалось скопировать')}};
+window.pcsBotHelpRefresh25=async function(){
+  const card=document.querySelector('#cx25Channels [data-channel="instagram"]');
+  if(!card)return;
+  try{
+    const connection=await botHelpAdmin('state');
+    const status=card.querySelector('.cx25-status');
+    const configured=connection.configured||{};
+    status.className='cx25-status '+(connection.status==='active'?'ok':connection.status==='error'?'error':'');
+    status.textContent=connection.status==='active'?'Сообщения PCS проверены':connection.status==='credentials_ok'?'Ключи проверены, нужен тест сообщений':configured.client_id&&configured.client_secret?'Ключи сохранены, не проверены':'Не подключено к PCS';
+    const buttons=card.querySelectorAll('.cx25-actions button');
+    if(buttons[0])buttons[0].textContent='BotHelp → PCS';
+    if(buttons[1])buttons[1].textContent='Проверить ключи';
+  }catch(error){
+    const status=card.querySelector('.cx25-status');
+    if(status){status.className='cx25-status error';status.textContent='Проверка PCS недоступна'}
+  }
+};
+window.pcsBotHelpSetup25=async function(){
+  try{
+    const connection=await botHelpAdmin('state');
+    const configured=connection.configured||{};
+    window.pcsBotHelpConfigured25=configured;
+    const webhookSecret=configured.webhook_secret?'':Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');
+    const note='Instagram уже должен быть подключён в BotHelp. Здесь ключи передаются в закрытое хранилище PCS. Автоответы останутся выключены до проверки реального входящего и исходящего сообщения.';
+    const webhook=String(connection.webhook_url||'');
+    window.openSheet('Instagram через BotHelp',`<div class="cx25-fields">${field('cxBhId','BotHelp Client ID','text','BotHelp → Настройки → Интеграции → Open API')}${field('cxBhSecret','BotHelp Client Secret','password','Не передавайте ключи в переписке')}${field('cxBhWebhookSecret','Секрет входящего запроса','password','Запишите его в заголовок x-pcs-bothelp-secret в BotHelp External Request')}<div class="cx25-webhook"><code>${E(webhook)}</code><button class="cx25-btn" onclick="pcsCopy25('${E(webhook)}')">Скопировать адрес</button></div><div class="cx25-note">${E(note)}</div></div><div class="cx25-form-actions"><button class="cx25-btn" onclick="closeSheet()">Отмена</button><button class="cx25-btn primary" onclick="pcsBotHelpSave25()">Сохранить ключи</button></div>`);
+    document.getElementById('cxBhWebhookSecret').value=webhookSecret;
+  }catch(error){if(window.toast)toast(error.message)}
+};
+window.pcsBotHelpSave25=async function(){
+  try{
+    const secrets={
+      bothelp_client_id:document.getElementById('cxBhId').value.trim(),
+      bothelp_client_secret:document.getElementById('cxBhSecret').value.trim(),
+      bothelp_webhook_secret:document.getElementById('cxBhWebhookSecret').value.trim(),
+    };
+    const configured=window.pcsBotHelpConfigured25||{};
+    if((!secrets.bothelp_client_id&&!configured.client_id)||(!secrets.bothelp_client_secret&&!configured.client_secret)||(!secrets.bothelp_webhook_secret&&!configured.webhook_secret))throw new Error('Заполните Client ID, Client Secret и секрет входящего запроса');
+    await botHelpAdmin('configure',{method:'POST',body:JSON.stringify({secrets})});
+    closeSheet();
+    if(window.toast)toast('Ключи сохранены. Автоответы Instagram ещё выключены');
+    await load();
+  }catch(error){if(window.toast)toast(error.message)}
+};
+window.pcsBotHelpTest25=async function(){
+  try{
+    await botHelpAdmin('test',{method:'POST',body:'{}'});
+    if(window.toast)toast('Ключи BotHelp работают. Нужен тестовый диалог');
+    await load();
+  }catch(error){if(window.toast)toast(error.message)}
+};
+const legacySetup25=window.pcsConnectSetup25;
+window.pcsConnectSetup25=function(ch){return ch==='instagram'?window.pcsBotHelpSetup25():legacySetup25(ch)};
+const legacyTest25=window.pcsConnectTest25;
+window.pcsConnectTest25=function(ch){return ch==='instagram'?window.pcsBotHelpTest25():legacyTest25(ch)};
 const previousGo=window.go;window.go=function(page){if(page==='connect')return render();document.body.classList.remove('pcs-connect-v25');const r=previousGo(page);if(window.pcsInstallNav25)setTimeout(window.pcsInstallNav25,0);return r};
 })();
