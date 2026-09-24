@@ -72,20 +72,8 @@ export async function bookingAdminText(m:any){
     const match=text.match(/^\/breceipt\s+([0-9a-f-]{36})\s+(approved|rejected)$/i);
     if(!match){await send(m.chat.id,'Формат: /breceipt ID_ЗАЯВКИ approved|rejected. Сначала откройте /brequest ID и проверьте чек.');return true}
     const [,id,decision]=match;
-    const {data:r,error}=await sb.from('pcs_booking_requests').select('id,status,payment_status,receipt_media_intake_id').eq('id',id).maybeSingle();
-    if(error)throw error;
-    if(!r||r.status!=='collecting'||r.payment_status!=='receipt_pending'||!r.receipt_media_intake_id){await send(m.chat.id,'Нет чека, ожидающего проверки по этой заявке.');return true}
-    const {data:receipt,error:receiptError}=await sb.from('pcs_media_intake').select('id,classification,review_status,extracted').eq('id',r.receipt_media_intake_id).maybeSingle();
-    if(receiptError)throw receiptError;
-    if(!receipt||receipt.classification!=='receipt'||receipt.review_status!=='needs_review'||receipt.extracted?.booking_request_id!==id){await send(m.chat.id,'Чек не совпадает с заявкой или уже проверен.');return true}
-    const {data:updated,error:updateError}=await sb.from('pcs_media_intake').update({review_status:decision,updated_at:new Date().toISOString()}).eq('id',receipt.id).eq('review_status','needs_review').select('id').maybeSingle();
-    if(updateError)throw updateError;
-    if(!updated){await send(m.chat.id,'Чек уже изменился. Откройте заявку заново.');return true}
-    if(decision==='rejected'){
-      const {error:resetError}=await sb.from('pcs_booking_requests').update({payment_status:'requested',updated_at:new Date().toISOString()}).eq('id',id).eq('receipt_media_intake_id',receipt.id).eq('payment_status','receipt_pending');
-      if(resetError)throw resetError;
-    }
-    await sb.from('pcs_audit_logs').insert({actor:`telegram:${m.from?.id??m.chat.id}`,action:'booking_receipt_review',entity_type:'pcs_booking_requests',entity_id:id,payload:{decision,media_intake_id:receipt.id}});
+    const {error}=await sb.rpc('pcs_review_booking_receipt',{p_request_id:id,p_decision:decision,p_actor:`telegram:${m.from?.id??m.chat.id}`});
+    if(error){await send(m.chat.id,'Проверка чека не сохранена: '+error.message+'. Откройте заявку заново.');return true}
     await send(m.chat.id,decision==='approved'?'Чек просмотрен. Это НЕ подтверждение поступления денег. Сверьте банк и затем отправьте /bpaid ID НОМЕР_ТРАНЗАКЦИИ.':'Чек отклонён. Ожидаем новый чек от клиента.');
     return true;
   }
@@ -122,27 +110,10 @@ export async function bookingAdminText(m:any){
     const match=text.match(/^\/bdoc\s+([0-9a-f-]{36})\s+(passport|permit)\s+(approved|rejected)$/i);
     if(!match){await send(m.chat.id,'Формат: /bdoc ID_ЗАЯВКИ passport|permit approved|rejected. Сначала откройте /brequest ID и проверьте файл.');return true}
     const [,id,kind,decision]=match;
-    const column=kind==='passport'?'passport_media_intake_id':'permit_media_intake_id';
-    const statusColumn=kind==='passport'?'passport_status':'international_permit_status';
-    const {data:r,error}=await sb.from('pcs_booking_requests').select(`id,status,${column},${statusColumn}`).eq('id',id).maybeSingle();
-    if(error)throw error;
-    if(!r||r.status!=='collecting'||!r[column]||r[statusColumn]!=='received'){await send(m.chat.id,'Нет ожидающего проверки документа для этой заявки.');return true}
-    const {data:record,error:recordError}=await sb.from('pcs_media_intake').select('id,classification,review_status,extracted').eq('id',r[column]).maybeSingle();
-    if(recordError)throw recordError;
-    const expected=kind==='passport'?'passport':'international_permit';
-    if(!record||record.classification!==expected||record.review_status!=='needs_review'||record.extracted?.booking_request_id!==id){await send(m.chat.id,'Документ не совпадает с заявкой или уже проверен.');return true}
-    const {data:updated,error:updateError}=await sb.from('pcs_booking_requests').update({[statusColumn]:decision,updated_at:new Date().toISOString()}).eq('id',id).eq(column,record.id).eq(statusColumn,'received').select('id').maybeSingle();
-    if(updateError)throw updateError;
-    if(!updated){await send(m.chat.id,'Документ изменился во время проверки. Откройте заявку заново.');return true}
-    const {error:reviewError}=await sb.from('pcs_media_intake').update({review_status:decision,updated_at:new Date().toISOString()}).eq('id',record.id).eq('review_status','needs_review');
-    if(reviewError)throw reviewError;
-    await sb.from('pcs_audit_logs').insert({actor:`telegram:${m.from?.id??m.chat.id}`,action:'booking_document_review',entity_type:'pcs_booking_requests',entity_id:id,payload:{kind,decision,media_intake_id:record.id}});
+    const {data:review,error}=await sb.rpc('pcs_review_booking_document',{p_request_id:id,p_kind:kind,p_decision:decision,p_actor:`telegram:${m.from?.id??m.chat.id}`});
+    if(error){await send(m.chat.id,'Проверка документа не сохранена: '+error.message+'. Откройте заявку заново.');return true}
     await send(m.chat.id,`${kind==='passport'?'Паспорт':'МВУ'}: ${decision}. Это не подтверждает оплату и не создаёт бронь.`);
-    if(decision==='approved'){
-      const {data:ready,error:readyError}=await sb.from('pcs_booking_requests').update({status:'ready_for_booking',updated_at:new Date().toISOString()}).eq('id',id).eq('status','collecting').eq('payment_status','paid').eq('passport_status','approved').eq('international_permit_status','approved').select('id').maybeSingle();
-      if(readyError)throw readyError;
-      if(ready)await finalizeIfReady(id,m.chat.id);
-    }
+    if(review?.status==='ready_for_booking')await finalizeIfReady(id,m.chat.id);
     return true;
   }
   if(!text.startsWith('/bdeposit'))return false;
