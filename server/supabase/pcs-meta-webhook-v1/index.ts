@@ -4,7 +4,7 @@ import { buildSystemPrompt, humanRisk } from './journey.mjs';
 import { parseBotHelpPayload } from './bothelp.mjs';
 import { hubMessage } from './conversation-hub.mjs';
 import { shouldGenerateCustomerReply } from './channel-policy.mjs';
-import { carRentalJourney } from './car-rental-journey.mjs';
+import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -359,18 +359,14 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     };
   }
   const { data: catalog, error } = await sb.from('pcs_catalog_items')
-    .select('id,title,city,location,currency,availability_note,status,customer_visible,deleted_at')
+    .select('id,title,category,city,location,currency,availability_note,status,customer_visible,deleted_at')
     .eq('category', 'car_rent')
     .eq('status', 'available')
     .eq('customer_visible', true)
     .is('deleted_at', null)
     .limit(40);
   if (error) throw error;
-  const cityAliases = journey.city.aliases;
-  const candidates = (catalog || []).filter((item: any) => {
-    const place = `${item.city || ''} ${item.location || ''}`.toLowerCase();
-    return cityAliases.some((alias: string) => place.includes(alias));
-  });
+  const candidates = rentalCandidates(catalog, journey);
   const offers: Array<{ title: string; total: number; currency: string; note: string }> = [];
   for (const item of candidates) {
     const { data: quote, error: quoteError } = await sb.rpc('pcs_booking_quote', {
