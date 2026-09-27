@@ -1,5 +1,6 @@
 import {sb,tg,send,sec,RUNTIME} from './common.ts';
 import {bookingConfirmationText} from './booking-confirmation.mjs';
+import {transferAmountLine} from './payment-amount.mjs';
 
 async function notifyConfirmedCustomer(requestId:string,publicId:string){
   const {data:request,error}=await sb.from('pcs_booking_requests').select('id,status,contact_id,start_date,end_date,rental_total,booking_deposit_amount,currency,pcs_catalog_items(title),pcs_contacts(telegram_chat_id,business_connection_id,detected_language,language)').eq('id',requestId).single();
@@ -137,7 +138,7 @@ export async function bookingAdminText(m:any){
   }
   const {error:saveError}=await sb.from('pcs_booking_requests').update({booking_deposit_amount:amount,updated_at:new Date().toISOString()}).eq('id',request.id).eq('status','collecting');
   if(saveError)throw saveError;
-  const {data:route,error:routeError}=await sb.from('pcs_payment_routes').select('recipient_name,contact,payment_details').eq('route_type','pcs_payment').eq('active',true).order('updated_at',{ascending:false}).limit(1).maybeSingle();
+  const {data:route,error:routeError}=await sb.from('pcs_payment_routes').select('recipient_name,contact,payment_details,payment_currency,exchange_rate_from_thb').eq('route_type','pcs').eq('active',true).order('updated_at',{ascending:false}).limit(1).maybeSingle();
   if(routeError)throw routeError;
   if(!route?.payment_details){await send(m.chat.id,'Сумма '+amount+' THB сохранена. Клиенту реквизиты не отправлены: активный платёжный маршрут PCS не настроен.');return true}
   const contact=request.pcs_contacts as any;
@@ -145,8 +146,9 @@ export async function bookingAdminText(m:any){
   const money=(v:number)=>new Intl.NumberFormat('ru-RU').format(v)+' бат';
   const name=String((request.pcs_catalog_items as any)?.title||'автомобиль').replace(/^LTC-\d+\s*·\s*/iu,'');
   const clientText=`Для оформления ${name} бронировочная предоплата по вашей заявке — ${money(amount)}. Это часть аренды ${money(Number(request.rental_total))}, не залог за сохранность авто.\n\nПодтверждённые реквизиты PCS:\n${[route.recipient_name,route.contact,route.payment_details].filter(Boolean).join('\n')}\n\nПосле оплаты пришлите чек сюда. Поступление проверим отдельно; пока бронь не подтверждена.`;
-  const outgoing=await tg('sendMessage',{business_connection_id:contact.business_connection_id,chat_id:String(contact.telegram_chat_id),text:clientText});
-  const {error:messageError}=await sb.from('pcs_messages').insert({telegram_message_id:outgoing.message_id,business_connection_id:contact.business_connection_id,contact_id:request.contact_id,chat_id:contact.telegram_chat_id,direction:'out',text:clientText,status:'sent',raw:{...outgoing,source:'booking_deposit_request',booking_request_id:request.id}});
+  const paymentText=clientText+'\n\n'+transferAmountLine(amount,route);
+  const outgoing=await tg('sendMessage',{business_connection_id:contact.business_connection_id,chat_id:String(contact.telegram_chat_id),text:paymentText});
+  const {error:messageError}=await sb.from('pcs_messages').insert({telegram_message_id:outgoing.message_id,business_connection_id:contact.business_connection_id,contact_id:request.contact_id,chat_id:contact.telegram_chat_id,direction:'out',text:paymentText,status:'sent',raw:{...outgoing,source:'booking_deposit_request',booking_request_id:request.id,payment_quote:{amount_thb:amount,currency:route.payment_currency,rate_from_thb:route.exchange_rate_from_thb}}});
   if(messageError)throw messageError;
   const {error:statusError}=await sb.from('pcs_booking_requests').update({payment_status:'requested',updated_at:new Date().toISOString()}).eq('id',request.id).eq('payment_status','not_requested');
   if(statusError)throw statusError;
