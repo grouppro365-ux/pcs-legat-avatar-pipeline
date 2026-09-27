@@ -4,6 +4,15 @@ import {parseRentalRange,rentalDays} from './rental-period.mjs';
 
 const today=new Date('2026-09-24T12:00:00Z');
 
+test('pickup plus duration uses exclusive return dates across month and year boundaries',()=>{
+  for(const input of ['с 10.11.2026 на 2 дня','с 10 ноября 2026 на 2 дня','from 2026-11-10 for 2 days']){
+    assert.deepEqual(parseRentalRange(input,today),{start:'2026-11-10',end:'2026-11-12',duration:'2 дня'},input);
+  }
+  assert.deepEqual(parseRentalRange('с 31.12 на 2 дня',today),{start:'2026-12-31',end:'2027-01-02',duration:'2 дня'});
+  assert.deepEqual(parseRentalRange('с 10 января на 1 день',today),{start:'2027-01-10',end:'2027-01-11',duration:'1 день'});
+  for(const input of ['с 10.11.2026 на 0 дней','с 31.11.2026 на 2 дня','с 10.09.2026 на 2 дня','с 10.11.2026 на 2.5 дня'])assert.equal(parseRentalRange(input,today),null,input);
+});
+
 test('numeric, ISO and named rental ranges use the same exclusive return date',()=>{
   const expected={start:'2026-11-10',end:'2026-11-12',duration:'2 дня'};
   assert.deepEqual(parseRentalRange('с 10 по 12 ноября 2026',today),expected);

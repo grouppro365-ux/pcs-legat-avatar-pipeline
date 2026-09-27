@@ -54,6 +54,26 @@ export function parseRentalRange(text,now=new Date()){
     match=value.match(new RegExp(`\\b(\\d{1,2})\\s*(?:по|до|[-–—]|to)\\s*(\\d{1,2})\\s*(${names})(?:\\s+(\\d{4}))?(?![\\p{L}\\p{N}])`,'iu'));
     if(match){const year=match[4]?Number(match[4]):now.getUTCFullYear();const month=MONTHS[match[3].toLowerCase()];start=iso(year,month,Number(match[1]));end=iso(year,month,Number(match[2]));explicitYear=Boolean(match[4])}
   }
+  if(!match){
+    const prefix='(?:^|\\s)(?:с|от|from)\\s*';
+    const suffix='\\s+(?:на|for)\\s*(\\d{1,3})\\s*(?:дней|день|дня|дн\\.?|сутки|суток|сут\\.?|days?)(?![\\p{L}\\p{N}])';
+    let days=0;
+    match=value.match(new RegExp(`${prefix}(\\d{4}-\\d{2}-\\d{2})${suffix}`,'iu'));
+    if(match){start=match[1];days=Number(match[2]);explicitYear=true}
+    if(!match){
+      match=value.match(new RegExp(`${prefix}(\\d{1,2})[./-](\\d{1,2})(?:[./-](\\d{2,4}))?${suffix}`,'iu'));
+      if(match){start=iso(match[3]?fullYear(match[3]):now.getUTCFullYear(),Number(match[2]),Number(match[1]));days=Number(match[4]);explicitYear=Boolean(match[3])}
+    }
+    if(!match){
+      match=value.match(new RegExp(`${prefix}(\\d{1,2})\\s+(${Object.keys(MONTHS).join('|')})(?:\\s+(\\d{4}))?${suffix}`,'iu'));
+      if(match){start=iso(match[3]?Number(match[3]):now.getUTCFullYear(),MONTHS[match[2].toLowerCase()],Number(match[1]));days=Number(match[4]);explicitYear=Boolean(match[3])}
+    }
+    if(match){
+      if(!rentalDate(start)||days<=0)return null;
+      if(!explicitYear&&start<today)start=iso(Number(start.slice(0,4))+1,Number(start.slice(5,7)),Number(start.slice(8,10)));
+      end=rentalEnd(start,`${days} days`);
+    }
+  }
   if(!match)return null;
   if(!rentalDate(start)||!rentalDate(end))return null;
   if(!explicitYear&&end<today){

@@ -1,17 +1,4 @@
-const MONTHS = {
-  января: 0, январь: 0, january: 0, jan: 0,
-  февраля: 1, февраль: 1, february: 1, feb: 1,
-  марта: 2, март: 2, march: 2, mar: 2,
-  апреля: 3, апрель: 3, april: 3, apr: 3,
-  мая: 4, май: 4, may: 4,
-  июня: 5, июнь: 5, june: 5, jun: 5,
-  июля: 6, июль: 6, july: 6, jul: 6,
-  августа: 7, август: 7, august: 7, aug: 7,
-  сентября: 8, сентябрь: 8, september: 8, sep: 8,
-  октября: 9, октябрь: 9, october: 9, oct: 9,
-  ноября: 10, ноябрь: 10, november: 10, nov: 10,
-  декабря: 11, декабрь: 11, december: 11, dec: 11,
-};
+import { parseRentalRange } from '../../../supabase/functions/_shared/rental-period.mjs';
 
 const cityOf = (text) => {
   const value = String(text || '').toLowerCase();
@@ -22,39 +9,9 @@ const cityOf = (text) => {
   return null;
 };
 
-const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-const valid = (year, month, day) => {
-  const date = new Date(year, month, day, 12);
-  return date.getFullYear() === year && date.getMonth() === month && date.getDate() === day ? date : null;
-};
-
-function yearFrom(value, now) {
-  const parsed = Number(value || now.getFullYear());
-  return parsed < 100 ? parsed + 2000 : parsed;
-}
-
 export function rentalRange(text, now = new Date()) {
-  const value = String(text || '').toLowerCase();
-  let match = value.match(/(?:с|от|from)?\s*(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?\s*(?:до|по|[-–—]|to)\s*(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?/u);
-  if (match) {
-    const start = valid(yearFrom(match[3], now), Number(match[2]) - 1, Number(match[1]));
-    const end = valid(yearFrom(match[6] || match[3], now), Number(match[5]) - 1, Number(match[4]));
-    if (start && end && end >= start) return { start: iso(start), end: iso(end) };
-  }
-  const names = Object.keys(MONTHS).join('|');
-  match = value.match(new RegExp(`(?:с|от|from)?\\s*(\\d{1,2})\\s*(?:до|по|[-–—]|to)\\s*(\\d{1,2})\\s*(${names})(?:\\s+(\\d{4}))?`, 'iu'));
-  if (match) {
-    const year = Number(match[4] || now.getFullYear());
-    const start = valid(year, MONTHS[match[3].toLowerCase()], Number(match[1]));
-    const end = valid(year, MONTHS[match[3].toLowerCase()], Number(match[2]));
-    if (start && end && end >= start) return { start: iso(start), end: iso(end) };
-  }
-  match = value.match(/(?:с|от|from)\s*(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?.{0,30}?(?:^|\s)(?:на|for)\s*(\d{1,2})\s*(?:дн|день|дня|дней|сут|day)/iu);
-  if (match) {
-    const start = valid(yearFrom(match[3], now), Number(match[2]) - 1, Number(match[1]));
-    if (start) { const end = new Date(start); end.setDate(end.getDate() + Number(match[4]) - 1); return { start: iso(start), end: iso(end) }; }
-  }
-  return null;
+  const range = parseRentalRange(text, now);
+  return range ? { start: range.start, end: range.end } : null;
 }
 
 export function isCarRental(text) {
