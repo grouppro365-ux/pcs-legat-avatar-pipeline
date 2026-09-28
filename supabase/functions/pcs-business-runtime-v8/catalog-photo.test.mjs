@@ -22,7 +22,7 @@ test('offer media respects customer visibility and item order', () => {
   ];
   const photos = offerPhotos(offer, rows);
   assert.deepEqual(photos.map(x=>x.id), ['a1','a2','b1']);
-  assert.equal(photos[0].caption, '1. Ford Fiesta · красный · 3675');
+  assert.equal(photos[0].caption, '1. Ford Fiesta · красный');
   assert.equal(photos[1].caption, '');
   assert.equal(photos[2].caption, '2. Ford Focus 2014');
 });
