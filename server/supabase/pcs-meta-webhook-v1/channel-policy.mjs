@@ -7,3 +7,8 @@ export const AUTOMATED_HUB_CHANNELS = new Set(['instagram', 'whatsapp', 'faceboo
 export function shouldGenerateCustomerReply(channel, savedMessage) {
   return Boolean(savedMessage) && AUTOMATED_HUB_CHANNELS.has(String(channel || '').toLowerCase());
 }
+
+export function mayAutoSendHubReply({ localDraft = false, connection, generated, risk, replyMode }) {
+  return Boolean(!localDraft && connection?.enabled && connection?.status === 'active' && replyMode === 'auto'
+    && generated.autoSend && !risk && generated.model !== 'safe-fallback');
+}

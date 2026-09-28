@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { remoteTransportAllowed } from './transport-policy.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -140,6 +141,7 @@ Deno.serve(async (request) => {
     if (text.length > 1800) return json({ error: 'message_too_long' }, 400);
     const config = await configuration(channel);
     const target = await recipient(contactId, channel);
+    if (!remoteTransportAllowed(channel, target.id)) return json({ error: 'local_instagram_outbound_not_enabled' }, 409);
     const sent = channel === 'line'
       ? await line(target.id, text)
       : channel === 'instagram' && String(config.transport || 'meta') === 'bothelp'

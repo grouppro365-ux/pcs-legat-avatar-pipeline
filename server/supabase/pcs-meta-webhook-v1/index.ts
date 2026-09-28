@@ -3,8 +3,10 @@ import { languageForMessage, socialIntent, socialReply } from './social.mjs';
 import { buildSystemPrompt, humanRisk } from './journey.mjs';
 import { parseBotHelpPayload } from './bothelp.mjs';
 import { hubMessage } from './conversation-hub.mjs';
-import { shouldGenerateCustomerReply } from './channel-policy.mjs';
+import { shouldGenerateCustomerReply, mayAutoSendHubReply } from './channel-policy.mjs';
+import { receiveLocalInstagram, localEventStore } from './instagram-local.mjs';
 import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
+import { carOffersReply } from './car-rental-response.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -359,7 +361,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     };
   }
   const { data: catalog, error } = await sb.from('pcs_catalog_items')
-    .select('id,title,category,city,location,currency,availability_note,status,customer_visible,deleted_at')
+    .select('id,title,category,city,location,currency,metadata,status,customer_visible,deleted_at')
     .eq('category', 'car_rent')
     .eq('status', 'available')
     .eq('customer_visible', true)
@@ -367,7 +369,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     .limit(40);
   if (error) throw error;
   const candidates = rentalCandidates(catalog, journey);
-  const offers: Array<{ title: string; total: number; currency: string; note: string }> = [];
+  const offers: Array<{ title: string; total: number; currency: string; deposit: number | null }> = [];
   for (const item of candidates) {
     const { data: quote, error: quoteError } = await sb.rpc('pcs_booking_quote', {
       p_item: item.id,
@@ -376,7 +378,10 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     });
     const total = Number(quote?.total_before_extras || 0);
     if (quoteError || quote?.ok !== true || quote?.manual_required || !Number.isFinite(total) || total <= 0) continue;
-    offers.push({ title: String(item.title), total, currency: String(quote.currency || item.currency || 'THB'), note: String(item.availability_note || '').trim() });
+    const deposit = Number(item.metadata?.security_deposit_thb);
+    offers.push({ title: String(item.title), total,
+      currency: String(quote.currency || item.currency || 'THB'),
+      deposit: Number.isFinite(deposit) && deposit > 0 ? deposit : null });
     if (offers.length === 3) break;
   }
   if (!offers.length) {
@@ -390,9 +395,8 @@ async function structuredCarRentalReply(contactId: string, text: string) {
       intent: 'car_rent',
     };
   }
-  const formatted = offers.map((offer, index) => `${index + 1}. ${offer.title}\n${new Intl.NumberFormat('ru-RU').format(offer.total)} ${offer.currency}${offer.note ? `\n${offer.note}` : ''}`).join('\n\n');
   return {
-    answer: `Нашли варианты на ${journey.range.start} — ${journey.range.end} в ${journey.city.label}:\n\n${formatted}\n\nНапишите название подходящего автомобиля — перед оформлением повторно подтвердим наличие и финальные условия.`,
+    answer: carOffersReply(offers, journey.range),
     provider: 'deterministic',
     model: 'car-rental-catalog-v1',
     confidence: 1,
@@ -434,21 +438,40 @@ async function dispatch(channel: string, contactId: string, text: string) {
   return payload;
 }
 
-async function processInbound(channel: string, row: any) {
+async function processInbound(channel: string, row: any, localDraft = false) {
   const { data: connection } = await sb.from('pcs_channel_connections').select('*').eq('channel', channel).maybeSingle();
-  if (channel === 'instagram') {
+  if (channel === 'instagram' && !localDraft) {
     const transport = String(connection?.public_config?.transport || 'meta');
     const accountId = String(connection?.public_config?.instagram_account_id || '');
     if (transport !== 'bothelp' && !accountId) throw new Error('instagram_account_not_configured');
     if (transport !== 'bothelp' && row.account && row.account !== accountId) throw new Error('instagram_recipient_mismatch');
   }
-  const saved = await ingest(channel, row);
+  let saved = await ingest(channel, row);
+  if (localDraft && !saved) {
+    // The event receipt may have failed after the message or draft was saved.
+    // Recover from the durable message rather than generating a second draft.
+    const existing = await sb.from('pcs_messages').select('id,contact_id').eq('channel', channel)
+      .eq('external_message_id', row.message_id).eq('direction', 'in').maybeSingle();
+    if (existing.error) throw existing.error;
+    if (!existing.data) throw new Error('local_ingest_requires_recovery');
+    const prior = await sb.from('pcs_ai_generations').select('id').eq('source_message_id', existing.data.id)
+      .eq('status', 'approval_required').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (prior.error) throw prior.error;
+    if (prior.data?.id) return { action: 'approval_required', contact_id: existing.data.contact_id,
+      generation_id: prior.data.id };
+    const contact = await contactFor(channel, row.external_user_id, row.name);
+    saved = { messageId: existing.data.id, contact, language: languageForMessage(row.text, contact.detected_language) };
+  }
   if (!shouldGenerateCustomerReply(channel, saved)) return { duplicate: !saved };
-  const generated = await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
+  const manualAttachment = localDraft && (row.kind !== 'text' || (row.attachments || []).length > 0);
+  const generated = manualAttachment
+    ? { answer: 'Вложение Instagram требует просмотра оператором. Клиенту автоматический ответ не отправлять.',
+      provider: 'deterministic', model: 'attachment-manual-review', confidence: 1, knowledgeIds: [], autoSend: false }
+    : await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
   const risk = humanRisk(row.text, saved.contact.intent || null, row.kind);
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
-  const canAutoSend = Boolean(connection?.enabled && connection?.status === 'active' && replyMode === 'auto' && generated.autoSend && !risk && !providerUnavailable);
+  const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
   const generation: any = {
     contact_id: saved.contact.id,
     source_message_id: saved.messageId,
@@ -462,7 +485,7 @@ async function processInbound(channel: string, row: any) {
     next_action: canAutoSend ? 'Ответить автоматически' : 'Проверить и отправить ответ',
     knowledge_item_ids: generated.knowledgeIds,
     policy_decision: canAutoSend ? 'auto' : 'approval',
-    policy_reason: risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
+    policy_reason: localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
     status: canAutoSend ? 'sending' : 'approval_required',
     business_connection_id: channel,
     source_text: row.text,
@@ -529,6 +552,12 @@ Deno.serve(async (request) => {
   if (declaredLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413);
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.byteLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413);
+  if (channel === 'instagram' && url.searchParams.get('source') === 'instagrapi') {
+    let config = null;
+    try { config = JSON.parse(await secret('channel_instagram_local_bridge')); } catch { /* disabled until explicitly provisioned */ }
+    return receiveLocalInstagram({ bytes, headers: request.headers, config, store: localEventStore(sb),
+      process: (row: any) => processInbound('instagram', row, true) });
+  }
   const botHelp = channel === 'instagram' && String(url.searchParams.get('source') || '').toLowerCase() === 'bothelp';
   if (botHelp) {
     const expectedSecret = await secret('channel_instagram_bothelp_webhook_secret').catch(() => '');
