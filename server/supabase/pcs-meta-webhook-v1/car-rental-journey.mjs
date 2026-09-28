@@ -37,6 +37,7 @@ export function rentalCandidates(catalog, journey) {
   if (!journey.matches || journey.question || !journey.city || !journey.range) return [];
   return (catalog || []).filter((item) => {
     if (item.category !== 'car_rent' || item.status !== 'available' || item.customer_visible !== true || item.deleted_at != null) return false;
+    if (item.unavailable_until && Date.parse(item.unavailable_until) > Date.parse(`${journey.range.start}T00:00:00Z`)) return false;
     const place = `${item.city || ''} ${item.location || ''}`.toLowerCase();
     return journey.city.aliases.some((alias) => place.includes(alias))
       && (!journey.model || specificVehicleModel(item.title) === journey.model);

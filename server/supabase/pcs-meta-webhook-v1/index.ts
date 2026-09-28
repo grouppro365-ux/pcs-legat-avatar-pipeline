@@ -1,4 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { neon } from 'npm:@neondatabase/serverless@1.0.1';
+import { readOperationalAvailability } from '../../../supabase/functions/pcs-business-runtime-v8/operational-availability.mjs';
 import { languageForMessage, socialIntent, socialReply } from './social.mjs';
 import { buildSystemPrompt, humanRisk } from './journey.mjs';
 import { parseBotHelpPayload } from './bothelp.mjs';
@@ -10,6 +12,15 @@ import { carOffersReply } from './car-rental-response.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
+let operationalDbPromise: Promise<any> | null = null;
+async function operationalDb() {
+  if (!operationalDbPromise) operationalDbPromise = (async () => {
+    const { data, error } = await sb.rpc('pcs_edge_runtime_config');
+    if (error || !data?.business_neon_database_url) throw new Error('operational_database_unavailable');
+    return neon(data.business_neon_database_url);
+  })().catch((error) => { operationalDbPromise = null; throw error; });
+  return await operationalDbPromise;
+}
 // LINE continues using its existing signed receiver until Hub E2E is verified.
 const CHANNELS = new Set(['whatsapp', 'instagram', 'facebook']);
 const META_SEND = BASE + '/functions/v1/pcs-channel-send-v1';
@@ -361,7 +372,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     };
   }
   const { data: catalog, error } = await sb.from('pcs_catalog_items')
-    .select('id,title,category,city,location,currency,metadata,status,customer_visible,deleted_at')
+    .select('id,title,category,city,location,currency,metadata,status,customer_visible,deleted_at,unavailable_until')
     .eq('category', 'car_rent')
     .eq('status', 'available')
     .eq('customer_visible', true)
@@ -371,6 +382,18 @@ async function structuredCarRentalReply(contactId: string, text: string) {
   const candidates = rentalCandidates(catalog, journey);
   const offers: Array<{ title: string; total: number; currency: string; deposit: number | null }> = [];
   for (const item of candidates) {
+    // A published listing is not proof that these dates are free. Both stores
+    // must agree; on an outage, leave the vehicle out of the proposal.
+    try {
+      const { data: conflict, error: conflictError } = await sb.rpc('pcs_reservation_conflicts', {
+        p_item: item.id, p_start: journey.range.start, p_end: journey.range.end, p_exclude: null,
+      });
+      if (conflictError || conflict !== false) continue;
+      if (!await readOperationalAvailability(await operationalDb(), item.id, journey.range.start, journey.range.end)) continue;
+    } catch (error) {
+      console.error('instagram_car_availability_unavailable', error instanceof Error ? error.message : String(error));
+      continue;
+    }
     const { data: quote, error: quoteError } = await sb.rpc('pcs_booking_quote', {
       p_item: item.id,
       p_start: journey.range.start,

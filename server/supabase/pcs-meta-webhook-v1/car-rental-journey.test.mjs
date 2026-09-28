@@ -30,6 +30,7 @@ test('catalog selection respects requested model, city, publication and sale sta
     { ...item, id: 'deleted', deleted_at: '2026-09-01T00:00:00Z' },
     { ...item, id: 'phuket', city: 'Phuket' },
     { ...item, id: 'purchase', category: 'car_buy' },
+    { ...item, id: 'temporarily-unavailable', unavailable_until: '2026-11-11' },
   ];
   const journey = carRentalJourney([], 'Аренда MG5 в Паттайе 10.11.2026–12.11.2026', now);
   assert.deepEqual(rentalCandidates(catalog, journey).map(x => x.id), ['mg5']);
