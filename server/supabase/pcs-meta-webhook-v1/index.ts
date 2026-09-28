@@ -465,10 +465,10 @@ async function processInbound(channel: string, row: any, localDraft = false) {
   if (!shouldGenerateCustomerReply(channel, saved)) return { duplicate: !saved };
   const manualAttachment = localDraft && (row.kind !== 'text' || (row.attachments || []).length > 0);
   const generated = manualAttachment
-    ? { answer: 'Вложение Instagram требует просмотра оператором. Клиенту автоматический ответ не отправлять.',
+    ? { answer: 'Спасибо, получили вложение. Передали менеджеру на просмотр — он ответит вам после проверки.',
       provider: 'deterministic', model: 'attachment-manual-review', confidence: 1, knowledgeIds: [], autoSend: false }
     : await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
-  const risk = humanRisk(row.text, saved.contact.intent || null, row.kind);
+  const risk = manualAttachment ? 'attachment_requires_manual_view' : humanRisk(row.text, saved.contact.intent || null, row.kind);
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
   const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
@@ -485,7 +485,7 @@ async function processInbound(channel: string, row: any, localDraft = false) {
     next_action: canAutoSend ? 'Ответить автоматически' : 'Проверить и отправить ответ',
     knowledge_item_ids: generated.knowledgeIds,
     policy_decision: canAutoSend ? 'auto' : 'approval',
-    policy_reason: localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
+    policy_reason: manualAttachment ? 'attachment_manual_review' : localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
     status: canAutoSend ? 'sending' : 'approval_required',
     business_connection_id: channel,
     source_text: row.text,
