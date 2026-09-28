@@ -15,8 +15,9 @@ test('booking payment reply never invents a universal advance or confirms bookin
   assert.match(requested, /не забронирован/);
 });
 
-test('hides internal fleet code but keeps the vehicle distinguishable', () => {
-  assert.equal(publicVehicleName('LTC-001 · Ford Fiesta · красный · 3675'), 'Ford Fiesta · красный · 3675');
+test('hides internal fleet code and plate but keeps the vehicle distinguishable', () => {
+  assert.equal(publicVehicleName('LTC-001 · Ford Fiesta · красный · 3675'), 'Ford Fiesta · красный');
+  assert.equal(publicVehicleName('LTR-002 · Ford Fiesta · белый · 3865'), 'Ford Fiesta · белый');
   assert.equal(publicVehicleName('MG MG5 Pro 1.5 CVT K-BRIT 2025'), 'MG5 Pro 1.5 CVT K-BRIT 2025');
 });
 
@@ -45,7 +46,7 @@ test('rental offer sounds natural and keeps the verified price and deposit', () 
   assert.match(reply, /600 бат за 2 дня/);
   assert.match(reply, /5\s?000 бат/);
   assert.match(reply, /Перед бронью ещё раз проверю наличие/);
-  assert.doesNotMatch(reply, /LTC-|2026-11-|по каталогу|Расчётный срок/);
+  assert.doesNotMatch(reply, /LTC-|3675|3865|5564|2026-11-|по каталогу|Расчётный срок/);
   assert.equal((reply.match(/600 бат/g) || []).length, 1);
 });
 

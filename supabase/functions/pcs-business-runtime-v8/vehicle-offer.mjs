@@ -1,5 +1,7 @@
 export function publicVehicleName(title) {
-  return String(title || '').replace(/^LTC-\d+\s*·\s*/iu, '').replace(/^MG\s+MG5\b/iu, 'MG5').trim();
+  return String(title || '').replace(/^(?:LTC|LTR)-\d+\s*[·•-]\s*/iu, '')
+    .replace(/\s*[·•-]\s*\d{3,8}\s*$/u, '')
+    .replace(/^MG\s+MG5\b/iu, 'MG5').trim();
 }
 
 export function securityDepositLine(metadata, currency = 'THB') {
