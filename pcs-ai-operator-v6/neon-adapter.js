@@ -153,7 +153,13 @@ async function uiRoute(path,init){
 
 async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
-  if(path==='/reservations'&&method==='GET')return jsonResponse((await manager('applications')).filter(x=>x.category==='booking'||(x.qualification_data?.start_date&&x.qualification_data?.end_date)).map(x=>({...x,status:bookingStatusFromServer(x.operational_status),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
+  const reservationRows=()=>manager('applications').then(rows=>rows.filter(x=>x.category==='booking'||(x.qualification_data?.start_date&&x.qualification_data?.end_date)).map(x=>({...x,status:bookingStatusFromServer(x.operational_status),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
+  if(path==='/reservations'&&method==='GET')return jsonResponse(await reservationRows());
+  if(path.startsWith('/calendar?')&&method==='GET'){
+    const query=new URL(path,'https://pcs.local').searchParams,from=query.get('from')||'',to=query.get('to')||'',validDate=x=>/^\d{4}-\d{2}-\d{2}$/.test(x)&&!Number.isNaN(Date.parse(x))&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x;
+    if(!validDate(from)||!validDate(to)||to<from)return appError('Укажите корректный период календаря.',400);
+    return jsonResponse((await reservationRows()).filter(x=>x.start_date&&x.end_date&&x.start_date<=to&&x.end_date>=from&&!cancelledReservation(x)));
+  }
   if(path==='/reservations'&&method==='POST'){
     const b=await parseBody(init);
     if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
