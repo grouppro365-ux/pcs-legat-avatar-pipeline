@@ -13,6 +13,8 @@ context.fetch=async(input,init={})=>{
   const body=init.body?JSON.parse(init.body):{};
   if(op==='catalog')return Response.json(catalog);
   if(op==='applications')return Response.json(applications);
+  if(op==='application-detail')return Response.json(applications.find(x=>x.id===new URL(input).searchParams.get('id'))||{}, {status:applications.some(x=>x.id===new URL(input).searchParams.get('id'))?200:404});
+  if(op==='application-conflict'){const u=new URL(input),item=u.searchParams.get('item'),exclude=u.searchParams.get('exclude'),start=u.searchParams.get('start'),end=u.searchParams.get('end');return Response.json({conflict:applications.some(x=>x.id!==exclude&&x.item_id===item&&!['CANCELLED_BY_CLIENT','COMPLETED'].includes(x.operational_status)&&x.qualification_data?.start_date<end&&x.qualification_data?.end_date>start)});}
   if(op==='clients')return Response.json([{id:'client-1',name:'Тестовый клиент',phone:'+66000000000'}]);
   if(op==='application-save'){writes.push(body);const saved={...body,id:'booking-1'};applications=[saved];return Response.json({ok:true,id:saved.id});}
   if(op==='application-status'){const row=applications.find(x=>x.id===body.id);if(row)row.operational_status=body.status;return Response.json({ok:true});}
@@ -28,6 +30,17 @@ assert.equal(writes[0].qualification_data.contact_id,'client-1');
 assert.equal((await context.fetch('https://pcs-stable.local/pcs-ops-api/reservations')).status,200);
 const patch=await context.fetch('https://pcs-stable.local/pcs-ops-api/reservations/booking-1',{method:'PATCH',body:JSON.stringify({status:'confirmed'})});
 assert.equal(patch.status,200);assert.equal(applications[0].operational_status,'CONFIRMED');
+const edit=await context.fetch('https://pcs-stable.local/pcs-ops-api/reservations/booking-1',{method:'PATCH',body:JSON.stringify({...valid,start_date:'2026-12-22',end_date:'2026-12-24',total_amount:600,deposit_amount:100,notes:'Новые условия'})});
+assert.equal(edit.status,200);
+assert.equal(applications[0].operational_status,'AWAITING_PARTNER_CONFIRMATION','changed dates require reconfirmation');
+assert.equal(applications[0].qualification_data.total_amount,600);
+assert.equal(applications[0].internal_notes,'Новые условия');
+assert.equal(applications[0].qualification_data.contact_id,'client-1');
+const writeCount=writes.length;
+applications.push({id:'blocking',item_id:'car-1',operational_status:'CONFIRMED',qualification_data:{start_date:'2026-12-25',end_date:'2026-12-27'}});
+const conflictEdit=await context.fetch('https://pcs-stable.local/pcs-ops-api/reservations/booking-1',{method:'PATCH',body:JSON.stringify({...valid,start_date:'2026-12-26',end_date:'2026-12-28'})});
+assert.equal(conflictEdit.status,409);
+assert.equal(writes.length,writeCount,'conflicting edit must not be saved');
 applications=[{id:'blocking',item_id:'car-1',operational_status:'AWAITING_PARTNER_CONFIRMATION',qualification_data:{start_date:'2026-12-24',end_date:'2026-12-26'}}];
 assert.equal((await post({...valid,start_date:'2026-12-25',end_date:'2026-12-27'})).status,409);
 assert.equal((await post({...valid,start_date:'2026-12-26',end_date:'2026-12-27'})).status,200,'end-exclusive handover must remain bookable');
