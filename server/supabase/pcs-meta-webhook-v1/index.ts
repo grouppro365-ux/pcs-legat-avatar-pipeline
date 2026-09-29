@@ -8,7 +8,7 @@ import { hubMessage } from './conversation-hub.mjs';
 import { shouldGenerateCustomerReply, mayAutoSendHubReply } from './channel-policy.mjs';
 import { receiveLocalInstagram, localEventStore } from './instagram-local.mjs';
 import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
-import { carOffersReply } from './car-rental-response.mjs';
+import { carOfferSnapshot, carOffersReply } from './car-rental-response.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -380,7 +380,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     .limit(40);
   if (error) throw error;
   const candidates = rentalCandidates(catalog, journey);
-  const offers: Array<{ title: string; total: number; currency: string; deposit: number | null }> = [];
+  const offers: Array<{ id: string; title: string; total: number; currency: string; deposit: number | null }> = [];
   for (const item of candidates) {
     // A published listing is not proof that these dates are free. Both stores
     // must agree; on an outage, leave the vehicle out of the proposal.
@@ -402,7 +402,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
     const total = Number(quote?.total_before_extras || 0);
     if (quoteError || quote?.ok !== true || quote?.manual_required || !Number.isFinite(total) || total <= 0) continue;
     const deposit = Number(item.metadata?.security_deposit_thb);
-    offers.push({ title: String(item.title), total,
+    offers.push({ id: String(item.id), title: String(item.title), total,
       currency: String(quote.currency || item.currency || 'THB'),
       deposit: Number.isFinite(deposit) && deposit > 0 ? deposit : null });
     if (offers.length === 3) break;
@@ -420,6 +420,7 @@ async function structuredCarRentalReply(contactId: string, text: string) {
   }
   return {
     answer: carOffersReply(offers, journey.range),
+    offerSnapshot: carOfferSnapshot(offers, journey.range),
     provider: 'deterministic',
     model: 'car-rental-catalog-v1',
     confidence: 1,
@@ -512,6 +513,7 @@ async function processInbound(channel: string, row: any, localDraft = false) {
     status: canAutoSend ? 'sending' : 'approval_required',
     business_connection_id: channel,
     source_text: row.text,
+    offer_snapshot: (generated as any).offerSnapshot || null,
   };
   const { data: record, error } = await sb.from('pcs_ai_generations').insert(generation).select('*').single();
   if (error) throw error;
