@@ -82,6 +82,9 @@ async function meta(channel: string, to: string, text: string, config: any) {
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
     body: JSON.stringify(body),
   }, 'meta');
+  if (channel === 'instagram' && (typeof payload?.message_id !== 'string' || !payload.message_id.trim())) {
+    throw new Error('instagram_delivery_unconfirmed');
+  }
   return { raw: payload, id: String(payload?.messages?.[0]?.id || payload?.message_id || '') || null };
 }
 
@@ -184,3 +187,4 @@ Deno.serve(async (request) => {
     return json({ ok: false, error: message }, 502);
   }
 });
+
