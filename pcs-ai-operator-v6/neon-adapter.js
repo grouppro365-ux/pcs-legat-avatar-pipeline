@@ -122,6 +122,66 @@ async function uiRoute(path,init){
   if(/^\/crm\/[^/]+\/(tasks|complete-task|action)/.test(path))return appError('Изменение CRM из этого экрана пока ограничено безопасным режимом.',409);
 
   if(path==='/catalog'&&method==='GET')return jsonResponse((await manager('catalog')).map(normalizeCatalog));
+  m=path.match(/^\/catalog\/([^/]+)\/media(?:\/([^/]+))?$/);
+  if(m){
+    const id=decodeURIComponent(m[1]),mid=m[2]?decodeURIComponent(m[2]):null;
+    const detail=await manager('catalog-detail',{id});
+    if(!detail.item||String(detail.item.id)!==id)return appError('Запись не найдена',404);
+    const gallery=detail.media||[];
+    if(mid==='order'&&method==='POST'){
+      const ids=Array.isArray(body.ids)?body.ids:[];
+      if(ids.length!==gallery.length||new Set(ids).size!==ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Список фото изменился. Обновите галерею.',409);
+      return jsonResponse(await manager('media-order',{method:'POST',body:{ids}}));
+    }
+    if(method==='GET'&&!mid)return jsonResponse(gallery);
+    if(method==='POST'&&!mid){
+      if(gallery.length>=30)return appError('Лимит 30 фото достигнут',400);
+      if(!['image/jpeg','image/png','image/webp'].includes(body.content_type))return appError('Разрешены JPG, PNG и WEBP',400);
+      const data=String(body.content_base64||'').replace(/^data:[^,]+,/,'');
+      if(!data||data.length>Math.ceil(10*1024*1024/3)*4||!/^[A-Za-z0-9+/]*={0,2}$/.test(data))return appError('Некорректный файл или размер больше 10 МБ',400);
+      return jsonResponse(await manager('media-add',{method:'POST',body:{item_id:id,
+        filename:body.filename||'image.jpg',content_type:body.content_type,content_base64:data,
+        media_type:'image',sort_order:gallery.length}}));
+    }
+    if(method==='DELETE'){
+      const ids=[...new Set(mid?[mid]:(Array.isArray(body.ids)?body.ids:[]))];
+      if(!ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Выберите фото именно этой записи',400);
+      const deleted=[];
+      for(const photoId of ids){
+        try{await manager('media-delete',{method:'POST',body:{id:photoId}});deleted.push(photoId)}
+        catch(e){return jsonResponse({error:'Удалена только часть фото. Обновите список перед повтором.',deleted},409)}
+      }
+      return jsonResponse({ok:true,deleted});
+    }
+  }
+  m=path.match(/^\/catalog\/([^/]+)$/);
+  if(m&&method==='GET')return jsonResponse(await manager('catalog-detail',{id:decodeURIComponent(m[1])}));
+  if(m&&method==='PATCH'){
+    const id=decodeURIComponent(m[1]);
+    const detail=await manager('catalog-detail',{id});
+    const item=detail.item;
+    if(!item||String(item.id)!==id)return appError('Запись не найдена',404);
+    const revision=item.revision?.ui||item.revision?.legacy||item.revision?.legacy_extra||{};
+    const payload={id,entity_type:item.entity_type,title:item.title,city:item.city,
+      publication_status:item.publication_status,moderation_status:item.moderation_status,
+      availability_status:item.availability_status,client_price_thb:item.client_price_thb,
+      deposit_thb:item.deposit_thb,internal_net_thb:item.internal_net_thb,
+      description:revision.description||'',category:revision.category||'',
+      conditions:revision.conditions||'',source:revision.source||''};
+    for(const key of ['title','city','description','conditions','source']){
+      if(Object.prototype.hasOwnProperty.call(body,key))payload[key]=String(body[key]??'').trim();
+    }
+    if(!payload.title)return appError('Укажите название',400);
+    await manager('catalog-save',{method:'POST',body:payload});
+    const verified=await manager('catalog-detail',{id});
+    const saved=verified.item;
+    const savedRevision=saved?.revision?.ui||{};
+    if(!saved||['title','city'].some(key=>saved[key]!==payload[key])||
+      ['description','conditions','source'].some(key=>(savedRevision[key]||'')!==payload[key])){
+      return appError('Сервер не подтвердил сохранение. Обновите запись перед повтором.',409);
+    }
+    return jsonResponse({ok:true,item:normalizeCatalog({...saved,media_items:verified.media||[]})});
+  }
   if(path==='/approvals'&&method==='GET')return jsonResponse(await manager('approvals'));
   if(/^\/approvals\//.test(path))return appError('Действие с согласованием пока недоступно в стабильном Mini App.',409);
   if(path==='/knowledge'&&method==='GET')return jsonResponse([]);
@@ -215,7 +275,7 @@ async function opsRoute(path,init){
     if(String(updated.item_id)!==item||String(data.start_date)!==start||String(data.end_date)!==end||Number(data.total_amount)!==total||Number(data.deposit_amount)!==deposit||String(updated.operational_status)!==expectedStatus)return appError('Сервер не подтвердил сохранение брони.',502);
     return jsonResponse({ok:true,id,status:bookingStatusFromServer(expectedStatus)});
   }
-  if(path==='/extras'&&method==='GET')return jsonResponse(await manager('services'));
+  if(path==='/extras'&&method==='GET')return jsonResponse((await manager('services')).map(x=>({...normalizeCatalog(x),name:x.name||x.title||'Услуга'})));
   if(path==='/duration-rules'&&method==='GET')return jsonResponse(await manager('durations'));
   if(path==='/seasonal-rules'&&method==='GET')return jsonResponse(await manager('seasons'));
   if(path==='/status'&&method==='GET')return jsonResponse(await manager('status'));
@@ -300,3 +360,4 @@ window.fetch=async function(input,init={}){
   }
 };
 })();
+
