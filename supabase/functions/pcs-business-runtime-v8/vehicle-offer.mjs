@@ -1,3 +1,55 @@
+export function vehicleOptionIndex(text) {
+  const match = String(text || '').trim().match(/^(?:(?:вариант|выбираю|беру|номер)\s*)?([1-9])\s*[.!]?$/iu);
+  return match ? Number(match[1]) - 1 : null;
+}
+
+export function resolveVehicleChoice(text, offer, now = Date.now()) {
+  const option = vehicleOptionIndex(text);
+  const confirming = isBookingConfirmation(text);
+  if ((option === null && !confirming) || offer?.intent !== 'car_rent' || !Array.isArray(offer.items)) return null;
+  if (confirming && !['awaiting_confirmation', 'awaiting_documents'].includes(offer.stage)) return {action: 'choose_first'};
+  const index = confirming ? offer.selected_index : option;
+  const item = Number.isInteger(index) ? offer.items[index] : null;
+  if (!item) return {action: 'invalid_choice'};
+  const issued = Date.parse((confirming && offer.selected_at) || offer.created_at || '');
+  if (!Number.isFinite(issued) || now - issued > 24 * 3600000 || issued > now) return {action: 'expired'};
+  const start = String(offer.start || ''), end = String(offer.end || '');
+  if (!offer.id || !item.id || !/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)
+      || !Number.isFinite(Date.parse(start)) || !Number.isFinite(Date.parse(end)) || start >= end
+      || !Number.isFinite(Number(item.total)) || Number(item.total) <= 0 || !item.currency) return {action: 'invalid_quote'};
+  return {action: confirming ? 'confirm' : 'select', index, item};
+}
+
+export async function continueVehicleBooking({text, offer, contactId, store, now = Date.now()}) {
+  const choice = resolveVehicleChoice(text, offer, now);
+  if (!choice) return null;
+  const errors = {
+    choose_first: 'Сначала выберите автомобиль из предложенных вариантов.',
+    invalid_choice: 'Не нашёл такой вариант. Напишите номер автомобиля из предложения.',
+    expired: 'Предложение устарело. Уточните даты — ещё раз проверим наличие и условия.',
+    invalid_quote: 'Условия предложения требуют проверки. Пока автомобиль не забронирован.'
+  };
+  if (errors[choice.action]) return {action: choice.action, answer: errors[choice.action], offer};
+  const item = await store.item(choice.item.id);
+  if (!item || item.id !== choice.item.id || item.status !== 'available' || item.customer_visible !== true || item.deleted_at != null) {
+    return {action: 'unavailable', offer, answer: 'Эта машина сейчас недоступна для предложения. Подберём другой вариант; ничего не забронировано.'};
+  }
+  if (item.ownership_type !== 'pcs_owned') return {action: 'partner_confirmation', offer, needsHuman: true,
+    answer: 'Для этой машины требуется подтверждение партнёра. Уточним наличие и условия; пока автомобиль не забронирован.'};
+  if (!await store.available(choice.item, offer)) return {action: 'unavailable', offer,
+    answer: 'Пока не могу подтвердить доступность этой машины. Подберём другой вариант; ничего не забронировано.'};
+  const selected = {...offer, selected_index: choice.index,
+    selected_at: offer.selected_at || new Date(now).toISOString(), stage: 'awaiting_confirmation'};
+  if (choice.action === 'select') return {action: 'select', offer: selected,
+    answer: selectedVehicleReply(selected, choice.item, item)};
+  const request = await store.request({contact_id: contactId, offer_id: offer.id,
+    catalog_item_id: choice.item.id, start_date: offer.start, end_date: offer.end,
+    rental_total: Number(choice.item.total), currency: choice.item.currency});
+  return {action: 'confirm', request, offer: {...selected, stage: 'awaiting_documents', booking_request_id: request.id},
+    answer: request.status === 'booked' ? 'Бронь по этой заявке уже оформлена. Повторно её не создаю.'
+      : 'Приняла заявку. Для оформления пришлите, пожалуйста, фото паспорта и международного водительского удостоверения (МВУ). После проверки сообщим сумму бронировочной предоплаты и реквизиты. Залог за сохранность автомобиля — отдельная сумма. Пока автомобиль не забронирован; подтвердим бронь только после проверки документов и поступления оплаты.'};
+}
+
 export function publicVehicleName(title) {
   return String(title || '').replace(/^(?:LTC|LTR)-\d+\s*[·•-]\s*/iu, '')
     .replace(/\s*[·•-]\s*\d{3,8}\s*$/u, '')
@@ -71,3 +123,4 @@ export function selectedVehicleReply(offer, item, catalogItem) {
   const deposit = Number.isFinite(depositAmount) && depositAmount >= 0 && catalogItem.metadata?.security_deposit_thb != null ? ` Залог за сохранность авто — ${money(depositAmount, item.currency)}.` : '';
   return `Вы выбрали ${name} на ${dates}. Аренда — ${money(item.total, item.currency)}.${deposit}\n\nДля оформления нужны паспорт, международное водительское удостоверение и бронировочная предоплата. Её сумму согласуем отдельно для этой заявки; залог за сохранность авто — другая сумма. Если хотите продолжить, напишите «Хочу оформить». Пока автомобиль не забронирован.`;
 }
+

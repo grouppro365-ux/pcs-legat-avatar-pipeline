@@ -8,6 +8,7 @@ import { hubMessage } from './conversation-hub.mjs';
 import { shouldGenerateCustomerReply, mayAutoSendHubReply } from './channel-policy.mjs';
 import { receiveLocalInstagram, localEventStore } from './instagram-local.mjs';
 import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
+import { continueVehicleBooking } from '../../../supabase/functions/pcs-business-runtime-v8/vehicle-offer.mjs';
 import { carOfferSnapshot, carOffersReply } from './car-rental-response.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
@@ -353,6 +354,55 @@ async function generate(contactId: string, sourceMessageId: string, text: string
   return { answer: safeFallback(language), provider: 'deterministic', model: 'safe-fallback', confidence: 0.5, knowledgeIds: [], autoSend: !!settings?.auto_send };
 }
 
+async function structuredCarRentalSelection(contactId, text, channel) {
+  const {data:last,error}=await sb.from('pcs_ai_generations').select('id,offer_snapshot,created_at')
+    .eq('contact_id',contactId).eq('business_connection_id',channel).eq('status','sent')
+    .not('offer_snapshot','is',null).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(error)throw error;
+  if(!last?.offer_snapshot)return null;
+  const snapshot=last.offer_snapshot;
+  const offer={...snapshot,id:snapshot.id||last.id,created_at:snapshot.created_at||last.created_at,
+    start:snapshot.start||snapshot.start_date,end:snapshot.end||snapshot.end_date,
+    items:snapshot.items||(snapshot.options||[]).map(option=>({id:option.catalog_item_id,
+      title:option.title,total:option.total_before_extras,currency:option.currency}))};
+  const result=await continueVehicleBooking({text,offer,contactId,store:{
+    item:async id=>{
+      const {data,error}=await sb.from('pcs_catalog_items').select('id,title,status,customer_visible,deleted_at,ownership_type,metadata').eq('id',id).maybeSingle();
+      if(error)throw error;
+      return data;
+    },
+    available:async (selected,offer)=>{
+      const {data,error}=await sb.rpc('pcs_reservation_conflicts',{p_item:selected.id,p_start:offer.start,p_end:offer.end,p_exclude:null});
+      if(error||data!==false)return false;
+      return await readOperationalAvailability(await operationalDb(),selected.id,offer.start,offer.end);
+    },
+    request:async input=>{
+      const existing=async()=>{
+        const {data,error}=await sb.from('pcs_booking_requests').select('*').eq('contact_id',contactId).eq('offer_id',input.offer_id).maybeSingle();
+        if(error)throw error;
+        return data;
+      };
+      let request=await existing();
+      if(!request){
+        const {data,error}=await sb.from('pcs_booking_requests').insert(input).select('*').single();
+        if(error?.code==='23505')request=await existing();
+        else if(error)throw error;
+        else request=data;
+      }
+      if(!request?.id||request.contact_id!==contactId||request.catalog_item_id!==input.catalog_item_id
+        ||request.start_date!==input.start_date||request.end_date!==input.end_date
+        ||Number(request.rental_total)!==input.rental_total||request.currency!==input.currency)throw Error('booking_request_quote_mismatch');
+      return request;
+    }
+  }});
+  if(!result)return null;
+  const {data:settings,error:settingsError}=await sb.from('pcs_settings').select('auto_send').eq('id','main').maybeSingle();
+  if(settingsError)throw settingsError;
+  return {answer:result.answer,offerSnapshot:result.offer,bookingRequestId:result.request?.id||null,
+    provider:'deterministic',model:'car-rental-choice-v1',confidence:1,knowledgeIds:[],
+    intent:'car_rent',autoSend:!!settings?.auto_send&&!result.needsHuman,needsHuman:!!result.needsHuman};
+}
+
 async function structuredCarRentalReply(contactId: string, text: string) {
   const [{ data: history }, { data: settings }] = await Promise.all([
     sb.from('pcs_messages').select('direction,text').eq('contact_id', contactId).eq('direction', 'in').not('text', 'is', null).order('created_at', { ascending: false }).limit(20),
@@ -491,8 +541,9 @@ async function processInbound(channel: string, row: any, localDraft = false) {
   const generated = manualAttachment
     ? { answer: 'Спасибо, получили вложение. Передали менеджеру на просмотр — он ответит вам после проверки.',
       provider: 'deterministic', model: 'attachment-manual-review', confidence: 1, knowledgeIds: [], autoSend: false }
-    : await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
-  const risk = manualAttachment ? 'attachment_requires_manual_view' : humanRisk(row.text, saved.contact.intent || null, row.kind);
+    : await structuredCarRentalSelection(saved.contact.id, row.text, channel) || await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
+  const detectedRisk = manualAttachment ? 'attachment_requires_manual_view' : humanRisk(row.text, saved.contact.intent || null, row.kind);
+  const risk = generated.needsHuman ? 'partner_confirmation_required' : generated.model === 'car-rental-choice-v1' && detectedRisk === 'booking_commitment' ? null : detectedRisk;
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
   const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
@@ -619,3 +670,5 @@ Deno.serve(async (request) => {
   else await job;
   return json({ ok: true, accepted: true });
 });
+
+
