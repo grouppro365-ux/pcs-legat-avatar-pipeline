@@ -12,3 +12,20 @@ test('follow-up never offers review, sold, archived or reserved fleet cars',()=>
   assert.deepEqual(Array.from(selected,x=>x.id),['available']);
   assert.equal(candidates[0].daily_price,400);
 });
+test('follow-up refuses missing or unreadable internal credentials before touching the queue',async()=>{
+  const source=readFileSync(new URL('../../supabase/functions/pcs-customer-followup-v1/index.ts',import.meta.url),'utf8');
+  const handlerSource=source.slice(source.lastIndexOf('Deno.serve('));
+  for(const mode of ['missing','unreadable','mismatch','valid']){
+    let handler;let queueReads=0;
+    const query={select(){return this},eq(){return this},lte(){return this},order(){return this},async limit(){return {data:[],error:null}}};
+    vm.runInNewContext(handlerSource,{
+      Deno:{serve(fn){handler=fn}},
+      sec:async()=>{if(mode==='unreadable')throw Error('unavailable');return mode==='missing'?'':'internal-test-key'},
+      sb:{from(){queueReads++;return query}},
+      J:(body,status=200)=>({body,status}),processOne:async()=>{throw Error('must not send')}
+    });
+    const result=await handler({method:'POST',headers:{get:()=>mode==='valid'?'internal-test-key':'wrong-key'}});
+    assert.equal(result.status,mode==='valid'?200:403,mode);
+    assert.equal(queueReads,mode==='valid'?1:0,mode);
+  }
+});
