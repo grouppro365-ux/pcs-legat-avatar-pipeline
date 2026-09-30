@@ -1,0 +1,2 @@
+ALTER TABLE public.pcs_knowledge_items ADD COLUMN IF NOT EXISTS media jsonb NOT NULL DEFAULT '[]'::jsonb;
+INSERT INTO storage.buckets (id,name,public,file_size_limit,allowed_mime_types) VALUES ('pcs-knowledge-media','pcs-knowledge-media',false,10485760,ARRAY['image/jpeg','image/png','image/webp']) ON CONFLICT (id) DO UPDATE SET public=false,file_size_limit=10485760,allowed_mime_types=ARRAY['image/jpeg','image/png','image/webp'];
