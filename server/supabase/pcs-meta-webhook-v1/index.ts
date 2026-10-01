@@ -367,6 +367,12 @@ async function structuredCarRentalSelection(contactId, text, channel) {
     items:snapshot.items||(snapshot.options||[]).map(option=>({id:option.catalog_item_id,
       title:option.title,total:option.total_before_extras,currency:option.currency}))};
   const result=await continueVehicleBooking({text,offer,contactId,store:{
+    paymentRequest:async (id,owner)=>{
+      const {data,error}=await sb.from('pcs_booking_requests').select('id,contact_id,offer_id,status,booking_deposit_amount,payment_status')
+        .eq('id',id).eq('contact_id',owner).eq('status','collecting').maybeSingle();
+      if(error)throw error;
+      return data;
+    },
     item:async id=>{
       const {data,error}=await sb.from('pcs_catalog_items').select('id,title,status,customer_visible,deleted_at,ownership_type,metadata').eq('id',id).maybeSingle();
       if(error)throw error;
@@ -400,7 +406,7 @@ async function structuredCarRentalSelection(contactId, text, channel) {
   const {data:settings,error:settingsError}=await sb.from('pcs_settings').select('auto_send').eq('id','main').maybeSingle();
   if(settingsError)throw settingsError;
   return {answer:result.answer,offerSnapshot:result.offer,bookingRequestId:result.request?.id||null,
-    provider:'deterministic',model:'car-rental-choice-v1',confidence:1,knowledgeIds:[],
+    provider:'deterministic',model:result.action==='payment_info'?'car-rental-payment-info-v1':'car-rental-choice-v1',confidence:1,knowledgeIds:[],
     intent:'car_rent',autoSend:!!settings?.auto_send&&!result.needsHuman,needsHuman:!!result.needsHuman};
 }
 
@@ -561,7 +567,7 @@ async function processInbound(channel: string, row: any, localDraft = false, loc
       provider: 'deterministic', model: 'attachment-manual-review', confidence: 1, knowledgeIds: [], autoSend: false }
     : await structuredCarRentalSelection(saved.contact.id, row.text, channel) || await structuredCarRentalReply(saved.contact.id, row.text) || await generate(saved.contact.id, saved.messageId, row.text, saved.language);
   const detectedRisk = manualAttachment ? 'attachment_requires_manual_view' : humanRisk(row.text, saved.contact.intent || null, row.kind);
-  const risk = generated.needsHuman ? 'partner_confirmation_required' : generated.model === 'car-rental-choice-v1' && detectedRisk === 'booking_commitment' ? null : detectedRisk;
+  const risk = generated.needsHuman ? 'partner_confirmation_required' : generated.model === 'car-rental-payment-info-v1' && detectedRisk === 'sensitive_topic' ? null : generated.model === 'car-rental-choice-v1' && detectedRisk === 'booking_commitment' ? null : detectedRisk;
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
   const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
