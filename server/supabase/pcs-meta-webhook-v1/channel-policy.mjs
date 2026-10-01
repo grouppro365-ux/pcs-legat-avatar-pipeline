@@ -13,7 +13,7 @@ export function mayAutoSendHubReply({ localDraft = false, connection, generated,
     && generated.autoSend && !risk && generated.model !== 'safe-fallback');
 }
 
-export function mayQueueLocalReply({ config, row, generated, risk }) {
+export function mayQueueLocalReply({ config, connection, row, generated, risk }) {
   if (config?.enabled !== true || config?.outgoing_enabled !== true ||
       typeof config.outgoing_since !== 'string' || row?.account !== `instagrapi:${config.account_id}`) return false;
   const since = Date.parse(config.outgoing_since);
@@ -22,7 +22,7 @@ export function mayQueueLocalReply({ config, row, generated, risk }) {
   if (!Number.isFinite(since) || !Number.isFinite(timestamp) || timestamp < since ||
       (Array.isArray(config.pilot_recipient_ids) && !config.pilot_recipient_ids.includes(recipient)) ||
       Number(generated?.confidence) < 0.9 || !Number.isFinite(Number(generated?.confidence))) return false;
-  return mayAutoSendHubReply({ localDraft: false, connection: {enabled:true,status:'active'},
-    generated, risk, replyMode:'auto' });
+  return mayAutoSendHubReply({ localDraft: false, connection,
+    generated, risk, replyMode: connection?.public_config?.reply_mode });
 }
 

@@ -565,7 +565,7 @@ async function processInbound(channel: string, row: any, localDraft = false, loc
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
   const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
-  const canQueueLocal=localDraft&&mayQueueLocalReply({config:localConfig,row,generated,risk});
+  const canQueueLocal=localDraft&&mayQueueLocalReply({config:localConfig,connection,row,generated,risk});
   const automatic=canAutoSend||canQueueLocal;
   const generation: any = {
     contact_id: saved.contact.id,
