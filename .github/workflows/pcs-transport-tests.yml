@@ -1,0 +1,60 @@
+name: PCS transport regressions
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'server/instagram-local/**'
+      - 'server/supabase/pcs-meta-webhook-v1/**'
+      - 'server/supabase/pcs-channel-send-v1/**'
+      - 'supabase/functions/pcs-business-runtime-v8/**'
+      - 'supabase/functions/_shared/**'
+      - '.github/workflows/pcs-transport-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'server/instagram-local/**'
+      - 'server/supabase/pcs-meta-webhook-v1/**'
+      - 'server/supabase/pcs-channel-send-v1/**'
+      - 'supabase/functions/pcs-business-runtime-v8/**'
+      - 'supabase/functions/_shared/**'
+      - '.github/workflows/pcs-transport-tests.yml'
+permissions:
+  contents: read
+concurrency:
+  group: pcs-transport-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  transport:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            server/instagram-local
+            server/supabase/pcs-meta-webhook-v1
+            server/supabase/pcs-channel-send-v1
+            supabase/functions/pcs-business-runtime-v8
+            supabase/functions/_shared
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+      - name: Install isolated pinned adapter dependencies
+        run: python -m pip install --disable-pip-version-check -r server/instagram-local/requirements.lock.txt
+      - name: Validate dependency compatibility and Python syntax
+        run: |
+          python -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m compileall -q server/instagram-local
+      - name: Windows adapter and native CPU limit regressions
+        working-directory: server/instagram-local
+        run: python -m unittest discover -p "test*.py" -v
+      - name: Hub and booking workflow regressions
+        run: |
+          $pcsTestFiles = @(Get-ChildItem server/supabase/pcs-meta-webhook-v1,supabase/functions/pcs-business-runtime-v8 -Filter '*.test.mjs' -File | ForEach-Object { $_.FullName })
+          if ($pcsTestFiles.Count -eq 0) { throw 'No transport tests discovered' }
+          node --test @pcsTestFiles
