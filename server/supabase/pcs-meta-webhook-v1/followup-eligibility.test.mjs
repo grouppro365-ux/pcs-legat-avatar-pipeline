@@ -45,7 +45,7 @@ test('real follow-up respects disabled follow-up and opted-out contacts', async 
     sb, dateRange:()=>({start:'2026-11-10',end:'2026-11-12'}), lang:()=> 'ru',cityOf:()=> 'Паттайя',
     fx:async()=>null,tg:async(method,payload)=>{sent.push(payload);return {message_id:sent.length};},
     intro:()=> 'available', priceLine:realPriceLine,clean:x=>x,noConfirmed:()=> 'not_confirmed',
-    cancel:async()=>({skip:'cancelled'}),cmap:{ru:'THB'},nonBlocking:new Set(['cancelled']),
+    cancel:async(id,why)=>({skip:why}),cmap:{ru:'THB'},nonBlocking:new Set(['cancelled']),
     readOperationalAvailability:async()=>{operationalChecks++;return true;},operationalDb:async()=>({}),
   };
   const processOne = new Function(...Object.keys(deps),'return ('+handler+');')(...Object.values(deps));
