@@ -70,3 +70,14 @@ production auto-reply: collection and transfer are manually invoked.
 - Live login, inbound retrieval, server ingest and draft persistence were exercised. Approved outgoing Instagram replies, continuous polling and end-to-end booking remain **unverified**.
 - Do not feed these namespaced IDs to the current Meta/BotHelp sender. A future local outgoing queue must verify destination, require approval during the pilot, retain deduplication and stop on uncertain send results.
 - Telegram, pricing, commissions, website and live channel configuration are unchanged. The existing Hub receiver gains the signed local route; the existing remote sender gains a guard rejecting local identities. No new Supabase function or table is required.
+
+
+## Outgoing delivery primitive (integration not activated)
+
+`bridge.deliver_approved_reply` now accepts one PCS-signed, explicitly approved reply job. The job is bound to the account, generation, one-to-one thread and recipient and expires within five minutes. Its signature uses a separate `pcs-instagram-outbound-v1` domain. Set `outgoing_enabled` explicitly in the private configuration only after controlled end-to-end verification; the absent/default value prevents all outgoing writes.
+
+The caller MUST hold the existing `delivery.lock` for the whole operation and use a separate DPAPI-encrypted receipt store (for example `outbound.dpapi`). A durable `sending` reservation is written before the Instagram request. Only a real provider message ID produces `sent`. Timeouts, missing acknowledgements and failure to save the final receipt leave the reservation non-retryable for manual reconciliation. Retrying an identical confirmed job returns its stored receipt without sending another message. Changing an already-used generation's body is rejected.
+
+This primitive does not enable automatic replies. The existing `--send-pending` command remains incoming/draft-only. The cloud claim/approval queue, signed job issuance, receipt acknowledgement into PCS and the permanent worker are still to be connected; no production end-to-end completion is claimed. Do not run multiple workers, recreate the receipt ledger, or mark a PCS generation sent before its Instagram acknowledgement. Session/password material must never be included in a job, source code, logs or an export.
+
+Focused tests: `python -B -m unittest test_outgoing test_intake test_bridge -v` (the bridge receiver compatibility test also requires the repository's existing Node runtime).

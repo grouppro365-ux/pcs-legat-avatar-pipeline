@@ -18,6 +18,69 @@ class BridgeError(Exception):
     pass
 
 
+def deliver_approved_reply(body, signature, config, client, receipt_store, now=None):
+    """Deliver one signed PCS job. Never retry an ambiguous Instagram send."""
+    if config.get("outgoing_enabled") is not True:
+        raise BridgeError("outgoing_disabled")
+    account = identifier(config.get("account_id"))
+    key = config.get("hmac_secret")
+    if not isinstance(key, str) or len(key) < 32 or not isinstance(body, bytes) or len(body) > 32768:
+        raise BridgeError("invalid_outgoing_job")
+    expected = hmac.new(key.encode("utf-8"), b"pcs-instagram-outbound-v1\n" + body, hashlib.sha256).hexdigest()
+    if not isinstance(signature, str) or not hmac.compare_digest(expected, signature):
+        raise BridgeError("invalid_outgoing_signature")
+    try:
+        job = json.loads(body)
+        generation = job["generation_id"]
+        thread_id = identifier(job["thread_id"])
+        recipient = identifier(job["recipient_id"])
+        text = job["text"]
+        expires = job["expires_at"]
+        seconds = int(time.time() if now is None else now)
+        valid = (job["account_id"] == account and str(client.user_id) == account and recipient != account
+                 and job["approved"] is True and isinstance(generation, str) and 0 < len(generation) <= 100
+                 and isinstance(text, str) and 0 < len(text.strip()) <= 8000
+                 and type(expires) is int and seconds < expires <= seconds + 300)
+        if not valid:
+            raise ValueError()
+    except Exception:
+        raise BridgeError("invalid_outgoing_job") from None
+    ledger = receipt_store.load()
+    if ledger is None:
+        ledger = {"version": 1, "account_id": account, "deliveries": {}}
+    if (not isinstance(ledger, dict) or type(ledger.get("version")) is not int or ledger.get("version") != 1
+            or ledger.get("account_id") != account or not isinstance(ledger.get("deliveries"), dict)):
+        raise BridgeError("receipt_account_mismatch")
+    digest = hashlib.sha256(body).hexdigest()
+    previous = ledger["deliveries"].get(generation)
+    if previous:
+        if previous.get("digest") != digest:
+            raise BridgeError("outgoing_job_changed")
+        if previous.get("status") == "sent":
+            return previous["receipt"]
+        raise BridgeError("delivery_uncertain_manual_review")
+    try:
+        thread = client.direct_thread(thread_id, amount=1)
+        users = {str(item.pk) for item in thread.users if str(item.pk) != account}
+        if str(thread.id) != thread_id or thread.is_group or thread.shh_mode_enabled or users != {recipient}:
+            raise ValueError()
+    except Exception:
+        raise BridgeError("outgoing_recipient_unverified") from None
+    # Reserve before the network write. A crash or lost acknowledgement leaves
+    # 'sending', which is deliberately not automatically retried.
+    ledger["deliveries"][generation] = {"status": "sending", "digest": digest}
+    receipt_store.save(ledger)
+    try:
+        delivered = client.direct_send(text, thread_ids=[thread_id])
+        message_id = identifier(getattr(delivered, "id", None))
+    except Exception:
+        raise BridgeError("delivery_uncertain_manual_review") from None
+    receipt = {"generation_id": generation, "message_id": message_id, "status": "sent"}
+    ledger["deliveries"][generation] = {"status": "sent", "digest": digest, "receipt": receipt}
+    receipt_store.save(ledger)
+    return receipt
+
+
 def signed_event(event, config, now=None):
     account = identifier(config.get("account_id"))
     key = config.get("hmac_secret")
@@ -107,3 +170,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
