@@ -119,7 +119,8 @@ export function isBookingConfirmation(text) {
 export function selectedVehicleReply(offer, item, catalogItem) {
   const dates = humanRentalDates(offer.start, offer.end);
   const name = publicVehicleName(catalogItem.title || item.title);
-  const quotedDeposit = item.security_deposit_thb ?? catalogItem.metadata?.security_deposit_thb;
+  const quotedOption = offer.options?.find(option => option.catalog_item_id === item.id);
+  const quotedDeposit = item.security_deposit_thb ?? quotedOption?.security_deposit_thb ?? catalogItem.metadata?.security_deposit_thb;
   const depositAmount = Number(quotedDeposit);
   const deposit = Number.isFinite(depositAmount) && depositAmount >= 0 && quotedDeposit != null ? ` Залог за сохранность авто — ${money(depositAmount, item.currency)}.` : '';
   return `Вы выбрали ${name} на ${dates}. Аренда — ${money(item.total, item.currency)}.${deposit}\n\nДля оформления нужны паспорт, международное водительское удостоверение и бронировочная предоплата. Её сумму согласуем отдельно для этой заявки; залог за сохранность авто — другая сумма. Если хотите продолжить, напишите «Хочу оформить». Пока автомобиль не забронирован.`;
