@@ -20,7 +20,7 @@ test('real follow-up handler excludes a car blocked by the operational calendar'
     from(table) {
       const q = {
         newer:false, select(){return this;}, update(){return this;}, insert(){return this;},
-        eq(){return this;}, is(){return this;}, in(){return this;}, lte(){return this;},
+        eq(){return this;}, is(){return this;}, not(){return this;}, in(){return this;}, lte(){return this;},
         gte(){return this;}, order(){return this;}, limit(){return this;},
         gt(){this.newer=true;return this;},
         result() {
@@ -46,7 +46,8 @@ test('real follow-up handler excludes a car blocked by the operational calendar'
     readOperationalAvailability:async()=>{operationalChecks++;return false;},operationalDb:async()=>({}),
   };
   const processOne = new Function(...Object.keys(deps),'return ('+handler+');')(...Object.values(deps));
-  await processOne(followup);
+  const result = await processOne(followup);
+  assert.equal(result.sent,true,result.error || 'the handler must complete without fixture errors');
   assert.equal(sent.some(p=>String(p.text||p.caption||'').includes(car.title)),false,
     'an empty Supabase calendar must not override the operational booking conflict');
   assert.equal(operationalChecks,1,'availability must consult the operational calendar');
