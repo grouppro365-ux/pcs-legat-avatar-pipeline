@@ -58,6 +58,33 @@ BEGIN
     ASSERT (SELECT count(*)=1 FROM public.pcs_instagram_outbox WHERE generation_id=fid),'duplicate_queue_record';
     ASSERT (SELECT reply_text='Regression offer - 1320 THB' FROM public.pcs_instagram_outbox WHERE generation_id=fid),'retry_changed_reply';
     ASSERT (SELECT status='queued' FROM public.pcs_customer_followups WHERE id=fid),'retry_faked_delivery';
+    BEGIN
+      result:=public.pcs_instagram_outbox_claim(account,fid,ARRAY[recipient]);
+      ASSERT result#>>'{job,generation_id}'=fid::text,'eligible_job_not_claimed';
+      ASSERT result#>>'{job,text}'='Regression offer - 1320 THB','claim_changed_quote';
+      ASSERT (SELECT status='sending' FROM public.pcs_instagram_outbox WHERE generation_id=fid),'claim_not_recorded';
+      ASSERT (SELECT status='queued' FROM public.pcs_customer_followups WHERE id=fid),'claim_marked_sent';
+      ASSERT public.pcs_instagram_outbox_claim(account,fid,ARRAY[recipient])=result,'claim_replay_not_idempotent';
+      UPDATE public.pcs_contacts SET status='OPTED_OUT' WHERE id=cid;
+      ASSERT public.pcs_instagram_outbox_claim(account,fid,ARRAY[recipient]) IS NULL,'revoked_claim_reissued';
+      RAISE EXCEPTION USING ERRCODE='P0902',MESSAGE='rollback_claim_case';
+    EXCEPTION WHEN SQLSTATE 'P0902' THEN NULL; END;
+    BEGIN
+      UPDATE public.pcs_contacts SET status='OPTED_OUT' WHERE id=cid;
+      ASSERT public.pcs_instagram_outbox_claim(account,gen_random_uuid(),ARRAY[recipient]) IS NULL,'opted_out_job_claimed';
+      RAISE EXCEPTION USING ERRCODE='P0902',MESSAGE='rollback_claim_case';
+    EXCEPTION WHEN SQLSTATE 'P0902' THEN NULL; END;
+    BEGIN
+      UPDATE public.pcs_contacts SET followup_enabled=false WHERE id=cid;
+      ASSERT public.pcs_instagram_outbox_claim(account,gen_random_uuid(),ARRAY[recipient]) IS NULL,'disabled_followup_job_claimed';
+      RAISE EXCEPTION USING ERRCODE='P0902',MESSAGE='rollback_claim_case';
+    EXCEPTION WHEN SQLSTATE 'P0902' THEN NULL; END;
+    BEGIN
+      INSERT INTO public.pcs_messages(contact_id,direction,text,status,channel,created_at)
+        VALUES(cid,'in','Please change the dates','received','instagram',now());
+      ASSERT public.pcs_instagram_outbox_claim(account,gen_random_uuid(),ARRAY[recipient]) IS NULL,'superseded_job_claimed';
+      RAISE EXCEPTION USING ERRCODE='P0902',MESSAGE='rollback_claim_case';
+    EXCEPTION WHEN SQLSTATE 'P0902' THEN NULL; END;
     UPDATE public.pcs_instagram_outbox SET status='sending',claim_id=cid WHERE generation_id=fid;
     ASSERT (SELECT status='queued' FROM public.pcs_customer_followups WHERE id=fid),'claim_faked_delivery';
     ASSERT public.pcs_instagram_outbox_ack(account,fid,cid,'uncertain',null),'uncertain_ack_rejected';
@@ -69,7 +96,7 @@ BEGIN
     ASSERT public.pcs_instagram_outbox_ack(account,fid,cid,'sent',thread),'receipt_retry_failed';
     ASSERT (SELECT count(*)=1 FROM public.pcs_messages WHERE contact_id=cid AND direction='out'
       AND external_message_id='instagrapi:'||account||':'||thread),'duplicate_delivery_receipt';
-    report:='passed:atomic_route_frozen_quote_idempotency_service_only_optout_stale_private_fields_delivery_receipts';
+    report:='passed:atomic_route_frozen_quote_idempotency_service_only_optout_stale_private_fields_delivery_receipts_claim_eligibility';
     RAISE EXCEPTION USING ERRCODE='P0901',MESSAGE='rollback_synthetic_fixture';
   EXCEPTION
     WHEN SQLSTATE 'P0901' THEN NULL;
