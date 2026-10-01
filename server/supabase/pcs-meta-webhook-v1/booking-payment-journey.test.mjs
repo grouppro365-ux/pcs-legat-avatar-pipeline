@@ -19,7 +19,7 @@ test('Instagram deposit question reads the existing request without creating a b
   });
   assert.equal(result?.action, 'payment_info');
   assert.deepEqual(reads, [['request-1', 'client-1']]);
-  assert.match(result.answer, /1\\s?000 бат/);
+  assert.match(result.answer, /1\s?000 бат/);
   assert.match(result.answer, /не забронирован/);
   assert.doesNotMatch(result.answer, /уже прислали выше/);
 });

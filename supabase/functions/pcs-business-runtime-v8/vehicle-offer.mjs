@@ -21,6 +21,16 @@ export function resolveVehicleChoice(text, offer, now = Date.now()) {
 }
 
 export async function continueVehicleBooking({text, offer, contactId, store, now = Date.now()}) {
+  if (offer?.intent === 'car_rent' && offer.stage === 'awaiting_documents' && offer.booking_request_id &&
+      /^(?:сколько(?:\s+нужно)?\s+внести(?:\s+предоплат[уы])?|какая(?:\s+сумма)?\s+предоплат[аы]|сколько\s+предоплата)\s*[?!.]*$/iu.test(String(text || '').trim())) {
+    const request = await store.paymentRequest(offer.booking_request_id, contactId);
+    if (!request || request.id !== offer.booking_request_id || request.contact_id !== contactId ||
+        request.offer_id !== offer.id || request.status !== 'collecting') return null;
+    const amount = Number(request.booking_deposit_amount);
+    return {action: 'payment_info', request, offer,
+      needsHuman: request.booking_deposit_amount == null || !Number.isFinite(amount) || amount <= 0,
+      answer: bookingPaymentReply(request, {instructionsAvailable: false})};
+  }
   const choice = resolveVehicleChoice(text, offer, now);
   if (!choice) return null;
   const errors = {
@@ -64,11 +74,11 @@ export function securityDepositLine(metadata, currency = 'THB') {
   return `\nЗалог за сохранность авто: ${new Intl.NumberFormat('ru-RU').format(amount)} ${currency}`;
 }
 
-export function bookingPaymentReply(request) {
+export function bookingPaymentReply(request, {instructionsAvailable = true} = {}) {
   const amount = request?.booking_deposit_amount == null ? null : Number(request.booking_deposit_amount);
   const formatted = Number.isFinite(amount) && amount > 0 ? `${new Intl.NumberFormat('ru-RU').format(amount)} бат` : null;
   if (!formatted) return 'Сумму бронировочной предоплаты уточним именно для вашей заявки и сообщим вместе с проверенными реквизитами. Паспорт и МВУ тоже нужно проверить. Пока автомобиль не забронирован.';
-  if (request.payment_status === 'requested') return `По вашей заявке предоплата — ${formatted}. Реквизиты мы уже прислали выше. После оплаты отправьте чек сюда; поступление проверим отдельно. Пока автомобиль не забронирован.`;
+  if (instructionsAvailable && request.payment_status === 'requested') return `По вашей заявке предоплата — ${formatted}. Реквизиты мы уже прислали выше. После оплаты отправьте чек сюда; поступление проверим отдельно. Пока автомобиль не забронирован.`;
   return `По вашей заявке предоплата — ${formatted}. Реквизиты сообщим после проверки. Пожалуйста, не переводите деньги по старым реквизитам. Пока автомобиль не забронирован.`;
 }
 
