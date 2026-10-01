@@ -11,7 +11,7 @@ test('follow-up preserves explicit ISO rental dates instead of interpreting thei
   assert.ok(start >= 0 && end > start, 'the real date helper must be present');
   const helpers = stripTypeScriptTypes(source.slice(start, end));
   const dateRange = new Function('ymd','parseRentalRange',helpers+'; return dateRange;')(
-    date => date.toISOString().slice(0,10), parseRentalRange);
+    date => date.toISOString().slice(0,10), text => parseRentalRange(text,new Date('2026-10-01T00:00:00Z')));
   assert.deepEqual(dateRange('Паттайя, аренда 2026-11-10 — 2026-11-12'),
     {start:'2026-11-10',end:'2026-11-12'});
 });
