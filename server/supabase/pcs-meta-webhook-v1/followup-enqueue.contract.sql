@@ -58,7 +58,18 @@ BEGIN
     ASSERT (SELECT count(*)=1 FROM public.pcs_instagram_outbox WHERE generation_id=fid),'duplicate_queue_record';
     ASSERT (SELECT reply_text='Regression offer - 1320 THB' FROM public.pcs_instagram_outbox WHERE generation_id=fid),'retry_changed_reply';
     ASSERT (SELECT status='queued' FROM public.pcs_customer_followups WHERE id=fid),'retry_faked_delivery';
-    report:='passed:atomic_route_frozen_quote_idempotency_service_only_optout_stale_private_fields';
+    UPDATE public.pcs_instagram_outbox SET status='sending',claim_id=cid WHERE generation_id=fid;
+    ASSERT (SELECT status='queued' FROM public.pcs_customer_followups WHERE id=fid),'claim_faked_delivery';
+    ASSERT public.pcs_instagram_outbox_ack(account,fid,cid,'uncertain',null),'uncertain_ack_rejected';
+    ASSERT (SELECT status='failed' AND last_error LIKE 'needs_reconciliation:%'
+      FROM public.pcs_customer_followups WHERE id=fid),'uncertain_followup_not_held';
+    ASSERT public.pcs_instagram_outbox_ack(account,fid,cid,'sent',thread),'late_receipt_rejected';
+    ASSERT (SELECT status='sent' AND completed_at IS NOT NULL AND sent_message_ids=jsonb_build_array(thread)
+      FROM public.pcs_customer_followups WHERE id=fid),'receipt_not_applied_to_followup';
+    ASSERT public.pcs_instagram_outbox_ack(account,fid,cid,'sent',thread),'receipt_retry_failed';
+    ASSERT (SELECT count(*)=1 FROM public.pcs_messages WHERE contact_id=cid AND direction='out'
+      AND external_message_id='instagrapi:'||account||':'||thread),'duplicate_delivery_receipt';
+    report:='passed:atomic_route_frozen_quote_idempotency_service_only_optout_stale_private_fields_delivery_receipts';
     RAISE EXCEPTION USING ERRCODE='P0901',MESSAGE='rollback_synthetic_fixture';
   EXCEPTION
     WHEN SQLSTATE 'P0901' THEN NULL;
