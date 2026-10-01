@@ -5,8 +5,8 @@ import { languageForMessage, socialIntent, socialReply } from './social.mjs';
 import { buildSystemPrompt, humanRisk } from './journey.mjs';
 import { parseBotHelpPayload } from './bothelp.mjs';
 import { hubMessage } from './conversation-hub.mjs';
-import { shouldGenerateCustomerReply, mayAutoSendHubReply } from './channel-policy.mjs';
-import { receiveLocalInstagram, localEventStore } from './instagram-local.mjs';
+import { shouldGenerateCustomerReply, mayAutoSendHubReply, mayQueueLocalReply } from './channel-policy.mjs';
+import { receiveLocalInstagram, localEventStore, receiveLocalOutbox, localOutboxStore } from './instagram-local.mjs';
 import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
 import { continueVehicleBooking } from '../../../supabase/functions/pcs-business-runtime-v8/vehicle-offer.mjs';
 import { carOfferSnapshot, carOffersReply } from './car-rental-response.mjs';
@@ -513,7 +513,21 @@ async function dispatch(channel: string, contactId: string, text: string) {
   return payload;
 }
 
-async function processInbound(channel: string, row: any, localDraft = false) {
+async function queueLocalReply(record: any, row: any, config: any) {
+  const account=String(config?.account_id||'');
+  const scoped=new RegExp('^instagrapi:'+account+':([0-9]{1,80})$');
+  const thread=scoped.exec(String(row.conversation_id||'')),recipient=scoped.exec(String(row.external_user_id||''));
+  if(config?.enabled!==true || config?.outgoing_enabled!==true || !thread || !recipient ||
+    row.account!=='instagrapi:'+account || record.policy_decision!=='auto' || record.requires_human!==false ||
+    record.risk!=='low' || (Array.isArray(config.pilot_recipient_ids)&&!config.pilot_recipient_ids.includes(recipient[1]))) {
+    throw new Error('local_outbox_not_authorized');
+  }
+  const {error}=await sb.from('pcs_instagram_outbox').upsert({
+    generation_id:record.id,account_id:account,thread_id:thread[1],recipient_id:recipient[1],reply_text:record.answer
+  },{onConflict:'generation_id',ignoreDuplicates:true});
+  if(error)throw error;
+}
+async function processInbound(channel: string, row: any, localDraft = false, localConfig: any = null) {
   const { data: connection } = await sb.from('pcs_channel_connections').select('*').eq('channel', channel).maybeSingle();
   if (channel === 'instagram' && !localDraft) {
     const transport = String(connection?.public_config?.transport || 'meta');
@@ -529,11 +543,14 @@ async function processInbound(channel: string, row: any, localDraft = false) {
       .eq('external_message_id', row.message_id).eq('direction', 'in').maybeSingle();
     if (existing.error) throw existing.error;
     if (!existing.data) throw new Error('local_ingest_requires_recovery');
-    const prior = await sb.from('pcs_ai_generations').select('id').eq('source_message_id', existing.data.id)
-      .eq('status', 'approval_required').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const prior = await sb.from('pcs_ai_generations').select('id,status,answer,policy_decision,requires_human,risk').eq('source_message_id', existing.data.id)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (prior.error) throw prior.error;
-    if (prior.data?.id) return { action: 'approval_required', contact_id: existing.data.contact_id,
-      generation_id: prior.data.id };
+    if(prior.data?.id) {
+      if(prior.data.status==='pending_send')await queueLocalReply(prior.data,row,localConfig);
+      return {action:['pending_send','sending','sent'].includes(prior.data.status)?'pending_send':'approval_required',
+        contact_id:existing.data.contact_id,generation_id:prior.data.id};
+    }
     const contact = await contactFor(channel, row.external_user_id, row.name);
     saved = { messageId: existing.data.id, contact, language: languageForMessage(row.text, contact.detected_language) };
   }
@@ -548,6 +565,8 @@ async function processInbound(channel: string, row: any, localDraft = false) {
   const replyMode = String(connection?.public_config?.reply_mode || 'draft');
   const providerUnavailable = generated.model === 'safe-fallback';
   const canAutoSend = mayAutoSendHubReply({ localDraft, connection, generated, risk, replyMode });
+  const canQueueLocal=localDraft&&mayQueueLocalReply({config:localConfig,row,generated,risk});
+  const automatic=canAutoSend||canQueueLocal;
   const generation: any = {
     contact_id: saved.contact.id,
     source_message_id: saved.messageId,
@@ -556,19 +575,24 @@ async function processInbound(channel: string, row: any, localDraft = false) {
     intent: saved.contact.intent || null,
     confidence: generated.confidence,
     risk: risk ? 'high' : 'low',
-    requires_human: !canAutoSend,
+    requires_human: !automatic,
     answer: generated.answer,
-    next_action: canAutoSend ? 'Ответить автоматически' : 'Проверить и отправить ответ',
+    next_action: canQueueLocal ? 'Дождаться доставки Instagram' : canAutoSend ? 'Ответить автоматически' : 'Проверить и отправить ответ',
     knowledge_item_ids: generated.knowledgeIds,
-    policy_decision: canAutoSend ? 'auto' : 'approval',
-    policy_reason: manualAttachment ? 'attachment_manual_review' : localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
-    status: canAutoSend ? 'sending' : 'approval_required',
+    policy_decision: automatic ? 'auto' : 'approval',
+    policy_reason: canQueueLocal ? 'local_instagram_outbox' : manualAttachment ? 'attachment_manual_review' : localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
+    status: canQueueLocal ? 'pending_send' : canAutoSend ? 'sending' : 'approval_required',
     business_connection_id: channel,
     source_text: row.text,
     offer_snapshot: (generated as any).offerSnapshot || null,
   };
   const { data: record, error } = await sb.from('pcs_ai_generations').insert(generation).select('*').single();
   if (error) throw error;
+  if(canQueueLocal) {
+    await queueLocalReply(record,row,localConfig);
+    await setConversationState(saved.contact.id,'IN_PROGRESS','Ответ ожидает доставки Instagram');
+    return {action:'pending_send',contact_id:saved.contact.id,generation_id:record.id};
+  }
   if (!canAutoSend) {
     const channelLabel = channel === 'line' ? 'LINE' : channel === 'whatsapp' ? 'WhatsApp' : channel === 'facebook' ? 'Facebook' : 'Instagram';
     const taskTitle = risk ? `${channelLabel}: требуется оператор` : `Проверить ответ ${channelLabel}`;
@@ -629,11 +653,16 @@ Deno.serve(async (request) => {
   if (declaredLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413);
   const bytes = new Uint8Array(await request.arrayBuffer());
   if (bytes.byteLength > MAX_BODY_BYTES) return json({ error: 'payload_too_large' }, 413);
+  if(channel==='instagram'&&url.searchParams.get('source')==='instagrapi-outbox') {
+    let config=null;
+    try {config=JSON.parse(await secret('channel_instagram_local_bridge'));} catch {}
+    return receiveLocalOutbox({bytes,headers:request.headers,config,store:localOutboxStore(sb)});
+  }
   if (channel === 'instagram' && url.searchParams.get('source') === 'instagrapi') {
     let config = null;
     try { config = JSON.parse(await secret('channel_instagram_local_bridge')); } catch { /* disabled until explicitly provisioned */ }
     return receiveLocalInstagram({ bytes, headers: request.headers, config, store: localEventStore(sb),
-      process: (row: any) => processInbound('instagram', row, true) });
+      process: (row: any) => processInbound('instagram', row, true, config) });
   }
   const botHelp = channel === 'instagram' && String(url.searchParams.get('source') || '').toLowerCase() === 'bothelp';
   if (botHelp) {
@@ -671,5 +700,6 @@ Deno.serve(async (request) => {
   else await job;
   return json({ ok: true, accepted: true });
 });
+
 
 

@@ -42,6 +42,12 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(self.transport.post.call_args.args[0], HUB_URL)
         self.assertFalse(self.transport.post.call_args.kwargs["allow_redirects"])
 
+    def test_queued_answer_is_acknowledged_without_claiming_delivery(self):
+        self.transport.post.return_value.json.return_value = dict(self.receipt, action="pending_send")
+        result = forward_pending(self.state, self.config, self.store, self.transport)
+        self.assertEqual(result["acknowledged"], 1)
+        self.assertEqual(result["mode"], "queued")
+
     def test_server_failure_or_redirect_keeps_event_unacknowledged(self):
         for status in [301, 302, 401, 409, 500, 503]:
             self.transport.post.return_value.status_code = status
@@ -114,3 +120,4 @@ class BridgeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

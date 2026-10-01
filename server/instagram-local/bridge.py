@@ -10,12 +10,81 @@ import time
 from intake import EncryptedStore, identifier
 
 HUB_URL = "https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-meta-webhook-v1?channel=instagram&source=instagrapi"
+OUTBOX_URL = "https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-meta-webhook-v1?channel=instagram&source=instagrapi-outbox"
 FIELDS = {"channel", "account", "conversation_id", "external_user_id", "message_id", "timestamp",
           "language", "text", "attachments", "reply_to", "kind", "name", "raw"}
 
 
 class BridgeError(Exception):
     pass
+
+
+def relay_outgoing(config, client, receipt_store, control_store, transport):
+    """One durable cloud claim/send/ack cycle. Caller holds delivery.lock."""
+    import uuid
+    if config.get("outgoing_enabled") is not True:
+        raise BridgeError("outgoing_disabled")
+    account = identifier(config.get("account_id"))
+    key = config.get("hmac_secret")
+    if not isinstance(key, str) or len(key) < 32:
+        raise BridgeError("bridge_not_configured")
+    state = control_store.load()
+    if state is None:
+        state = {"version": 1, "account_id": account, "request_id": str(uuid.uuid4()), "claimed": None, "ack": None}
+        control_store.save(state)
+    if (not isinstance(state, dict) or type(state.get("version")) is not int or state["version"] != 1
+            or state.get("account_id") != account or not isinstance(state.get("request_id"), str)):
+        raise BridgeError("outbox_control_invalid")
+
+    def request(payload):
+        body = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        timestamp = str(int(time.time()))
+        signature = hmac.new(key.encode(), f"pcs-instagram-outbox-v1\n{timestamp}\n".encode() + body,
+                             hashlib.sha256).hexdigest()
+        try:
+            response = transport.post(OUTBOX_URL, data=body, headers={"content-type": "application/json",
+                "x-pcs-local-timestamp": timestamp, "x-pcs-local-signature": signature},
+                timeout=(10, 30), allow_redirects=False)
+            result = response.json()
+            if response.status_code != 200 or not isinstance(result, dict) or result.get("ok") is not True:
+                raise ValueError()
+            return result
+        except Exception:
+            raise BridgeError("outbox_not_acknowledged") from None
+
+    if state.get("ack") is None:
+        if state.get("claimed") is None:
+            claimed = request({"action": "claim", "account_id": account, "request_id": state["request_id"]})
+            if "job" not in claimed:
+                raise BridgeError("invalid_outbox_receipt")
+            if claimed["job"] is None:
+                control_store.save(None)
+                return {"status": "idle"}
+            if (not isinstance(claimed["job"], dict) or not isinstance(claimed["job"].get("body"), str)
+                    or not isinstance(claimed.get("claim_id"), str)):
+                raise BridgeError("invalid_outbox_receipt")
+            state["claimed"] = claimed
+            control_store.save(state)
+        claimed = state["claimed"]
+        envelope = claimed["job"]
+        try:
+            receipt = deliver_approved_reply(envelope["body"].encode("utf-8"), envelope.get("signature"),
+                                             config, client, receipt_store)
+            ack = {"status": "sent", "message_id": receipt["message_id"], "generation_id": receipt["generation_id"]}
+        except BridgeError as error:
+            if str(error) != "delivery_uncertain_manual_review":
+                raise
+            ack = {"status": "uncertain", "generation_id": json.loads(envelope["body"])["generation_id"]}
+        state["ack"] = dict(ack, action="ack", account_id=account, request_id=state["request_id"], claim_id=claimed["claim_id"])
+        control_store.save(state)
+    accepted = request(state["ack"])
+    if accepted.get("acknowledged") is not True or accepted.get("generation_id") != state["ack"]["generation_id"]:
+        raise BridgeError("invalid_outbox_receipt")
+    status = state["ack"]["status"]
+    control_store.save(None)
+    if status == "uncertain":
+        raise BridgeError("delivery_uncertain_manual_review")
+    return {"status": "sent"}
 
 
 def deliver_approved_reply(body, signature, config, client, receipt_store, now=None):
@@ -114,6 +183,7 @@ def forward_pending(state, config, receipt_store, transport=None, limit=10):
         import requests
         transport = requests.Session()
     sent = 0
+    queued = 0
     pending = [event for event in state["events"] if event["message_id"] not in receipts["acknowledged"]]
     try:
         for event in pending[:limit]:
@@ -126,7 +196,7 @@ def forward_pending(state, config, receipt_store, transport=None, limit=10):
             except Exception:
                 raise BridgeError("hub_did_not_acknowledge") from None
             if (not isinstance(result, dict) or result.get("ok") is not True or result.get("accepted") is not True or
-                    result.get("event_id") != event["message_id"] or result.get("action") != "approval_required" or
+                    result.get("event_id") != event["message_id"] or result.get("action") not in {"approval_required", "pending_send"} or
                     not isinstance(result.get("generation_id"), str) or not result["generation_id"]):
                 raise BridgeError("invalid_hub_receipt")
             receipts["acknowledged"][event["message_id"]] = result["generation_id"]
@@ -134,10 +204,11 @@ def forward_pending(state, config, receipt_store, transport=None, limit=10):
             # obtains the original server receipt by the stable event ID.
             receipt_store.save(receipts)
             sent += 1
+            queued += int(result["action"] == "pending_send")
     finally:
         if owned:
             transport.close()
-    return {"acknowledged": sent, "remaining": len(pending) - sent, "mode": "draft_only"}
+    return {"acknowledged": sent, "remaining": len(pending) - sent, "mode": "queued" if queued else "draft_only"}
 
 
 def main():

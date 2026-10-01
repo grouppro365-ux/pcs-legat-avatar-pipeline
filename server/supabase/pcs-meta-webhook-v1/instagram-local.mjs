@@ -36,11 +36,11 @@ function parseRow(body, accountId, now) {
 }
 
 function receipt(messageId, result) {
-  if (result?.action !== 'approval_required' || typeof result.generation_id !== 'string' || !result.generation_id) {
+  if (!['approval_required', 'pending_send'].includes(result?.action) || typeof result.generation_id !== 'string' || !result.generation_id) {
     throw new Error('local_draft_not_persisted');
   }
   return { ok: true, accepted: true, event_id: messageId,
-    action: 'approval_required', generation_id: result.generation_id };
+    action: result.action, generation_id: result.generation_id };
 }
 
 // The caller provides the existing Hub processor, not channel-specific sales logic.
@@ -112,3 +112,79 @@ export function localEventStore(sb) {
     },
   };
 }
+
+// A separate signature domain prevents replaying an incoming message as a
+// request to claim or acknowledge an outgoing reply.
+export async function receiveLocalOutbox({ bytes, headers, config, store, now = Date.now() }) {
+  const requestClock = Date.now();
+  if (bytes.byteLength > 4096) return json({ error: 'payload_too_large' }, 413);
+  if (config?.enabled !== true || config?.outgoing_enabled !== true ||
+      !/^[0-9]{1,80}$/.test(String(config?.account_id || '')) ||
+      typeof config?.hmac_secret !== 'string' || config.hmac_secret.length < 32) {
+    return json({ error: 'outgoing_disabled' }, 503);
+  }
+  const timestamp = headers.get('x-pcs-local-timestamp') || '';
+  const signature = headers.get('x-pcs-local-signature') || '';
+  if (!/^[0-9]{10}$/.test(timestamp) || Math.abs(now - Number(timestamp) * 1000) > 300_000 ||
+      !/^[a-f0-9]{64}$/.test(signature)) return json({ error: 'invalid_outbox_signature' }, 401);
+  const prefix = encoder.encode(`pcs-instagram-outbox-v1\n${timestamp}\n`);
+  const signed = new Uint8Array(prefix.length + bytes.length);
+  signed.set(prefix); signed.set(bytes, prefix.length);
+  const key = await crypto.subtle.importKey('raw', encoder.encode(config.hmac_secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  if (!equal(signature, hex(await crypto.subtle.sign('HMAC', key, signed)))) {
+    return json({ error: 'invalid_outbox_signature' }, 401);
+  }
+  const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  let input;
+  try {
+    input = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    if (input.account_id !== String(config.account_id) || !uuid(input.request_id) || !['claim', 'ack'].includes(input.action)) throw new Error();
+    if (input.action === 'ack' && (!uuid(input.generation_id) || !uuid(input.claim_id) ||
+        !['sent', 'uncertain'].includes(input.status) ||
+        (input.status === 'sent' && !/^[0-9]{1,80}$/.test(input.message_id || '')))) throw new Error();
+  } catch { return json({ error: 'invalid_outbox_request' }, 400); }
+  try {
+    if (input.action === 'ack') {
+      await store.ack(input);
+      return json({ ok: true, acknowledged: true, generation_id: input.generation_id });
+    }
+    const claimed = await store.claim(String(config.account_id), input.request_id, config.pilot_recipient_ids || null);
+    if (!claimed) return json({ ok: true, job: null });
+    const job = claimed.job;
+    const responseSeconds = Math.floor((now + Date.now() - requestClock) / 1000);
+    if (!uuid(claimed.claim_id) || !uuid(job?.generation_id) || job?.account_id !== String(config.account_id) ||
+        !/^[0-9]{1,80}$/.test(job?.thread_id || '') || !/^[0-9]{1,80}$/.test(job?.recipient_id || '') ||
+        job.recipient_id === job.account_id || job.approved !== true ||
+        typeof job.text !== 'string' || !job.text.trim() || job.text.length > 8000 ||
+        !Number.isSafeInteger(job.expires_at) || job.expires_at <= responseSeconds || job.expires_at > responseSeconds + 300) {
+      return json({ error: 'outbox_job_requires_review' }, 409);
+    }
+    const body = JSON.stringify(job);
+    const signature = hex(await crypto.subtle.sign('HMAC', key, encoder.encode('pcs-instagram-outbound-v1\n' + body)));
+    return json({ ok: true, claim_id: claimed.claim_id, job: { body, signature } });
+  } catch { return json({ error: 'outbox_not_completed' }, 503); }
+}
+
+export function localOutboxStore(sb) {
+  return {
+    async claim(account, requestId, recipients) {
+      const settings=await sb.from('pcs_settings').select('auto_send').eq('id','main').maybeSingle();
+      if(settings.error) throw settings.error;
+      if(settings.data?.auto_send !== true) return null;
+      const { data, error } = await sb.rpc('pcs_instagram_outbox_claim', {
+        p_account: account, p_request: requestId, p_recipients: recipients,
+      });
+      if (error) throw error;
+      return data;
+    },
+    async ack(input) {
+      const { error } = await sb.rpc('pcs_instagram_outbox_ack', {
+        p_account: input.account_id, p_generation: input.generation_id, p_claim: input.claim_id,
+        p_status: input.status, p_message: input.status === 'sent' ? input.message_id : null,
+      });
+      if (error) throw error;
+    },
+  };
+}
+
+
