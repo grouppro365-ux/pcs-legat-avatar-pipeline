@@ -11,7 +11,7 @@ from pathlib import Path
 import time
 from intake import EncryptedStore, IntakeError, read_only_client, utc
 from collect_once import collect_snapshot
-from bridge import forward_pending, relay_outgoing
+from bridge import BridgeError, forward_pending, relay_outgoing
 
 
 def cycle(account, config, reader, sender, stores, transport):
@@ -104,9 +104,13 @@ def run(argv=None):
         with lock_file(runtime["directory"] / "relay.lock"):
             while True:
                 if args.once or monitor.percent() < 80:
-                    with lock_file(runtime["directory"] / "delivery.lock"):
-                        result = cycle(*(runtime[key] for key in
-                                         ("account", "config", "reader", "sender", "stores", "transport")))
+                    try:
+                        with lock_file(runtime["directory"] / "delivery.lock"):
+                            result = cycle(*(runtime[key] for key in
+                                             ("account", "config", "reader", "sender", "stores", "transport")))
+                    except BridgeError as error:
+                        if args.once or str(error) not in {"hub_did_not_acknowledge", "outbox_not_acknowledged"}:
+                            raise
                     if args.once:
                         return result
                 time.sleep(60)
