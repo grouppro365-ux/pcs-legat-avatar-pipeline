@@ -171,6 +171,10 @@ export function localOutboxStore(sb) {
       const settings=await sb.from('pcs_settings').select('auto_send').eq('id','main').maybeSingle();
       if(settings.error) throw settings.error;
       if(settings.data?.auto_send !== true) return null;
+      const connection=await sb.from('pcs_channel_connections').select('enabled,status,public_config').eq('channel','instagram').maybeSingle();
+      if(connection.error) throw connection.error;
+      if(connection.data?.enabled !== true || connection.data?.status !== 'active' ||
+          connection.data?.public_config?.reply_mode !== 'auto') return null;
       const { data, error } = await sb.rpc('pcs_instagram_outbox_claim', {
         p_account: account, p_request: requestId, p_recipients: recipients,
       });
