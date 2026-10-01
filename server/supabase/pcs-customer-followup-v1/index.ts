@@ -1,6 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { neon } from 'npm:@neondatabase/serverless@1.0.1';
 import { readOperationalAvailability } from '../../../supabase/functions/pcs-business-runtime-v8/operational-availability.mjs';
+import { parseRentalRange } from '../../../supabase/functions/_shared/rental-period.mjs';
 const sb=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
 let operationalDbPromise: Promise<any> | null = null;
 async function operationalDb() {
@@ -24,7 +25,7 @@ function ymd(d:Date){return d.toISOString().slice(0,10)}
 const months:any={января:0,январь:0,февраля:1,февраль:1,марта:2,март:2,апреля:3,апрель:3,мая:4,май:4,июня:5,июнь:5,июля:6,июль:6,августа:7,август:7,сентября:8,сентябрь:8,октября:9,октябрь:9,ноября:10,ноябрь:10,декабря:11,декабрь:11,january:0,february:1,march:2,april:3,may:4,june:5,july:6,august:7,september:8,october:9,november:10,december:11};
 function mkDate(day:number,month:number,year?:number){const now=new Date();let y=year||now.getUTCFullYear();let d=new Date(Date.UTC(y,month,day));if(!year&&d.getTime()<now.getTime()-45*86400000)d=new Date(Date.UTC(y+1,month,day));return d}
 function parseAllDates(text:string){const out:{date:Date,index:number}[]=[];const num=/\b(\d{1,2})[.\/-](\d{1,2})(?:[.\/-](\d{2,4}))?\b/g;let m:any;while((m=num.exec(text))){let y=m[3]?Number(m[3]):undefined;if(y&&y<100)y+=2000;out.push({date:mkDate(Number(m[1]),Number(m[2])-1,y),index:m.index})}const named=new RegExp(`\\b(\\d{1,2})\\s+(${Object.keys(months).join('|')})(?:\\s+(\\d{4}))?`,'giu');while((m=named.exec(text.toLowerCase()))){out.push({date:mkDate(Number(m[1]),months[m[2]],m[3]?Number(m[3]):undefined),index:m.index})}return out.sort((a,b)=>a.index-b.index)}
-function dateRange(text:string){const now=new Date();const ds=parseAllDates(text);if(!ds.length)return null;const lower=text.toLowerCase();let start:Date|null=null,end:Date|null=null;for(const x of ds){const before=lower.slice(Math.max(0,x.index-18),x.index);if(/(до|по|until|till|through)\s*$/.test(before))end=x.date;else if(/(с|от|после|from|after)\s*$/.test(before))start=x.date;else if(!start)start=x.date;else if(!end)end=x.date}if(!end&&start){end=start;start=new Date(now)}if(end&&!start)start=new Date(now);if(start&&end&&start>end){const z=start;start=end;end=z}return start&&end?{start:ymd(start),end:ymd(end)}:null}
+function dateRange(text:string){const range=parseRentalRange(text);return range?{start:range.start,end:range.end}:null}
 async function fx(){const {data}=await sb.from('pcs_fx_cache').select('rates').eq('base_currency','THB').order('fetched_at',{ascending:false}).limit(1).maybeSingle();return data?.rates||null}
 function fmt(n:number,c:string){return new Intl.NumberFormat(c==='RUB'?'ru-RU':c==='EUR'?'de-DE':c==='PLN'?'pl-PL':c==='CNY'?'zh-CN':c==='JPY'?'ja-JP':c==='KRW'?'ko-KR':c==='KZT'?'kk-KZ':'en-US',{maximumFractionDigits:zero.has(c)?0:2,minimumFractionDigits:0}).format(n)+' '+c}
 function price(v:any,target:string,rates:any){const n=Number(v);if(!Number.isFinite(n)||n<=0)return null;if(target==='THB')return fmt(n,'THB');const rate=Number(rates?.[target]);return Number.isFinite(rate)&&rate>0?fmt(n*rate,target):fmt(n,'THB')}
