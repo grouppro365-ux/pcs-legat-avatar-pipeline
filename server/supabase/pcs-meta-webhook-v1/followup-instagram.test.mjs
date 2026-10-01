@@ -5,6 +5,7 @@ import { stripTypeScriptTypes } from 'node:module';
 import { carOffersReply, carOfferSnapshot } from './car-rental-response.mjs';
 
 test('real Instagram follow-up uses the durable outbox, never Telegram or a false sent state', async () => {
+  for(const inventoryAvailable of [true,false]){
   const source = readFileSync(new URL('../pcs-customer-followup-v1/index.ts', import.meta.url), 'utf8');
   const start = source.indexOf('async function processOne(');
   const end = source.indexOf('\nDeno.serve(', start);
@@ -31,7 +32,7 @@ test('real Instagram follow-up uses the durable outbox, never Telegram or a fals
           const data = table==='pcs_customer_followups' ? followup
             : table==='pcs_ai_generations' ? (this.newer ? null : generation)
             : table==='pcs_contacts' ? {id:'client-1',city:'Паттайя',language:'ru'}
-            : table==='pcs_catalog_items' ? [car]
+            : table==='pcs_catalog_items' ? (inventoryAvailable?[car]:[])
             : table==='pcs_reservations' ? [] : table==='pcs_messages' ? {channel:'instagram'} : null;
           return {data,error:null};
         },
@@ -49,16 +50,22 @@ test('real Instagram follow-up uses the durable outbox, never Telegram or a fals
     sb, carOffersReply, carOfferSnapshot, dateRange:()=>({start:'2026-11-10',end:'2026-11-12'}), lang:()=> 'ru',cityOf:()=> 'Паттайя',
     fx:async()=>null,tg:async(method,payload)=>{sent.push(payload);return {message_id:sent.length};},
     intro:()=> 'available', priceLine:realPriceLine,clean:x=>x,noConfirmed:()=> 'not_confirmed',
-    cancel:async()=>({skip:'cancelled'}),cmap:{ru:'THB'},nonBlocking:new Set(['cancelled']),
+    cancel:async(id,why)=>({skip:why}),cmap:{ru:'THB'},nonBlocking:new Set(['cancelled']),
     readOperationalAvailability:async()=>{operationalChecks++;return true;},operationalDb:async()=>({}),
   };
   const processOne = new Function(...Object.keys(deps),'return ('+handler+');')(...Object.values(deps));
   const result = await processOne(followup);
   assert.equal(sent.length,0,'Instagram recipients must never be addressed through Telegram');
+  if(!inventoryAvailable){
+    assert.equal(queued.length,0,'no unconfirmed option or unsupported supplier promise may enter the outbox');
+    assert.equal(result.skip,'supplier_confirmation_required');
+    continue;
+  }
   assert.equal(queued.length,1,'the follow-up must enter the existing durable Instagram outbox');
   assert.equal(queued[0].p_followup,followup.id);
-  assert.match(queued[0].p_answer,/1[\\s\\u00a0\\u202f,]?320 THB/);
+  assert.ok(queued[0].p_answer.includes(new Intl.NumberFormat('ru-RU').format(1320)+' THB'));
   assert.equal(queued[0].p_offer.options[0].total_before_extras,1320,'freeze the public quoted total');
   assert.equal(result.queued,true);
   assert.equal(result.sent,false,'queue acceptance is not delivery');
+  }
 });
