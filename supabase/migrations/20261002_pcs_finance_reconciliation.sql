@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.pcs_navi_reconcile_finance(p_id uuid)
  LANGUAGE plpgsql
  SET search_path TO 'public', 'pg_temp'
 AS $function$
-declare f pcs_finance_entries; orig pcs_finance_entries;ca pcs_client_attribution;cid uuid; eligible numeric:=0; prior numeric:=0;prevcommission numeric:=0;targetcommission numeric;rev integer;rate numeric;okey text; refunded numeric;begin
+declare f pcs_finance_entries; orig pcs_finance_entries;ca pcs_client_attribution;cid uuid; eligible numeric:=0; prior numeric:=0;prevcommission numeric:=0;targetcommission numeric;rev integer;rate numeric;okey text; refunded numeric;cutoff timestamptz;begin
  select * into f from pcs_finance_entries where id=p_id for update;
  if f.id is null then raise exception 'finance_not_found';end if;
  cid:=coalesce(f.contact_id,(select contact_id from pcs_reservations where id=f.reservation_id),(select contact_id from pcs_deals where id=f.deal_id));
@@ -14,8 +14,9 @@ declare f pcs_finance_entries; orig pcs_finance_entries;ca pcs_client_attributio
  end if;
  select * into ca from pcs_client_attribution where contact_id=cid;
  if ca.contact_id is null then return jsonb_build_object('attributed',false);end if;
+ cutoff:=coalesce((select created_at from pcs_attribution_touches where id=ca.touch_id),ca.attributed_at);
  rate:=case when ca.model_snapshot in ('REFERRAL','HYBRID') then ca.rate_snapshot else 0 end;
- if f.status='paid' and f.entry_type='income' and (f.payment_kind in ('full','prepayment','booking_deposit') or f.metadata->>'eligible_revenue'='true') then eligible:=f.amount;end if;
+ if f.status='paid' and f.entry_type='income' and coalesce(f.paid_at,f.created_at)>=cutoff and (f.payment_kind in ('full','prepayment','booking_deposit') or f.metadata->>'eligible_revenue'='true') then eligible:=f.amount;end if;
  if f.entry_type='refund' and f.metadata->>'original_finance_entry_id' ~ '^[0-9a-f-]{36}$' then
   select * into orig from pcs_finance_entries where id=(f.metadata->>'original_finance_entry_id')::uuid for update;
   if orig.id is null or orig.entry_type<>'income' or orig.currency<>f.currency or coalesce(orig.contact_id,(select contact_id from pcs_reservations where id=orig.reservation_id),(select contact_id from pcs_deals where id=orig.deal_id)) is distinct from cid then raise exception 'refund_original_mismatch';end if;
@@ -23,7 +24,7 @@ declare f pcs_finance_entries; orig pcs_finance_entries;ca pcs_client_attributio
    select coalesce(sum(amount),0) into refunded from pcs_finance_entries where id<>f.id and entry_type='refund' and status='paid' and metadata->>'original_finance_entry_id'=orig.id::text;
    if orig.status<>'paid' or refunded+f.amount>orig.amount then raise exception 'refund_exceeds_paid_original';end if;
   end if;
-  if f.status='paid' and (orig.payment_kind in ('full','prepayment','booking_deposit') or orig.metadata->>'eligible_revenue'='true') then eligible:=-f.amount;end if;
+  if f.status='paid' and coalesce(orig.paid_at,orig.created_at)>=cutoff and (orig.payment_kind in ('full','prepayment','booking_deposit') or orig.metadata->>'eligible_revenue'='true') then eligible:=-f.amount;end if;
  end if;
  if f.entry_type='refund' and orig.id is null then raise exception 'refund_requires_original';end if;
  if f.amount<0 then raise exception 'finance_amount_must_be_positive';end if;
