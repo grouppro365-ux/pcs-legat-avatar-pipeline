@@ -3,8 +3,8 @@ declare a pcs_partner_agreements;p pcs_ad_placements;l jsonb;begin
  select * into a from pcs_partner_agreements where id=p_agreement for update;
  if a.id is null or a.status<>'ACTIVE' or length(trim(p_actor))<3 then raise exception 'active_confirmed_agreement_required';end if;
  if p_model not in ('PAID','HYBRID','ORGANIC') or p_model<>a.model or length(trim(p_title))<2 or length(trim(p_campaign))<2 or length(p_key)<10 then raise exception 'invalid_placement';end if;
- insert into pcs_ad_placements(agreement_id,source_id,source_title,campaign,model,currency,requested_price,agreed_price,status,agreed_at,request_key)
- values(a.id,p_source,p_title,p_campaign,p_model,upper(p_currency),p_requested,p_agreed,'AGREED',now(),p_key) on conflict(request_key) do nothing;
+ insert into pcs_ad_placements(agreement_id,source_id,source_title,campaign,format,model,currency,requested_price,agreed_price,status,agreed_at,request_key)
+ values(a.id,p_source,p_title,p_campaign,'Публикация',p_model,upper(p_currency),p_requested,p_agreed,'AGREED',now(),p_key) on conflict(request_key) do nothing;
  select * into p from pcs_ad_placements where request_key=p_key;
  if p.agreement_id<>a.id or p.source_id is distinct from p_source or p.campaign<>p_campaign then raise exception 'idempotency_conflict';end if;
  l:=pcs_navi_campaign(a.id,p_campaign,'https://vipthaiconcierge.com/',p_key||':link',p_actor,p.id);
