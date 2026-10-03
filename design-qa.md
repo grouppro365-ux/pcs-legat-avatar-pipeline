@@ -1,15 +1,17 @@
-# PCS design QA
+# PCS foundation QA — original logo, themes and Operator layout
 
-Source visual truth: supplied `upload/image(3).png`, 1536×1024, reference collage of mobile Client screens in light and dark; supplied original RGBA logo 2048×682.
+Scope: original brand asset, semantic theme bridge and existing Operator navigation/layout. This pass does not certify the full Client/Provider redesign requested in the reference collage.
 
-Implementation evidence: `/workspace/scratch/pcs-transparent-logo-check.jpg`, 1310×270 crop of the browser-rendered existing Operator Inbox. Browser viewport 1363×936, CSS density 1. This is a focused transparent-logo check, not a like-for-like Client screen comparison.
+Source visual truth: uploaded original logo `upload/Изображение ChatGPT 3 окт. 2026 г., 03_33_25(1).png`, RGBA 2048×682, SHA-256 1c11d5379f76a45e54f34110c206ef3c649d9286f9bd9ea61d4cd1345d68ff56. Client collage `upload/image(3).png` remains the separate role-migration target.
 
-Verified: logo file SHA matches original exactly; alpha range 0–255; image and container background have no black backing. Original white logo renders over existing photographic header and navigation. Light/dark/system control is functional; 7 tests pass. Root transition retains Dashboard class and horizontal overflow was false. Browser errors observed were extension metadata errors; no application error was observed in inspected login state. Authenticated UI was inspected read-only.
+Browser implementation: existing app preview, desktop 1363×936 CSS px and same-origin iframe 390×844 CSS px, density 1. Focused evidence `/workspace/scratch/pcs-logo-mobile-light-20261003.jpg` (375×280): original logo over the complete photographic Inbox hero, no image/container plate. Source original and implementation were opened together. The focused comparison checks the exact original shape, proportions and lack of backing; a like-for-like Client full-view comparison remains outside this release.
 
-Typography/layout/colors/images/copy: shared semantic tokens and existing font stack bridge the current UI. The selected reference requires Client screens; Operator wording and operational modules were preserved intentionally. Full typography/rhythm/image/card fidelity comparison against the Client reference is not yet valid because the existing Client frontend source is unavailable. Mobile and complete light-role checks are still outstanding.
+Typography: existing operator copy/font hierarchy preserved; buttons and theme choices remain readable. Spacing/layout: desktop Dashboard body class retained, operational panels use available width; mobile navigation and menus are visible. Colors: explicit light/dark/system choices, cross-tab propagation, system-change behavior verified. Photographic section headers use readable white text in both themes. Imagery: original file is unchanged, object-fit contain, no filters/crop/backing. App copy: actual clients/bookings/catalog counts load; no fabricated prices or statistics.
 
-History: initial black CSS backing behind the unchanged original was removed after user correction. Browser confirmed computed parent background rgba(0,0,0,0). Existing dashboard body class loss was diagnosed from DOM and fixed; oversize navigation icons were resolved. Relative hero search/shortcut offsets and narrow desktop width were subsequently corrected; broader recapture is still required.
+Comparison history: black logo backing removed; missing Dashboard class fixed; desktop width/search offsets corrected; mobile light-header logo contrast corrected by the complete photographic header overlay; HOT badge wrapping corrected; mobile theme access added under More → Appearance.
 
-Findings: [P1] Full Client Home benchmark cannot be evaluated against the source until the existing Client frontend is obtained. [P2] Full role/mobile/light coverage remains incomplete. Do not report full redesign or production deployment as complete.
+Primary interactions: real authenticated Inbox/Home navigation; mobile More → Appearance → Dark; desktop explicit Light/Dark/System choices; document photo controls and PDF generation tested separately with synthetic data. 7 theme/navigation tests pass. Console inspection found extension metadata errors, no observed application error in tested states.
 
-final result: blocked
+Residual coverage: complete Client/Provider and every operational page remain in the role migration plan. No claim of completing that wider redesign.
+
+final result: passed

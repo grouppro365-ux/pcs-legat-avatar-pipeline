@@ -23,10 +23,12 @@ Vanilla JavaScript and HTML; 30 loaded application modules; 19 legacy CSS layers
 4. Migrate Client requests/offers/bookings/profile; then Provider operational screens; then dense Admin/CRM; then actual Content/AI/Video capabilities.
 5. Screenshot and interaction QA in both themes before publishing each role migration. No invented prices, availability, metrics, offers or integrations.
 
-## Verification and limitations
+## Verification and remaining work
 
-7 meaningful theme/navigation tests passed. Syntax and diff whitespace checks passed. Browser verified explicit dark/system selection, original transparency, and real authenticated Operator inbox/dashboard rendering. No message, booking, payment or other write was sent during QA.
+The original-logo/theme/Operator foundation has passed its scoped QA (`design-qa.md`). Seven theme/navigation tests pass; desktop and 390px mobile browser checks cover real Home/Inbox and theme selection. Mobile More now exposes Appearance. A complete photographic hero overlay keeps the unchanged white original readable in both themes; the logo itself has no plate.
 
-Existing `operator-ux-v37.test.mjs` fails against the repository baseline because it expects an obsolete script cache query `20260920-catalog1` whereas the baseline already loads `20260930-nav-transition1`; it was not changed to conceal this unrelated baseline failure.
+Contract fixes were published separately: compact document rows, private selected-image OCR, a single current version, deletion of older unsigned drafts after successful replacement, native Telegram HTTPS PDF downloads. Existing signed copies are retained. Tests cover OCR/photo behavior and PDF download transport; actual client-signature automation is not enabled without a real customer confirmation flow.
 
-Full redesign QA is incomplete: Client frontend source and full role/theme/mobile coverage remain unresolved. Vercel connector reports Project/Deployment not found. GitHub branch creation was rejected by automatic approval review, despite exact production-source matching evidence. Local work is preserved; no frontend production deployment occurred.
+The full Client/Provider/CRM/Content migration remains unfinished. Client/Provider frontend source is not present in this repository, although existing backend handlers are available. The supplied Client collage cannot yet be certified as faithfully implemented. Do not claim the entire master specification is complete.
+
+The obsolete operator-ux-v37 source-match test expects an older cache query and fails against the unchanged repository baseline; it has not been altered to conceal that unrelated issue.

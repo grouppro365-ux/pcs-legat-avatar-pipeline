@@ -131,3 +131,12 @@ html[data-theme] body.pcs-dashboard-v25 {
  .pcs-login-welcome h2 {font-size:26px;margin:16px 0 8px}
  .pcs-login-welcome p {font-size:14px}
 }
+
+/* Keep the unchanged white original readable across photographic section heroes. */
+html[data-theme] :is(.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero) {color:#f1f7fa}
+html[data-theme] :is(.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero)::before {background:rgb(5 25 36 / 68%)}
+html[data-theme] :is(.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero) :is(h1,h2,.in25-title,.cal25-title,.cx25-title,.v24-title,.v26-title) {color:#f1f7fa!important}
+html[data-theme] :is(.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero) :is(p,.in25-sub,.cal25-sub,.cx25-sub,.v24-sub,.v26-sub) {color:#d4e3eb!important}
+.in25-contact-status {flex:none;white-space:nowrap;min-width:max-content}
+
+html[data-theme] :is(.in25-hero,.cal25-hero,.cx25-hero,.v24-hero,.v26-hero,.ops-system-hero) .eyebrow {color:#c7dce5!important}
