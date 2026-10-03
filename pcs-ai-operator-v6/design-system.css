@@ -1,0 +1,133 @@
+/* Semantic tokens bridge the existing UI modules. Loaded last. */
+:root {
+  --pcs-background:#f5f8fa; --pcs-surface:#fff; --pcs-surface-muted:#edf3f5;
+  --pcs-text:#102632; --pcs-text-muted:#536976; --pcs-border:#d6e2e8;
+  --pcs-accent:#007f91; --pcs-on-accent:#fff; --pcs-accent-soft:#dff4f6;
+  --pcs-positive:#147646; --pcs-positive-soft:#e1f4e9;
+  --pcs-warning:#81570c; --pcs-warning-soft:#fff0cf;
+  --pcs-danger:#ae303d; --pcs-danger-soft:#fce8eb;
+  --pcs-focus:#007f91; --pcs-shadow:0 8px 28px rgb(15 47 64 / 7%);
+  --pcs-radius:20px;
+}
+html[data-theme=dark] {
+  --pcs-background:#071923; --pcs-surface:#102834; --pcs-surface-muted:#173340;
+  --pcs-text:#f1f7fa; --pcs-text-muted:#aec2cd; --pcs-border:#2a4856;
+  --pcs-accent:#39d4df; --pcs-on-accent:#06242b; --pcs-accent-soft:#153f4b;
+  --pcs-positive:#8bdfb1; --pcs-positive-soft:#153d2e;
+  --pcs-warning:#f3ce7a; --pcs-warning-soft:#423720;
+  --pcs-danger:#ffabb5; --pcs-danger-soft:#472b35;
+  --pcs-focus:#39d4df; --pcs-shadow:0 8px 28px rgb(0 0 0 / 22%);
+}
+/* Aliases are defined at the same specificity as the legacy dark overrides. */
+html[data-theme] {
+  --bg:var(--pcs-background); --panel:var(--pcs-surface); --panel2:var(--pcs-surface-muted);
+  --ink:var(--pcs-text); --muted:var(--pcs-text-muted); --line:var(--pcs-border);
+  --lav:var(--pcs-accent-soft); --blue:var(--pcs-accent-soft); --sage:var(--pcs-positive-soft);
+  --warn:var(--pcs-warning-soft); --danger:var(--pcs-danger-soft); --ok:var(--pcs-positive);
+  --shadow:var(--pcs-shadow); --r:var(--pcs-radius);
+  --ap-bg:var(--pcs-background); --ap-card:var(--pcs-surface); --ap-card2:var(--pcs-surface-muted);
+  --ap-ink:var(--pcs-text); --ap-muted:var(--pcs-text-muted); --ap-line:var(--pcs-border);
+  --ap-teal:var(--pcs-accent); --ap-teal2:var(--pcs-accent); --ap-shadow:var(--pcs-shadow);
+}
+body { background:var(--pcs-background); color:var(--pcs-text); }
+:where(button,a,input,textarea,select):focus-visible {outline:3px solid var(--pcs-focus);outline-offset:3px}
+.btn:not(.ghost):not(.soft):not(.sage):not(.blue):not(.peach):not(.danger) {background:var(--pcs-accent);color:var(--pcs-on-accent)}
+.btn.danger,.v37-card-actions .danger {background:var(--pcs-danger-soft);color:var(--pcs-danger);border-color:var(--pcs-border)}
+.pill.warn {color:var(--pcs-warning)} .pill.bad {color:var(--pcs-danger)}
+.field input:focus,.field textarea:focus,.field select:focus {border-color:var(--pcs-focus);box-shadow:none}
+.field label,.eyebrow {color:var(--pcs-text-muted)}
+.pcs-theme-options {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.pcs-theme-options [aria-pressed=true] {background:var(--pcs-accent-soft);border-color:var(--pcs-accent);color:var(--pcs-text)}
+/* Preserve the original transparent raster without a backing, crop or recolor. */
+.logo,.pcs-ap-logo,.pcs25-script,.pcs-original-brand,.in25-brand,.cal25-brand,.pcs-system-brand {
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:220px!important;max-width:100%;height:74px!important;padding:0!important;
+  background:transparent!important;border-radius:0!important;flex:0 0 auto!important;
+  font-size:0!important;line-height:0!important;overflow:hidden;
+}
+.logo::before,.logo::after,.pcs-ap-logo::before,.pcs-ap-logo::after,.pcs25-script::before,.pcs25-script::after {content:none!important;display:none!important}
+.logo img,.pcs-ap-logo img,.pcs25-script img,.pcs-original-brand img,.in25-brand img,.cal25-brand img,.pcs-system-brand img {
+  display:block!important;width:100%!important;height:100%!important;object-fit:contain!important;
+  filter:none!important;mix-blend-mode:normal!important;opacity:1!important;
+}
+.top {height:auto;min-height:86px;gap:16px}
+.top .brand {font-size:14px;max-width:210px}
+.login {background:var(--pcs-background)}
+.loginbox {border-radius:28px;padding:32px}
+.loginbox .pcs-original-brand {width:260px!important;height:88px!important;margin:0 0 28px}
+.loginbox .title {font-size:30px;line-height:1.15;letter-spacing:-.025em}
+.loginbox .field {margin-top:28px}
+.loginbox #err:empty {display:none}
+@media(max-width:600px) {
+  .top .brand {display:none}
+  .logo,.pcs-ap-logo,.pcs25-script {width:174px!important;height:60px!important}
+  .top {min-height:76px}
+  .pcs-ap-head {padding-inline:18px;gap:10px}
+  .pcs-ap-head-actions {gap:6px}
+  .pcs-ap-round {width:40px;height:40px}
+  .loginbox {padding:24px}
+  .loginbox .title {font-size:27px}
+  .pcs-theme-options {grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+.loginbox .eyebrow {color:var(--pcs-text-muted)!important}
+.in25-brand,.cal25-brand {width:180px!important;height:64px!important;margin-bottom:20px}
+html[data-theme] body.pcs-dashboard-v25 {
+ --d-bg:var(--pcs-background);--d-card:var(--pcs-surface);--d-ink:var(--pcs-text);
+ --d-muted:var(--pcs-text-muted);--d-line:var(--pcs-border);--d-teal:var(--pcs-accent);--d-shadow:var(--pcs-shadow);
+}
+.nav-icon svg,.side .nav svg {width:22px!important;height:22px!important;fill:none!important;stroke:currentColor!important;stroke-width:1.8!important}
+.side .nav button {display:flex;align-items:center;gap:10px}
+.pcs25 .pcs25-search,.pcs25 .pcs25-quick {position:relative!important;inset:auto!important;width:100%!important;margin:0!important}
+#main .pcs25-hero {height:auto!important;min-height:0!important;display:grid!important;gap:16px!important;padding:20px!important}
+#main .pcs25-top {padding:0!important;height:44px!important}
+#main .pcs25-copy {position:relative!important;inset:auto!important;width:100%!important;margin:0!important}
+#main .pcs25-title {font-size:32px!important;line-height:1.1!important}
+#main .pcs25-sub {position:relative!important;inset:auto!important;line-height:1.5!important;margin:14px 0 0!important}
+#main .pcs25-search {min-height:52px!important}
+#main .pcs25-quick {min-height:90px!important}
+#main .pcs25-photo {inset:0!important;width:100%!important;height:100%!important;background-image:url('./hero-travel-v27.webp')!important}
+@media(min-width:1024px) {
+ body.pcs-dashboard-v25 .top {display:flex!important}
+ body.pcs-dashboard-v25 .side {display:block!important;background:var(--pcs-surface)!important}
+ body.pcs-dashboard-v25 .layout {display:grid!important;grid-template-columns:220px minmax(0,1fr)!important}
+ body.pcs-dashboard-v25 main {padding:28px!important}
+ body.pcs-dashboard-v25 .bottom {display:none!important}
+ .pcs25 {max-width:1140px!important;min-height:auto!important;border:0!important;box-shadow:none!important}
+ #main .pcs25-hero {border-radius:24px!important;padding:28px!important}
+ #main .pcs25-copy {max-width:520px!important}
+ #main .pcs25-title br {display:none}
+ #main .pcs25-title span {margin-top:8px!important}
+ #main .pcs25-sub br {display:none}
+ #main .pcs25-search {max-width:600px!important}
+ #main .pcs25-quick {max-width:600px!important}
+ #main .pcs25-content {padding:24px 0!important;display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important}
+ #main .pcs25-kpis {grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+#main .pcs25-search,#main .pcs25-quick {position:relative!important;inset:auto!important;margin:0!important;width:100%!important}
+@media(min-width:1024px) { #main .pcs25 {max-width:1140px!important;width:100%!important} }
+/* The white original sits over the photographic hero or the full navigation
+   surface. Its own container always remains transparent. */
+.top {background:#102834!important;color:#f1f7fa!important}
+.top .brand {color:#f1f7fa!important}
+.in25-side,.cal25-side {background:#102834!important;color:#f1f7fa!important}
+.in25-side .in25-nav button,.cal25-side button,.in25-logout {color:#d6e8f0!important}
+.in25-side .in25-nav button.on {background:#214653!important;color:#fff!important}
+#main .pcs25-hero {--d-bg:#071923;--d-ink:#f1f7fa;--d-muted:#bdd3de;--d-card:#102834;color:#f1f7fa!important}
+.pcs-ap-hero {--ap-bg:#071923;--ap-ink:#f1f7fa;--ap-muted:#bdd3de}
+.login {display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,470px);gap:40px;align-content:center;padding:48px;max-width:1400px;margin:auto}
+.pcs-login-welcome {position:relative;isolation:isolate;min-height:480px;padding:40px;border-radius:28px;overflow:hidden;background:#071923 url('./hero-travel-v27.webp') center/cover;color:#fff;display:flex;flex-direction:column;justify-content:flex-end}
+.pcs-login-welcome::before {content:'';position:absolute;inset:0;background:rgb(5 25 36 / 55%);z-index:-1}
+.pcs-login-welcome .pcs-original-brand {width:300px!important;height:100px!important;margin:0 0 auto}
+.pcs-login-welcome h2 {font-size:clamp(28px,3vw,44px);line-height:1.1;margin:24px 0 16px;letter-spacing:-.025em}
+.pcs-login-welcome p {max-width:330px;margin:0;font-size:18px;line-height:1.5}
+@media(max-width:820px) {
+ .login {display:flex;flex-direction:column;gap:20px;padding:20px;min-height:100dvh;justify-content:center}
+ .pcs-login-welcome {width:min(470px,100%);min-height:220px;padding:24px;flex:none}
+ .pcs-login-welcome .pcs-original-brand {width:240px!important;height:80px!important}
+ .pcs-login-welcome h2 {font-size:26px;margin:16px 0 8px}
+ .pcs-login-welcome p {font-size:14px}
+}

@@ -43,7 +43,7 @@ window.opsNav=nav37;
 const go37=window.go;window.go=function(p){const r=go37.apply(this,arguments);Promise.resolve(r).finally(()=>setTimeout(()=>{nav37();if(p==='catalog')upgradeCatalog37();if(p==='bookings'&&document.getElementById('pcsApServices'))upgradeExtras37()},40));return r};
 const booking37=window.bookingTab;if(typeof booking37==='function')window.bookingTab=function(t){const r=booking37.apply(this,arguments);Promise.resolve(r).finally(()=>setTimeout(()=>{nav37();if(t==='extras')upgradeExtras37()},40));return r};
 const apExtras37=window.pcsApExtras;if(typeof apExtras37==='function')window.pcsApExtras=async function(){const r=await apExtras37.apply(this,arguments);await upgradeExtras37();nav37();return r};
-function brand37(){document.querySelectorAll('.brand').forEach(el=>el.textContent='Premium Concierge Service Thailand');nav37()}
+function brand37(){window.pcsBrand26?.();nav37()}
 let scheduled37=0;new MutationObserver(()=>{cancelAnimationFrame(scheduled37);scheduled37=requestAnimationFrame(brand37)}).observe(document.getElementById('root')||document.body,{childList:true,subtree:false});
 setTimeout(()=>{brand37();if(localStorage.pcsToken&&!new URLSearchParams(location.search).get('view'))window.go('dashboard')},120);
 })();
