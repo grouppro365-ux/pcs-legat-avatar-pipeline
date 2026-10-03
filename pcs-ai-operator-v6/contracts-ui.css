@@ -11,3 +11,5 @@
 #ctDocumentStatus {line-height:1.5;overflow-wrap:anywhere}#ctDocumentStatus:empty {display:none}#ctDocuments .muted {font-size:13px;line-height:1.5}#ctDocuments>.btn {width:100%;white-space:normal}
 .contract-pdf-actions {display:grid;gap:10px}.contract-pdf-actions .btn {width:100%;white-space:normal}
 @media(max-width:600px){.contract-hero {display:block}.contract-hero .pill {display:inline-flex;margin-top:14px}.contract-price-readonly {grid-template-columns:1fr}.contract-price-readonly .total {grid-column:auto}#ctDocuments .grid2 {grid-template-columns:1fr}.contract-version {grid-template-columns:1fr}.contract-version span {white-space:normal}.contract-version small,.contract-version em {grid-column:auto}.sheetbox .action-grid>.btn {white-space:normal}}
+
+.contract-fields{border:0;padding:0;margin:0;min-width:0}.contract-fields:disabled input,.contract-fields:disabled textarea{opacity:1;color:var(--ink);background:var(--panel2)}
