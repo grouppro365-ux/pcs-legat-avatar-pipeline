@@ -1,7 +1,7 @@
 (()=>{
  'use strict';
  const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const validId=id=>/^[0-9a-f-]{36}$/i.test(String(id));
+ const validId=id=>/^[A-Za-z0-9_-]{1,128}$/.test(String(id));
  let submitting=false;
  function draft(contact){
   const language=String(contact.detected_language||contact.language||'ru').toLowerCase().slice(0,2);

@@ -110,7 +110,7 @@ async function uiRoute(path,init){
 
   let m=path.match(/^\/crm\/([^/]+)$/);
   if(m&&method==='GET')return jsonResponse(await manager('client',{id:decodeURIComponent(m[1])}));
-  if(m&&method==='PATCH')return appError('Редактирование карточки временно недоступно в Mini App. Данные не потеряны.',409);
+  if(m&&method==='PATCH')return jsonResponse(await manager('client-save',{id:decodeURIComponent(m[1]),method:'POST',body}));
 
   m=path.match(/^\/crm\/([^/]+)\/(send|followup)$/);
   if(m&&method==='POST'){
@@ -118,6 +118,10 @@ async function uiRoute(path,init){
     if(!String(text).trim())return appError('Введите текст сообщения',400);
     return jsonResponse(await manager('send',{id:decodeURIComponent(m[1]),method:'POST',body:{text:String(text)}}));
   }
+  m=path.match(/^\/crm\/([^/]+)\/tasks$/);
+  if(m&&method==='POST')return jsonResponse(await manager('task-create',{id:decodeURIComponent(m[1]),method:'POST',body}));
+  m=path.match(/^\/crm\/([^/]+)\/complete-task\/([^/]+)$/);
+  if(m&&method==='POST')return jsonResponse(await manager('task-complete',{id:decodeURIComponent(m[1]),method:'POST',body:{task_id:decodeURIComponent(m[2])}}));
   if(/^\/crm\/[^/]+\/selected-media$/.test(path))return appError('Отправка выбранного медиа ещё не подключена к стабильному Mini App.',409);
   if(/^\/crm\/[^/]+\/(tasks|complete-task|action)/.test(path))return appError('Изменение CRM из этого экрана пока ограничено безопасным режимом.',409);
 
