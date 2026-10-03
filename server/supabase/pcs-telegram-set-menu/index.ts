@@ -1,7 +1,8 @@
-const ENTRY='https://pcs-ai-operator-live-grouppro365-2288s-projects.vercel.app/';
+const ENTRY='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-crm-actions3';
 const BASE=Deno.env.get('SUPABASE_URL')||'';
 const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
 const ORIGINS=new Set([
+  'https://grouppro365-ux.github.io',
   'https://pcs-ai-operator-live.vercel.app',
   'https://pcs-ai-operator-live-grouppro365-2288s-projects.vercel.app',
   'https://pcs-ai-operator-grouppro365-2288s-projects.vercel.app'
