@@ -46,3 +46,8 @@ test('OCR requires confirmation, sends selected names and preserves manual field
 test('upload errors remain visible and preserve file selection for retry',async()=>{
  const f=fixture();await f.api.mount({id:'contract-1',reservation_id:'reservation-1'});f.setFail(true);await f.api.upload('passport');assert.match(f.nodes.ctDocumentStatus.textContent,/15 МБ/);assert.equal(f.nodes.ctPassportPhotos.value,'chosen');
 });
+test('finalized version accepts attachments but blocks OCR writes and external recognition',async()=>{
+ const f=fixture();await f.api.mount({id:'contract-1',reservation_id:'reservation-1',status:'ready_to_sign'});
+ await f.api.recognize();assert.equal(f.calls.filter(x=>x?.kind==='ocr_documents').length,0);assert.match(f.nodes.ctDocumentStatus.textContent,/зафиксирована/);
+ await f.api.upload('passport');assert.equal(f.calls.filter(x=>x?.kind==='client_document').length,1);assert.equal(f.nodes.ctName.value,'Manual Name');assert.match(f.nodes.ctDocumentStatus.textContent,/не меняются/);
+});
