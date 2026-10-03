@@ -14,7 +14,8 @@
    const d=await window.call('/crm/'+id),c=d.contact||d;
    editor={id,version:c.edit_version,original:c};
    window.openSheet('Редактировать клиента',`<form id="crmEditorForm" onsubmit="event.preventDefault();pcsCrmEditor.save()"><div class="grid2">${fields.map(([key,label,max])=>`<div class="field"><label for="crmEdit_${key}">${label}</label>${max>500?`<textarea id="crmEdit_${key}" maxlength="${max}">${E(c[key])}</textarea>`:`<input id="crmEdit_${key}" maxlength="${max}" value="${E(c[key])}">`}</div>`).join('')}<div class="field"><label for="crmEdit_status">Статус CRM</label><select id="crmEdit_status">${options(statuses,c.status)}</select></div><div class="field"><label for="crmEdit_priority">Приоритет</label><select id="crmEdit_priority">${options(['LOW','NORMAL','HOT','URGENT'],c.priority)}</select></div><div class="field"><label for="crmEdit_next_action_at">Дата следующего шага</label><input id="crmEdit_next_action_at" type="datetime-local" value="${dateInput(c.next_action_at)}"></div></div><p class="muted">Изменение статуса CRM не подтверждает оплату и не меняет финансовые записи.</p><p id="crmEditorError" role="alert" class="contract-fact-error"></p><button id="crmEditorSave" class="btn" type="submit">Сохранить</button></form>`);
-  }catch{window.toast('Не удалось загрузить карточку клиента')}
+   return true;
+  }catch{window.toast('Не удалось загрузить карточку клиента');return false}
  }
  async function refresh(id){try{window.PCS.crm=await window.call('/crm');await window.openClient(id,false)}catch{window.toast('Изменения сохранены. Обновите карточку клиента.')}}
  async function save(){
@@ -56,6 +57,21 @@
   if(!valid(cid)||!valid(tid)||busy.has(tid))return;busy.add(tid);
   try{await window.call('/crm/'+cid+'/complete-task/'+tid,{method:'POST',body:'{}'});window.toast('Задача завершена');await refresh(cid)}catch(e){window.toast(e.message||'Не удалось завершить задачу')}finally{busy.delete(tid)}
  }
- window.pcsCrmEditor={edit,save,taskForm,createTask,complete};
+ async function action(id,kind){
+  if(!['hot','waiting','lost','paid','ready_to_pay'].includes(kind))return;
+  if(!await edit(id))return;
+  if(!document.getElementById('crmEditorForm')||editor?.id!==id)return;
+  if(kind==='hot')document.getElementById('crmEdit_priority').value='HOT';
+  const target={waiting:'WAITING_CLIENT',lost:'LOST',paid:'PAID'}[kind];
+  if(target)document.getElementById('crmEdit_status').value=target;
+  if(kind==='ready_to_pay'){
+   const field=document.getElementById('crmEdit_next_action');
+   const note='Клиент готов к оплате.';
+   if(!field.value.includes(note)&&field.value.length+note.length+1<=4000)field.value=note+(field.value?'\n'+field.value:'');
+  }
+  window.toast('Проверьте изменения и нажмите «Сохранить».');
+ }
+ window.pcsCrmEditor={edit,save,taskForm,createTask,complete,action};
+ window.clientAction=action;
  window.editClient=edit;window.taskForm=taskForm;window.createTask=createTask;window.completeTask=complete;
 })();

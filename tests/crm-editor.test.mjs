@@ -26,3 +26,11 @@ test('task retries reuse one stable ID and preserve an absent deadline',async()=
 test('repeated complete taps send once and malformed IDs do not send',async()=>{
  const f=fixture();await f.api.complete("bad'id",'task');assert.equal(f.calls.length,0);const pending=f.api.complete('cmcontact1','task1');await f.api.complete('cmcontact1','task1');assert.equal(f.calls.length,1);f.finish();await pending;
 });
+test('quick actions prepare a reviewable edit and do not mutate on opening',async()=>{
+ for(const [kind,key,value] of [['hot','priority','HOT'],['waiting','status','WAITING_CLIENT'],['lost','status','LOST'],['paid','status','PAID']]){
+  const f=fixture();f.editorNodes();await f.api.action('cmcontact1',kind);assert.equal(f.nodes['crmEdit_'+key].value,value);assert.equal(f.calls.length,1);assert.equal(f.calls[0].opt,undefined);
+ }
+});
+test('readiness keeps existing next-step notes and does not fabricate a payment status',async()=>{
+ const f=fixture();f.editorNodes();f.nodes.crmEdit_next_action.value='Ask about dates';await f.api.action('cmcontact1','ready_to_pay');assert.match(f.nodes.crmEdit_next_action.value,/Клиент готов к оплате/);assert.match(f.nodes.crmEdit_next_action.value,/Ask about dates/);assert.equal(f.nodes.crmEdit_status.value,'WAITING_CLIENT');assert.equal(f.calls.length,1);
+});
