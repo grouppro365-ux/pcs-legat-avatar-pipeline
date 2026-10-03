@@ -1,5 +1,7 @@
 # CRM: редактирование и ручные задачи
 
+Опубликованная сборка: https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-crm-actions3. Глобальная кнопка Telegram проверена через getChatMenuButton. Vercel пока отдаёт предыдущую версию быстрых действий. После перехода на новый origin нужен повторный вход. Menu updater и gateway используют тот же адрес; обновление не отправляет клиентам сообщения.
+
 ## Подтверждённая архитектура
 
 Проверка schema metadata существующей операционной Neon базы выполнена через Supabase pg_net и pcs_edge_runtime_config. Credentials оставались на сервере, не выдавались браузеру и не сохранялись в репозитории. contacts, tasks и audit_logs находятся в одной базе. tasks.contact_id ссылается на contacts.id. ID имеют тип text; поддержаны UUID и строковые ID. Supabase pcs_contacts/pcs_tasks не используются в этих операциях.
