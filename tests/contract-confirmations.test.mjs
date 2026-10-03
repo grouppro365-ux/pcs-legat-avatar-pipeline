@@ -34,3 +34,12 @@ test('no request without checkbox; concurrent clicks send once and successful sa
 test('server conflict keeps the form and entered values for correction',async()=>{
  const f=fixture();f.fail();await f.api.submit();assert.match(f.nodes.ctFactError.textContent,/подтвердите бронь/);assert.equal(f.nodes.ctFactNote.value,'Present at signing');assert.equal(f.nodes.ctFactSave.disabled,false);assert.equal(f.centers.length,0);
 });
+test('return action requires handover and retry remains visible after remote completion',()=>{
+ const f=fixture(),fact={occurred_at:valid.occurred_at,confirmed_at:valid.occurred_at,operator_name:'Test',note:'Test return'};
+ assert.doesNotMatch(f.api.render({id:'test',status:'ready_to_sign',handover_data:{}}),/Машина возвращена/);
+ assert.match(f.api.render({id:'test',status:'ready_to_sign',rental_status:'active',rental_status_recorded:'active',handover_data:{handover_confirmation:fact}}),/Машина возвращена/);
+ const pending=f.api.render({id:'test',status:'signed',rental_status:'completed',rental_status_recorded:'active',handover_data:{handover_confirmation:fact,return_confirmation:fact}});
+ assert.match(pending,/Возврат автомобиля подтверждён/);assert.match(pending,/Завершить аренду/);
+ const done=f.api.render({id:'test',status:'signed',rental_status:'completed',rental_status_recorded:'completed',handover_data:{handover_confirmation:fact,return_confirmation:fact}});
+ assert.doesNotMatch(done,/Завершить аренду|Машина возвращена/);
+});
