@@ -6,8 +6,8 @@
 
 - Проверен существующий репозиторий grouppro365-ux/pcs-legat-avatar-pipeline, frontend pcs-ai-operator-v6, текущий CRM-адаптер и исходники действующего pcs-manager-live2 v7.
 - Перечислены 100 активных Supabase Edge Functions и таблицы public с метаданными RLS. Наличие функции, строки или включённого RLS не доказывает работоспособность, права или безопасность.
-- CRM читает contacts/conversations/messages в Neon. Существующая pcs_tasks в Supabase связана с pcs_contacts. Связь идентификаторов между хранилищами не подтверждена. Нельзя подключать задачи по совпадению UUID и нельзя создавать вторую CRM.
-- Прямой read-only запрос через Neon connector не выполнялся: соединение требует project_id. Секреты подключения не извлекались.
+- CRM читает contacts/conversations/messages в Neon. Существующая pcs_tasks в Supabase связана с pcs_contacts. Связь идентификаторов между хранилищами не подтверждена. 2026-10-03 дополнительная серверная проверка обнаружила каноническую Neon tasks с FK на Neon contacts; для ручных задач подключена именно она. Supabase pcs_tasks не смешивается с этой CRM.
+- Прямой read-only запрос через Neon connector не выполнялся: соединение требует project_id. Секреты подключения не извлекались. Схема Neon и rollback-проверки SQL выполнены через существующий pg_net между серверами; ключи оставались внутри серверного запроса.
 - Клиентский и партнёрский кабинеты не проверены. Отсутствие подходящего имени функции или файла в обследованной части проекта не доказывает отсутствие кабинета.
 - Визуальная проверка узкого экрана и реальный сценарий в Telegram Mini App остаются непроверенными. Автоматические тесты не заменяют production E2E.
 
@@ -17,8 +17,8 @@
 |---|---|---|
 | P0 | Права и данные | Проверить server-side roles, владельца записи, RLS policies, приватные файлы и вызовы каждого чувствительного маршрута; завершённого аудита безопасности нет. |
 | P1 | CRM Follow-up | Исправлен пустой POST: кнопка открывает редактируемый RU/EN/TH черновик; отправка только по нажатию пользователя через существующий /send. Фактическая доставка в Telegram не проверена, сообщения клиентам в ходе проверки не отправлялись. |
-| P1 | CRM редактирование и статусы | BROKEN: UI предлагает действия, adapter возвращает 409. Проверить действующую Neon схему, enum и авторизацию; реализовать запись в существующие contacts с audit и конфликтами. |
-| P1 | Задачи | BROKEN/PARTIAL: manager не возвращает задачи, adapter блокирует создание/завершение. Найти каноническое хранилище и доказанную связь контактов. UI теперь отличает отсутствующие данные от пустого списка. |
+| P1 | CRM редактирование и статусы | PARTIAL: редактор подключён к Neon contacts, сохраняет изменённые поля с точной проверкой версии и атомарным audit. Быстрые кнопки /action и финансовый сценарий остаются открытыми. |
+| P1 | Задачи | PARTIAL: manager возвращает Neon tasks; создание и завершение подключены с проверкой contact_id, атомарным audit и повторной отправкой без дублей. Scheduler, автоматические напоминания, escalation и production UI E2E не проверены. |
 | P1 | Диалог | Исправлено отображение направления OUT из Neon. Проверить маршрутизацию каналов, порядок последних сообщений, вложения, retry и защиту от дублирования. |
 | P1 | Client/Provider Cabinet | UNVERIFIED: найти действующий frontend, маршруты, auth, роли и связи данных; проверить клиентскую заявку и партнёрское подтверждение от начала до конца. |
 | P1 | Запрос → offer → deal → payment | UNVERIFIED/PARTIAL: есть таблицы и отдельные функции; сквозной сценарий, availability и финансовая согласованность не доказаны. |
@@ -39,7 +39,7 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 1 | ЧТО ТАКОЕ PCS OPERATOR | Требование; выполнение не подтверждено |
 | 2 | FIRST ACTION - FULL AUDIT | PARTIAL: аудит продолжается |
 | 3 | SOURCE OF TRUTH | PARTIAL: выявлена граница Neon / Supabase |
-| 4 | CRM CORE | PARTIAL: чтение есть, изменение заблокировано |
+| 4 | CRM CORE | PARTIAL: чтение и редактор подключены; быстрые действия открыты |
 | 5 | EXISTING PCS OPERATIONAL STRUCTURE | Требование; выполнение не подтверждено |
 | 6 | CONTACTS + IDENTITY RESOLUTION | UNVERIFIED |
 | 7 | UNIFIED INBOX | PARTIAL: Telegram CRM; объединение каналов не проверено |
@@ -56,7 +56,7 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 18 | DEALS + PAYMENTS | UNVERIFIED |
 | 19 | CLIENT CABINET | UNVERIFIED |
 | 20 | PROVIDER / PARTNER CABINET | UNVERIFIED |
-| 21 | TASK / FOLLOW-UP ENGINE | PARTIAL: ручной Follow-up; задачи заблокированы |
+| 21 | TASK / FOLLOW-UP ENGINE | PARTIAL: ручной Follow-up и задачи; scheduler не проверен |
 | 22 | ESCALATION | UNVERIFIED |
 | 23 | CONFLICTS | UNVERIFIED |
 | 24 | CONTENT SYSTEM | UNVERIFIED |
@@ -90,7 +90,7 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 52 | OPERATIONAL DASHBOARD | UNVERIFIED |
 | 53 | TODAY PCS | UNVERIFIED |
 | 54 | NOTIFICATIONS | UNVERIFIED |
-| 55 | AUDIT LOG | PARTIAL: факты договора; общий audit не проверен |
+| 55 | AUDIT LOG | PARTIAL: договоры и атомарный audit CRM; общий audit не проверен |
 | 56 | PERMISSIONS | UNVERIFIED |
 | 57 | SECURITY | UNVERIFIED |
 | 58 | OBSERVABILITY | UNVERIFIED |

@@ -13,6 +13,9 @@ function fixture(){
 test('opening a follow-up performs a read and escapes client data, without sending',async()=>{
  const f=fixture();await f.api.open(cid);assert.equal(f.calls.length,1);assert.equal(f.calls[0].opt,undefined);assert.match(f.sheets[0].html,/&lt;Client&gt;/);assert.doesNotMatch(f.sheets[0].html,/<img/);
 });
+test('follow-up supports the operational database text contact IDs',async()=>{
+ const f=fixture();await f.api.open('cmcontact123');assert.equal(f.calls[0].path,'/crm/cmcontact123');
+});
 test('edited text is sent only on submit and repeated taps send once',async()=>{
  const f=fixture();const pending=f.api.submit();await f.api.submit();assert.equal(f.calls.length,1);assert.equal(f.calls[0].path,`/crm/${cid}/send`);assert.equal(JSON.parse(f.calls[0].opt.body).text,'Edited message');assert.equal(f.nodes.crmFollowupSend.disabled,true);f.finish();await pending;assert.equal(f.closed(),1);
 });
