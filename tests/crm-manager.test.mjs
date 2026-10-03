@@ -7,9 +7,9 @@ import * as policy from '../server/supabase/pcs-manager-live2/crm-policy.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
 async function fixture(){
- let handler;const writes=[];
+ let handler;const writes=[],reads=[];
  const sql=async(strings,...params)=>{
-  const q=strings.join('?');if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
+  const q=strings.join('?');reads.push({q,params});if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...policy,...login,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
@@ -17,7 +17,7 @@ async function fixture(){
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const token=data+'.'+Buffer.from(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(data))).toString('base64url');
- return{writes,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
+ return{writes,reads,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
 }
 test('all new mutations require a valid admin token before any write',async()=>{
  const f=await fixture();for(const op of ['client-save','task-create','task-complete'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
@@ -29,4 +29,11 @@ test('manager binds contact mutation to route identity and rejects unsupported f
  const f=await fixture();assert.equal((await f.call('client-save',{method:'GET'})).status,405);
  assert.equal((await f.call('client-save',{body:{expected_version:'2026-10-03 00:00:00',id:'other',name:'X'}})).status,400);assert.equal(f.writes.length,0);
  assert.equal((await f.call('client-save',{body:{expected_version:'2026-10-03 00:00:00',name:'X'}})).status,200);assert.equal(f.writes[0].p[1],cid);
+});
+
+test('long conversations select the newest bounded window before rendering chronological history',async()=>{
+ const f=await fixture();await f.call('client',{method:'GET'});
+ const q=f.reads.find(x=>x.q.includes('from messages m join conversations'));
+ assert.ok(q);assert.equal(q.params[0],cid);
+ assert.match(q.q,/order by coalesce\(m.sent_at,m.created_at\) desc,m.id desc limit 1000\) recent order by coalesce\(recent.sent_at,recent.created_at\) asc,recent.id asc/);
 });
