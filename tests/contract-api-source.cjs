@@ -20,5 +20,5 @@ assert.match(source, /managerConflict\(req,r\.catalog_item_id/);
 const manager = fs.readFileSync(path.resolve(__dirname, '../server/supabase/pcs-manager-live2/index.ts'), 'utf8');
 assert.match(manager, /opName==='application-detail'/);
 assert.match(manager, /opName==='application-conflict'/);
-assert.match(manager, /tokenPayload\(req,cfg\.edge_session_secret\)/);
+assert.match(manager, /verifyAdminToken\(req,cfg\.edge_session_secret\)/);
 console.log('Contract snapshot source checks passed');

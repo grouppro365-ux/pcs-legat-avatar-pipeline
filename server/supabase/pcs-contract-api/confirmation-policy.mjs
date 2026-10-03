@@ -1,6 +1,6 @@
 export function confirmationRequest(body,now=Date.now()) {
  if(!body||body.confirmed!==true)throw Error('confirmation_required');
- if(!['signature','handover'].includes(body.kind))throw Error('invalid_confirmation_kind');
+ if(!['signature','handover','return'].includes(body.kind))throw Error('invalid_confirmation_kind');
  const occurred=Date.parse(body.occurred_at);
  if(typeof body.occurred_at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/.test(body.occurred_at)||!Number.isFinite(occurred)||occurred>now||occurred<Date.UTC(2000,0,1)||new Date(occurred).toISOString().slice(0,10)!==body.occurred_at.slice(0,10))throw Error('invalid_confirmation_date');
  const operator=typeof body.operator_name==='string'?body.operator_name.trim():'';
