@@ -6,11 +6,11 @@ import {stripTypeScriptTypes} from 'node:module';
 import * as policy from '../server/supabase/pcs-manager-live2/crm-policy.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
-async function fixture(){
+async function fixture({taskRows}={}){
  let handler;const writes=[],reads=[];
  const sql=async(strings,...params)=>{
   const q=strings.join('?');reads.push({q,params});if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
-  if(q.includes('from tasks'))return[{id:'task1',contact_id:cid,title:'Real task'}];return[];
+  if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...policy,...login,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
@@ -36,4 +36,33 @@ test('long conversations select the newest bounded window before rendering chron
  const q=f.reads.find(x=>x.q.includes('from messages m join conversations'));
  assert.ok(q);assert.equal(q.params[0],cid);
  assert.match(q.q,/order by coalesce\(m.sent_at,m.created_at\) desc,m.id desc limit 1000\) recent order by coalesce\(recent.sent_at,recent.created_at\) asc,recent.id asc/);
+});
+
+test('task queue is authenticated, read-only, and validates its filter',async()=>{
+ const f=await fixture();
+ assert.equal((await f.call('tasks',{method:'GET',auth:''})).status,401);
+ assert.equal((await f.call('tasks',{method:'POST'})).status,405);
+ assert.equal((await f.call('tasks&view=unknown',{method:'GET'})).status,400);
+ for(const view of ['open','overdue','undated']){
+  const r=await f.call('tasks&view='+view,{method:'GET'});assert.equal(r.status,200);assert.equal((await r.json()).view,view);
+ }
+ assert.equal((await f.call('tasks&page=-1',{method:'GET'})).status,400);
+ assert.equal((await f.call('tasks&page=5001',{method:'GET'})).status,400);
+ assert.equal((await f.call('tasks&page=1junk',{method:'GET'})).status,400);
+ assert.equal(f.writes.length,0);
+ const q=f.reads.find(x=>x.q.includes('from tasks t'));assert.ok(q);
+ assert.match(q.q,/t.completed_at is null/);assert.match(q.q,/join contacts c on c.id=t.contact_id/);
+ assert.match(q.q,/limit 201/);assert.match(q.q,/t.due_at asc nulls last/);
+ assert.doesNotMatch(q.q,/select \*/);
+});
+test('task queue bounds its response and reports truncation honestly',async()=>{
+ const rows=Array.from({length:201},(_,i)=>({id:'task'+i,contact_id:cid,title:'Task'}));
+ const f=await fixture({taskRows:rows}),r=await f.call('tasks',{method:'GET'}),d=await r.json();
+ assert.equal(d.tasks.length,200);assert.equal(d.truncated,true);assert.equal(d.limit,200);
+});
+
+test('task queue pagination remains parameterized and does not claim a total',async()=>{
+ const f=await fixture(),r=await f.call('tasks&page=2',{method:'GET'}),d=await r.json();
+ assert.equal(r.status,200);assert.equal(d.page,2);assert.equal(d.total,undefined);
+ const q=f.reads.find(x=>x.q.includes('from tasks t'));assert.equal(q.params.at(-1),400);assert.match(q.q,/offset \?/);
 });

@@ -107,6 +107,7 @@ async function uiRoute(path,init){
   if(path==='/session')return jsonResponse(await manager('session'));
   if(path==='/dashboard')return jsonResponse(await manager('dashboard'));
   if(path==='/crm'&&method==='GET')return jsonResponse(await manager('clients'));
+  if(path.startsWith('/crm-tasks')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/crm-tasks')return jsonResponse(await manager('tasks',{params:{view:u.searchParams.get('view')||'open',page:u.searchParams.get('page')||'0'}}));}
 
   let m=path.match(/^\/crm\/([^/]+)$/);
   if(m&&method==='GET')return jsonResponse(await manager('client',{id:decodeURIComponent(m[1])}));

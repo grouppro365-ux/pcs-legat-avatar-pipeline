@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const entry='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-crm-actions3';
+const entry='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-tasks2';
 const edge=readFileSync(new URL('../server/supabase/pcs-telegram-set-menu/index.ts',import.meta.url),'utf8');
 const gateway=readFileSync(new URL('../server/supabase/pcs-tg-gateway/common.ts',import.meta.url),'utf8');
 const ui=readFileSync(new URL('../pcs-ai-operator-v6/connections-v25.js',import.meta.url),'utf8');

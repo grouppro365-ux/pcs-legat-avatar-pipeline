@@ -2,7 +2,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 export const sb=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
 export const RUNTIME='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-business-runtime-v8';
 export const MEDIA='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-media-intake-v1';
-export const WEBAPP='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-crm-actions3';
+export const WEBAPP='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-tasks2';
 export const J=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{'content-type':'application/json;charset=utf-8'}});
 export const sleep=(ms:number)=>new Promise(r=>setTimeout(r,ms));
 export async function sec(n:string){const {data,error}=await sb.rpc('pcs_secret_get',{p_name:n});if(error)throw error;return data||''}

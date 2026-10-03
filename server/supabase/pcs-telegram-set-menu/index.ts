@@ -1,4 +1,4 @@
-const ENTRY='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-crm-actions3';
+const ENTRY='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-tasks2';
 const BASE=Deno.env.get('SUPABASE_URL')||'';
 const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
 const ORIGINS=new Set([
