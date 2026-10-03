@@ -6,10 +6,10 @@ import {stripTypeScriptTypes} from 'node:module';
 import * as policy from '../server/supabase/pcs-manager-live2/crm-policy.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
-async function fixture({taskRows}={}){
+async function fixture({taskRows,applicationRows}={}){
  let handler;const writes=[],reads=[];
  const sql=async(strings,...params)=>{
-  const q=strings.join('?');reads.push({q,params});if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
+  const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...policy,...login,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
@@ -65,4 +65,42 @@ test('task queue pagination remains parameterized and does not claim a total',as
  const f=await fixture(),r=await f.call('tasks&page=2',{method:'GET'}),d=await r.json();
  assert.equal(r.status,200);assert.equal(d.page,2);assert.equal(d.total,undefined);
  const q=f.reads.find(x=>x.q.includes('from tasks t'));assert.equal(q.params.at(-1),400);assert.match(q.q,/offset \?/);
+});
+
+const applicationId='11111111-1111-4111-8111-111111111111';
+test('generic booking routes cannot forge handover or return',async()=>{
+ const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
+ for(const status of ['SERVICE_IN_PROGRESS','COMPLETED']){
+  assert.equal((await f.call('application-status',{body:{id:applicationId,status}})).status,409);
+  assert.equal((await f.call('application-save',{body:{id:applicationId,category:'booking',operational_status:status}})).status,409);
+  assert.equal((await f.call('application-save',{body:{category:'booking',operational_status:status}})).status,409);
+ }
+ assert.equal(f.writes.length,0);
+});
+test('existing active, completed and cancelled bookings cannot be edited, reclassified or reversed',async()=>{
+ for(const operational_status of ['SERVICE_IN_PROGRESS','COMPLETED','CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER']){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status}]});
+  assert.equal((await f.call('application-save',{body:{id:applicationId,category:'general',operational_status:'NEW'}})).status,409);
+  assert.equal((await f.call('application-status',{body:{id:applicationId,status:'NEW'}})).status,409);
+  assert.equal(f.writes.length,0);
+ }
+});
+test('booking changes racing with handover cannot report a successful generic update',async()=>{
+ const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
+ const r=await f.call('application-save',{body:{id:applicationId,category:'booking',operational_status:'CONFIRMED'}});
+ assert.equal(r.status,409);assert.match(f.writes[0].q,/operational_status not in \('SERVICE_IN_PROGRESS','COMPLETED','CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'\)/);
+});
+test('missing bookings do not produce success and ordinary non-booking flows keep their status route',async()=>{
+ const f=await fixture();assert.equal((await f.call('application-status',{body:{id:applicationId,status:'NEW'}})).status,404);
+ const g=await fixture({applicationRows:[{id:applicationId,category:'general',operational_status:'NEW'}]});
+ assert.equal((await g.call('application-status',{body:{id:applicationId,status:'SERVICE_IN_PROGRESS'}})).status,409);
+ assert.equal(g.writes.length,1,'non-booking status reaches conditional SQL, which returned no updated row in this fixture');
+});
+
+test('generic booking save retains its category when omitted and rejects invented booking states',async()=>{
+ const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
+ assert.equal((await f.call('application-save',{body:{id:applicationId,operational_status:'CONFIRMED'}})).status,409);
+ assert.ok(f.writes[0].p.includes('booking'));
+ assert.equal((await f.call('application-status',{body:{id:applicationId,status:'FAKE'}})).status,400);
+ assert.equal(f.writes.length,1);
 });
