@@ -43,7 +43,6 @@
   }
 
   let dependenciesPromise;
-  let activeUrl;
   const loadScript = path => new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = new URL(path, base).href;
@@ -81,7 +80,9 @@
     return dependenciesPromise;
   }
 
+  let generating=false;
   async function download(contractId) {
+    if(generating)return;generating=true;root.toast("Готовим PDF…");
     try {
       const contract = await root.contractCall('/contracts/' + encodeURIComponent(contractId));
       if (!['ready_to_sign', 'signed'].includes(contract.status))
@@ -98,23 +99,29 @@
         catch (error) { reject(error); }
       });
       if (blob.size < 1000) throw new Error('PDF получился пустым');
-      if (activeUrl) URL.revokeObjectURL(activeUrl);
-      activeUrl = URL.createObjectURL(blob);
-      const booking = String(contract.reservation_id || contractId).replace(/[^a-zA-Z0-9-]/g, '').slice(0, 12);
-      const file = `PCS-car-rental-${booking}-v${Number(contract.version) || 1}.pdf`;
-      const link = document.createElement('a');
-      link.href = activeUrl;
-      link.download = file;
-      link.textContent = 'Скачать готовый PDF';
-      link.className = 'btn';
-      const escape = value => String(value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
-      root.openSheet('Готовый договор PDF', `<p>Сформирован договор, версия ${escape(contract.version)}. Файл содержит текст и тайский шрифт, а не фотографию бланка.</p><div id="contractPdfDownload"></div><object id="contractPdfPreview" type="application/pdf" style="display:block;width:100%;height:68vh;margin-top:16px" aria-label="Предпросмотр PDF"><p>Предпросмотр недоступен. Скачайте PDF кнопкой выше.</p></object>`);
-      document.getElementById('contractPdfDownload').appendChild(link);
-      document.getElementById('contractPdfPreview').data = activeUrl;
-      link.click();
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();reader.onload = () => resolve(String(reader.result).split(',')[1]);reader.onerror = () => reject(Error('Не удалось прочитать PDF'));reader.readAsDataURL(blob);
+      });
+      const response = await fetch('https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-contract-files', {
+        method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+(localStorage.pcsToken||'')},
+        body:JSON.stringify({kind:'contract_pdf',contract_id:contractId,base64})
+      });
+      const saved = await response.json();if(!response.ok||!saved.url)throw Error('Не удалось подготовить скачивание PDF. Повторите попытку.');
+      const downloadUrl = new URL(saved.url);if(downloadUrl.protocol!=='https:'||downloadUrl.hostname!=='nnlzgertmmxuteozoeel.supabase.co')throw Error('Некорректная ссылка PDF');
+      const link = document.createElement('a');link.href=saved.url;link.download=saved.filename;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Скачать PDF';link.className='btn';
+      const telegram=root.Telegram?.WebApp;
+      if(telegram?.downloadFile&&telegram?.isVersionAtLeast?.('8.0'))link.onclick=event=>{
+        event.preventDefault();try{telegram.downloadFile({url:saved.url,file_name:saved.filename},accepted=>{if(!accepted)root.toast('Скачивание отменено. Можно повторить или открыть PDF.');});}catch{telegram.openLink(saved.url);}
+      };
+      root.openSheet('Готовый договор PDF', '<p>Договор готов. Нажмите «Скачать PDF», чтобы сохранить файл. Ссылка действует один час.</p><div id="contractPdfDownload" class="contract-pdf-actions"></div>');
+      const actions=document.getElementById('contractPdfDownload');actions.appendChild(link);
+      const preview=document.createElement('a');preview.href=saved.preview_url||saved.url;preview.target='_blank';preview.rel='noopener noreferrer';preview.className='btn ghost';preview.textContent='Открыть PDF';
+      if(telegram?.initData)preview.onclick=event=>{event.preventDefault();telegram.openLink(preview.href)};
+      actions.appendChild(preview);
+
     } catch (error) {
       root.toast(error.message || 'Не удалось создать PDF');
-    }
+    } finally {generating=false}
   }
 
   root.PCSContractPdf = { mapContract, download };
