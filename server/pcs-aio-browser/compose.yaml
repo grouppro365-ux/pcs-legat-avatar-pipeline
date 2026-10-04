@@ -1,0 +1,49 @@
+services:
+  sandbox:
+    image: ghcr.io/agent-infra/sandbox:1.11.0@sha256:6328d7fd2f0ff0b4c147c3d05b3df1ce331f4a482eb6e550ecd64ed1fcf906e7
+    hostname: pcs-browser-${PCS_PROJECT_ID:?Set the PCS project UUID}
+    restart: unless-stopped
+    security_opt: [seccomp:unconfined]
+    shm_size: 2gb
+    environment:
+      SANDBOX_API_KEY: ${AIO_API_KEY:?Set a private AIO key}
+      WORKSPACE: /home/gem/pcs/files
+      BROWSER_EXTRA_ARGS: --user-data-dir=/home/gem/pcs/profile --password-store=basic
+      DISABLE_JUPYTER: "true"
+      DISABLE_CODE_SERVER: "true"
+    volumes:
+      - project_data:/home/gem/pcs
+    networks: [private]
+  gateway:
+    build: .
+    restart: unless-stopped
+    environment:
+      AIO_ORIGIN: http://sandbox:8080
+      AIO_API_KEY: ${AIO_API_KEY:?Set a private AIO key}
+      PCS_GATEWAY_KEY: ${PCS_GATEWAY_KEY:?Set a different PCS key}
+      PCS_PROJECT_ID: ${PCS_PROJECT_ID:?Set the PCS project UUID}
+      PUBLIC_ORIGIN: https://${PCS_BROWSER_DOMAIN:?Set a dedicated browser domain}
+      FILES_ROOT: /home/gem/pcs/files
+    volumes:
+      - project_data:/home/gem/pcs
+    depends_on: [sandbox]
+    networks: [private, public]
+  tls:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      PCS_BROWSER_DOMAIN: ${PCS_BROWSER_DOMAIN:?Set a dedicated browser domain}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - tls_data:/data
+      - tls_config:/config
+    networks: [public]
+    depends_on: [gateway]
+volumes:
+  project_data:
+  tls_data:
+  tls_config:
+networks:
+  private:
+  public:

@@ -1,3 +1,5 @@
+import * as prospectWorker from '../server/supabase/pcs-manager-live2/prospect-worker.mjs';
+import * as prospect from '../server/supabase/pcs-manager-live2/prospect-engine.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
@@ -19,7 +21,7 @@ async function fixture({taskRows,applicationRows}={}){
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectWorker,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -132,3 +134,11 @@ test('finance and task editing reject unauthenticated and unsupported requests b
 });
 
 test('manual delivery review requires admin POST before changing a receipt',async()=>{const f=await fixture();assert.equal((await f.call('delivery-review',{auth:''})).status,401);assert.equal((await f.call('delivery-review',{method:'GET'})).status,405);assert.equal(f.writes.length,0)});
+
+test('prospecting sources, scanning and reads require admin auth and correct methods',async()=>{
+ const f=await fixture();for(const op of ['prospecting','prospecting-source','prospecting-scan','prospecting-classify-review','prospecting-settings'])assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);
+ for(const [op,method] of [['prospecting','POST'],['prospecting-source','GET'],['prospecting-scan','GET'],['prospecting-classify-review','GET'],['prospecting-settings','GET']])assert.equal((await f.call(op,{method})).status,405);
+ assert.equal(f.writes.length,0);
+});
+
+test('internal scanner rejects anonymous access and wrong methods before any database write',async()=>{const f=await fixture();assert.equal((await f.call('prospecting-worker',{auth:''})).status,401);assert.equal((await f.call('prospecting-worker',{auth:'',method:'GET'})).status,405);assert.equal(f.writes.length,0);});

@@ -1,0 +1,285 @@
+[
+  {
+    "username": "phuketads",
+    "title": "Пхукет объявления",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "classifieds",
+    "discovery_url": "https://t.me/phuketads"
+  },
+  {
+    "username": "instababythai",
+    "title": "Хуахин для семей",
+    "city": "Hua Hin",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/instababythai"
+  },
+  {
+    "username": "pattaya_arenda_ru",
+    "title": "Паттайя Байк Авто",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "car_rental",
+    "discovery_url": "https://t.me/pattaya_arenda_ru"
+  },
+  {
+    "username": "pattaya_arenda",
+    "title": "Паттайя Авто Мото",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "car_rental",
+    "discovery_url": "https://t.me/pattaya_arenda"
+  },
+  {
+    "username": "phucet",
+    "title": "Пхукет Чат",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/phucet",
+    "rules": "В описании указано: объявления в этот чат размещать не нужно."
+  },
+  {
+    "username": "arenda_pattaya",
+    "title": "Недвижимость Паттайя",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/arenda_pattaya"
+  },
+  {
+    "username": "rent_pattaya_city",
+    "title": "Паттайя жильё",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/rent_pattaya_city"
+  },
+  {
+    "username": "pattayab",
+    "title": "Паттайя объявления",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/pattayab"
+  },
+  {
+    "username": "phuketmarket_chat",
+    "title": "Пхукет Маркетплейс",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/phuketmarket_chat"
+  },
+  {
+    "username": "pattaiay",
+    "title": "Паттайя Таиланд Чат",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/pattaiay"
+  },
+  {
+    "username": "phuket_real_estate",
+    "title": "Недвижимость Пхукет",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/phuket_real_estate"
+  },
+  {
+    "username": "pattaia_life",
+    "title": "Паттайя Life",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/pattaia_life"
+  },
+  {
+    "username": "pattayachat",
+    "title": "Паттайя чат экспатов",
+    "city": "Pattaya",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/pattayachat"
+  },
+  {
+    "username": "phuketrents",
+    "title": "Пхукет Недвижимость",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/phuketrents"
+  },
+  {
+    "username": "pkhuket",
+    "title": "Пхукет Чат Объявления",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/pkhuket"
+  },
+  {
+    "username": "rentin_phuket",
+    "title": "Пхукет жильё",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/rentin_phuket"
+  },
+  {
+    "username": "chatphuket_chat",
+    "title": "Недвижимость Пхукет",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/chatphuket_chat"
+  },
+  {
+    "username": "info_phuket",
+    "title": "Пхукет Таиланд Чат",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/info_phuket"
+  },
+  {
+    "username": "phuketarenda24",
+    "title": "Пхукет недвижимость запросы",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/phuketarenda24"
+  },
+  {
+    "username": "russians_phuket_chat",
+    "title": "Русские на Пхукете",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/russians_phuket_chat"
+  },
+  {
+    "username": "chat_phuket",
+    "title": "Чат Пхукета Форум",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/chat_phuket"
+  },
+  {
+    "username": "expat_phuket",
+    "title": "Thailand Phuket EN",
+    "city": "Phuket",
+    "language": "en",
+    "topic": "community",
+    "discovery_url": "https://t.me/expat_phuket"
+  },
+  {
+    "username": "phuket_thailand_chat_russkii",
+    "title": "Туристический чат Пхукет",
+    "city": "Phuket",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/phuket_thailand_chat_russkii"
+  },
+  {
+    "username": "bangkok_chat",
+    "title": "Бангкок объявления",
+    "city": "Bangkok",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/bangkok_chat"
+  },
+  {
+    "username": "bangkok_realestate",
+    "title": "Недвижимость Бангкок",
+    "city": "Bangkok",
+    "language": "ru",
+    "topic": "property",
+    "discovery_url": "https://t.me/bangkok_realestate"
+  },
+  {
+    "username": "arenda_samui_chat",
+    "title": "Самуи аренда транспорта и недвижимости",
+    "city": "Samui",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/arenda_samui_chat"
+  },
+  {
+    "username": "huahin_chat",
+    "title": "Мой Хуахин",
+    "city": "Hua Hin",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/huahin_chat"
+  },
+  {
+    "username": "thaiex",
+    "title": "Thailand Expats EN",
+    "city": "Thailand",
+    "language": "en",
+    "topic": "community",
+    "discovery_url": "https://t.me/thaiex"
+  },
+  {
+    "username": "bkk_chat",
+    "title": "Бангкок общий чат",
+    "city": "Bangkok",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/bkk_chat",
+    "rules": "В описании указано: без торговли и услуг."
+  },
+  {
+    "username": "koh_samui",
+    "title": "Koh Samui Community",
+    "city": "Samui",
+    "language": "en",
+    "topic": "community",
+    "discovery_url": "https://t.me/koh_samui",
+    "rules": "English only; respect members; no repeated ads."
+  },
+  {
+    "username": "samuiexpat",
+    "title": "Samui expat",
+    "city": "Samui",
+    "language": "en",
+    "topic": "community",
+    "discovery_url": "https://t.me/samuiexpat"
+  },
+  {
+    "username": "samuigroup",
+    "title": "Самуи жители и отдыхающие",
+    "city": "Samui",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/samuigroup"
+  },
+  {
+    "username": "chiangmai_chat",
+    "title": "Чиангмай чат",
+    "city": "Chiang Mai",
+    "language": "ru",
+    "topic": "community",
+    "discovery_url": "https://t.me/chiangmai_chat"
+  },
+  {
+    "username": "bangkokexpats",
+    "title": "Bangkok Expats",
+    "city": "Bangkok",
+    "language": "en",
+    "topic": "community",
+    "discovery_url": "https://t.me/bangkokexpats"
+  },
+  {
+    "username": "samui_ua",
+    "title": "Украинцы в Таиланде Самуи",
+    "city": "Samui",
+    "language": "uk",
+    "topic": "community",
+    "discovery_url": "https://t.me/samui_ua"
+  }
+]
