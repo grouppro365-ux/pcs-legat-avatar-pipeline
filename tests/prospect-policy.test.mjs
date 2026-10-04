@@ -53,3 +53,10 @@ test('still-incomplete repair cannot be promoted to a completed page; retries ar
 test('key/id mismatch and duplicate repair output fail validation without fabricated decisions',async()=>{
  for(const results of [{'42':{...result,id:'43'}},[result,result]])await assert.rejects(()=>classifyPublicMessages([message],{openrouter_model:'model'},'key',async()=>Response.json({choices:[{message:{content:JSON.stringify({results})}}]}),now),/ai_invalid_response/);
 });
+
+test('forwarded irrelevant news and advertisements remain rejected instead of creating review leads',()=>{
+ for(const change of [{forwarded:true},{published_at:null},{forwarded:true,published_at:'2026-09-01T12:00:00Z'}]){
+  const classified=validateClassifications([{...message,...change}],{results:[{...result,decision:'rejected',direction:null,evidence:null}]},now)[0];
+  assert.equal(classified.decision,'rejected');assert.equal(classified.outreach_status,'not_applicable');
+ }
+});

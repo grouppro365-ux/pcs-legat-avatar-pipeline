@@ -22,3 +22,11 @@ test('pause changes only the selected version and rapid taps cannot submit twice
  const h=fixture(),p=h.window.pcsProspecting();h.calls[0].resolve({view:'requests',enabled:true,version:3,rows:[],summary:{}});await p;
  const write=h.nodes.toggle.onclick();h.nodes.toggle.onclick();assert.equal(h.calls.length,2);assert.equal(h.calls[1].url,'/prospecting/settings');assert.deepEqual(JSON.parse(h.calls[1].init.body),{enabled:false,expected_version:3});h.calls[1].resolve({ok:true});await new Promise(resolve=>setImmediate(resolve));h.calls[2].resolve({view:'requests',enabled:false,version:4,rows:[],summary:{}});await write;assert.equal(h.nodes.scan.disabled,true);
 });
+
+test('classification prevents duplicate submission and restores both action buttons after reload',async()=>{
+ const h=fixture(),p=h.window.pcsProspecting();h.calls[0].resolve({view:'requests',enabled:true,version:1,rows:[],summary:{}});await p;
+ const action=h.nodes.classify.onclick();h.nodes.classify.onclick();assert.equal(h.calls.length,2);assert.equal(h.calls[1].url,'/prospecting/classify-review');
+ h.calls[1].resolve({classified:12,qualified:0,review:0,rejected:12});await new Promise(resolve=>setImmediate(resolve));
+ h.calls[2].resolve({view:'requests',enabled:true,version:1,rows:[],summary:{rejected:12}});await action;
+ assert.equal(h.nodes.scan.disabled,false);assert.equal(h.nodes.classify.disabled,false);assert.match(h.nodes.result.textContent,/Обработано: 12/);
+});

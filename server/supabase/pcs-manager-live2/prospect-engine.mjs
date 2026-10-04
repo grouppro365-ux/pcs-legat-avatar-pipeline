@@ -10,8 +10,8 @@ export async function prospectAI(base,key,transport=fetch){
 }
 export const saveReviewClassifications=`with saved as (
  update pcs_prospect_requests r set decision=x.decision,direction=x.direction,reason=x.reason,evidence=x.evidence,facts=x.facts,outreach_status=x.outreach_status,qualification_model=$2,qualification_version=$3,updated_at=now()
- from jsonb_to_recordset($1::jsonb) x(id text,message_text text,decision text,direction text,reason text,evidence text,facts jsonb,outreach_status text)
- where r.id=x.id and r.message_text=x.message_text and r.decision='review' and r.qualification_model='local-review-only'
+ from jsonb_to_recordset($1::jsonb) x(id text,message_text text,expected_updated_at text,decision text,direction text,reason text,evidence text,facts jsonb,outreach_status text)
+ where r.id=x.id and r.message_text=x.message_text and r.decision='review' and r.updated_at=x.expected_updated_at::timestamptz
  returning r.id,r.decision),
  audit as (insert into audit_logs(id,actor,action,entity_type,entity_id,payload,created_at)
  select $4,'pcs-prospect-worker','prospect_review_classified','prospect_run',$4,jsonb_build_object('classified',count(*),'model',$2),now() from saved having count(*)>0 returning id)
@@ -19,7 +19,7 @@ export const saveReviewClassifications=`with saved as (
 export async function classifyReviewProspects(sql,loadAI,{transport=fetch}={}){
  const config=(await sql.query("select value from system_settings where id='pcs_telegram_prospecting'"))[0]?.value;
  if(config?.enabled!==true)throw new CrmError('Поиск запросов приостановлен',409);
- const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where r.decision='review' and r.qualification_model='local-review-only' and r.published_at>=now()-interval '7 days' order by r.published_at desc,r.id limit 20");
+ const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.updated_at::text updated_at,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where r.decision='review' and r.published_at>=now()-interval '7 days' order by r.published_at desc,r.id limit 20");
  const counts={classified:0,qualified:0,review:0,rejected:0};
  if(!records.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  // Re-read the public page to retain forwarded-message provenance which was not stored by the review-only pass.
@@ -35,7 +35,7 @@ export async function classifyReviewProspects(sql,loadAI,{transport=fetch}={}){
  if(!messages.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  const ai=await loadAI();
  const classified=await ai.classify(messages);
- const rows=classified.map(x=>({id:x.id,message_text:x.text,decision:x.decision,direction:x.direction,reason:x.reason,evidence:x.evidence,facts:x.facts,outreach_status:x.outreach_status}));
+ const rows=classified.map(x=>({id:x.id,message_text:x.text,expected_updated_at:records.find(r=>r.id===x.id).updated_at,decision:x.decision,direction:x.direction,reason:x.reason,evidence:x.evidence,facts:x.facts,outreach_status:x.outreach_status}));
  const saved=await sql.query(saveReviewClassifications,[JSON.stringify(rows),ai.model,prospectVersion,crypto.randomUUID()]);
  counts.classified=saved.length;for(const x of saved)counts[x.decision]++;
  return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};

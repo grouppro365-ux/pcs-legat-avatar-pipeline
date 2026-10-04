@@ -37,8 +37,8 @@ export function validateClassifications(messages,data,now=Date.now()){
   if(x.direction!==null&&!['CAR_RENTAL','PROPERTY_PURCHASE'].includes(x.direction))throw Error('ai_invalid_response');
   let decision=x.decision,reason=x.reason;
   if(decision==='qualified'&&(!x.direction||x.confidence<0.9||typeof x.evidence!=='string'||!x.evidence.trim()||!m.text.includes(x.evidence))){decision='review';reason='Недостаточно проверяемых доказательств намерения. '+reason;}
-  if(m.forwarded){decision='review';reason='Пересланный запрос: автор требует проверки. '+reason;}
-  if(!m.published_at||Date.parse(m.published_at)>now+300000||Date.parse(m.published_at)<now-7*86400000){decision='review';reason='Дата или актуальность требует проверки. '+reason;}
+  if(m.forwarded&&decision!=='rejected'){decision='review';reason='Пересланный запрос: автор требует проверки. '+reason;}
+  if(decision!=='rejected'&&(!m.published_at||Date.parse(m.published_at)>now+300000||Date.parse(m.published_at)<now-7*86400000)){decision='review';reason='Дата или актуальность требует проверки. '+reason;}
   const facts={};for(const k of ['city','budget','dates'])if(typeof x[k]==='string'&&x[k].length<=300&&m.text.includes(x[k]))facts[k]=x[k];
   if(typeof x.language==='string'&&/^[a-z]{2}$/.test(x.language))facts.language=x.language;
   return {...m,decision,direction:x.direction,reason:reason.slice(0,600),evidence:typeof x.evidence==='string'&&m.text.includes(x.evidence)?x.evidence:null,facts,outreach_status:decision==='rejected'?'not_applicable':'blocked_identity'};
