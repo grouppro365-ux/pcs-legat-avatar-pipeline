@@ -14,6 +14,7 @@ function adapterHarness({sendResponse}={}){
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,params:Object.fromEntries(new URL(url).searchParams),view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
+    if(op==='finance-balance')return Response.json({reservation_id:new URL(url).searchParams.get('reservation_id')});
     if(op==='finance')return Response.json({source:new URL(url).searchParams.get('source'),rows:[]});
     if(op==='task')return Response.json({task:{id:new URL(url).searchParams.get('task_id'),contact_id:new URL(url).searchParams.get('id')}});
     if(op==='task-update')return Response.json({ok:true,task:{id:body.task_id}});
@@ -129,4 +130,9 @@ test('task adapter binds route identity and rejects forged task id before a writ
 
 test('manual delivery review adapter uses the existing admin manager and bound client identity',async()=>{
  const h=adapterHarness(),body={message_id:'11111111-1111-4111-8111-111111111111',expected_version:'exact',confirmed:true,note:'Checked conversation'};const r=await h.window.fetch('https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-errors-api/delivery/contact1/confirm',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal((await r.json()).operator_confirmed,true);assert.equal(h.calls[0].op,'delivery-review');assert.equal(h.calls[0].params.id,'contact1');assert.deepEqual(h.calls[0].body,body);assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
+
+test('reservation balance stays in the authenticated canonical PCS source',async()=>{
+ const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/finance/balance?reservation_id='+itemId);
+ assert.equal(r.status,200);assert.equal((await r.json()).reservation_id,itemId);assert.equal(h.calls[0].op,'finance-balance');assert.equal(h.calls[0].authorization,'Bearer fixture');assert.equal(h.calls[0].params.reservation_id,itemId);
 });

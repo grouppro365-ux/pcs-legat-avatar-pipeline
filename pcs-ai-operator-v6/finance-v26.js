@@ -2,7 +2,7 @@
 'use strict';
 const sources={ledger:'Журнал операций',settlements:'Расчёты с партнёрами',quotes:'Снимки цен'};
 const types={income:'Доход',expense:'Расход',partner_payout:'Выплата партнёру',refund:'Возврат',deposit:'Депозит'};
-const statuses={paid:'Оплачено',PAID:'Оплачено',pending:'Ожидает проверки',planned:'Запланировано',cancelled:'Отменено',canceled:'Отменено',rejected:'Отклонено',draft:'Черновик',PENDING:'Ожидает',DISPUTED:'Спор',OVERDUE:'Просрочено'};
+const statuses={paid:'Оплачено',PAID:'Оплачено',pending:'Ожидает проверки',due:'Срок оплаты наступил',unpaid:'Не оплачено',partial:'Частично оплачено',refunded:'Возвращено',planned:'Запланировано',cancelled:'Отменено',canceled:'Отменено',rejected:'Отклонено',draft:'Черновик',PENDING:'Ожидает',DISPUTED:'Спор',OVERDUE:'Просрочено'};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function cash(value,currency){
  if(value==null||value==='')return 'Не указано';const text=String(value);if(!/^-?\d+(?:\.\d+)?$/.test(text)||text.length>80)return 'Некорректная сумма';
@@ -17,16 +17,37 @@ function row(x,source,index){
  else{title=x.application_public_id||'Снимок цены';amount=cash(x.client_total,x.currency);meta=[x.client_name,'Версия '+x.version,'Депозит: '+cash(x.deposit,x.currency),'Сохранено: '+fmt(x.immutable_at)];}
  return `<article class="finance-row"><div><div class="finance-row-title">${esc(title)}</div><div class="finance-row-meta">${meta.filter(Boolean).map(v=>`<span>${esc(v)}</span>`).join('')}</div></div><div class="finance-amount">${esc(amount)}</div><button class="btn soft compact" type="button" data-finance-row="${index}">Подробнее</button></article>`;
 }
-let state=null;
+let state=null,detailSequence=0;
 const active=s=>state===s&&window.PCS?.page==='finance'&&document.querySelector('#pcsFinanceScreen')===s.root;
-function detail(x,source){
+async function detail(x,source){
+ const request=++detailSequence;
  const labels={id:'ID операции',public_id:'Номер расчёта',application_public_id:'Заявка',client_name:'Клиент',partner_name:'Партнёр',entry_type:'Тип',status:'Статус',payment_kind:'Назначение',payment_method:'Способ',counterparty:'Контрагент',receipt_name:'Имя чека',reservation_id:'ID брони в журнале PCS',deal_id:'ID сделки в журнале PCS',invoice_status:'Статус счёта',model:'Модель расчёта',payment_recipient:'Получатель',version:'Версия'};
  let html=Object.entries(labels).filter(([k])=>x[k]!=null&&x[k]!=='').map(([k,v])=>`<p><strong>${esc(v)}:</strong> ${esc(k==='status'?(statuses[x[k]]||x[k]):k==='entry_type'?(types[x[k]]||x[k]):x[k])}</p>`).join('');
  for(const [key,label] of Object.entries({amount:'Сумма операции',client_total:'Цена клиенту',deposit:'Депозит',client_paid_amount:'Клиент оплатил',expected_pcs_amount:'Ожидается PCS'}))if(x[key]!=null)html+=`<p><strong>${label}:</strong> ${esc(cash(x[key],x.currency))}</p>`;
  for(const [key,label] of Object.entries({created_at:'Создано',due_at:'Срок',paid_at:'Оплачено',partner_confirmed_at:'Партнёр подтвердил',immutable_at:'Цена сохранена',updated_at:'Обновлено'}))if(x[key])html+=`<p><strong>${label}:</strong> ${esc(fmt(x[key]))}</p>`;
  if(x.note)html+=`<p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.note)}</p>`;
  html+='<p class="muted">'+(source==='quotes'?'Снимок цены сохраняет условия расчёта. Он не подтверждает поступление денег.':source==='settlements'?'Расчёт хранит ожидания и статус взаиморасчётов с партнёром.':'Статус взят из действующего финансового журнала PCS.')+'</p>';
- window.openSheet(sources[source],html);
+ if(source==='ledger'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x.reservation_id||'')){
+  html+='<div data-finance-balance aria-live="polite">Загружаю баланс брони…</div>';
+  window.openSheet(sources[source],html);
+  const box=document.querySelector('[data-finance-balance]'),screen=state;
+  if(!box)return;
+  try{
+   const balance=await window.opsCall('/finance/balance?'+new URLSearchParams({reservation_id:x.reservation_id}));
+   if(request!==detailSequence||!active(screen)||document.querySelector('[data-finance-balance]')!==box)return;
+   if(balance?.reservation_id!==x.reservation_id)throw Error('Некорректный ответ баланса брони');
+   box.innerHTML=balanceHtml(balance);
+  }catch(e){if(request===detailSequence&&active(screen)&&document.querySelector('[data-finance-balance]')===box)box.textContent=e.message||'Не удалось загрузить баланс брони'}
+ }else window.openSheet(sources[source],html);
+}
+function balanceHtml(b){
+ let html='<h3>Баланс брони PCS</h3><p><strong>Статус оплаты:</strong> '+esc(statuses[b.payment_status]||b.payment_status)+'</p>';
+ for(const [key,label] of Object.entries({total_amount:'Стоимость аренды / услуги',gross_paid:'Поступило за аренду / услугу',refunded:'Возвращено за аренду / услугу',net_paid:'Оплачено с учётом возвратов',remaining:'Осталось оплатить',overpayment:'Переплата',security_deposit_paid:'Гарантийный депозит: получено',security_deposit_refunded:'Гарантийный депозит: возвращено'}))html+='<p><strong>'+label+':</strong> '+esc(cash(b[key],b.currency))+'</p>';
+ if(!b.total_confirmed)html+='<p class="muted">Стоимость не подтверждена: полную оплату определить нельзя.</p>';
+ if(b.invalid_refunds)html+='<p class="muted">Есть возвраты, требующие сверки с исходной операцией.</p>';
+ if(b.stored_payment_status!==b.payment_status)html+='<p class="muted">Сохранённый статус отличается от расчёта по журналу: нужна сверка.</p>';
+ if(b.other_currencies?.length)html+='<h4>Операции в других валютах</h4>'+b.other_currencies.map(x=>'<p>'+esc(types[x.entry_type]||x.entry_type)+': '+esc(cash(x.amount,x.currency))+'</p>').join('')+'<p class="muted">Эти суммы показаны отдельно. Для зачёта в оплату требуется подтверждённый курс.</p>';
+ return html+'<p class="muted">Расходы, выплаты партнёрам и гарантийный депозит не засчитываются в оплату аренды. Аванс бронирования засчитывается при связи с этой бронью.</p>';
 }
 async function load(s){
  if(!active(s))return;const sequence=++s.sequence,snapshot={source:s.source,status:s.status,page:s.page};s.loading=true;const box=s.root.querySelector('[data-finance-list]');box.textContent='Загружаю…';
@@ -41,12 +62,12 @@ async function load(s){
 }
 async function render(){
  const main=document.querySelector('#main');if(!main)return;if(typeof window.opsNav==='function')window.opsNav();
- main.innerHTML=header()+`<section id="pcsFinanceScreen" class="finance-v26"><div class="toolbar"><label>Источник<select data-finance-source>${Object.entries(sources).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label data-finance-filter>Статус<select data-finance-status><option value="all">Все</option><option value="paid">Оплачено</option><option value="pending">Ожидает проверки</option><option value="planned">Запланировано</option><option value="cancelled">Отменено</option><option value="rejected">Отклонено</option></select></label><button class="btn soft" data-finance-refresh>Обновить</button></div><p data-finance-context class="sub">Действующий журнал PCS. Каждая операция показана в своей валюте.</p><div class="finance-ledger" data-finance-list aria-live="polite"></div></section>`;
+ main.innerHTML=header()+`<section id="pcsFinanceScreen" class="finance-v26"><div class="toolbar"><label>Источник<select data-finance-source>${Object.entries(sources).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><label data-finance-filter>Статус<select data-finance-status><option value="all">Все</option><option value="paid">Оплачено</option><option value="due">Срок оплаты наступил</option><option value="planned">Запланировано</option><option value="cancelled">Отменено</option></select></label><button class="btn soft" data-finance-refresh>Обновить</button></div><p data-finance-context class="sub">Действующий журнал PCS. Каждая операция показана в своей валюте.</p><div class="finance-ledger" data-finance-list aria-live="polite"></div></section>`;
  const root=document.querySelector('#pcsFinanceScreen'),s=state={root,source:'ledger',status:'all',page:0,sequence:0,loading:false};
  root.querySelector('[data-finance-source]').addEventListener('change',e=>{s.source=e.target.value;s.page=0;s.status='all';root.querySelector('[data-finance-status]').value='all';root.querySelector('[data-finance-filter]').hidden=s.source!=='ledger';root.querySelector('[data-finance-context]').textContent=s.source==='ledger'?'Действующий журнал PCS. Каждая операция показана в своей валюте.':s.source==='settlements'?'Расчёты с партнёрами: оплачено клиентом и ожидается PCS.':'Сохранённые цены и депозиты. Снимок цены не подтверждает оплату.';load(s)});
  const refresh=()=>{const status=root.querySelector('[data-finance-status]').value.trim()||'all';if(!/^[A-Za-z_]{1,40}$/.test(status)){window.toast('Укажите all или код статуса латиницей');return}s.status=s.source==='ledger'?status:'all';s.page=0;load(s)};
  root.querySelector('[data-finance-refresh]').addEventListener('click',refresh);root.querySelector('[data-finance-status]').addEventListener('keydown',e=>{if(e.key==='Enter')refresh()});
  await load(s);if(active(s)){if(typeof window.pcsInstallNav25==='function')window.pcsInstallNav25();if(typeof window.pcsBrand26==='function')window.pcsBrand26()}
 }
-window.pcsFinance26=render;window.pcsFinanceFormat=cash;
+window.pcsFinance26=render;window.pcsFinanceFormat=cash;window.pcsFinanceBalanceHtml=balanceHtml;
 })();
