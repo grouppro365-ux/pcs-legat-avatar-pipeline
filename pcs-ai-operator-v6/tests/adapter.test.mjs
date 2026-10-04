@@ -13,6 +13,7 @@ function adapterHarness({sendResponse}={}){
   const window={fetch:async(url,init={})=>{
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    if(op==='errors')return Response.json({rows:[],source:new URL(url).searchParams.get('source')});
     if(op==='approval-action')return Response.json({ok:true});
     if(op==='send')return sendResponse?.()||Response.json({ok:true,message_id:123});
     if(op==='tasks')return Response.json({tasks:[{id:'task1',contact_id:'contact1',title:'Task'}],truncated:false});
@@ -106,4 +107,9 @@ test('approval decisions preserve route identity, reviewed text, version and aut
 test('approval read methods cannot trigger a decision',async()=>{
  const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/approvals/generation1/send');
  assert.equal(r.status,405);assert.equal(h.calls.length,0);
+});
+
+test('error queues preserve source, page and current admin authentication',async()=>{
+ const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-errors-api?source=delivery&page=2');
+ assert.equal(r.status,200);assert.equal((await r.json()).source,'delivery');assert.equal(h.calls[0].op,'errors');assert.equal(h.calls[0].authorization,'Bearer fixture');
 });

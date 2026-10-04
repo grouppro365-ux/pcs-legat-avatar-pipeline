@@ -346,8 +346,8 @@ async function catalogAdminRoute(init){
 
 async function errorsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
-  if((path==='/'||path==='')&&method==='GET')return jsonResponse(await manager('errors'));
-  return appError('Повтор задания пока выполняется из основной панели.',409);
+  if(method==='GET'){const u=new URL(path||'/','https://pcs.invalid');if(u.pathname==='/')return jsonResponse(await manager('errors',{params:{source:u.searchParams.get('source')||'runtime',page:u.searchParams.get('page')||'0'}}));}
+  return appError('Повтор требует проверки обработчика. Отправка с неизвестной доставкой не повторяется автоматически.',409);
 }
 
 window.__PCS_BACKEND_ADAPTER__={api:MANAGER,settingsApi:SETTINGS,version:'2026-09-02.1'};
