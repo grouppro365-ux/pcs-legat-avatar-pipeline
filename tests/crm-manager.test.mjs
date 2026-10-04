@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 import * as policy from '../server/supabase/pcs-manager-live2/crm-policy.mjs';
+import * as search from '../server/supabase/pcs-manager-live2/search-policy.mjs';
 import * as monitor from '../server/supabase/pcs-manager-live2/error-monitor.mjs';
 import * as approvals from '../server/supabase/pcs-manager-live2/approval-policy.mjs';
 import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs';
@@ -15,7 +16,7 @@ async function fixture({taskRows,applicationRows}={}){
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...policy,...login,...delivery,...approvals,...monitor,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...policy,...login,...delivery,...approvals,...monitor,...search,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -116,4 +117,8 @@ test('approval queue reads narrow source context with validated server paginatio
 
 test('error reads require admin auth and cannot be used as write routes',async()=>{
  const f=await fixture();assert.equal((await f.call('errors',{method:'GET',auth:''})).status,401);assert.equal((await f.call('errors',{method:'POST'})).status,405);assert.equal(f.writes.length,0);
+});
+
+test('global search is admin-only and rejects mutation requests before reading search sources',async()=>{
+ const f=await fixture();assert.equal((await f.call('search',{auth:'',method:'GET'})).status,401);assert.equal((await f.call('search',{method:'POST'})).status,405);assert.equal(f.writes.length,0);
 });
