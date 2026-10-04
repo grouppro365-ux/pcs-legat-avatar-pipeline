@@ -351,6 +351,8 @@ async function catalogAdminRoute(init){
 
 async function errorsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
+  const review=path.match(/^\/delivery\/([^/]+)\/confirm$/);
+  if(review&&method==='POST'){const b=await parseBody(init);return jsonResponse(await manager('delivery-review',{id:decodeURIComponent(review[1]),method:'POST',body:b}));}
   if(method==='GET'){const u=new URL(path||'/','https://pcs.invalid');if(u.pathname==='/')return jsonResponse(await manager('errors',{params:{source:u.searchParams.get('source')||'runtime',page:u.searchParams.get('page')||'0'}}));}
   return appError('Повтор требует проверки обработчика. Отправка с неизвестной доставкой не повторяется автоматически.',409);
 }

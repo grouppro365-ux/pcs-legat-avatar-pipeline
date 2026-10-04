@@ -24,6 +24,7 @@ function replay(row,cid,request){
  if(!row)return null;
  const state=row.raw?.manual_send;
  if(row.request_contact!==cid||state?.contact_id!==cid||row.text!==request.text||row.direction!=='OUT')throw new DeliveryError('Идентификатор уже используется другим сообщением. Откройте новую форму.','send_conflict');
+ if(row.status==='SENT'&&state.stage==='sent'&&row.raw?.delivery_review?.method==='operator_attestation'&&row.raw.delivery_review.outcome==='delivered')return{ok:true,request_id:request.id,replayed:true,operator_confirmed:true};
  if(row.status==='SENT'&&state.stage==='sent'&&Number.isSafeInteger(Number(row.telegram_message_id))&&Number(row.telegram_message_id)>0)return{ok:true,message_id:Number(row.telegram_message_id),request_id:request.id,replayed:true};
  if(row.status!=='FAILED'||state.stage!=='rejected')throw uncertain();
  return null;

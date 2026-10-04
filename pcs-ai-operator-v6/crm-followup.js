@@ -23,8 +23,8 @@
   if(!form.dataset.requestId)form.dataset.requestId=crypto.randomUUID();
   form.pcsAttemptedText=text;field.readOnly=true;submitting=true;button.disabled=true;button.textContent='Отправляю…';error.textContent='';
   try{
-   await window.call(`/crm/${id}/send`,{method:'POST',body:JSON.stringify({text,request_id:form.dataset.requestId})});
-   window.toast('Сообщение отправлено');
+   const result=await window.call(`/crm/${id}/send`,{method:'POST',body:JSON.stringify({text,request_id:form.dataset.requestId})});
+   window.toast(result?.operator_confirmed?'Доставка подтверждена оператором':'Сообщение отправлено');
    if(document.getElementById('crmFollowupForm')===form){window.closeSheet();try{await window.openClient(id,false)}catch{window.toast('Сообщение отправлено. Обновите карточку клиента.')}}
   }catch(e){if(document.getElementById('crmFollowupForm')===form){const knownUnsent=['send_rejected','send_route_unavailable','invalid_send'].includes(e.code)||e.status===401||e.status===400||e.status===413;if(knownUnsent){field.readOnly=false;delete form.pcsAttemptedText;if(e.code==='send_rejected')form.dataset.requestId=crypto.randomUUID()}form.pcsUncertain=!knownUnsent;form.pcsPending=e.code==='delivery_uncertain';error.textContent=knownUnsent?(e.message||'Не удалось отправить сообщение.'):(e.code?e.message:'Доставка не подтверждена. Повторите попытку: система проверит предыдущую отправку.')}}
   finally{submitting=false;if(document.getElementById('crmFollowupForm')===form){button.disabled=false;button.textContent=form.pcsPending?'Проверить отправку':form.pcsUncertain?'Повторить попытку':'Отправить клиенту'}}
