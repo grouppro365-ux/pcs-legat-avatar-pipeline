@@ -10,7 +10,7 @@ export async function readErrorMonitor(op,base,key,source,rawPage,transport=fetc
   rows=await r.json();if(!Array.isArray(rows))throw new CrmError('Некорректный ответ очереди',503);
   rows=rows.map(x=>({...x,error:safeError(x.error)}));
  }else{
-  rows=await op.query(`select m.id,m.status,m.created_at,cv.contact_id,c.name contact_name,
+  rows=await op.query(`select m.id,m.status,m.created_at,m.updated_at::text edit_version,cv.contact_id,c.name contact_name,
    case when m.raw ? 'approval_send' then 'ai_approval' else 'crm_manual' end operation
    from messages m join conversations cv on cv.id=m.conversation_id join contacts c on c.id=cv.contact_id
    where m.status='PROCESSING'::"MessageStatus" and (m.raw->'manual_send'->>'stage'='sending' or m.raw->'approval_send'->>'stage'='sending')

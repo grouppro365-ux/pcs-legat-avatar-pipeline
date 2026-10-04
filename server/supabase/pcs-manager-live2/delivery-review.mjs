@@ -1,0 +1,12 @@
+import {contactId} from './crm-policy.mjs';
+import {DeliveryError} from './manual-send.mjs';
+export function reviewInput(cid,b){
+ contactId(cid);
+ if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['message_id','expected_version','note','confirmed'].includes(k))||b.confirmed!==true||typeof b.message_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(b.message_id)||typeof b.expected_version!=='string'||!/^\d{4}-\d{2}-\d{2} [\d:.]{8,15}$/.test(b.expected_version)||typeof b.note!=='string'||b.note.trim().length<10||b.note.length>1000)throw new DeliveryError('Подтвердите проверку диалога и добавьте комментарий от 10 до 1000 символов.','invalid_delivery_review',400);
+ return{...b,note:b.note.trim()};
+}
+export function deliveryReviewQuery(cid,input,auditId){
+ const b=reviewInput(cid,input);
+ return{query:`with written as(update messages m set status='SENT'::"MessageStatus",raw=jsonb_set(m.raw,'{manual_send,stage}','"sent"')||jsonb_build_object('delivery_review',jsonb_build_object('method','operator_attestation','outcome','delivered','note',$4::text,'confirmed_at',clock_timestamp(),'actor','pcs-manager-admin')),updated_at=greatest(clock_timestamp(),m.updated_at+interval '1 microsecond') from conversations cv where m.id=$1 and cv.id=m.conversation_id and cv.contact_id=$2 and m.updated_at::text=$3 and m.direction='OUT'::"MessageDirection" and m.status='PROCESSING'::"MessageStatus" and m.raw->'manual_send'->>'stage'='sending' and m.raw->'manual_send'->>'contact_id'=$2 and not(m.raw ? 'approval_send') returning m.id,cv.contact_id,m.raw->'delivery_review'->>'confirmed_at' confirmed_at),audited as(insert into audit_logs(id,actor,action,entity_type,entity_id,payload) select $5,'pcs-manager-admin','crm_delivery_confirmed_by_operator','message',id,jsonb_build_object('contact_id',contact_id,'method','operator_attestation','note',$4::text) from written returning id) select written.* from written where exists(select 1 from audited)`,params:[b.message_id,cid,b.expected_version,b.note,auditId]};
+}
+export async function confirmManualDelivery(sql,cid,input){const q=deliveryReviewQuery(cid,input,crypto.randomUUID()),rows=await sql.query(q.query,q.params);if(!rows.length)throw new DeliveryError('Попытка уже изменилась или не относится к ручной отправке этого клиента. Обновите список и проверьте диалог.','delivery_review_conflict',409);return{ok:true,operator_confirmed:true,review:rows[0]}}

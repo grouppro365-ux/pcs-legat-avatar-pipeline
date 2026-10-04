@@ -14,8 +14,8 @@
   if(!form.dataset.requestId)form.dataset.requestId=crypto.randomUUID();
   sending=true;button.disabled=true;field.readOnly=true;form.pcsAttemptedText=text;error.textContent='';button.textContent='Отправляю…';
   try{
-   await window.call('/crm/'+id+'/send',{method:'POST',body:JSON.stringify({text,request_id:form.dataset.requestId})});
-   window.toast('Сообщение отправлено');
+   const result=await window.call('/crm/'+id+'/send',{method:'POST',body:JSON.stringify({text,request_id:form.dataset.requestId})});
+   window.toast(result?.operator_confirmed?'Доставка подтверждена оператором':'Сообщение отправлено');
    if(document.getElementById('crmMessageForm')===form){window.closeSheet();try{await window.openClient(id,false)}catch{window.toast('Сообщение отправлено. Обновите карточку клиента.')}}
   }catch(e){
    if(document.getElementById('crmMessageForm')!==form)return;

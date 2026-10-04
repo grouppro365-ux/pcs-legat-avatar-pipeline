@@ -1,0 +1,7 @@
+# Manual CRM delivery reconciliation
+
+The existing delivery-error list now offers explicit operator confirmation for held manual CRM sends after checking the actual Telegram conversation. The form requires a checked attestation and a 10–1000-character review note. The server matches the contact, exact message UUID, microsecond version, OUT direction, PROCESSING status, sending stage, and raw contact identity. AI approval attempts are excluded. The status and audit are written in one SQL statement.
+
+The resulting message is SENT with a structured operator_attestation. Unknown Telegram message IDs and sent_at remain unknown. Client history and retry responses distinguish operator confirmation from a provider receipt. Repeating the original CRM request returns this confirmation and never calls Telegram. A message with no confirmed delivery remains held; there is no automatic resend or assertion of failed delivery.
+
+Verified: 263 tests, including form attestation, escaped evidence, double-click blocking, conflict draft preservation, adapter/auth/method guards, and replay without a provider call. Actual Neon rollback assertions passed (pg_net 174495, HTTP 200), covering contact scope, AI exclusion, audit rollback, successful attestation, no fabricated provider facts, and stale/duplicate protection. No real client messages or live delivery rows were modified. Native Telegram visual acceptance remains open.
