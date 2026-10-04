@@ -1,0 +1,5 @@
+{$PCS_BROWSER_DOMAIN} {
+  reverse_proxy gateway:8080
+  header Referrer-Policy "no-referrer"
+  header X-Content-Type-Options "nosniff"
+}
