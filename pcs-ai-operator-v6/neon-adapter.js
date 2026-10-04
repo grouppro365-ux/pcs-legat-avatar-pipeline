@@ -32,7 +32,7 @@ async function manager(op,{method='GET',body=null,id=null,params=null,auth=true}
   const text=await r.text();
   let d={};
   try{d=text?JSON.parse(text):{}}catch{d={error:text||`HTTP ${r.status}`}}
-  if(!r.ok)throw new Error(d?.error||d?.message||`HTTP ${r.status}`);
+  if(!r.ok){const e=new Error(d?.error||d?.message||`HTTP ${r.status}`);e.code=d?.code;e.status=r.status;throw e;}
   return d;
 }
 
@@ -117,7 +117,7 @@ async function uiRoute(path,init){
   if(m&&method==='POST'){
     const text=body.text||body.message||body.answer||'';
     if(!String(text).trim())return appError('Введите текст сообщения',400);
-    return jsonResponse(await manager('send',{id:decodeURIComponent(m[1]),method:'POST',body:{text:String(text)}}));
+    return jsonResponse(await manager('send',{id:decodeURIComponent(m[1]),method:'POST',body:{text:String(text),request_id:body.request_id}}));
   }
   m=path.match(/^\/crm\/([^/]+)\/tasks$/);
   if(m&&method==='POST')return jsonResponse(await manager('task-create',{id:decodeURIComponent(m[1]),method:'POST',body}));
@@ -361,7 +361,7 @@ window.fetch=async function(input,init={}){
     return appError(`${r.k}: этот модуль ещё не подключён к стабильному Mini App`,410);
   }catch(e){
     console.error('[PCS backend adapter]',r.k,r.path,e);
-    return appError(e?.message||'Ошибка PCS backend',503);
+    return jsonResponse({error:e?.message||'Ошибка PCS backend',code:e?.code},e?.status||503);
   }
 };
 })();

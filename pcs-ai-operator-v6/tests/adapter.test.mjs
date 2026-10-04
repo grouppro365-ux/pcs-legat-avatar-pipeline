@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness(){
+function adapterHarness({sendResponse}={}){
   const item={id:itemId,entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
@@ -13,6 +13,7 @@ function adapterHarness(){
   const window={fetch:async(url,init={})=>{
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    if(op==='send')return sendResponse?.()||Response.json({ok:true,message_id:123});
     if(op==='tasks')return Response.json({tasks:[{id:'task1',contact_id:'contact1',title:'Task'}],truncated:false});
     if(op==='catalog-detail')return new Response(JSON.stringify({item,media}));
     if(op==='media-add'){media.push({id:'photo-new',public_url:'https://example.test/new.jpg'});return new Response(JSON.stringify({ok:true,id:'photo-new'}));}
@@ -78,4 +79,17 @@ test('task list adapter forwards the selected view and existing admin authentica
 test('task list adapter never turns a POST into a successful read or write',async()=>{
  const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/crm-tasks',{method:'POST',body:'{}'});
  assert.notEqual(r.status,200);assert.equal(h.calls.length,0);
+});
+
+test('reviewed send and follow-up forward the stable request id and bearer token',async()=>{
+ for(const action of ['send','followup']){
+  const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/crm/contact1/'+action,{method:'POST',body:JSON.stringify({text:'Reviewed',request_id:itemId})});
+  assert.equal(r.status,200);assert.equal(h.calls.length,1);assert.equal(h.calls[0].op,'send');
+  assert.deepEqual(h.calls[0].body,{text:'Reviewed',request_id:itemId});assert.equal(h.calls[0].authorization,'Bearer fixture');
+ }
+});
+test('uncertain delivery survives the adapter with its status and machine-readable code',async()=>{
+ const h=adapterHarness({sendResponse:()=>Response.json({error:'Check dialogue',code:'delivery_uncertain'},{status:409})});
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/crm/contact1/send',{method:'POST',body:JSON.stringify({text:'Reviewed',request_id:itemId})});
+ assert.equal(r.status,409);assert.equal((await r.json()).code,'delivery_uncertain');assert.equal(h.calls.length,1);
 });
