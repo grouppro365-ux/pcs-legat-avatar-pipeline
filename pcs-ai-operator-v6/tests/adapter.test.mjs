@@ -12,7 +12,10 @@ function adapterHarness({sendResponse}={}){
   const calls=[];const media=[{id:'photo-a',public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}];
   const window={fetch:async(url,init={})=>{
     const op=new URL(url).searchParams.get('op');
-    const body=init.body?JSON.parse(init.body):null; calls.push({op,body,view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    const body=init.body?JSON.parse(init.body):null; calls.push({op,body,params:Object.fromEntries(new URL(url).searchParams),view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    if(op==='finance')return Response.json({source:new URL(url).searchParams.get('source'),rows:[]});
+    if(op==='task')return Response.json({task:{id:new URL(url).searchParams.get('task_id'),contact_id:new URL(url).searchParams.get('id')}});
+    if(op==='task-update')return Response.json({ok:true,task:{id:body.task_id}});
     if(op==='errors')return Response.json({rows:[],source:new URL(url).searchParams.get('source')});
     if(op==='approval-action')return Response.json({ok:true});
     if(op==='send')return sendResponse?.()||Response.json({ok:true,message_id:123});
@@ -112,4 +115,13 @@ test('approval read methods cannot trigger a decision',async()=>{
 test('error queues preserve source, page and current admin authentication',async()=>{
  const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-errors-api?source=delivery&page=2');
  assert.equal(r.status,200);assert.equal((await r.json()).source,'delivery');assert.equal(h.calls[0].op,'errors');assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
+
+test('finance adapter forwards source, status and page through the authenticated manager',async()=>{
+ const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/finance?source=quotes&status=all&page=4');assert.equal(r.status,200);assert.equal((await r.json()).source,'quotes');assert.deepEqual(h.calls[0].params,{op:'finance',source:'quotes',status:'all',page:'4'});assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
+test('task adapter binds route identity and rejects forged task id before a write',async()=>{
+ const h=adapterHarness(),url='https://pcs-stable.local/pcs-ui-api/crm/contact1/tasks/task1';const read=await h.window.fetch(url);assert.equal((await read.json()).task.id,'task1');
+ const bad=await h.window.fetch(url,{method:'PATCH',body:JSON.stringify({task_id:'other',title:'X'})});assert.equal(bad.status,400);assert.equal(h.calls.filter(x=>x.op==='task-update').length,0);
+ const ok=await h.window.fetch(url,{method:'PATCH',body:JSON.stringify({expected_version:'version',title:'X'})});assert.equal(ok.status,200);assert.equal(h.calls.at(-1).body.task_id,'task1');assert.equal(h.calls.at(-1).params.id,'contact1');
 });

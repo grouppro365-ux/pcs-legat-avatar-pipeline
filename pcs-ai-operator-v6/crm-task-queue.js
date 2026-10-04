@@ -15,7 +15,7 @@
   const list=document.getElementById('crmTaskQueueList');
   list.innerHTML=s.rows.map((t,i)=>{
    const safe=valid(t.id)&&valid(t.contact_id),working=busy.has(t.id);
-   return `<article class="item"><b>${esc(t.title)}</b><p>${esc(t.contact_name||t.contact_username||'Клиент')}</p>${t.comment?`<p>${esc(t.comment)}</p>`:''}<div class="pills"><span class="pill">${esc(priority[t.priority]||t.priority||'Обычный')}</span>${t.is_overdue?'<span class="pill warn">Просрочена</span>':''}<span class="pill">${t.due_at?esc(window.fmtDateTime(t.due_at)):'Без срока'}</span></div><div class="actions"><button class="btn ghost compact" type="button" ${safe?'':'disabled'} onclick="pcsTaskQueue.client(${i})">Клиент</button><button class="btn soft compact" type="button" ${safe&&!working?'':'disabled'} onclick="pcsTaskQueue.complete(${i})">${working?'Сохраняем…':'Завершить'}</button></div></article>`;
+   return `<article class="item"><b>${esc(t.title)}</b><p>${esc(t.contact_name||t.contact_username||'Клиент')}</p>${t.comment?`<p>${esc(t.comment)}</p>`:''}<div class="pills"><span class="pill">${esc(priority[t.priority]||t.priority||'Обычный')}</span>${t.is_overdue?'<span class="pill warn">Просрочена</span>':''}<span class="pill">${t.due_at?esc(window.fmtDateTime(t.due_at)):'Без срока'}</span></div><div class="actions"><button class="btn ghost compact" type="button" ${safe?'':'disabled'} onclick="pcsTaskQueue.client(${i})">Клиент</button><button class="btn ghost compact" type="button" ${safe&&!working?'':'disabled'} onclick="pcsTaskQueue.edit(${i})">Изменить</button><button class="btn soft compact" type="button" ${safe&&!working?'':'disabled'} onclick="pcsTaskQueue.complete(${i})">${working?'Сохраняем…':'Завершить'}</button></div></article>`;
   }).join('')||'<p class="muted">В этом списке нет открытых задач.</p>';
   document.getElementById('crmTaskQueueLimit').textContent=s.truncated?'Есть ещё задачи. Откройте следующую страницу.':'';
   paging(s);
@@ -55,5 +55,5 @@
   finally{busy.delete(t.id);if(active(s)&&s.rows.length)draw(s)}
  }
  async function client(i){const t=state?.rows[i];if(!t||!valid(t.contact_id))return;window.closeSheet();try{await window.go('crm');await window.openClient(t.contact_id,false)}catch(e){window.toast(e.message||'Не удалось открыть клиента.')}}
- window.pcsTaskQueue={open,filter,page,complete,client,reload:()=>state&&load(state)};
+ window.pcsTaskQueue={open,filter,page,complete,client,edit:i=>{const t=state?.rows[i];if(t&&valid(t.id)&&valid(t.contact_id)&&!busy.has(t.id))window.pcsTaskEdit.open(t.contact_id,t.id)},reload:()=>state&&load(state)};
 })();

@@ -120,6 +120,9 @@ async function uiRoute(path,init){
     if(!String(text).trim())return appError('Введите текст сообщения',400);
     return jsonResponse(await manager('send',{id:decodeURIComponent(m[1]),method:'POST',body:{text:String(text),request_id:body.request_id}}));
   }
+  m=path.match(/^\/crm\/([^/]+)\/tasks\/([^/]+)$/);
+  if(m&&method==='GET')return jsonResponse(await manager('task',{id:decodeURIComponent(m[1]),params:{task_id:decodeURIComponent(m[2])}}));
+  if(m&&method==='PATCH'){if(Object.hasOwn(body,'task_id')&&body.task_id!==decodeURIComponent(m[2]))return appError('Номер задачи не совпадает',400);return jsonResponse(await manager('task-update',{id:decodeURIComponent(m[1]),method:'POST',body:{...body,task_id:decodeURIComponent(m[2])}}));}
   m=path.match(/^\/crm\/([^/]+)\/tasks$/);
   if(m&&method==='POST')return jsonResponse(await manager('task-create',{id:decodeURIComponent(m[1]),method:'POST',body}));
   m=path.match(/^\/crm\/([^/]+)\/complete-task\/([^/]+)$/);
@@ -224,6 +227,7 @@ async function uiRoute(path,init){
 
 async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
+  if(path.startsWith('/finance')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/finance')return jsonResponse(await manager('finance',{params:{source:u.searchParams.get('source')||'ledger',status:u.searchParams.get('status')||'all',page:u.searchParams.get('page')||'0'}}));}
   const reservationRows=()=>manager('applications').then(rows=>rows.filter(x=>x.category==='booking'||(x.qualification_data?.start_date&&x.qualification_data?.end_date)).map(x=>({...x,status:bookingStatusFromServer(x.operational_status),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
   if(path==='/reservations'&&method==='GET')return jsonResponse(await reservationRows());
   if(path.startsWith('/calendar?')&&method==='GET'){
