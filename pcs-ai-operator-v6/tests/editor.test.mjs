@@ -24,7 +24,8 @@ test('edit opens the selected v26 knowledge record with its existing values',()=
 test('runtime scripts have explicit release keys, including the current send modules',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  for(const file of ['app.js','crm-followup.js','crm-message.js'])assert.ok(html.includes(file+'?v=20261004-send1'),file+' must refresh in Telegram');
- for(const file of ['neon-adapter.js','approval-review.js'])assert.ok(html.includes(file+'?v=20261004-approval1'));
+ for(const file of ['approval-review.js'])assert.ok(html.includes(file+'?v=20261004-approval1'));
+ for(const file of ['neon-adapter.js','errors.js'])assert.ok(html.includes(file+'?v=20261004-monitor1'));
  for(const file of ['operator-ux-v37.js','media.js'])assert.match(html,new RegExp(file.replaceAll('.','\\.')+'\\?v=\\d{8}-[a-z0-9-]+'));
 });
 
