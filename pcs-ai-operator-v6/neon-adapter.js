@@ -104,6 +104,7 @@ async function uiRoute(path,init){
   const body=await parseBody(init);
 
   if(path==='/login'&&method==='POST')return jsonResponse(await manager('login',{method:'POST',body:{password:body.password||''},auth:false}));
+  if(path.startsWith('/search')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/search')return jsonResponse(await manager('search',{params:{q:u.searchParams.get('q')||'',scope:u.searchParams.get('scope')||'all',page:u.searchParams.get('page')||'0'}}));}
   if(path==='/session')return jsonResponse(await manager('session'));
   if(path==='/dashboard')return jsonResponse(await manager('dashboard'));
   if(path==='/crm'&&method==='GET')return jsonResponse(await manager('clients'));
