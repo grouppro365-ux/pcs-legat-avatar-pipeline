@@ -29,7 +29,10 @@ test('real Instagram follow-up uses the durable outbox, never Telegram or a fals
         gte(){return this;}, order(){return this;}, limit(){return this;},
         gt(){this.newer=true;return this;},
         result() {
-          const data = table==='pcs_customer_followups' ? followup
+          const data = table==='pcs_settings' ? {auto_send:true}
+            : table==='pcs_telegram_connections' ? {enabled:true,can_reply:true}
+            : table==='pcs_channel_connections' ? {enabled:true,status:'active',public_config:{reply_mode:'auto'}}
+            : table==='pcs_customer_followups' ? followup
             : table==='pcs_ai_generations' ? (this.newer ? null : generation)
             : table==='pcs_contacts' ? {id:'client-1',city:'Паттайя',language:'ru'}
             : table==='pcs_catalog_items' ? (inventoryAvailable?[car]:[])
