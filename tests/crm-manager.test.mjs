@@ -127,8 +127,8 @@ test('global search is admin-only and rejects mutation requests before reading s
 });
 
 test('finance and task editing reject unauthenticated and unsupported requests before source access',async()=>{
- const f=await fixture();for(const op of ['finance','task','task-update'])assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);
- for(const [op,method] of [['finance','POST'],['task','POST'],['task-update','GET']])assert.equal((await f.call(op,{method})).status,405);assert.equal(f.writes.length,0);
+ const f=await fixture();for(const op of ['finance','finance-balance','task','task-update'])assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);
+ for(const [op,method] of [['finance','POST'],['finance-balance','POST'],['task','POST'],['task-update','GET']])assert.equal((await f.call(op,{method})).status,405);assert.equal(f.writes.length,0);
 });
 
 test('manual delivery review requires admin POST before changing a receipt',async()=>{const f=await fixture();assert.equal((await f.call('delivery-review',{auth:''})).status,401);assert.equal((await f.call('delivery-review',{method:'GET'})).status,405);assert.equal(f.writes.length,0)});

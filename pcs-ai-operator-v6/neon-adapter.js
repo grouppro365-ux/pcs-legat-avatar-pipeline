@@ -227,7 +227,7 @@ async function uiRoute(path,init){
 
 async function opsRoute(path,init){
   const method=String(init?.method||'GET').toUpperCase();
-  if(path.startsWith('/finance')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/finance')return jsonResponse(await manager('finance',{params:{source:u.searchParams.get('source')||'ledger',status:u.searchParams.get('status')||'all',page:u.searchParams.get('page')||'0'}}));}
+  if(path.startsWith('/finance')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/finance/balance')return jsonResponse(await manager('finance-balance',{params:{reservation_id:u.searchParams.get('reservation_id')||''}}));if(u.pathname==='/finance')return jsonResponse(await manager('finance',{params:{source:u.searchParams.get('source')||'ledger',status:u.searchParams.get('status')||'all',page:u.searchParams.get('page')||'0'}}));}
   const reservationRows=()=>manager('applications').then(rows=>rows.filter(x=>x.category==='booking'||(x.qualification_data?.start_date&&x.qualification_data?.end_date)).map(x=>({...x,status:bookingStatusFromServer(x.operational_status),start_date:x.qualification_data?.start_date||'',end_date:x.qualification_data?.end_date||'',total_amount:x.qualification_data?.total_amount??null,deposit_amount:x.qualification_data?.deposit_amount??null,currency:x.qualification_data?.currency||'THB',payment_status:Number(x.qualification_data?.deposit_amount||0)>0?'partial':'unpaid',pcs_catalog_items:{title:x.item_title||'Объект'},pcs_contacts:{name:x.client_name||x.client_contact||'Без клиента'}})));
   if(path==='/reservations'&&method==='GET')return jsonResponse(await reservationRows());
   if(path.startsWith('/calendar?')&&method==='GET'){
