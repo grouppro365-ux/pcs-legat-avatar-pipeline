@@ -7,7 +7,7 @@ function fixture(){
  const nodes={crmFollowupForm:{dataset:{contact:cid}},crmFollowupText:{value:'Edited message'},crmFollowupError:{textContent:''},crmFollowupSend:{disabled:false,textContent:'Отправить клиенту'}};
  const calls=[],sheets=[],toasts=[];let finish,fail=false,closed=0;
  const window={call:async(path,opt)=>{calls.push({path,opt});if(!opt)return{contact:{name:'<Client>',need:'<img onerror=x>',language:'ru'}};if(fail)throw Error('unavailable');return new Promise(resolve=>{finish=resolve})},openSheet:(title,html)=>sheets.push({title,html}),toast:s=>toasts.push(s),closeSheet:()=>closed++,openClient:async()=>{}};
- vm.runInNewContext(readFileSync(new URL('../pcs-ai-operator-v6/crm-followup.js',import.meta.url),'utf8'),{window,document:{getElementById:id=>nodes[id]}});
+ vm.runInNewContext(readFileSync(new URL('../pcs-ai-operator-v6/crm-followup.js',import.meta.url),'utf8'),{window,crypto:globalThis.crypto,document:{getElementById:id=>nodes[id]}});
  return{api:window.pcsCrmFollowup,window,nodes,calls,sheets,toasts,finish:()=>finish({ok:true}),fail:()=>{fail=true},closed:()=>closed};
 }
 test('opening a follow-up performs a read and escapes client data, without sending',async()=>{
@@ -20,7 +20,7 @@ test('edited text is sent only on submit and repeated taps send once',async()=>{
  const f=fixture();const pending=f.api.submit();await f.api.submit();assert.equal(f.calls.length,1);assert.equal(f.calls[0].path,`/crm/${cid}/send`);assert.equal(JSON.parse(f.calls[0].opt.body).text,'Edited message');assert.equal(f.nodes.crmFollowupSend.disabled,true);f.finish();await pending;assert.equal(f.closed(),1);
 });
 test('failed send keeps the message and enables retry without claiming success',async()=>{
- const f=fixture();f.fail();await f.api.submit();assert.equal(f.nodes.crmFollowupText.value,'Edited message');assert.equal(f.nodes.crmFollowupSend.disabled,false);assert.match(f.nodes.crmFollowupError.textContent,/не отправлено/);assert.equal(f.closed(),0);assert.equal(f.toasts.length,0);
+ const f=fixture();f.fail();await f.api.submit();assert.equal(f.nodes.crmFollowupText.value,'Edited message');assert.equal(f.nodes.crmFollowupSend.disabled,false);assert.equal(f.nodes.crmFollowupText.readOnly,true);assert.equal(f.nodes.crmFollowupSend.textContent,'Повторить попытку');assert.equal(f.closed(),0);assert.equal(f.toasts.length,0);
 });
 test('a failed card refresh after delivery does not report the message as unsent',async()=>{
  const f=fixture();f.window.openClient=async()=>{throw Error('refresh failed')};const pending=f.api.submit();f.finish();await pending;assert.equal(f.calls.length,1);assert.equal(f.closed(),1);assert.equal(f.nodes.crmFollowupError.textContent,'');assert.match(f.toasts.at(-1),/Сообщение отправлено/);

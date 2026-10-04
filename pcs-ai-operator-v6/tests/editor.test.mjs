@@ -21,9 +21,10 @@ test('edit opens the selected v26 knowledge record with its existing values',()=
   assert.match(h.sheets[0].html,/400 THB daily/);
   assert.match(h.sheets[0].html,/saveKnowledge\('kb-existing'\)/);
 });
-test('all changed runtime files have the same release cache key',()=>{
+test('runtime scripts have explicit release keys, including the current send modules',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- for(const file of ['neon-adapter.js','operator-ux-v37.js','media.js'])assert.ok(html.includes(file+'?v=20260930-catalog-media1'),file+' must refresh in Telegram');
+ for(const file of ['neon-adapter.js','app.js','crm-followup.js','crm-message.js'])assert.ok(html.includes(file+'?v=20261004-send1'),file+' must refresh in Telegram');
+ for(const file of ['operator-ux-v37.js','media.js'])assert.match(html,new RegExp(file.replaceAll('.','\\.')+'\\?v=\\d{8}-[a-z0-9-]+'));
 });
 
 test('unknown record never silently opens a creation form',()=>{
