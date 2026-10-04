@@ -13,6 +13,7 @@ function adapterHarness({sendResponse}={}){
   const window={fetch:async(url,init={})=>{
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    if(op==='approval-action')return Response.json({ok:true});
     if(op==='send')return sendResponse?.()||Response.json({ok:true,message_id:123});
     if(op==='tasks')return Response.json({tasks:[{id:'task1',contact_id:'contact1',title:'Task'}],truncated:false});
     if(op==='catalog-detail')return new Response(JSON.stringify({item,media}));
@@ -92,4 +93,17 @@ test('uncertain delivery survives the adapter with its status and machine-readab
  const h=adapterHarness({sendResponse:()=>Response.json({error:'Check dialogue',code:'delivery_uncertain'},{status:409})});
  const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/crm/contact1/send',{method:'POST',body:JSON.stringify({text:'Reviewed',request_id:itemId})});
  assert.equal(r.status,409);assert.equal((await r.json()).code,'delivery_uncertain');assert.equal(h.calls.length,1);
+});
+
+test('approval decisions preserve route identity, reviewed text, version and authentication',async()=>{
+ for(const action of ['send','reject']){
+  const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/approvals/generation1/'+action,{method:'POST',body:JSON.stringify({expected_version:'microsecond-version',text:'Reviewed',id:'forged',action:'forged'})});
+  assert.equal(r.status,200);assert.equal(h.calls.length,1);assert.equal(h.calls[0].op,'approval-action');
+  assert.deepEqual(h.calls[0].body,{id:'generation1',action,expected_version:'microsecond-version',...(action==='send'?{text:'Reviewed'}:{})});
+  assert.equal(h.calls[0].authorization,'Bearer fixture');
+ }
+});
+test('approval read methods cannot trigger a decision',async()=>{
+ const h=adapterHarness(),r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/approvals/generation1/send');
+ assert.equal(r.status,405);assert.equal(h.calls.length,0);
 });

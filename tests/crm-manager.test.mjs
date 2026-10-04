@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
 import * as policy from '../server/supabase/pcs-manager-live2/crm-policy.mjs';
+import * as approvals from '../server/supabase/pcs-manager-live2/approval-policy.mjs';
 import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
@@ -13,7 +14,7 @@ async function fixture({taskRows,applicationRows}={}){
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...policy,...login,...delivery,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...policy,...login,...delivery,...approvals,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -21,7 +22,7 @@ async function fixture({taskRows,applicationRows}={}){
  return{writes,reads,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
 }
 test('all new mutations require a valid admin token before any write',async()=>{
- const f=await fixture();for(const op of ['client-save','task-create','task-complete','send'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
+ const f=await fixture();for(const op of ['client-save','task-create','task-complete','send','approval-action'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
 });
 test('client detail returns tasks from the same operational database',async()=>{
  const f=await fixture(),r=await f.call('client',{method:'GET'});assert.equal(r.status,200);assert.equal((await r.json()).tasks[0].contact_id,cid);
@@ -104,4 +105,10 @@ test('generic booking save retains its category when omitted and rejects invente
  assert.ok(f.writes[0].p.includes('booking'));
  assert.equal((await f.call('application-status',{body:{id:applicationId,status:'FAKE'}})).status,400);
  assert.equal(f.writes.length,1);
+});
+
+test('approval queue reads narrow source context with validated server pagination',async()=>{
+ const f=await fixture();assert.equal((await f.call('approvals&page=-1',{method:'GET'})).status,400);
+ assert.equal((await f.call('approvals&page=2',{method:'GET'})).status,200);
+ const q=f.reads.find(x=>x.q.includes('from ai_generations'));assert.ok(q);assert.match(q.q,/m.text source_text/);assert.match(q.q,/updated_at::text edit_version/);assert.match(q.q,/limit 200 offset/);assert.equal(q.params.at(-1),400);assert.doesNotMatch(q.q,/g.\*/);
 });

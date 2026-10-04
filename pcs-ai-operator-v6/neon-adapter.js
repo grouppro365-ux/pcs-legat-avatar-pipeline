@@ -187,8 +187,13 @@ async function uiRoute(path,init){
     }
     return jsonResponse({ok:true,item:normalizeCatalog({...saved,media_items:verified.media||[]})});
   }
-  if(path==='/approvals'&&method==='GET')return jsonResponse(await manager('approvals'));
-  if(/^\/approvals\//.test(path))return appError('Действие с согласованием пока недоступно в стабильном Mini App.',409);
+  if(path.startsWith('/approvals')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/approvals')return jsonResponse(await manager('approvals',{params:{page:u.searchParams.get('page')||'0'}}));}
+  const approvalRoute=path.match(/^\/approvals\/([A-Za-z0-9_-]{1,128})\/(send|reject)$/);
+  if(approvalRoute){
+    if(method!=='POST')return appError('Метод не поддерживается.',405);
+    return jsonResponse(await manager('approval-action',{method:'POST',body:{id:approvalRoute[1],action:approvalRoute[2],expected_version:body.expected_version,...(approvalRoute[2]==='send'?{text:body.text}:{})}}));
+  }
+  if(/^\/approvals\//.test(path))return appError('Согласование не найдено.',404);
   if(path==='/knowledge'&&method==='GET')return jsonResponse([]);
   if(path==='/knowledge'&&method!=='GET')return appError('Редактор базы знаний пока доступен только в основной панели.',409);
 
