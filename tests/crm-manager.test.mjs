@@ -1,3 +1,4 @@
+import * as bookingCreate from '../server/supabase/pcs-manager-live2/booking-create.mjs';
 import * as operations from '../server/supabase/pcs-manager-live2/operations-read.mjs';
 import * as prospectWorker from '../server/supabase/pcs-manager-live2/prospect-worker.mjs';
 import * as prospect from '../server/supabase/pcs-manager-live2/prospect-engine.mjs';
@@ -22,7 +23,7 @@ async function fixture({taskRows,applicationRows}={}){
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -30,7 +31,7 @@ async function fixture({taskRows,applicationRows}={}){
  return{writes,reads,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
 }
 test('all new mutations require a valid admin token before any write',async()=>{
- const f=await fixture();for(const op of ['client-save','task-create','task-complete','send','approval-action'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
+ const f=await fixture();for(const op of ['client-save','task-create','task-complete','send','approval-action','notification-read'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
 });
 test('client detail returns tasks from the same operational database',async()=>{
  const f=await fixture(),r=await f.call('client',{method:'GET'});assert.equal(r.status,200);assert.equal((await r.json()).tasks[0].contact_id,cid);
@@ -144,4 +145,6 @@ test('prospecting sources, scanning and reads require admin auth and correct met
 
 test('internal scanner rejects anonymous access and wrong methods before any database write',async()=>{const f=await fixture();assert.equal((await f.call('prospecting-worker',{auth:''})).status,401);assert.equal((await f.call('prospecting-worker',{auth:'',method:'GET'})).status,405);assert.equal(f.writes.length,0);});
 
-test('operational overview and notification/application reads are admin-only and GET-only',async()=>{const f=await fixture();for(const op of ['dashboard','notifications','operational-application']){assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);assert.equal((await f.call(op,{method:'POST'})).status,405);}assert.equal(f.writes.length,0);});
+test('operational overview and notification/application reads are admin-only and GET-only',async()=>{const f=await fixture();for(const op of ['dashboard','notifications','operational-application','audit']){assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);assert.equal((await f.call(op,{method:'POST'})).status,405);}assert.equal(f.writes.length,0);});
+
+test('notification acknowledgement rejects GET and malformed payload before mutation',async()=>{const f=await fixture();assert.equal((await f.call('notification-read',{method:'GET'})).status,405);assert.equal((await f.call('notification-read',{body:{id:'bad',expected_version:'bad'}})).status,400);assert.equal(f.writes.length,0);});

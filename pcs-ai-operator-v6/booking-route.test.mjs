@@ -56,3 +56,8 @@ catalog[0].status='available';catalog[0].base_price_period='one_time';
 assert.equal((await post({...valid,start_date:'2027-01-01',end_date:'2027-01-02'})).status,409,'sale items must not enter the rental booking flow');
 
 console.log('booking route checks passed');
+
+const retryKey='11111111-1111-4111-8111-111111111111';
+applications=[{id:'booking-original',item_id:'car-1',category:'booking',client_name:'Original client name',client_contact:'Original contact',operational_status:'CONFIRMED',qualification_data:{...writes[0].qualification_data,booking_idempotency_key:retryKey}}];
+assert.equal((await post({...valid,request_id:retryKey})).status,200,'an exact retry reaches server receipt validation even if catalog status changed');
+assert.equal(writes.at(-1).request_id,retryKey);assert.equal(writes.at(-1).client_name,'Original client name');
