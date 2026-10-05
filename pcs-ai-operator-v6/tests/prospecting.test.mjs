@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../prospecting.js',import.meta.url),'utf8');
 function fixture(){
- const calls=[],nodes={};for(const k of ['list','summary','view','decision','refresh','scan','classify','result','add','toggle'])nodes[k]={innerHTML:'',textContent:'',value:k==='view'?'requests':'qualified',disabled:false,querySelector(){return{}},elements:{username:{value:'@channel_test'}},reset(){}};
+ const calls=[],nodes={};for(const k of ['list','summary','view','decision','refresh','scan','classify','result','add','toggle','competitors'])nodes[k]={innerHTML:'',textContent:'',value:k==='view'?'requests':'qualified',disabled:false,querySelector(){return{}},elements:{username:{value:'@channel_test'},topic:{value:'community'}},reset(){}};
  nodes.list.querySelector=k=>nodes[k.includes('prev')?'prev':'next']||(nodes[k.includes('prev')?'prev':'next']={});
  const root={querySelector:k=>nodes[k.match(/data-prospect-([a-z]+)/)?.[1]]},main={innerHTML:''};
  const window={PCS:{page:'prospecting'},opsCall:(url,init)=>new Promise((resolve,reject)=>calls.push({url,init,resolve,reject})),toast(){}};

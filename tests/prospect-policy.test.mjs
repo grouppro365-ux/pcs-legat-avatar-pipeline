@@ -60,3 +60,47 @@ test('forwarded irrelevant news and advertisements remain rejected instead of cr
   assert.equal(classified.decision,'rejected');assert.equal(classified.outreach_status,'not_applicable');
  }
 });
+
+// Seller listings must fail even when the external model confidently labels them as buyers.
+const negativeDemandCases=[
+ ['Совершенно новый кондик пентхаус на 8 этаже в Чалонг. В квартире есть: кухня, мебель. Цена 25000 бат. Контакт: Viktoria','PROPERTY_PURCHASE'],
+ ['Вилла в комплексе Peykaa Estate. Площадь участка: 700 кв. м. 1 месяц: 500000 THB. Дополнительные фото по запросу.','PROPERTY_PURCHASE'],
+ ['Аренда авто MG5 Pro. Страховка включена. Почему выбирают нас? Напишите нам для бронирования.','CAR_RENTAL'],
+ ['Сдаются в аренду Тойота Виос. Стоимость от 9000 бат. Депозит 5000.','CAR_RENTAL'],
+ ['Интересует длительная аренда байка на Пхукете? Официальный прокат. Модели в нашем парке.','CAR_RENTAL'],
+ ['Ищете квартиру? Предлагаем купить кондо в Паттайе','PROPERTY_PURCHASE'],
+ ['Ищу жильё на зимовку, сниму квартиру на месяц','PROPERTY_PURCHASE'],
+ ['Looking for an apartment to rent in Phuket','PROPERTY_PURCHASE'],
+ ['Ищу квартиру в Паттайе','PROPERTY_PURCHASE'],
+ ['Хочу купить машину на Пхукете','CAR_RENTAL'],
+ ['Нужен байк в аренду','CAR_RENTAL'],
+ ['Уже нашли квартиру, больше не ищу купить кондо','PROPERTY_PURCHASE'],
+ ['Condo for sale, contact us for viewing','PROPERTY_PURCHASE'],
+ ['We offer car rental in Phuket. Book now','CAR_RENTAL']
+];
+for(const [text,direction] of negativeDemandCases)test('never qualifies supplier/out-of-scope: '+text.slice(0,65),()=>{
+ const out=validateClassifications([{...message,text}],{results:[{...result,direction,evidence:text}]},now)[0];
+ assert.notEqual(out.decision,'qualified');
+});
+const positiveDemandCases=[
+ ['Хочу купить кондо в Джомтьене для сдачи в аренду','PROPERTY_PURCHASE'],
+ ['Рассматриваем покупку квартиры на Пхукете','PROPERTY_PURCHASE'],
+ ['Кто продаёт кондо? Ищу купить для себя','PROPERTY_PURCHASE'],
+ ['Подскажите варианты для покупки квартиры','PROPERTY_PURCHASE'],
+ ['Looking to buy a condo in Phuket','PROPERTY_PURCHASE'],
+ ['I want to buy a house in Pattaya','PROPERTY_PURCHASE'],
+ ['ต้องการซื้อคอนโดภูเก็ต','PROPERTY_PURCHASE'],
+ ['Кто сдаёт авто на месяц на Пхукете?','CAR_RENTAL'],
+ ['Посоветуйте прокат авто, прилетаем завтра','CAR_RENTAL'],
+ ['Ищу семиместную машину в аренду','CAR_RENTAL'],
+ ['Looking for a car to rent in Phuket','CAR_RENTAL'],
+ ['We need a car to rent in Pattaya','CAR_RENTAL'],
+ ['ต้องการเช่ารถยนต์ภูเก็ต','CAR_RENTAL']
+];
+for(const [text,direction] of positiveDemandCases)test('preserves explicit client demand: '+text,()=>{
+ assert.equal(validateClassifications([{...message,text}],{results:[{...result,direction,evidence:text}]},now)[0].decision,'qualified');
+});
+test('a literal object description cannot be used as buyer evidence inside a genuine request',()=>{
+ const text='Хочу купить кондо. Пентхаус на 8 этаже';
+ assert.equal(validateClassifications([{...message,text}],{results:[{...result,direction:'PROPERTY_PURCHASE',evidence:'Пентхаус на 8 этаже'}]},now)[0].decision,'review');
+});

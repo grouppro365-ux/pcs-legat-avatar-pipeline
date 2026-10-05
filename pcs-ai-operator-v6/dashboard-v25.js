@@ -36,26 +36,45 @@ window.pcsInstallNav25=installNav;
 function quick(page,label,key){return `<button onclick="go('${page}')"><span class="pcs25-qicon">${rawIcon(key)}</span><span>${label}</span></button>`}
 function kpi(label,value,note,key){return `<article class="pcs25-kpi"><div class="pcs25-kpi-label">${label}</div><div class="pcs25-kpi-value">${value}</div><div class="pcs25-kpi-note">${note}</div><div class="pcs25-kpi-icon">${rawIcon(key)}</div></article>`}
 
-async function loadDashboard(){
- const r=await Promise.allSettled([ui('/crm'),ops('/reservations'),ui('/catalog'),ui('/approvals')]);
- const clients=r[0].status==='fulfilled'?A(r[0].value):[];
- const bookings=r[1].status==='fulfilled'?A(r[1].value):[];
- const catalog=r[2].status==='fulfilled'?A(r[2].value):[];
- const approvals=r[3].status==='fulfilled'?A(r[3].value):[];
- const active=bookings.filter(x=>['requested','hold','confirmed','active'].includes(String(x.status||'').toLowerCase())).length;
- const items=catalog.filter(x=>!x.deleted_at);
- const available=items.filter(x=>String(x.status||'').toLowerCase()==='available').length;
- const checking=items.filter(x=>String(x.status||'').toLowerCase()==='checking').length;
- put('pcs25Kpis',kpi('Клиенты',clients.length,'в CRM','clients')+kpi('Брони',active,'активные и предварительные','bookings')+kpi('Каталог',items.length,`${checking} требуют проверки`,'catalog')+kpi('Доступно',available,'подтверждено','available'));
- const bell=document.querySelector('.pcs25-bell-dot');if(bell)bell.classList.toggle('on',approvals.length>0);
- if(r[0].status==='fulfilled'){
-  put('pcs25Clients',clients.slice(0,2).map((x,i)=>`<button class="pcs25-row" onclick="openClient('${x.id}')"><span class="pcs25-dot"></span><span><b>${E(x.name||x.username||'Клиент')}</b><small>${E(x.last_message||x.need||x.summary||x.intent||'Без описания')}</small></span><span class="pcs25-status ${x.priority==='HOT'?'hot':''}">${x.priority==='HOT'?'HOT':i===1?'NEW':''}</span></button>`).join('')||'<div class="pcs25-empty">Обращений пока нет</div>');
- } else put('pcs25Clients','<div class="pcs25-empty">Не удалось загрузить обращения</div>');
- if(r[1].status==='fulfilled'){
-  const today=new Date().toISOString().slice(0,10);
-  const rows=bookings.filter(x=>String(x.status||'').toLowerCase()!=='cancelled'&&(!x.end_date||x.end_date>=today)).sort((a,b)=>String(a.start_date||'').localeCompare(String(b.start_date||''))).slice(0,2);
-  put('pcs25Bookings',rows.map(x=>`<button class="pcs25-row" onclick="go('bookings')"><span class="pcs25-dot"></span><span><b>${E(x.pcs_catalog_items?.title||x.title||'Бронь')}</b><small>${dt(x.start_date)} — ${dt(x.end_date)}</small></span><span class="pcs25-status">${E(String(x.status||'').toUpperCase())}</span></button>`).join('')||'<div class="pcs25-empty">Ближайших броней нет</div>');
- } else put('pcs25Bookings','<div class="pcs25-empty">Не удалось загрузить брони</div>');
+let dashboardSequence=0;
+async function loadDashboard(scope){
+ const current=()=>scope.sequence===dashboardSequence&&window.PCS?.page==='dashboard'&&document.getElementById('main')===scope.main;
+ let d;try{d=await ui('/dashboard');if(!current())return;if(!d?.sections)throw Error('Некорректный ответ главной панели')}catch(e){if(current())for(const id of ['pcs25Kpis','pcs25Clients','pcs25Bookings','pcs25Attention'])put(id,`<div class="pcs25-empty">${E(e.message||'Не удалось загрузить панель')}</div>`);return;}
+ const crm=d.sections.crm?.data,biz=d.sections.business?.data,runtime=d.sections.runtime?.data;
+ const num=x=>Number.isSafeInteger(x)&&x>=0?String(x):'—';
+ put('pcs25Kpis',kpi('Клиенты',num(crm?.contacts),crm?'в CRM':'источник недоступен','clients')+kpi('Брони',num(biz?.active_bookings),biz?'активные и предварительные':'источник недоступен','bookings')+kpi('Каталог',num(biz?.catalog),biz?`${num(biz.catalog_review)} требуют проверки`:'источник недоступен','catalog')+kpi('Доступно',num(biz?.available),'по статусу карточек','available'));
+ const count=[crm?.approvals,crm?.delivery_unknown,biz?.unread_notifications,runtime?.unresolved_jobs].filter(x=>Number.isSafeInteger(x)&&x>0).reduce((a,b)=>a+b,0);
+ const bell=document.querySelector('.pcs25-bell-dot');if(bell)bell.classList.toggle('on',Number.isFinite(count)&&count>0);
+ if(crm)put('pcs25Clients',(crm.clients||[]).map(x=>`<button class="pcs25-row" data-dashboard-contact="${E(x.id)}"><span class="pcs25-dot"></span><span><b>${E(x.name||x.username||'Клиент')}</b><small>${E(x.need||'Без описания')}</small></span><span class="pcs25-status">${E(x.priority==='HOT'?'HOT':'')}</span></button>`).join('')||'<div class="pcs25-empty">Обращений пока нет</div>');
+ else put('pcs25Clients',`<div class="pcs25-empty">${E(d.sections.crm?.error||'CRM недоступна')}</div>`);
+ if(biz)put('pcs25Bookings',(biz.bookings||[]).map(x=>`<button class="pcs25-row" data-dashboard-page="bookings"><span class="pcs25-dot"></span><span><b>${E(x.title||x.public_id||'Бронь')}</b><small>${E(x.public_id||'')}</small></span><span class="pcs25-status">${E(x.operational_status)}</span></button>`).join('')||'<div class="pcs25-empty">Активных броней нет</div>');
+ else put('pcs25Bookings',`<div class="pcs25-empty">${E(d.sections.business?.error||'Заявки недоступны')}</div>`);
+ const blocks=[];
+ if(crm){blocks.push(`<p>Открытые задачи: ${num(crm.tasks?.open)} · Просрочены: ${num(crm.tasks?.overdue)} · Без срока: ${num(crm.tasks?.undated)}</p>`);
+  if(crm.tasks?.overdue>0)blocks.push('<button class="btn soft" data-dashboard-tasks>Открыть задачи</button>');
+  for(const x of crm.attention_tasks||[])blocks.push(`<button class="pcs25-row" data-dashboard-contact="${E(x.contact_id)}"><span><b>${E(x.title)}</b><small>${E(x.contact_name||'Клиент')} · ${E(x.assignee||'Без ответственного')}</small></span><span class="pcs25-status">Просрочено</span></button>`);
+  if(crm.approvals>0)blocks.push(`<button class="btn soft" data-dashboard-page="approvals">Ответы на согласовании: ${num(crm.approvals)}</button>`);
+  if(crm.delivery_unknown>0)blocks.push(`<button class="btn soft" data-dashboard-page="errors">Неизвестная доставка: ${num(crm.delivery_unknown)}</button>`);
+  if(crm.due_actions>0)blocks.push(`<p>Клиентов с наступившим сроком следующего действия: ${num(crm.due_actions)}</p>`);
+ }
+ if(biz){blocks.push(`<p>Заявки с просроченным SLA: ${num(biz.sla_overdue)} · Требуют решения: ${num(biz.human_review)} · Проблемы исполнения: ${num(biz.execution_issues)}</p>`);
+  for(const x of biz.attention_applications||[])blocks.push(`<button class="pcs25-row" data-dashboard-application="${E(x.id)}"><span><b>${E(x.public_id||'Заявка')}</b><small>${E(x.client_name||'Клиент')} · ${E(x.operational_status)}</small></span><span class="pcs25-status">Требует внимания</span></button>`);
+  blocks.push(`<button class="btn soft" data-dashboard-notifications>Непрочитанные события: ${num(biz.unread_notifications)}</button>`);
+ }
+ if(runtime)blocks.push(`<button class="btn soft" data-dashboard-page="errors">Неразрешённые ошибки: ${num(runtime.unresolved_jobs)}</button>`);
+ for(const name of ['crm','business','runtime'])if(d.sections[name]?.error)blocks.push(`<p class="muted">${E(d.sections[name].error)}</p>`);
+ put('pcs25Attention',blocks.join('')||'<div class="pcs25-empty">Данные недоступны</div>');
+ const attention=document.getElementById('pcs25Attention');if(attention)attention.onclick=e=>{
+  const b=e.target.closest?.('button');if(!b)return;
+  if(b.hasAttribute('data-dashboard-tasks'))window.pcsTaskQueue?.open();
+  if(b.hasAttribute('data-dashboard-notifications'))window.pcsNotifications?.open();
+  const id=b.dataset.dashboardApplication;if(id&&/^[0-9a-f-]{36}$/i.test(id))window.pcsOpenOperationalApplication?.(id);
+ };
+ for(const id of ['pcs25Clients','pcs25Bookings','pcs25Attention']){const el=document.getElementById(id);if(el)el.addEventListener('click',e=>{
+  const b=e.target.closest?.('button');if(!b)return;const cid=b.dataset.dashboardContact;
+  if(cid&&/^[A-Za-z0-9_-]{1,100}$/.test(cid)&&typeof window.openClient==='function')window.openClient(cid);
+  if(['bookings','approvals','errors'].includes(b.dataset.dashboardPage))window.go(b.dataset.dashboardPage);
+ });}
 }
 
 function renderDashboard(){
@@ -67,8 +86,8 @@ function renderDashboard(){
  root.innerHTML=window.shell();
  installNav();
  const main=document.getElementById('main');if(!main)return;
- main.innerHTML=`<div class="pcs25"><section class="pcs25-hero"><div class="pcs25-photo" aria-hidden="true"></div><div class="pcs25-top"><button class="pcs25-icon" aria-label="Меню" onclick="pcs25Menu()">${rawIcon('menu')}</button><button class="pcs25-icon" aria-label="Уведомления" onclick="go('approvals')">${rawIcon('bell')}<i class="pcs25-bell-dot"></i></button></div><div class="pcs25-copy"><div class="pcs25-script">PCS Concierge</div><h1 class="pcs25-title">Управляйте<br> сервисом.<span>Не теряйте<br> клиента.</span></h1><p class="pcs25-sub">Все инструменты в одном месте:<br>клиенты, брони, каталог, оплаты<br>и Telegram.</p></div><div class="pcs25-search">${rawIcon('search')}<input id="pcs25Search" placeholder="Найти клиента, бронь, запрос..."><button aria-label="Найти" onclick="pcs25Search()">${rawIcon('search')}</button></div><div class="pcs25-quick">${quick('crm','Клиенты','clients')}${quick('bookings','Брони','bookings')}${quick('catalog','Каталог','catalog')}${quick('connect','Telegram','telegram')}</div></section><section class="pcs25-content"><div id="pcs25Kpis" class="pcs25-kpis">${kpi('Клиенты','…','в CRM','clients')}${kpi('Брони','…','активные и предварительные','bookings')}${kpi('Каталог','…','загрузка','catalog')}${kpi('Доступно','…','подтверждено','available')}</div><section class="pcs25-panel"><div class="pcs25-panel-head"><h2>Последние обращения</h2><button onclick="go('inbox')">Все →</button></div><div id="pcs25Clients" class="pcs25-list"><div class="pcs25-empty">Загружаю…</div></div></section><section class="pcs25-panel"><div class="pcs25-panel-head"><h2>Ближайшие брони</h2><button onclick="go('calendar')">Календарь →</button></div><div id="pcs25Bookings" class="pcs25-list"><div class="pcs25-empty">Загружаю…</div></div></section></section></div>`;
- loadDashboard().catch(()=>{});
+ main.innerHTML=`<div class="pcs25"><section class="pcs25-hero"><div class="pcs25-photo" aria-hidden="true"></div><div class="pcs25-top"><button class="pcs25-icon" aria-label="Меню" onclick="pcs25Menu()">${rawIcon('menu')}</button><button class="pcs25-icon" aria-label="Уведомления" onclick="pcsNotifications.open()">${rawIcon('bell')}<i class="pcs25-bell-dot"></i></button></div><div class="pcs25-copy"><div class="pcs25-script">PCS Concierge</div><h1 class="pcs25-title">Управляйте<br> сервисом.<span>Не теряйте<br> клиента.</span></h1><p class="pcs25-sub">Все инструменты в одном месте:<br>клиенты, брони, каталог, оплаты<br>и Telegram.</p></div><div class="pcs25-search">${rawIcon('search')}<input id="pcs25Search" placeholder="Найти клиента, бронь, запрос..."><button aria-label="Найти" onclick="pcs25Search()">${rawIcon('search')}</button></div><div class="pcs25-quick">${quick('crm','Клиенты','clients')}${quick('bookings','Брони','bookings')}${quick('catalog','Каталог','catalog')}${quick('connect','Telegram','telegram')}</div></section><section class="pcs25-content"><div id="pcs25Kpis" class="pcs25-kpis">${kpi('Клиенты','…','в CRM','clients')}${kpi('Брони','…','активные и предварительные','bookings')}${kpi('Каталог','…','загрузка','catalog')}${kpi('Доступно','…','подтверждено','available')}</div><section class="pcs25-panel"><div class="pcs25-panel-head"><h2>Последние обращения</h2><button onclick="go('inbox')">Все →</button></div><div id="pcs25Clients" class="pcs25-list"><div class="pcs25-empty">Загружаю…</div></div></section><section class="pcs25-panel"><div class="pcs25-panel-head"><h2>Активные брони</h2><button onclick="go('calendar')">Календарь →</button></div><div id="pcs25Bookings" class="pcs25-list"><div class="pcs25-empty">Загружаю…</div></div></section><section class="pcs25-panel"><div class="pcs25-panel-head"><h2>Сегодня PCS</h2><button onclick="go('dashboard')">Обновить</button></div><div id="pcs25Attention" class="pcs25-list" aria-live="polite">Загружаю…</div></section></section></div>`;
+ loadDashboard({sequence:++dashboardSequence,main}).catch(()=>{});
 }
 window.pcsDashboard25=renderDashboard;
 window.pcs25Search=function(){const q=(document.getElementById('pcs25Search')?.value||'').trim();window.go('crm');setTimeout(()=>{const s=document.getElementById('crmSearch');if(s){s.value=q;s.dispatchEvent(new Event('input',{bubbles:true}))}},40)};
