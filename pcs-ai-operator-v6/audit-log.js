@@ -22,5 +22,5 @@
   document.getElementById('pcsAuditNext').onclick=()=>{s.page++;load(s)};await load(s);
  }
  window.pcsAudit={open};
- for(const name of ['moreMenu','pcs25Menu']){const previous=window[name];if(typeof previous!=='function')continue;window[name]=function(...args){const result=previous.apply(this,args),grid=document.querySelector('.sheetbox .more-grid,.sheetbox .action-grid');if(grid){const button=document.createElement('button');button.className='btn soft';button.textContent='Журнал действий';button.onclick=open;grid.appendChild(button);}return result;};}
+ for(const name of ['moreMenu','pcs25Menu']){const previous=window[name];if(typeof previous!=='function')continue;window[name]=function(...args){const result=previous.apply(this,args),grid=document.querySelector('.sheetbox .v26-more,.sheetbox .more-grid,.sheetbox .action-grid');if(grid){const button=document.createElement('button');button.className='btn soft';button.textContent='Журнал действий';button.onclick=open;grid.appendChild(button);}return result;};}
 })();
