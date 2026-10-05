@@ -152,3 +152,8 @@ test('application workspace routes bind queue filters, identity and exact follow
  const b={id:itemId,expected_version:'a'.repeat(32),follow_up_at:null,follow_up_note:'Keep'};await window.fetch('https://pcs-stable.local/pcs-ui-api/application-followup',{method:'POST',body:JSON.stringify(b)});
  assert.deepEqual(calls.map(x=>x.u.searchParams.get('op')),['application-queue','application-workspace','application-followup']);assert.equal(calls[0].u.searchParams.get('q'),'100%');assert.equal(calls[0].u.searchParams.get('page'),'2');assert.equal(calls[1].u.searchParams.get('id'),itemId);assert.deepEqual(JSON.parse(calls[2].init.body),b);assert.ok(calls.every(x=>x.init.headers.authorization==='Bearer fixture'));
 });
+test('application-offer adapter keeps scoped identity, source and page with admin auth',async()=>{
+ const calls=[],window={fetch:async(url,init)=>{calls.push({url:new URL(url),init});return Response.json({rows:[]})}};
+ vm.runInNewContext(readFileSync(new URL('../neon-adapter.js',import.meta.url),'utf8'),{window,URL,Response,localStorage:{pcsToken:'fixture'},console:{error(){}}});
+ await window.fetch('https://pcs-stable.local/pcs-ui-api/application-offers/'+itemId+'?source=quotes&page=2');const r=calls[0];assert.equal(r.url.searchParams.get('op'),'application-offers');assert.equal(r.url.searchParams.get('id'),itemId);assert.equal(r.url.searchParams.get('source'),'quotes');assert.equal(r.url.searchParams.get('page'),'2');assert.equal(r.init.headers.authorization,'Bearer fixture');
+});
