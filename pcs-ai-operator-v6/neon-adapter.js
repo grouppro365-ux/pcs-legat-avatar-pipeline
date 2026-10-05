@@ -246,9 +246,13 @@ async function opsRoute(path,init){
     const b=await parseBody(init);
     if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<=String(b.start_date))return appError('Дата возврата должна быть позже даты начала аренды.',400);
+    const amountOK=x=>x==null||(typeof x==='number'&&Number.isFinite(x)&&x>=0&&Number.isSafeInteger(Math.round(x*100))&&Math.abs(x*100-Math.round(x*100))<=0.000001);
+    if(!amountOK(b.total_amount)||!amountOK(b.deposit_amount)||(b.deposit_amount>0&&(b.total_amount==null||b.deposit_amount>b.total_amount)))return appError('Проверьте стоимость и предоплату.',400);
+    if(b.currency!==undefined&&!['THB','USD','RUB'].includes(b.currency))return appError('Неизвестная валюта.',400);
     const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
     const status=bookingStatusToServer[b.status||'hold'];if(!status)return appError('Неизвестный статус брони.',400);
     const client=clients.find(x=>String(x.id)===String(b.contact_id||''));
+    if(b.contact_id&&!client)return appError('Клиент не найден. Обновите список.',404);
     const replay=b.request_id?applications.find(x=>x.category==='booking'&&x.qualification_data?.booking_idempotency_key===b.request_id):null;
     const sameClient=replay&&String(replay.qualification_data?.contact_id||'')===String(b.contact_id||'');
     const saveBody={request_id:b.request_id,item_id:b.catalog_item_id||null,client_name:sameClient?replay.client_name:(client?.name||client?.username||null),client_contact:sameClient?replay.client_contact:(client?.phone||client?.username||null),category:'booking',operational_status:status,priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null};

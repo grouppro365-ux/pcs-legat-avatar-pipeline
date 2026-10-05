@@ -1,4 +1,4 @@
-import { createBooking, bookingDatabaseError } from './booking-create.mjs';
+import { createBooking, bookingDatabaseError, validateBookingMoney } from './booking-create.mjs';
 import { checkInventory } from './inventory-check.mjs';
 import { readOperationalOverview, readNotifications, readOperationalApplication, readDueActions, markNotificationRead, readAudit } from './operations-read.mjs';
 import { internalProspectScan } from './prospect-worker.mjs';
@@ -29,6 +29,7 @@ const LOCKED_BOOKING_STATES=['SERVICE_IN_PROGRESS','COMPLETED','CANCELLED_BY_CLI
 async function guardBookingSave(biz:any,b:any){
  let current=null;if(b.id){if(!/^[0-9a-f-]{36}$/i.test(String(b.id)))throw new CrmError('Некорректный номер заявки',400);current=(await biz`select id,category,operational_status from applications where id=${b.id} limit 1`)[0];if(!current)throw new CrmError('Заявка не найдена',404)}
  if(b.category==='booking'||current?.category==='booking'){
+  if(b.qualification_data!==undefined)validateBookingMoney(b.qualification_data);
   if(current?.category==='booking'&&!b.category)b.category='booking';
   if(current&&LOCKED_BOOKING_STATES.includes(current.operational_status))throw new CrmError('Активную, завершённую или отменённую аренду нельзя менять здесь',409);
   if(['SERVICE_IN_PROGRESS','COMPLETED'].includes(b.operational_status))throw new CrmError('Подтвердите выдачу или возврат в центре договоров',409);

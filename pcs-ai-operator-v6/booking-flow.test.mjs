@@ -9,7 +9,7 @@ for(const id of ['brItem','brClient','brStart','brEnd','brTotal','brDeposit','br
   assert.ok(ops.includes(`id="${id}"`),`booking form is missing ${id}`);
 }
 assert.match(ops,/type="date"/,'booking dates must use the native date picker');
-assert.match(ops,/deposit>total&&total>0/,'deposit cannot exceed a known total');
+assert.match(ops,/deposit>total/,'deposit cannot exceed a known total');
 assert.match(ops,/file\.size>8\*1024\*1024/,'booking images need a size limit');
 assert.match(ops,/Показываются только доступные автомобили с посуточным тарифом/,'booking form must exclude unconfirmed and non-rental catalog positions');
 assert.match(ops,/refreshReservationPricing/,'booking total must be calculated from the daily rate and dates');

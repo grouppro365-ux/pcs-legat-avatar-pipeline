@@ -61,3 +61,7 @@ const retryKey='11111111-1111-4111-8111-111111111111';
 applications=[{id:'booking-original',item_id:'car-1',category:'booking',client_name:'Original client name',client_contact:'Original contact',operational_status:'CONFIRMED',qualification_data:{...writes[0].qualification_data,booking_idempotency_key:retryKey}}];
 assert.equal((await post({...valid,request_id:retryKey})).status,200,'an exact retry reaches server receipt validation even if catalog status changed');
 assert.equal(writes.at(-1).request_id,retryKey);assert.equal(writes.at(-1).client_name,'Original client name');
+const beforeInvalid=writes.length;
+for(const patch of [{total_amount:-1},{total_amount:'100'},{total_amount:1.001},{total_amount:0,deposit_amount:1},{currency:'EUR'}])assert.equal((await post({...valid,...patch})).status,400);
+assert.equal((await post({...valid,contact_id:'missing-client'})).status,404);
+assert.equal(writes.length,beforeInvalid,'invalid terms and missing clients must not write applications');

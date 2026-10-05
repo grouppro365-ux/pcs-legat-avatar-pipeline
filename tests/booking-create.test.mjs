@@ -26,3 +26,9 @@ test('canonical booking errors receive clear responses without hiding unrelated 
  assert.equal(bookingDatabaseError({code:'22023',message:'booking_dates_invalid'}).status,400);
  for(const e of [{code:'23P01',constraint:'other'},new Error('offline'),null])assert.equal(bookingDatabaseError(e),null);
 });
+test('invalid financial terms fail before database or photo operations',async()=>{
+ const db={query:()=>assert.fail('invalid terms reached database')};for(const patch of [{total_amount:-1},{total_amount:'100'},{total_amount:Infinity},{total_amount:1.001},{total_amount:1e15},{total_amount:0,deposit_amount:1},{total_amount:null,deposit_amount:1},{total_amount:100,deposit_amount:101},{currency:'EUR'}]){
+ const b=input();b.qualification_data={...b.qualification_data,...patch};await assert.rejects(()=>createBooking(db,b,()=>assert.fail('invalid upload')),e=>e.status===400);
+ }
+ const f=fixture(),b=input();b.qualification_data={...b.qualification_data,total_amount:100.25,deposit_amount:100.25,currency:'THB'};assert.equal((await createBooking(f.db,b,null)).ok,true);
+});

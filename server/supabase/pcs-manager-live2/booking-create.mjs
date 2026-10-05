@@ -7,9 +7,16 @@ export function bookingDatabaseError(error){
  if(error?.code==='22023'&&error.message==='booking_dates_invalid')return new CrmError('Проверьте даты аренды: начало и окончание должны быть корректными датами.',400);
  return null;
 }
+export function validateBookingMoney(q){
+ if(!q||typeof q!=='object'||Array.isArray(q))throw new CrmError('Некорректные условия брони',400);
+ for(const field of ['total_amount','deposit_amount']){const value=q[field];if(value!=null&&(typeof value!=='number'||!Number.isFinite(value)||value<0||!Number.isSafeInteger(Math.round(value*100))||Math.abs(value*100-Math.round(value*100))>0.000001))throw new CrmError('Стоимость и предоплата должны быть неотрицательными суммами с точностью до двух знаков.',400);}
+ if(q.deposit_amount>0&&(q.total_amount==null||q.deposit_amount>q.total_amount))throw new CrmError('Предоплата не должна превышать стоимость аренды. Укажите полную стоимость.',400);
+ if(q.currency!==undefined&&!['THB','USD','RUB'].includes(q.currency))throw new CrmError('Неизвестная валюта брони',400);
+}
 export async function createBooking(biz,b,uploadPhoto){
  if(!uuid(b.request_id)||b.id||b.category!=='booking')throw new CrmError('Некорректный номер запроса создания брони',400);
  const dates=b.qualification_data||{};if(!uuid(b.item_id)||!calendarDate(dates.start_date)||!calendarDate(dates.end_date)||dates.end_date<=dates.start_date)throw new CrmError('Укажите автомобиль и корректные даты: окончание позже начала.',400);
+ validateBookingMoney(dates);
  const q={...dates};delete q.booking_idempotency_key;delete q.booking_request_hash;
  const input={item_id:b.item_id||null,client_name:b.client_name||null,client_contact:b.client_contact||null,category:'booking',city:b.city||null,operational_status:b.operational_status||'NEW',priority:b.priority||'NORMAL',client_visible_notes:b.client_visible_notes||null,internal_notes:b.internal_notes||null,qualification_data:q,photo:b.photo||null};
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(stable(input))))),x=>x.toString(16).padStart(2,'0')).join('');

@@ -11,3 +11,14 @@ test('editing checked booking terms invalidates the preview and associates contr
   assert.match(html,new RegExp('label for="'+id+'"'));nodes.brCreate.disabled=false;nodes.brQuote.textContent='Checked';for(const fn of nodes[id].events.change)fn({target:nodes[id]});assert.equal(nodes.brCreate.disabled,true);assert.match(nodes.brQuote.textContent,/Условия изменились/);
  }
 });
+test('catalog prices cannot be relabelled in another currency and changing currency clears both sums',async()=>{
+ const nodes={},window={},document={querySelector:s=>nodes[s.slice(1)],getElementById:id=>nodes[id]};
+ const openSheet=(title,body)=>{for(const x of body.matchAll(/id="([^"]+)"/g)){const events={};nodes[x[1]]={dataset:{},value:'',events,addEventListener:(type,fn)=>(events[type]??=[]).push(fn)}}};
+ const start=source.indexOf('function reservationDays()'),end=source.indexOf('window.previewQuote=');
+ const context={window,document,ensureCatalog:async()=>[],call:async()=>[],openSheet,esc:x=>x,money:(n,c='THB')=>n+' '+c,toast:()=>{}};
+ vm.createContext(context);vm.runInContext(source.slice(start,end),context);context.refreshReservationPricing=window.refreshReservationPricing;
+ await window.newReservation();nodes.brItem.selectedOptions=[{dataset:{price:'660',priceCurrency:'THB'}}];nodes.brStart.value='2027-03-10';nodes.brEnd.value='2027-03-12';nodes.brCurrency.value='THB';window.refreshReservationPricing();assert.equal(nodes.brTotal.value,'1320');
+ nodes.brDeposit.value='100';nodes.brCurrency.value='USD';for(const fn of nodes.brCurrency.events.change)fn({target:nodes.brCurrency});assert.equal(nodes.brTotal.value,'');assert.equal(nodes.brDeposit.value,'');assert.match(nodes.brRateHint.textContent,/660 THB/);assert.match(nodes.brRateHint.textContent,/автоматического пересчёта нет/);
+ nodes.brTotal.value='40';delete nodes.brTotal.dataset.autoPrice;window.refreshReservationPricing();assert.equal(nodes.brTotal.value,'40');
+ nodes.brCurrency.value='THB';for(const fn of nodes.brCurrency.events.change)fn({target:nodes.brCurrency});assert.equal(nodes.brTotal.value,'1320');
+});
