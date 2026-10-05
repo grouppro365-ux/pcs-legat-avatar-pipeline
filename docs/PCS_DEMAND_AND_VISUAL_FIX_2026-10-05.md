@@ -32,3 +32,11 @@ The dashboard reads authoritative aggregated CRM and business counts and shows f
 - Secure browser authentication succeeded in the PR31 preview. The same LTC-008 editor from the owner screenshot was opened and captured; fields, title and save/photo actions render correctly. Authoritative dashboard counters were observed in the signed-in UI. A visual check found the prospect checkbox inheriting text-field sizing and bare filter selects; scoped controls/layout were added. The 360px responsive harness keeps ordinary PCS authentication. Main production UI publication is blocked by automatic approval review requiring explicit approval to merge PR31. No alternative deployment path is used.
 
 Gamification is not implemented. The full master backlog remains open beyond the verified scope of this release.
+
+## Mobile verification (live authenticated preview, 2026-10-05)
+
+Verified actual PCS application in responsive iframe viewports 360 and 390 px: inbox, home, catalogue, catalogue editor, prospecting controls and competitor source filter, notification empty state. Frame scrollbars leave 345/375 px layout width; document scrollWidth equals clientWidth in checked screens. Save button is reachable by normal focus/scroll without submitting changes. Fixed mobile banner titles that previously split “Входящие” at its last letter: responsive 28–38 px font and full available title width, subtitle width 85%. Live preview after deployment renders the title in one line at 360 px (height 31.09 px).
+
+Competitor public reads verified in UI for @iproperty_phuket (11 messages) and @ibg_property (20 messages); two additional competitor sources were still awaiting first read. Private groups/comments and first direct outreach remain blocked by missing cloud Telegram user session. No customer messages were sent during UI verification.
+
+348 automated tests passed; git diff --check passed. No PCS console errors in checked browser flows; unrelated extension logs excluded. Browser desktop viewport plus narrow embedded app verification does not replace testing native Telegram WebView/physical devices. Backend manager deployed v27; PR31 frontend awaits explicit main merge approval after automatic approval review rejected production merge.
