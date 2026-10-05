@@ -29,3 +29,27 @@ body.pcs-approved-page .pcs-ap-logo::before{content:none!important;display:none!
  .v37-catalog-card{grid-template-columns:88px minmax(0,1fr);gap:10px}
  .v37-catalog-card>img{width:88px;height:96px}
 }
+
+/* Catalog editor shares the established field/button styles at Mini App widths. */
+.v37-catalog-editor{display:grid;gap:16px;min-width:0;width:100%}
+.v37-editor-context{margin:0;color:var(--muted);overflow-wrap:anywhere;line-height:1.5}
+.v37-catalog-editor .field{display:grid;gap:8px;margin:0;min-width:0}
+.v37-catalog-editor .field input,.v37-catalog-editor .field textarea{box-sizing:border-box;width:100%;max-width:100%;min-width:0;font:inherit;line-height:1.5}
+.v37-catalog-editor textarea{resize:vertical;min-height:112px}
+.v37-editor-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.v37-editor-actions .btn{min-width:0;white-space:normal;min-height:48px}
+.sheethead{display:flex;gap:12px;align-items:flex-start;min-width:0}
+.sheethead h2{min-width:0;overflow-wrap:anywhere;line-height:1.3}
+.sheethead .iconbtn{flex:0 0 44px;min-width:44px;min-height:44px}
+@media(max-width:360px){.v37-editor-actions{grid-template-columns:1fr}}
+
+/* Prospecting controls must not inherit full-width text-field rules for checkboxes. */
+#pcsProspecting .prospect-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+#pcsProspecting .prospect-filters .field{min-width:0;margin:0}
+#pcsProspecting .prospect-competitor-toggle{display:flex;align-items:center;gap:10px;min-height:44px;margin:12px 0;font-weight:650;cursor:pointer}
+#pcsProspecting .prospect-competitor-toggle input{width:20px!important;height:20px!important;min-width:20px!important;min-height:20px!important;flex:0 0 20px;margin:0!important;padding:0!important;accent-color:var(--ap-teal,#079d9d)}
+#pcsProspecting .prospect-source-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,220px) auto;gap:12px;align-items:end;margin-top:18px}
+#pcsProspecting .prospect-source-form .field{margin:0;min-width:0}
+#pcsProspecting .prospect-source-form>.btn{min-height:48px}
+@media(max-width:700px){#pcsProspecting .prospect-filters,#pcsProspecting .prospect-source-form{grid-template-columns:minmax(0,1fr)}#pcsProspecting .prospect-actions .btn{min-width:0;white-space:normal}}
+#pcsProspecting [hidden]{display:none!important}

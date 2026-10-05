@@ -11,7 +11,7 @@ export async function prospectAI(base,key,transport=fetch){
 export const saveReviewClassifications=`with saved as (
  update pcs_prospect_requests r set decision=x.decision,direction=x.direction,reason=x.reason,evidence=x.evidence,facts=x.facts,outreach_status=x.outreach_status,qualification_model=$2,qualification_version=$3,updated_at=now()
  from jsonb_to_recordset($1::jsonb) x(id text,message_text text,expected_updated_at text,decision text,direction text,reason text,evidence text,facts jsonb,outreach_status text)
- where r.id=x.id and r.message_text=x.message_text and r.decision='review' and r.updated_at=x.expected_updated_at::timestamptz
+ where r.id=x.id and r.message_text=x.message_text and (r.decision='review' or (r.decision='qualified' and r.qualification_version is distinct from $3)) and r.updated_at=x.expected_updated_at::timestamptz
  returning r.id,r.decision),
  audit as (insert into audit_logs(id,actor,action,entity_type,entity_id,payload,created_at)
  select $4,'pcs-prospect-worker','prospect_review_classified','prospect_run',$4,jsonb_build_object('classified',count(*),'model',$2),now() from saved having count(*)>0 returning id)
@@ -19,18 +19,22 @@ export const saveReviewClassifications=`with saved as (
 export async function classifyReviewProspects(sql,loadAI,{transport=fetch}={}){
  const config=(await sql.query("select value from system_settings where id='pcs_telegram_prospecting'"))[0]?.value;
  if(config?.enabled!==true)throw new CrmError('Поиск запросов приостановлен',409);
- const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.updated_at::text updated_at,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where r.decision='review' and r.published_at>=now()-interval '7 days' order by r.published_at desc,r.id limit 20");
+ const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.updated_at::text updated_at,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where (r.decision='review' or (r.decision='qualified' and r.qualification_version is distinct from $1)) and r.published_at>=now()-interval '7 days' order by (r.decision='qualified') desc,r.published_at desc,r.id limit 5",[prospectVersion]);
  const counts={classified:0,qualified:0,review:0,rejected:0};
  if(!records.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  // Re-read the public page to retain forwarded-message provenance which was not stored by the review-only pass.
  const messages=[];
- for(const username of new Set(records.map(r=>r.username))){
-  const group=records.filter(r=>r.username===username),before=Math.max(...group.map(r=>Number(r.telegram_message_id)))+1;
-  const response=await transport('https://t.me/s/'+sourceUsername(username)+'?before='+before,{redirect:'manual',signal:AbortSignal.timeout(12000)});
+ for(const r of records){
+  if(messages.some(m=>m.id===r.id))continue;
+  const username=sourceUsername(r.username),before=Number(r.telegram_message_id)+1;
+  const response=await transport('https://t.me/s/'+username+'?before='+before,{redirect:'manual',signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error('public_history_unavailable');
   const page=parsePublicPage(await response.text(),username);
   if(!page.readable)throw Error('public_history_unavailable');
-  for(const r of group){const message=page.messages.find(m=>m.id===r.telegram_message_id&&m.text===r.message_text);if(message)messages.push({...message,id:r.id});}
+  for(const candidate of records.filter(x=>x.username===r.username)){
+   const message=page.messages.find(m=>m.id===candidate.telegram_message_id&&m.text===candidate.message_text);
+   if(message&&!messages.some(m=>m.id===candidate.id))messages.push({...message,id:candidate.id});
+  }
  }
  if(!messages.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  const ai=await loadAI();
@@ -45,18 +49,18 @@ export async function addProspectSource(sql,input){
  const name=sourceUsername(input.username),data={};
  for(const k of ['title','city','language','topic','discovery_url','rules']){if(input[k]!=null&&(typeof input[k]!=='string'||input[k].length>(k==='rules'?2000:400)))throw new CrmError('Некорректное описание источника',400);data[k]=input[k]||null;}
  const rows=await sql.query(`with source as (insert into pcs_prospect_sources(id,username,title,city,language,topic,discovery_url,rules)
- values($1,$2,$3,$4,$5,$6,$7,$8) on conflict(username) do nothing returning id),
+ values($1,$2,$3,$4,$5,$6,$7,$8) on conflict(username) do update set topic=coalesce(excluded.topic,pcs_prospect_sources.topic),updated_at=now() returning id),
  audit as (insert into audit_logs(id,actor,action,entity_type,entity_id,payload,created_at)
- select $9,'admin','prospect_source_added','prospect_source',id,jsonb_build_object('username',$2),now() from source returning id)
+ select $9,'admin','prospect_source_configured','prospect_source',id,jsonb_build_object('username',$2),now() from source returning id)
  select id,true added from source union all select id,false added from pcs_prospect_sources where username=$2 and not exists(select 1 from source)`,[crypto.randomUUID(),name,data.title,data.city,data.language,data.topic,data.discovery_url,data.rules,crypto.randomUUID()]);
  return{ok:true,source:rows[0]||{added:false}};
 }
-export async function readProspecting(sql,view='requests',page='0',decision='qualified'){
- if(!['sources','requests','runs'].includes(view)||!/^\d{1,5}$/.test(page)||Number(page)>5000||!['qualified','review','rejected','all'].includes(decision))throw new CrmError('Некорректный фильтр поиска запросов',400);
+export async function readProspecting(sql,view='requests',page='0',decision='qualified',sourceKind='all'){
+ if(!['all','competitor'].includes(sourceKind)||!['sources','requests','runs'].includes(view)||!/^\d{1,5}$/.test(page)||Number(page)>5000||!['qualified','review','rejected','all'].includes(decision))throw new CrmError('Некорректный фильтр поиска запросов',400);
  const offset=Number(page)*50;let rows;
- if(view==='sources')rows=await sql.query('select id,username,title,city,language,topic,rules,enabled,access_status,last_checked_at,last_read_at,next_scan_at,cursor_id::text,pending_before::text,last_error,messages_read::text from pcs_prospect_sources order by created_at,id limit 51 offset $1',[offset]);
+ if(view==='sources')rows=await sql.query(`select id,username,title,city,language,topic,rules,enabled,access_status,last_checked_at,last_read_at,next_scan_at,cursor_id::text,pending_before::text,last_error,messages_read::text from pcs_prospect_sources where ($2='all' or topic='competitor') order by created_at,id limit 51 offset $1`,[offset,sourceKind]);
  if(view==='runs')rows=await sql.query('select id,status,started_at,finished_at,sources_checked,messages_read,qualified,review,rejected,errors,error from pcs_prospect_runs order by started_at desc,id desc limit 51 offset $1',[offset]);
- if(view==='requests')rows=await sql.query(`select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.decision,r.direction,r.reason,r.evidence,r.facts,r.author_verified,r.contact_id,r.outreach_status,r.qualification_model,r.updated_at,s.username source_username,s.title source_title from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where ($1='all' or r.decision=$1) order by r.published_at desc nulls last,r.id desc limit 51 offset $2`,[decision,offset]);
+ if(view==='requests')rows=await sql.query(`select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.decision,r.direction,r.reason,r.evidence,r.facts,r.author_verified,r.contact_id,r.outreach_status,r.qualification_model,r.updated_at,s.username source_username,s.title source_title,s.topic source_topic from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where ($1='all' or r.decision=$1) and ($3='all' or s.topic='competitor') order by r.published_at desc nulls last,r.id desc limit 51 offset $2`,[decision,offset,sourceKind]);
  const summary=(await sql.query(`select (select count(*)::int from pcs_prospect_sources) sources,(select count(*)::int from pcs_prospect_sources where last_read_at is not null) sources_read,(select count(*)::int from pcs_prospect_requests where decision='qualified') qualified,(select count(*)::int from pcs_prospect_requests where decision='review') review,(select count(*)::int from pcs_prospect_requests where decision='rejected') rejected`))[0];
  const config=(await sql.query("select value,version from system_settings where id='pcs_telegram_prospecting'"))[0];
  return{view,page:Number(page),decision,rows:rows.slice(0,50),truncated:rows.length>50,summary,enabled:config?.value?.enabled===true,version:config?.version,capabilities:{public_pages:true,telegram_user_session:false,first_private_message:false,followup_blocked:'Нет подтверждённого первого сообщения и проверенного адресата'}};

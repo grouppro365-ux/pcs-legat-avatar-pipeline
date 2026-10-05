@@ -23,9 +23,15 @@ test('history continuation records the fixed sweep top and advances no cursor un
  const h=fixture(),messages=Array.from({length:20},(_,i)=>({id:String(i+101),text:'Advertisement',published_at:'2026-10-04T14:00:00Z'}));await scanProspects(h.sql,h.ai,{transport:async()=>new Response(publicFixture(messages)),now:()=>instant});const save=h.calls.find(x=>x.q===saveProspectPage);assert.equal(save.p[6],0);assert.equal(save.p[7],101);assert.equal(save.p[8],120);
 });
 test('source addition validates allowlist before DB writes and duplicate source does not create clients',async()=>{
- const h=fixture();await assert.rejects(()=>addProspectSource(h.sql,{username:'valid_channel',contact_id:'forged'}),e=>e.status===400);assert.equal(h.calls.length,0);await addProspectSource(h.sql,{username:'@Valid_Channel'});assert.equal(h.calls[0].p[1],'valid_channel');assert.match(h.calls[0].q,/on conflict\(username\) do nothing/);assert.doesNotMatch(h.calls[0].q,/insert into contacts|insert into conversations/);
+ const h=fixture();await assert.rejects(()=>addProspectSource(h.sql,{username:'valid_channel',contact_id:'forged'}),e=>e.status===400);assert.equal(h.calls.length,0);await addProspectSource(h.sql,{username:'@Valid_Channel'});assert.equal(h.calls[0].p[1],'valid_channel');assert.match(h.calls[0].q,/on conflict\(username\) do update set topic=/);assert.doesNotMatch(h.calls[0].q,/insert into contacts|insert into conversations/);
 });
 test('read filters remain bound and do not expose keys or invent first-message capability',async()=>{
- const calls=[],sql={query:async(q,p)=>{calls.push({q,p});if(q.includes('select (select count'))return[{sources:3,sources_read:1}];return Array.from({length:51},(_,i)=>({id:String(i)}))}};const r=await readProspecting(sql,'requests','2','review');assert.equal(r.rows.length,50);assert.equal(r.truncated,true);assert.deepEqual(calls[0].p,['review',100]);assert.equal(r.capabilities.first_private_message,false);
+ const calls=[],sql={query:async(q,p)=>{calls.push({q,p});if(q.includes('select (select count'))return[{sources:3,sources_read:1}];return Array.from({length:51},(_,i)=>({id:String(i)}))}};const r=await readProspecting(sql,'requests','2','review');assert.equal(r.rows.length,50);assert.equal(r.truncated,true);assert.deepEqual(calls[0].p,['review',100,'all']);assert.equal(r.capabilities.first_private_message,false);
  await assert.rejects(()=>readProspecting(sql,'fake','0','all'),e=>e.status===400);
+});
+
+test('competitor filtering applies in SQL before pagination, and unknown kinds cannot read',async()=>{
+ const h=fixture();await readProspecting(h.sql,'requests','1','qualified','competitor');assert.deepEqual(h.calls[0].p,['qualified',50,'competitor']);assert.match(h.calls[0].q,/s.topic='competitor'/);
+ await readProspecting(h.sql,'sources','0','all','competitor');assert.deepEqual(h.calls[3].p,[0,'competitor']);
+ await assert.rejects(()=>readProspecting(h.sql,'requests','0','qualified','forged'),e=>e.status===400);
 });

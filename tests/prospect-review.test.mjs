@@ -22,3 +22,11 @@ test('changed or unavailable public messages are not classified from stale store
 test('classifier failure leaves review records intact',async()=>{
  const h=fixture();await assert.rejects(()=>classifyReviewProspects(h.sql,async()=>({classify:async()=>{throw Error('ai_invalid_response')}}),{transport:async()=>new Response(publicFixture([{id:'42',text:h.record.message_text,published_at:published}]))}),/ai_invalid_response/);assert.ok(!h.calls.some(c=>c.q===saveReviewClassifications));
 });
+
+test('policy rollout includes earlier qualified listings and re-reads every separated source page',async()=>{
+ const h=fixture(),old={...h.record,id:'older',telegram_message_id:'12',message_text:'Сдаю авто'},other={...h.record,id:'earlier',telegram_message_id:'2',message_text:'Продаю квартиру'};
+ const original=h.sql.query;h.sql.query=async(q,p)=>q.startsWith('select r.id')?(h.calls.push({q,p}),[h.record,old,other]):original(q,p);
+ let reads=0;
+ await classifyReviewProspects(h.sql,async()=>({model:'test-model',classify:async messages=>{assert.equal(messages.length,3);return messages.map(m=>({...m,decision:'rejected',direction:null,reason:'Реклама',facts:{},outreach_status:'not_applicable'}))}}),{transport:async url=>{reads++;const id=String(Number(new URL(url).searchParams.get('before'))-1),r=[h.record,old,other].find(x=>x.telegram_message_id===id);return new Response(publicFixture([{id,text:r.message_text,published_at:published}]));}});
+ assert.equal(reads,3);assert.match(h.calls.find(c=>c.q.startsWith('select r.id')).q,/qualification_version is distinct from \$1/);assert.match(saveReviewClassifications,/qualification_version is distinct from \$3/);
+});
