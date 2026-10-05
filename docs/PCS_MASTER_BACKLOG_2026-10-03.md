@@ -89,9 +89,9 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 49 | CONTENT PERFORMANCE | UNVERIFIED |
 | 50 | CONTENT LEARNING LOOP | UNVERIFIED |
 | 51 | ATTRIBUTION | UNVERIFIED |
-| 52 | OPERATIONAL DASHBOARD | UNVERIFIED |
-| 53 | TODAY PCS | UNVERIFIED |
-| 54 | NOTIFICATIONS | UNVERIFIED |
+| 52 | OPERATIONAL DASHBOARD | PARTIAL: канонические показатели, независимые ошибки источников; живой UI проверен |
+| 53 | TODAY PCS | PARTIAL: задачи, SLA, согласования, проблемы доставки, клиенты с наступившим сроком действия и полный список |
+| 54 | NOTIFICATIONS | PARTIAL: чтение событий, страницы и переход к заявке; постановка/прочтение событий не закрыты |
 | 55 | AUDIT LOG | PARTIAL: договоры и атомарный audit CRM; общий audit не проверен |
 | 56 | PERMISSIONS | UNVERIFIED |
 | 57 | SECURITY | UNVERIFIED |
@@ -105,7 +105,7 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 65 | TESTING | PARTIAL: тесты отдельных сценариев |
 | 66 | REAL INTEGRATION TESTS | UNVERIFIED |
 | 67 | PERFORMANCE | UNVERIFIED |
-| 68 | MOBILE | PARTIAL: адаптация; визуальный E2E не подтверждён |
+| 68 | MOBILE | PARTIAL: реальные экраны проверены в браузере на 360/390 px; native Telegram WebView не проверен |
 | 69 | UX PRINCIPLE | PARTIAL: интерфейс требует дальнейшей проверки |
 | 70 | NO FAKE FEATURES | Требование; выполнение не подтверждено |
 | 71 | MIGRATION STRATEGY | Требование; выполнение не подтверждено |
@@ -164,3 +164,7 @@ CRM/ручной Follow-up: добавлены сохранённый UUID по�
 ## Дополнение: баланс канонической брони 04.10.2026
 
 Исправлен Supabase finance projection: paid определяется суммой оплаченного дохода за услугу минус привязанные возвраты, в валюте брони; расходы/выплаты/гарантийный депозит исключены. Пересчитываются обе брони при переносе записи, изменения суммы/валюты/стоимости, отмены и допустимые удаления. Состояния unpaid/partial/paid/refunded, ограничения возвратов, блокировки и audit переходов проверены реальными SQL assertions с полным rollback, также от service_role. Manager v19; 273 Node tests. В ledger detail появился баланс связанной Supabase брони; Neon applications автоматически не связываются. Подробности: PCS_RESERVATION_FINANCE_2026-10-04.md. Банковская сверка, проведение возвратов, immutable ledger, cross-store identity, положительный REST/Telegram E2E и все 26 полных production acceptance по-прежнему открыты.
+
+## Продолжение: клиенты со сроком действия 05.10.2026
+
+«Сегодня PCS» показывает первые пять клиентов с наступившим next_action_at, текст действия и срок. Полный список доступен через отдельный серверный GET /due-actions, страницы по 50 записей с lookahead, устойчивым порядком next_action_at/id и UTC cutoff. Карточка клиента открывается из списка; чтение не отправляет сообщения и не меняет сроки. Ошибки видны, устаревший ответ закрытой/повторно открытой формы не заменяет текущую форму. Manager v28. Реальный Neon SELECT вернул HTTP 200 и одну требующую внимания карточку; 350 тестов прошли. Это не закрывает автоматический Follow-up/напоминания и полный production acceptance.

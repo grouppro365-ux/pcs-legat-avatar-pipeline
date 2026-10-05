@@ -10,6 +10,7 @@ export const overviewQueries={
  'approvals',(select count(*)::int from ai_generations where status='APPROVAL_REQUIRED'),
  'tasks',(select to_jsonb(task_counts) from task_counts),
  'due_actions',(select count(*)::int from contacts where next_action_at<=(select instant from clock)),
+ 'attention_contacts',coalesce((select jsonb_agg(c) from (select id,name,username,next_action,next_action_at from contacts where next_action_at<=(select instant from clock) order by next_action_at,id limit 5)c),'[]'::jsonb),
  'clients',coalesce((select jsonb_agg(c) from (select id,name,username,need,priority from contacts order by updated_at desc,id limit 2)c),'[]'::jsonb),
  'attention_tasks',coalesce((select jsonb_agg(t) from (select t.id,t.contact_id,t.title,t.priority,t.assignee,t.due_at,c.name contact_name from tasks t join contacts c on c.id=t.contact_id where t.completed_at is null and t.due_at<(select instant from clock) order by t.due_at,t.id limit 5)t),'[]'::jsonb),
  'delivery_unknown',(select count(*)::int from messages where status='PROCESSING'::"MessageStatus" and (raw->'manual_send'->>'stage'='sending' or raw->'approval_send'->>'stage'='sending'))
@@ -53,4 +54,10 @@ export async function readOperationalApplication(biz,id){
  if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))throw new CrmError('Некорректный номер заявки',400);
  const rows=await biz.query('select id,public_id,client_name,category,operational_status,sla_due_at,human_review_required,human_review_reason,execution_issue_status,execution_issue_summary,next_action_code,next_action_at from applications where id=$1 limit 1',[id]);
  if(!rows.length)throw new CrmError('Заявка не найдена',404);return{application:rows[0]};
+}
+
+export async function readDueActions(op,rawPage='0'){
+ if(typeof rawPage!=='string'||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000)throw new CrmError('Некорректная страница действий',400);
+ const page=Number(rawPage),rows=await op.query(`select id,name,username,next_action,next_action_at from contacts where next_action_at<=now() at time zone 'UTC' order by next_action_at,id limit 51 offset $1`,[page*50]);
+ return {page,rows:rows.slice(0,50),truncated:rows.length>50};
 }
