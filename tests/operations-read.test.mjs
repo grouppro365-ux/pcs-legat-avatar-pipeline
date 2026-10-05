@@ -21,3 +21,12 @@ test('attention application read binds identity and projects only operational fi
  await assert.rejects(()=>readOperationalApplication({query:()=>assert.fail('unsafe SQL')},'bad'),e=>e.status===400);
  await assert.rejects(()=>readOperationalApplication({query:async()=>[]},id),e=>e.status===404);
 });
+test('due actions page all contacts with stable order, bounded projection and UTC cutoff',async()=>{
+ const {readDueActions}=await import('../server/supabase/pcs-manager-live2/operations-read.mjs');let call;
+ const result=await readDueActions({query:async(q,p)=>{call={q,p};return Array.from({length:51},(_,i)=>({id:String(i)}));}},'2');
+ assert.equal(result.page,2);assert.equal(result.rows.length,50);assert.equal(result.truncated,true);assert.deepEqual(call.p,[100]);
+ assert.match(call.q,/next_action_at<=now\(\) at time zone 'UTC'/);assert.match(call.q,/order by next_action_at,id limit 51/);assert.doesNotMatch(call.q,/select \*|update |insert /i);
+ assert.match(overviewQueries.crm,/'attention_contacts'.*next_action_at<=.*order by next_action_at,id limit 5/s);
+ for(const page of ['-1','5001','1;drop table contacts',null])await assert.rejects(()=>readDueActions({query:()=>assert.fail('unsafe query')},page),e=>e.status===400);
+ await assert.rejects(()=>readDueActions({query:async()=>{throw Error('Unavailable')}},'0'),/Unavailable/);
+});

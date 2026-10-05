@@ -36,6 +36,29 @@ window.pcsInstallNav25=installNav;
 function quick(page,label,key){return `<button onclick="go('${page}')"><span class="pcs25-qicon">${rawIcon(key)}</span><span>${label}</span></button>`}
 function kpi(label,value,note,key){return `<article class="pcs25-kpi"><div class="pcs25-kpi-label">${label}</div><div class="pcs25-kpi-value">${value}</div><div class="pcs25-kpi-note">${note}</div><div class="pcs25-kpi-icon">${rawIcon(key)}</div></article>`}
 
+const actionTime=value=>{if(!value)return 'Срок не указан';const normalized=/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(value)?value.replace(' ','T')+'Z':value;const date=new Date(normalized);return Number.isFinite(date.getTime())?date.toLocaleString('ru-RU'):'Проверьте срок';};
+const actionRow=x=>`<button class="btn soft pcs-due-action-row" data-dashboard-contact="${E(x.id)}"><span style="min-width:0;overflow-wrap:anywhere"><b>${E(x.name||x.username||'Клиент')}</b><small>${E(x.next_action||'Следующее действие не описано')}</small><small>Срок: ${E(actionTime(x.next_action_at))}</small></span></button>`;
+let dueState=null;
+async function loadDueActions(s){
+ const active=()=>dueState===s&&document.getElementById('pcsDueActionsList')===s.root;
+ if(!active())return;const seq=++s.sequence,page=s.page;s.root.textContent='Загружаю действия…';
+ const prev=document.getElementById('pcsDueActionsPrev'),next=document.getElementById('pcsDueActionsNext');prev.disabled=true;next.disabled=true;
+ try{const d=await ui('/due-actions?'+new URLSearchParams({page}));if(!active()||seq!==s.sequence)return;
+  if(d.page!==page||!Array.isArray(d.rows))throw Error('Некорректный ответ списка действий');
+  s.root.innerHTML=d.rows.map(actionRow).join('')||'<p class="muted">Клиентов с наступившим сроком действия нет.</p>';
+  prev.disabled=page===0;next.disabled=!d.truncated||page>=5000;
+  document.getElementById('pcsDueActionsPage').textContent=`Страница ${page+1}`;
+ }catch(e){if(active()&&seq===s.sequence)s.root.textContent=e.message||'Не удалось загрузить действия';}
+}
+window.pcsDueActions={open(){
+ window.openSheet('Клиенты: пора продолжить',`<p class="muted">Наступил срок следующего действия. Откройте карточку клиента, чтобы продолжить работу.</p><button class="btn soft" id="pcsDueActionsRefresh">Обновить</button><div id="pcsDueActionsList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsDueActionsPrev" disabled>Назад</button><span id="pcsDueActionsPage">Страница 1</span><button class="btn soft" id="pcsDueActionsNext" disabled>Далее</button></div>`);
+ const s=dueState={root:document.getElementById('pcsDueActionsList'),page:0,sequence:0};
+ s.root.onclick=e=>{const id=e.target.closest?.('[data-dashboard-contact]')?.dataset.dashboardContact;if(id&&/^[A-Za-z0-9_-]{1,100}$/.test(id)&&typeof window.openClient==='function'){window.closeSheet();window.openClient(id)}};
+ document.getElementById('pcsDueActionsRefresh').onclick=()=>loadDueActions(s);
+ document.getElementById('pcsDueActionsPrev').onclick=()=>{s.page=Math.max(0,s.page-1);loadDueActions(s)};
+ document.getElementById('pcsDueActionsNext').onclick=()=>{s.page++;loadDueActions(s)};
+ return loadDueActions(s);
+}};
 let dashboardSequence=0;
 async function loadDashboard(scope){
  const current=()=>scope.sequence===dashboardSequence&&window.PCS?.page==='dashboard'&&document.getElementById('main')===scope.main;
@@ -55,7 +78,7 @@ async function loadDashboard(scope){
   for(const x of crm.attention_tasks||[])blocks.push(`<button class="pcs25-row" data-dashboard-contact="${E(x.contact_id)}"><span><b>${E(x.title)}</b><small>${E(x.contact_name||'Клиент')} · ${E(x.assignee||'Без ответственного')}</small></span><span class="pcs25-status">Просрочено</span></button>`);
   if(crm.approvals>0)blocks.push(`<button class="btn soft" data-dashboard-page="approvals">Ответы на согласовании: ${num(crm.approvals)}</button>`);
   if(crm.delivery_unknown>0)blocks.push(`<button class="btn soft" data-dashboard-page="errors">Неизвестная доставка: ${num(crm.delivery_unknown)}</button>`);
-  if(crm.due_actions>0)blocks.push(`<p>Клиентов с наступившим сроком следующего действия: ${num(crm.due_actions)}</p>`);
+  if(crm.due_actions>0){blocks.push(`<button class="btn soft" data-dashboard-due-actions>Пора продолжить с клиентами: ${num(crm.due_actions)}</button>`);for(const x of crm.attention_contacts||[])blocks.push(actionRow(x));}
  }
  if(biz){blocks.push(`<p>Заявки с просроченным SLA: ${num(biz.sla_overdue)} · Требуют решения: ${num(biz.human_review)} · Проблемы исполнения: ${num(biz.execution_issues)}</p>`);
   for(const x of biz.attention_applications||[])blocks.push(`<button class="pcs25-row" data-dashboard-application="${E(x.id)}"><span><b>${E(x.public_id||'Заявка')}</b><small>${E(x.client_name||'Клиент')} · ${E(x.operational_status)}</small></span><span class="pcs25-status">Требует внимания</span></button>`);
@@ -66,6 +89,7 @@ async function loadDashboard(scope){
  put('pcs25Attention',blocks.join('')||'<div class="pcs25-empty">Данные недоступны</div>');
  const attention=document.getElementById('pcs25Attention');if(attention)attention.onclick=e=>{
   const b=e.target.closest?.('button');if(!b)return;
+  if(b.hasAttribute('data-dashboard-due-actions'))window.pcsDueActions.open();
   if(b.hasAttribute('data-dashboard-tasks'))window.pcsTaskQueue?.open();
   if(b.hasAttribute('data-dashboard-notifications'))window.pcsNotifications?.open();
   const id=b.dataset.dashboardApplication;if(id&&/^[0-9a-f-]{36}$/i.test(id))window.pcsOpenOperationalApplication?.(id);

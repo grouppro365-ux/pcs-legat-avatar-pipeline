@@ -25,3 +25,7 @@ test('dashboard responses cannot overwrite another screen or a newer dashboard',
  const h=fixture();h.window.pcsDashboard25();const old=h.nodes.pcs25Kpis;h.window.PCS.page='crm';h.pending[0].resolve(payload());await tick();assert.equal(old.innerHTML,'');
  h.window.PCS.page='dashboard';h.window.pcsDashboard25();h.window.pcsDashboard25();h.pending[2].resolve(payload());await tick();const current=h.nodes.pcs25Kpis;h.pending[1].reject(Error('stale'));await tick();assert.match(current.innerHTML,/1005/);assert.doesNotMatch(current.innerHTML,/stale/);
 });
+test('today shows the due client, escaped action and a full queue entry',async()=>{
+ const h=fixture();h.window.pcsDashboard25();const d=payload();d.sections.crm.data.due_actions=1;d.sections.crm.data.attention_contacts=[{id:'due-contact',name:'<img onerror=bad>',next_action:'<script>bad</script>',next_action_at:'2026-10-04 10:00:00'}];h.pending[0].resolve(d);await tick();
+ assert.match(h.nodes.pcs25Attention.innerHTML,/data-dashboard-due-actions/);assert.match(h.nodes.pcs25Attention.innerHTML,/data-dashboard-contact="due-contact"/);assert.match(h.nodes.pcs25Attention.innerHTML,/&lt;script&gt;/);assert.doesNotMatch(h.nodes.pcs25Attention.innerHTML,/<script>|<img/);assert.match(h.nodes.pcs25Attention.innerHTML,/Срок:/);
+});

@@ -53,3 +53,7 @@ body.pcs-approved-page .pcs-ap-logo::before{content:none!important;display:none!
 #pcsProspecting .prospect-source-form>.btn{min-height:48px}
 @media(max-width:700px){#pcsProspecting .prospect-filters,#pcsProspecting .prospect-source-form{grid-template-columns:minmax(0,1fr)}#pcsProspecting .prospect-actions .btn{min-width:0;white-space:normal}}
 #pcsProspecting [hidden]{display:none!important}
+
+.pcs-due-action-row{display:block!important;width:100%;min-height:48px;height:auto!important;padding:14px!important;text-align:left!important;white-space:normal!important;line-height:1.45!important;font-size:14px!important}
+.pcs-due-action-row>span,.pcs-due-action-row b,.pcs-due-action-row small{display:block!important;min-width:0;max-width:100%;overflow-wrap:anywhere;white-space:normal!important;font-size:14px!important;line-height:1.45!important}
+.pcs-due-action-row small{font-weight:400;margin-top:5px}
