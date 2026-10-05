@@ -111,6 +111,9 @@ async function uiRoute(path,init){
   if(path.startsWith('/notifications')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/notifications')return jsonResponse(await manager('notifications',{params:{view:u.searchParams.get('view')||'unread',page:u.searchParams.get('page')||'0'}}));}
   if(path.startsWith('/due-actions')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/due-actions')return jsonResponse(await manager('due-actions',{params:{page:u.searchParams.get('page')||'0'}}));}
   if(path.startsWith('/inventory-check')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/inventory-check')return jsonResponse(await manager('inventory-check',{params:{id:u.searchParams.get('id')||'',start:u.searchParams.get('start')||'',end:u.searchParams.get('end')||''}}));}
+  if(path==='/application-followup'&&method==='POST')return jsonResponse(await manager('application-followup',{method:'POST',body}));
+  if(path.startsWith('/application-queue')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/application-queue')return jsonResponse(await manager('application-queue',{params:{view:u.searchParams.get('view')||'active',page:u.searchParams.get('page')||'0',q:u.searchParams.get('q')||''}}));}
+  const workspace=path.match(/^\/application-workspace\/([^/]+)$/);if(workspace&&method==='GET')return jsonResponse(await manager('application-workspace',{id:decodeURIComponent(workspace[1])}));
   if(path==='/dashboard'&&method==='GET')return jsonResponse(await manager('dashboard'));
   if(path==='/crm'&&method==='GET')return jsonResponse(await manager('clients'));
   if(path.startsWith('/crm-tasks')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/crm-tasks')return jsonResponse(await manager('tasks',{params:{view:u.searchParams.get('view')||'open',page:u.searchParams.get('page')||'0'}}));}
