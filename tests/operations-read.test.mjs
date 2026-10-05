@@ -1,5 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {notificationReadQuery,markNotificationRead} from '../server/supabase/pcs-manager-live2/operations-read.mjs';
+test('explicit acknowledgement locks the exact shared event, audits first read, and supports retries',async()=>{
+ const b={id:'11111111-1111-4111-8111-111111111111',expected_version:'a'.repeat(32)},q=notificationReadQuery(b);
+ assert.deepEqual(q.params,[b.id,b.expected_version]);assert.match(q.query,/recipient_partner_id is null/);assert.match(q.query,/for update/);assert.match(q.query,/md5\(\(to_jsonb\(n\)-'read_at'\)::text\)=\$2/);
+ assert.match(q.query,/c.read_at is null/);assert.match(q.query,/insert into audit_events/);assert.match(q.query,/from candidate where read_at is not null/);assert.doesNotMatch(q.query,/set status|actioned_at=|sent_at=/);
+ assert.equal((await markNotificationRead({query:async()=>[{id:b.id,read_at:'2026-10-05T08:00:00Z'}]},b)).ok,true);
+ await assert.rejects(()=>markNotificationRead({query:async()=>[]},b),e=>e.status===409);
+ await assert.rejects(()=>markNotificationRead({query:async()=>{throw Error('offline')}},b),/offline/);
+ for(const bad of [null,[],{...b,id:'invalid'},{...b,expected_version:'x'},{...b,recipient_partner_id:null}])assert.throws(()=>notificationReadQuery(bad),e=>e.status===400);
+});
 import {readOperationalOverview,readNotifications,readOperationalApplication,overviewQueries,terminalApplicationStatuses} from '../server/supabase/pcs-manager-live2/operations-read.mjs';
 test('overview reads full server counts independently from limited previews and excludes all terminal applications',async()=>{
  const calls=[],op={query:async q=>{calls.push(q);return[{data:{contacts:1005,clients:[{id:'last'}],tasks:{open:8,overdue:3}}}];}},biz={query:async(q,p)=>{assert.deepEqual(p,[terminalApplicationStatuses]);return[{data:{catalog:900,available:800,active_bookings:4}}];}};

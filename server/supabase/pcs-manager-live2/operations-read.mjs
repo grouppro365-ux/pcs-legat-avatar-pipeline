@@ -47,7 +47,7 @@ export async function readOperationalOverview(op,biz,base,key,transport=fetch){
 }
 export async function readNotifications(biz,view='unread',rawPage='0'){
  if(!['unread','all'].includes(view)||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000)throw new CrmError('Некорректный фильтр уведомлений',400);
- const page=Number(rawPage),rows=await biz.query(`select id,event_key,entity_type,entity_id,title,body,status,read_at,created_at from notifications where recipient_partner_id is null and ($1='all' or read_at is null) order by created_at desc,id desc limit 51 offset $2`,[view,page*50]);
+ const page=Number(rawPage),rows=await biz.query(`select id,event_key,entity_type,entity_id,title,body,status,read_at,created_at,md5((to_jsonb(n)-'read_at')::text) read_version from notifications n where recipient_partner_id is null and ($1='all' or read_at is null) order by created_at desc,id desc limit 51 offset $2`,[view,page*50]);
  return{view,page,rows:rows.slice(0,50),truncated:rows.length>50};
 }
 export async function readOperationalApplication(biz,id){
@@ -60,4 +60,23 @@ export async function readDueActions(op,rawPage='0'){
  if(typeof rawPage!=='string'||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000)throw new CrmError('Некорректная страница действий',400);
  const page=Number(rawPage),rows=await op.query(`select id,name,username,next_action,next_action_at from contacts where next_action_at<=now() at time zone 'UTC' order by next_action_at,id limit 51 offset $1`,[page*50]);
  return {page,rows:rows.slice(0,50),truncated:rows.length>50};
+}
+
+// Exclude only read_at from the fingerprint so retries acknowledge the same event.
+export function notificationReadQuery(b){
+ if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['id','expected_version'].includes(k))||typeof b.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.id)||typeof b.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(b.expected_version))throw new CrmError('Обновите событие перед отметкой прочтения',400);
+ return{query:`with candidate as materialized (
+ select n.id,n.read_at from notifications n where n.id=$1::uuid and n.recipient_partner_id is null and md5((to_jsonb(n)-'read_at')::text)=$2 for update
+ ),changed as (
+ update notifications n set read_at=clock_timestamp() from candidate c where n.id=c.id and c.read_at is null returning n.id,n.read_at
+ ),audited as (
+ insert into audit_events(actor_role,action,entity_type,entity_id,patch,reason,result)
+ select 'ADMIN','notification_read','notifications',id::text,jsonb_build_object('read_at',read_at),'Explicit PCS operator acknowledgement','SUCCESS' from changed returning entity_id
+ ) select c.id,c.read_at from changed c where exists(select 1 from audited a where a.entity_id=c.id::text)
+ union all select id,read_at from candidate where read_at is not null`,params:[b.id,b.expected_version]};
+}
+export async function markNotificationRead(biz,b){
+ const q=notificationReadQuery(b),rows=await biz.query(q.query,q.params);
+ if(!rows.length)throw new CrmError('Событие изменилось или недоступно. Обновите список перед повтором.',409);
+ return{ok:true,id:rows[0].id,read_at:rows[0].read_at};
 }
