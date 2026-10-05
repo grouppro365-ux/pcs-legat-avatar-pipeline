@@ -145,3 +145,10 @@ test('prospecting adapter preserves authentication, paging, source payload and s
  r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/source',{method:'POST',body:JSON.stringify({username:'@example_source'})});assert.equal(r.status,200);assert.equal(h.calls[1].op,'prospecting-source');assert.equal(h.calls[1].body.username,'@example_source');
  r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/scan',{method:'POST',body:'{}'});assert.equal(r.status,200);assert.equal(h.calls[2].op,'prospecting-scan');assert.equal((await r.json()).outreach_sent,0);
 });
+test('application workspace routes bind queue filters, identity and exact followup body with admin auth',async()=>{
+ const calls=[],window={fetch:async(url,init)=>{calls.push({u:new URL(url),init});return Response.json({ok:true})}};
+ vm.runInNewContext(readFileSync(new URL('../neon-adapter.js',import.meta.url),'utf8'),{window,URL,Response,localStorage:{pcsToken:'fixture'},console:{error(){}}});
+ await window.fetch('https://pcs-stable.local/pcs-ui-api/application-queue?view=followup&page=2&q=100%25');await window.fetch('https://pcs-stable.local/pcs-ui-api/application-workspace/'+itemId);
+ const b={id:itemId,expected_version:'a'.repeat(32),follow_up_at:null,follow_up_note:'Keep'};await window.fetch('https://pcs-stable.local/pcs-ui-api/application-followup',{method:'POST',body:JSON.stringify(b)});
+ assert.deepEqual(calls.map(x=>x.u.searchParams.get('op')),['application-queue','application-workspace','application-followup']);assert.equal(calls[0].u.searchParams.get('q'),'100%');assert.equal(calls[0].u.searchParams.get('page'),'2');assert.equal(calls[1].u.searchParams.get('id'),itemId);assert.deepEqual(JSON.parse(calls[2].init.body),b);assert.ok(calls.every(x=>x.init.headers.authorization==='Bearer fixture'));
+});

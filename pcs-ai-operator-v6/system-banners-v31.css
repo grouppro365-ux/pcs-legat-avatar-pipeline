@@ -46,6 +46,8 @@ html[data-theme=dark] .v26-hero:before,html[data-theme=dark] .ops-system-hero:be
     background:linear-gradient(90deg,#f7faf9 0 29%,rgba(247,250,249,.91) 46%,rgba(247,250,249,.08) 82%),linear-gradient(180deg,transparent 64%,#f7f8fa 100%)
   }
   .pcs-system-brand{margin-bottom:43px;font-size:18px}
+  /* The generic operations main has 12px gutters; match them exactly. */
+  .ops-system-hero{margin-left:-12px!important;margin-right:-12px!important}
   body.pcs-inbox-v25 .in25-title,body.pcs-calendar-v25 .cal25-title,body.pcs-connect-v25 .cx25-title{font-size:clamp(28px,8vw,38px)!important;max-width:100%;line-height:1.08;word-break:normal;overflow-wrap:normal}
   body.pcs-inbox-v25 .in25-sub,body.pcs-calendar-v25 .cal25-sub,body.pcs-connect-v25 .cx25-sub{max-width:85%;font-size:14px!important;line-height:1.45}
   body.pcs-inbox-v25 .in25-toolbar{margin-top:-27px;position:relative;z-index:3;gap:10px}
