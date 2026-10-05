@@ -47,6 +47,7 @@ export function demandSignals(text,direction){
  if((supplier||listing)&&!asking)return{decision:'rejected',reason:'Предложение поставщика/объявление, а не запрос клиента.'};
  if(supplier)return{decision:'review',reason:'Смешаны предложение поставщика и признаки спроса. Требуется проверка роли автора.'};
  if(property&&rental&&!buy&&direction==='PROPERTY_PURCHASE')return{decision:'rejected',reason:'Аренда жилья не является покупкой недвижимости.'};
+ if(direction==='CAR_RENTAL'&&buy&&!rental)return{decision:'rejected',reason:'Покупка транспорта не относится к аренде автомобиля.'};
  if(direction==='CAR_RENTAL'&&!car&&/(байк|скутер|мотоцикл|bike|scooter|motorcycle)/u.test(t))return{decision:'rejected',reason:'Запрос/предложение мотобайка не относится к аренде автомобиля.'};
  const supported=asking&&(direction==='PROPERTY_PURCHASE'?property&&buy:direction==='CAR_RENTAL'?car&&(rental||/(прокат|на неделю|посоветуйте)/u.test(t)):false);
  return supported?null:{decision:'review',reason:'Нет явной фразы клиента о покупке недвижимости или аренде автомобиля.'};
@@ -57,14 +58,14 @@ export function validateClassifications(messages,data,now=Date.now()){
  return data.results.map(x=>{
   const m=byId.get(x.id);if(!m||seen.has(x.id)||!['qualified','review','rejected'].includes(x.decision)||typeof x.reason!=='string'||!x.reason.trim()||x.reason.length>600||!Number.isFinite(x.confidence)||x.confidence<0||x.confidence>1)throw Error('ai_invalid_response');seen.add(x.id);
   if(x.direction!==null&&!['CAR_RENTAL','PROPERTY_PURCHASE'].includes(x.direction))throw Error('ai_invalid_response');
-  let decision=x.decision,reason=x.reason;
+  let decision=x.decision,reason=x.reason,direction=x.direction;
   if(decision==='qualified'&&(!x.direction||x.confidence<0.9||typeof x.evidence!=='string'||!x.evidence.trim()||!m.text.includes(x.evidence))){decision='review';reason='Недостаточно проверяемых доказательств намерения. '+reason;}
-  if(decision==='qualified'){const gate=demandSignals(m.text,x.direction);if(gate){decision=gate.decision;reason=gate.reason+' '+reason;}else if(demandSignals(x.evidence,x.direction)){decision='review';reason='Цитата не доказывает потребность клиента. '+reason;}}
+  if(decision==='qualified'){const gate=demandSignals(m.text,x.direction);if(gate){decision=gate.decision;if(decision==='review')direction=null;reason=gate.reason+' '+reason;}else if(demandSignals(x.evidence,x.direction)){decision='review';reason='Цитата не доказывает потребность клиента. '+reason;}}
   if(m.forwarded&&decision!=='rejected'){decision='review';reason='Пересланный запрос: автор требует проверки. '+reason;}
   if(decision!=='rejected'&&(!m.published_at||Date.parse(m.published_at)>now+300000||Date.parse(m.published_at)<now-7*86400000)){decision='review';reason='Дата или актуальность требует проверки. '+reason;}
   const facts={};for(const k of ['city','budget','dates'])if(typeof x[k]==='string'&&x[k].length<=300&&m.text.includes(x[k]))facts[k]=x[k];
   if(typeof x.language==='string'&&/^[a-z]{2}$/.test(x.language))facts.language=x.language;
-  return {...m,decision,direction:decision==='rejected'?null:x.direction,reason:reason.slice(0,600),evidence:typeof x.evidence==='string'&&m.text.includes(x.evidence)?x.evidence:null,facts,outreach_status:decision==='rejected'?'not_applicable':'blocked_identity'};
+  return {...m,decision,direction:decision==='rejected'?null:direction,reason:reason.slice(0,600),evidence:typeof x.evidence==='string'&&m.text.includes(x.evidence)?x.evidence:null,facts,outreach_status:decision==='rejected'?'not_applicable':'blocked_identity'};
  });
 }
 export async function classifyPublicMessages(messages,settings,key,transport=fetch,now=Date.now()){

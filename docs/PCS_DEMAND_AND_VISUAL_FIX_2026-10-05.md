@@ -27,8 +27,8 @@ The dashboard reads authoritative aggregated CRM and business counts and shows f
 - Both operational aggregation queries returned HTTP 200 from the existing Neon databases. At the check: 2 contacts, 155 catalog items, 128 published/approved/available items, 4 active bookings. No customer fixture or test message was written.
 - Existing manager deployment v26 preserves all previous modules and authentication; no new function or plan change.
 - Four source-add statements returned HTTP 200 and audited existing-source records.
-- First old-policy reclassification returned HTTP 200: 2 rejected, 0 qualified, 0 sent. Remaining old records require the follow-up run after the separated-page fix.
+- First old-policy reclassification returned HTTP 200: 2 rejected, 0 qualified, 0 sent. Second rollout run returned HTTP 200: 4 checked, 3 rejected and 1 review. All five previously qualified supplier ads are now outside the qualified list. The scheduled scan read 20 messages with 9 rejected, 1 review, 0 qualified and 0 errors.
 - Schedule remains the owner-approved 15-minute public scanner; customer Follow-up remains disabled.
-- Full visual audit of the signed-in production UI remains pending: the cloud browser reaches the PCS admin sign-in page. This is not claimed as visual verification of protected screens. Local preview is not reachable from that cloud browser.
+- Secure browser authentication succeeded in the PR31 preview. The same LTC-008 editor from the owner screenshot was opened and captured; fields, title and save/photo actions render correctly. Authoritative dashboard counters were observed in the signed-in UI. A visual check found the prospect checkbox inheriting text-field sizing and bare filter selects; scoped controls/layout were added. The 360px responsive harness keeps ordinary PCS authentication. Main production UI publication is blocked by automatic approval review requiring explicit approval to merge PR31. No alternative deployment path is used.
 
 Gamification is not implemented. The full master backlog remains open beyond the verified scope of this release.

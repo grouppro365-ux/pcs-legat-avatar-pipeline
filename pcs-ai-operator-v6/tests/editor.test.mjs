@@ -29,7 +29,7 @@ test('runtime scripts have explicit release keys, including the current send mod
  for(const file of ['finance-v26.css','crm-task-queue.js','crm-task-edit.js'])assert.ok(html.includes(file+'?v=20261004-finance-tasks1'));
  assert.ok(html.includes('finance-v26.js?v=20261004-balance1'));
  assert.ok(html.includes('router-v26.js?v=20261004-prospect2'));
- assert.ok(html.includes('prospecting.js?v=20261005-visual-intent1'));
+ assert.ok(html.includes('prospecting.js?v=20261005-visual-intent2'));
  for(const file of ['neon-adapter.js','dashboard-v25.js','notifications.js'])assert.ok(html.includes(file+'?v=20261004-operations1'));
  for(const file of ['operator-ux-v37.js','media.js'])assert.match(html,new RegExp(file.replaceAll('.','\\.')+'\\?v=\\d{8}-[a-z0-9-]+'));
 });
