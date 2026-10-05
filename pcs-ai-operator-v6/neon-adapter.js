@@ -247,6 +247,12 @@ async function opsRoute(path,init){
     if(!b.catalog_item_id)return appError('Выберите объект из каталога.',400);
     if(!/^\d{4}-\d{2}-\d{2}$/.test(String(b.start_date||''))||!/^\d{4}-\d{2}-\d{2}$/.test(String(b.end_date||''))||String(b.end_date)<=String(b.start_date))return appError('Дата возврата должна быть позже даты начала аренды.',400);
     const [catalog,applications,clients]=await Promise.all([manager('catalog'),manager('applications'),manager('clients')]);
+    const status=bookingStatusToServer[b.status||'hold'];if(!status)return appError('Неизвестный статус брони.',400);
+    const client=clients.find(x=>String(x.id)===String(b.contact_id||''));
+    const replay=b.request_id?applications.find(x=>x.category==='booking'&&x.qualification_data?.booking_idempotency_key===b.request_id):null;
+    const sameClient=replay&&String(replay.qualification_data?.contact_id||'')===String(b.contact_id||'');
+    const saveBody={request_id:b.request_id,item_id:b.catalog_item_id||null,client_name:sameClient?replay.client_name:(client?.name||client?.username||null),client_contact:sameClient?replay.client_contact:(client?.phone||client?.username||null),category:'booking',operational_status:status,priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null};
+    if(replay)return jsonResponse(await manager('application-save',{method:'POST',body:saveBody}));
     const rawItem=catalog.find(x=>String(x.id)===String(b.catalog_item_id));
     if(!rawItem)return appError('Объект не найден в каталоге. Обновите экран и повторите попытку.',404);
     // The manager can return entity_type=VEHICLE without a legacy category.
@@ -254,11 +260,9 @@ async function opsRoute(path,init){
     // validating the direct-rental policy.
     const item=normalizeCatalog(rawItem);
     if(!directRental(item))return appError('Для прямой брони доступен только автомобиль со статусом «Доступно» и посуточным тарифом.',409);
-    const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
+    const conflict=applications.find(x=>String(x.item_id||x.catalog_item_id||'')===String(b.catalog_item_id)&&(!b.request_id||x.qualification_data?.booking_idempotency_key!==b.request_id)&&!cancelledReservation(x)&&x.qualification_data?.start_date&&x.qualification_data?.end_date&&datesOverlap(String(b.start_date),String(b.end_date),String(x.qualification_data.start_date),String(x.qualification_data.end_date)));
     if(conflict)return appError('На выбранные даты уже есть активная бронь или холд. Проверьте календарь.',409);
-    const status=bookingStatusToServer[b.status||'hold'];if(!status)return appError('Неизвестный статус брони.',400);
-    const client=clients.find(x=>String(x.id)===String(b.contact_id||''));
-    return jsonResponse(await manager('application-save',{method:'POST',body:{item_id:b.catalog_item_id||null,client_name:client?.name||client?.username||null,client_contact:client?.phone||client?.username||null,category:'booking',operational_status:status,priority:'NORMAL',internal_notes:b.notes||null,qualification_data:{start_date:b.start_date,end_date:b.end_date,total_amount:b.total_amount,deposit_amount:b.deposit_amount,currency:b.currency||'THB',contact_id:b.contact_id||null},photo:b.photo||null}}));
+    return jsonResponse(await manager('application-save',{method:'POST',body:saveBody}));
   }
   const reservationMatch=path.match(/^\/reservations\/([^/]+)$/);
   if(reservationMatch&&method==='PATCH'){
