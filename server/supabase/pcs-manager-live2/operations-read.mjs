@@ -80,3 +80,12 @@ export async function markNotificationRead(biz,b){
  if(!rows.length)throw new CrmError('Событие изменилось или недоступно. Обновите список перед повтором.',409);
  return{ok:true,id:rows[0].id,read_at:rows[0].read_at};
 }
+
+export async function readAudit(op,biz,source='crm',rawPage='0'){
+ if(!['crm','business'].includes(source)||typeof rawPage!=='string'||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000)throw new CrmError('Некорректный фильтр журнала',400);
+ const page=Number(rawPage),sql=source==='crm'?op:biz;
+ const query=source==='crm'
+ ? `select id,actor,action,entity_type,entity_id,created_at,payload->'changed_fields' changed_fields from audit_logs order by created_at desc,id desc limit 51 offset $1`
+ : `select id,actor_role actor,action,entity_type,entity_id,result,created_at,coalesce((select jsonb_agg(k) from jsonb_object_keys(case when jsonb_typeof(patch)='object' then patch else '{}'::jsonb end) k),'[]'::jsonb) changed_fields from audit_events order by created_at desc,id desc limit 51 offset $1`;
+ const rows=await sql.query(query,[page*50]);return{source,page,rows:rows.slice(0,50),truncated:rows.length>50};
+}

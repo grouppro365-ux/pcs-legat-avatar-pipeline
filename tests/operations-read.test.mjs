@@ -40,3 +40,10 @@ test('due actions page all contacts with stable order, bounded projection and UT
  for(const page of ['-1','5001','1;drop table contacts',null])await assert.rejects(()=>readDueActions({query:()=>assert.fail('unsafe query')},page),e=>e.status===400);
  await assert.rejects(()=>readDueActions({query:async()=>{throw Error('Unavailable')}},'0'),/Unavailable/);
 });
+test('audit reads keep canonical sources separate, page consistently and omit payload values',async()=>{
+ const {readAudit}=await import('../server/supabase/pcs-manager-live2/operations-read.mjs');const calls=[];
+ const db=name=>({query:async(q,p)=>{calls.push({name,q,p});return Array.from({length:51},(_,i)=>({id:String(i)}));}});
+ for(const source of ['crm','business']){const r=await readAudit(db('crm'),db('business'),source,'2');assert.equal(r.source,source);assert.equal(r.rows.length,50);assert.equal(r.truncated,true);assert.equal(calls.at(-1).name,source);assert.deepEqual(calls.at(-1).p,[100]);assert.match(calls.at(-1).q,/order by created_at desc,id desc limit 51/);assert.doesNotMatch(calls.at(-1).q,/select \*|update |insert |\bbody\b|\breason\b|patch,|payload,/i);}
+ for(const args of [['other','0'],['crm','-1'],['business','5001']])await assert.rejects(()=>readAudit(db('unsafe'),db('unsafe'),...args),e=>e.status===400);
+ await assert.rejects(()=>readAudit({query:async()=>{throw Error('Unavailable')}},db('unused')),/Unavailable/);
+});

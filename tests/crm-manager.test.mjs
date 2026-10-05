@@ -144,6 +144,6 @@ test('prospecting sources, scanning and reads require admin auth and correct met
 
 test('internal scanner rejects anonymous access and wrong methods before any database write',async()=>{const f=await fixture();assert.equal((await f.call('prospecting-worker',{auth:''})).status,401);assert.equal((await f.call('prospecting-worker',{auth:'',method:'GET'})).status,405);assert.equal(f.writes.length,0);});
 
-test('operational overview and notification/application reads are admin-only and GET-only',async()=>{const f=await fixture();for(const op of ['dashboard','notifications','operational-application']){assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);assert.equal((await f.call(op,{method:'POST'})).status,405);}assert.equal(f.writes.length,0);});
+test('operational overview and notification/application reads are admin-only and GET-only',async()=>{const f=await fixture();for(const op of ['dashboard','notifications','operational-application','audit']){assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);assert.equal((await f.call(op,{method:'POST'})).status,405);}assert.equal(f.writes.length,0);});
 
 test('notification acknowledgement rejects GET and malformed payload before mutation',async()=>{const f=await fixture();assert.equal((await f.call('notification-read',{method:'GET'})).status,405);assert.equal((await f.call('notification-read',{body:{id:'bad',expected_version:'bad'}})).status,400);assert.equal(f.writes.length,0);});

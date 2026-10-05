@@ -26,7 +26,7 @@
   finally{s.reading=false;}
  }
  async function open(){
-  window.openSheet('События PCS',`<div class="toolbar"><select id="pcsNotificationView"><option value="unread">Непрочитанные</option><option value="all">Все</option></select><button class="btn soft" id="pcsNotificationRefresh">Обновить</button><button class="btn soft" onclick="closeSheet();go('errors')">Ошибки и доставка</button></div><p id="pcsNotificationMessage" role="status" class="muted"></p><div id="pcsNotificationList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsNotificationPrev" disabled>Назад</button><button class="btn soft" id="pcsNotificationNext" disabled>Далее</button></div>`);
+  window.openSheet('События PCS',`<div class="toolbar"><select aria-label="Список событий" id="pcsNotificationView" style="min-height:44px;max-width:100%"><option value="unread">Непрочитанные</option><option value="all">Все</option></select><button class="btn soft" id="pcsNotificationRefresh">Обновить</button><button class="btn soft" onclick="closeSheet();go('errors')">Ошибки и доставка</button></div><p id="pcsNotificationMessage" role="status" class="muted"></p><div id="pcsNotificationList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsNotificationPrev" disabled>Назад</button><button class="btn soft" id="pcsNotificationNext" disabled>Далее</button></div>`);
   const s=state={root:document.getElementById('pcsNotificationList'),view:'unread',page:0,sequence:0,rows:[]};
   document.getElementById('pcsNotificationView').onchange=e=>{s.view=e.target.value;s.page=0;load(s)};
   document.getElementById('pcsNotificationRefresh').onclick=()=>load(s);
