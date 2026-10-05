@@ -37,7 +37,7 @@ function quick(page,label,key){return `<button onclick="go('${page}')"><span cla
 function kpi(label,value,note,key){return `<article class="pcs25-kpi"><div class="pcs25-kpi-label">${label}</div><div class="pcs25-kpi-value">${value}</div><div class="pcs25-kpi-note">${note}</div><div class="pcs25-kpi-icon">${rawIcon(key)}</div></article>`}
 
 const actionTime=value=>{if(!value)return 'Срок не указан';const normalized=/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(value)?value.replace(' ','T')+'Z':value;const date=new Date(normalized);return Number.isFinite(date.getTime())?date.toLocaleString('ru-RU'):'Проверьте срок';};
-const actionRow=x=>`<button class="pcs25-row" data-dashboard-contact="${E(x.id)}" style="width:100%;min-height:48px;text-align:left"><span style="min-width:0;overflow-wrap:anywhere"><b>${E(x.name||x.username||'Клиент')}</b><small>${E(x.next_action||'Следующее действие не описано')}</small><small>Срок: ${E(actionTime(x.next_action_at))}</small></span></button>`;
+const actionRow=x=>`<button class="btn soft pcs-due-action-row" data-dashboard-contact="${E(x.id)}"><span style="min-width:0;overflow-wrap:anywhere"><b>${E(x.name||x.username||'Клиент')}</b><small>${E(x.next_action||'Следующее действие не описано')}</small><small>Срок: ${E(actionTime(x.next_action_at))}</small></span></button>`;
 let dueState=null;
 async function loadDueActions(s){
  const active=()=>dueState===s&&document.getElementById('pcsDueActionsList')===s.root;
