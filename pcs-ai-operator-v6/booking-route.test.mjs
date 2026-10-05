@@ -65,3 +65,13 @@ const beforeInvalid=writes.length;
 for(const patch of [{total_amount:-1},{total_amount:'100'},{total_amount:1.001},{total_amount:0,deposit_amount:1},{currency:'EUR'}])assert.equal((await post({...valid,...patch})).status,400);
 assert.equal((await post({...valid,contact_id:'missing-client'})).status,404);
 assert.equal(writes.length,beforeInvalid,'invalid terms and missing clients must not write applications');
+applications=[
+ {id:'no-status',category:'booking',qualification_data:{deposit_amount:1000}},
+ {id:'waiting',category:'booking',client_payment_status:'AWAITING_PAYMENT',qualification_data:{deposit_amount:2000}},
+ {id:'partial',category:'booking',client_payment_status:'PARTIALLY_PAID',qualification_data:{deposit_amount:0}},
+ {id:'paid',category:'booking',client_payment_status:'PAID_TO_PARTNER',qualification_data:{deposit_amount:0}},
+ {id:'refund',category:'booking',client_payment_status:'REFUND_PENDING',qualification_data:{deposit_amount:100}}
+];
+const payments=await (await context.fetch('https://pcs-stable.local/pcs-ops-api/reservations')).json();
+assert.deepEqual(payments.map(x=>x.payment_status),['UNKNOWN','AWAITING_PAYMENT','PARTIALLY_PAID','PAID_TO_PARTNER','REFUND_PENDING']);
+assert.ok(payments.every(x=>x.payment_status_source==='application'));
