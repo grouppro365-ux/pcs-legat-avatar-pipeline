@@ -10,3 +10,7 @@ test('journal is reachable from the current v26 More menu without removing exist
  const children=[],grid={appendChild:b=>children.push(b)},window={moreMenu:()=>children.push({textContent:'Existing action'})},document={querySelector:s=>s.includes('.v26-more')?grid:null,createElement:()=>({})};
  vm.runInNewContext(readFileSync(new URL('../audit-log.js',import.meta.url),'utf8'),{window,document,URLSearchParams,Date});window.moreMenu();assert.deepEqual(children.map(x=>x.textContent),['Existing action','Журнал действий']);assert.equal(typeof children[1].onclick,'function');
 });
+test('long field lists stay compact, use readable labels, and escape expanded values',async()=>{
+ const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'applications.insert',changed_fields:['id','city','item_id','category','public_id','reserved_vehicle_id','<img>']}]});await p;
+ const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/Все изменённые поля \(7\)/);assert.match(html,/<details><summary/);assert.match(html,/Зарезервированный автомобиль/);assert.doesNotMatch(html,/<img>|reserved_vehicle_id/);assert.ok(html.indexOf('Зарезервированный автомобиль')>html.indexOf('<details>'));
+});
