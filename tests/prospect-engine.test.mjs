@@ -29,3 +29,9 @@ test('read filters remain bound and do not expose keys or invent first-message c
  const calls=[],sql={query:async(q,p)=>{calls.push({q,p});if(q.includes('select (select count'))return[{sources:3,sources_read:1}];return Array.from({length:51},(_,i)=>({id:String(i)}))}};const r=await readProspecting(sql,'requests','2','review');assert.equal(r.rows.length,50);assert.equal(r.truncated,true);assert.deepEqual(calls[0].p,['review',100,'all']);assert.equal(r.capabilities.first_private_message,false);
  await assert.rejects(()=>readProspecting(sql,'fake','0','all'),e=>e.status===400);
 });
+
+test('competitor filtering applies in SQL before pagination, and unknown kinds cannot read',async()=>{
+ const h=fixture();await readProspecting(h.sql,'requests','1','qualified','competitor');assert.deepEqual(h.calls[0].p,['qualified',50,'competitor']);assert.match(h.calls[0].q,/s.topic='competitor'/);
+ await readProspecting(h.sql,'sources','0','all','competitor');assert.deepEqual(h.calls[3].p,[0,'competitor']);
+ await assert.rejects(()=>readProspecting(h.sql,'requests','0','qualified','forged'),e=>e.status===400);
+});

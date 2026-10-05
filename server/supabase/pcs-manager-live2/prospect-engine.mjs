@@ -19,18 +19,22 @@ export const saveReviewClassifications=`with saved as (
 export async function classifyReviewProspects(sql,loadAI,{transport=fetch}={}){
  const config=(await sql.query("select value from system_settings where id='pcs_telegram_prospecting'"))[0]?.value;
  if(config?.enabled!==true)throw new CrmError('Поиск запросов приостановлен',409);
- const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.updated_at::text updated_at,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where (r.decision='review' or (r.decision='qualified' and r.qualification_version is distinct from $1)) and r.published_at>=now()-interval '7 days' order by r.published_at desc,r.id limit 20",[prospectVersion]);
+ const records=await sql.query("select r.id,r.telegram_message_id::text,r.message_url,r.published_at,r.message_text,r.updated_at::text updated_at,s.username from pcs_prospect_requests r join pcs_prospect_sources s on s.id=r.source_id where (r.decision='review' or (r.decision='qualified' and r.qualification_version is distinct from $1)) and r.published_at>=now()-interval '7 days' order by (r.decision='qualified') desc,r.published_at desc,r.id limit 5",[prospectVersion]);
  const counts={classified:0,qualified:0,review:0,rejected:0};
  if(!records.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  // Re-read the public page to retain forwarded-message provenance which was not stored by the review-only pass.
  const messages=[];
- for(const username of new Set(records.map(r=>r.username))){
-  const group=records.filter(r=>r.username===username),before=Math.max(...group.map(r=>Number(r.telegram_message_id)))+1;
-  const response=await transport('https://t.me/s/'+sourceUsername(username)+'?before='+before,{redirect:'manual',signal:AbortSignal.timeout(12000)});
+ for(const r of records){
+  if(messages.some(m=>m.id===r.id))continue;
+  const username=sourceUsername(r.username),before=Number(r.telegram_message_id)+1;
+  const response=await transport('https://t.me/s/'+username+'?before='+before,{redirect:'manual',signal:AbortSignal.timeout(12000)});
   if(!response.ok)throw Error('public_history_unavailable');
   const page=parsePublicPage(await response.text(),username);
   if(!page.readable)throw Error('public_history_unavailable');
-  for(const r of group){const message=page.messages.find(m=>m.id===r.telegram_message_id&&m.text===r.message_text);if(message)messages.push({...message,id:r.id});}
+  for(const candidate of records.filter(x=>x.username===r.username)){
+   const message=page.messages.find(m=>m.id===candidate.telegram_message_id&&m.text===candidate.message_text);
+   if(message&&!messages.some(m=>m.id===candidate.id))messages.push({...message,id:candidate.id});
+  }
  }
  if(!messages.length)return{ok:true,...counts,outreach_sent:0,outreach_blocker:'telegram_user_session_not_connected'};
  const ai=await loadAI();

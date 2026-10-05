@@ -76,7 +76,10 @@ const negativeDemandCases=[
  ['Нужен байк в аренду','CAR_RENTAL'],
  ['Уже нашли квартиру, больше не ищу купить кондо','PROPERTY_PURCHASE'],
  ['Condo for sale, contact us for viewing','PROPERTY_PURCHASE'],
- ['We offer car rental in Phuket. Book now','CAR_RENTAL']
+ ['We offer car rental in Phuket. Book now','CAR_RENTAL'],
+ ['Если нужна машина в аренду, пишите нам','CAR_RENTAL'],
+ ['Ищете купить квартиру? У нас лучшие предложения','PROPERTY_PURCHASE'],
+ ['На консультацию обратились клиенты. Хотят купить кондо','PROPERTY_PURCHASE']
 ];
 for(const [text,direction] of negativeDemandCases)test('never qualifies supplier/out-of-scope: '+text.slice(0,65),()=>{
  const out=validateClassifications([{...message,text}],{results:[{...result,direction,evidence:text}]},now)[0];
