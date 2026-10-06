@@ -1,0 +1,51 @@
+{
+  "project": "Legat ABC",
+  "site": "https://legat-abc.com",
+  "locales": ["ru", "en", "pl", "es", "zh", "ja", "ko", "th", "ar", "fr", "de", "kk"],
+  "channels": ["instagram", "facebook", "telegram", "vk", "dzen", "tenchat"],
+  "content_mix": {
+    "real_offers": 45,
+    "comparisons": 20,
+    "useful_trust": 15,
+    "partners_supply": 10,
+    "platform_product": 10
+  },
+  "visual": {
+    "background": ["white", "off-white", "very pale cool blue"],
+    "text": "deep navy",
+    "primary_accent": "bright clean blue",
+    "secondary_accent": "cyan",
+    "warning_accent": "coral only for risk/warning",
+    "principles": [
+      "one dominant message per asset",
+      "real photography first",
+      "editorial marketplace aesthetic",
+      "large whitespace",
+      "clean UI cards only when meaningful"
+    ],
+    "avoid": [
+      "black and gold luxury",
+      "generic purple-blue AI gradients",
+      "fake ratings",
+      "fake prices",
+      "fake statistics",
+      "huge logo",
+      "generic handshake partnership visuals"
+    ]
+  },
+  "fact_rules": [
+    "Never invent price, availability, year, mileage, location, seller, legal status or terms.",
+    "Publishing rights are controlled; do not imply anyone can instantly publish anything.",
+    "Do not promise a safe or guaranteed transaction.",
+    "For variable listing facts, re-check before reusing old content.",
+    "Prefer a concrete listing/category landing page over the site homepage."
+  ],
+  "channel_rules": {
+    "instagram": "Discovery-first. Reels for reach, carousels for saves/comparison, Stories for daily life. Global visual copy may be short English; captions can localize selectively.",
+    "facebook": "Local distribution, communities, partner reposts and discussion. Adapt the hook; do not blindly duplicate Instagram copy.",
+    "telegram": "Fast specific updates, clear titles, actual model/location/category when known, direct landing link.",
+    "vk": "Russian-language reach, communities and clips. Adapt copy rather than mirroring Facebook.",
+    "dzen": "Evergreen search/recommendation content: guides, comparisons, explanatory articles connected to live listings.",
+    "tenchat": "B2B: partners, suppliers, business cases, catalog packaging and local-market expansion."
+  }
+}

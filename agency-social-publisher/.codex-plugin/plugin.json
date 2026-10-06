@@ -1,0 +1,26 @@
+{
+  "name": "legat-abc-social-publisher",
+  "version": "0.2.0",
+  "description": "Create, adapt, generate, schedule, publish and analyze Legat ABC social content across Postiz-connected channels, with secondary routes for Dzen and TenChat.",
+  "author": {
+    "name": "Legat ABC"
+  },
+  "repository": "https://github.com/grouppro365-ux/pcs-legat-avatar-pipeline",
+  "keywords": ["social-media", "postiz", "instagram", "facebook", "telegram", "vk", "dzen", "tenchat", "reels", "legat-abc"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Legat ABC Social Publisher",
+    "shortDescription": "Create and run Legat ABC social media",
+    "longDescription": "Plan channel-native content, read live Legat ABC listing pages, generate images and short videos, use existing media, create drafts, schedule or publish through connected social accounts, and review analytics.",
+    "developerName": "Legat ABC",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://legat-abc.com",
+    "defaultPrompt": [
+      "Create today's Legat ABC social pack from current listings and put it into drafts.",
+      "Make a Reel and channel-native posts for this Legat ABC listing, then schedule them.",
+      "Show me what performed best this week and what we should publish next."
+    ],
+    "brandColor": "#147DFF"
+  }
+}

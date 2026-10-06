@@ -1,0 +1,182 @@
+openapi: 3.1.0
+info:
+  title: Agency Social Publisher
+  version: 0.2.0
+  description: Unified generation, media, Postiz publishing and secondary-channel bridge for Legat ABC.
+servers:
+  - url: https://YOUR_BRIDGE_HOST
+components:
+  securitySchemes:
+    BridgeBearer:
+      type: http
+      scheme: bearer
+  schemas:
+    MediaRef:
+      type: object
+      required: [id, path]
+      properties:
+        id: { type: string }
+        path: { type: string }
+security:
+  - BridgeBearer: []
+paths:
+  /health:
+    get:
+      security: []
+      operationId: health
+      responses:
+        '200': { description: OK }
+  /api/capabilities:
+    get:
+      operationId: getCapabilities
+      responses:
+        '200': { description: Runtime capability flags }
+  /api/integrations:
+    get:
+      operationId: listSocialIntegrations
+      responses:
+        '200': { description: Connected Postiz channels }
+  /api/integrations/{id}/settings:
+    get:
+      operationId: getSocialIntegrationSettings
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Provider settings schema }
+  /api/plan:
+    post:
+      operationId: createLegatSocialPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject]
+              properties:
+                subject: { type: string }
+                facts: { type: object, additionalProperties: true }
+                channels:
+                  type: array
+                  items: { type: string }
+                goal: { type: string }
+                language: { type: string }
+      responses:
+        '200': { description: Channel-native content plan }
+  /api/generate/image:
+    post:
+      operationId: generateSocialImage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string }
+                size: { type: string }
+                quality: { type: string }
+                uploadToPostiz: { type: boolean }
+                filename: { type: string }
+      responses:
+        '200': { description: Generated image or uploaded Postiz media }
+  /api/generate/video:
+    post:
+      operationId: generateSocialVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string }
+                seconds: { type: string, enum: ['4','8','12'] }
+                size: { type: string, enum: ['720x1280','1280x720','1024x1792','1792x1024'] }
+      responses:
+        '202': { description: OpenAI video generation job }
+  /api/generate/video/{id}:
+    get:
+      operationId: getSocialVideoStatus
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Video job status }
+  /api/generate/video/{id}/finalize:
+    post:
+      operationId: finalizeGeneratedVideoToPostiz
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: Completed MP4 uploaded into Postiz media }
+        '202': { description: Video is still processing }
+  /api/media/upload:
+    post:
+      operationId: uploadExistingSocialMedia
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200': { description: Existing media uploaded to Postiz }
+  /api/media/import-url:
+    post:
+      operationId: importApprovedMediaUrl
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        '200': { description: Allowlisted media URL imported to Postiz }
+  /api/publish:
+    post:
+      operationId: publishOrScheduleSocialPost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [date, content, integrationIds]
+              properties:
+                type: { type: string, enum: [draft, schedule, now] }
+                date: { type: string, format: date-time }
+                content: { type: string }
+                integrationIds:
+                  type: array
+                  items: { type: string }
+                media:
+                  type: array
+                  items: { $ref: '#/components/schemas/MediaRef' }
+                settingsByIntegration:
+                  type: object
+                  additionalProperties: true
+      responses:
+        '200': { description: Postiz post result }
+  /api/secondary/tenchat:
+    post:
+      operationId: publishTenChatThroughBridge
+      responses:
+        '200': { description: Secondary TenChat bridge result }
+        '503': { description: TenChat bridge is not configured }
