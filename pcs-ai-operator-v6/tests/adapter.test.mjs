@@ -17,6 +17,7 @@ function adapterHarness({sendResponse,knowledgeResponse}={}){
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
     if(op==='data-quality')return Response.json({rows:[],view:new URL(url).searchParams.get('view'),page:Number(new URL(url).searchParams.get('page'))});
     if(op==='prospecting')return Response.json({rows:[],view:new URL(url).searchParams.get('view')});
+    if(op==='prospecting-source-update')return Response.json({ok:true});
     if(op==='prospecting-source')return Response.json({ok:true});
     if(op==='prospecting-scan')return Response.json({ok:true,outreach_sent:0});
     if(op==='finance-balance')return Response.json({reservation_id:new URL(url).searchParams.get('reservation_id')});
@@ -154,6 +155,10 @@ test('reservation balance stays in the authenticated canonical PCS source',async
  assert.equal(r.status,200);assert.equal((await r.json()).reservation_id,itemId);assert.equal(h.calls[0].op,'finance-balance');assert.equal(h.calls[0].authorization,'Bearer fixture');assert.equal(h.calls[0].params.reservation_id,itemId);
 });
 
+test('prospecting source edit preserves admin authentication and version payload',async()=>{
+ const h=adapterHarness(),body={id:'10000000-0000-4000-8000-000000000001',expected_version:'2026-10-06 15:00:00.123456+00',enabled:false,competitor:true,rules:'Rule'};
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/source-update',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.calls[0].op,'prospecting-source-update');assert.equal(h.calls[0].authorization,'Bearer fixture');assert.deepEqual(h.calls[0].body,body);
+});
 test('prospecting adapter preserves authentication, paging, source payload and scan POST',async()=>{
  const h=adapterHarness();let r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting?view=sources&page=2&decision=all');assert.equal(r.status,200);assert.equal(h.calls[0].op,'prospecting');assert.equal(h.calls[0].params.page,'2');assert.equal(h.calls[0].authorization,'Bearer fixture');
  r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/source',{method:'POST',body:JSON.stringify({username:'@example_source'})});assert.equal(r.status,200);assert.equal(h.calls[1].op,'prospecting-source');assert.equal(h.calls[1].body.username,'@example_source');

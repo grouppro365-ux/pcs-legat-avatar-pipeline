@@ -1,0 +1,6 @@
+#pcsProspectSourceForm{min-width:0;overflow-wrap:anywhere}
+#pcsProspectSourceForm .toggle-row{display:flex;align-items:center;gap:12px;min-height:48px;margin:8px 0}
+#pcsProspectSourceForm .toggle-row input{width:20px!important;height:20px!important;min-width:20px!important;flex:0 0 20px;padding:0!important;margin:0!important;accent-color:var(--ap-teal,#079d9d)}
+#pcsProspectSourceForm textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;min-width:0;min-height:120px;resize:vertical}
+#pcsProspectSourceForm #pcsSourceError{color:#a33125;white-space:pre-wrap;overflow-wrap:anywhere}
+#pcsProspecting .item{overflow-wrap:anywhere}

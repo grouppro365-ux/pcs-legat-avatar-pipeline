@@ -3,11 +3,11 @@
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const labels={qualified:'Запрос подтверждён по смыслу',review:'Требует проверки',rejected:'Не клиентский запрос',CAR_RENTAL:'Аренда авто',PROPERTY_PURCHASE:'Покупка недвижимости',discovered:'Найден, ещё не прочитан',public_readable:'Публичные сообщения доступны',unavailable:'История недоступна без подключения',http_error:'Ошибка чтения',ai_error:'Ошибка распознавания',complete:'Завершён',partial:'Часть источников с ошибками',running:'В работе',failed:'Ошибка'};
 const fmt=x=>x?new Date(x).toLocaleString('ru-RU'):'—';
-let state=null;
+let state=null,sourceEdit=null;
 const active=s=>s===state&&window.PCS?.page==='prospecting'&&document.querySelector('#pcsProspecting')===s.root;
 function release(s){s.busy=false;if(active(s))for(const k of ['scan','classify'])s.root.querySelector('[data-prospect-'+k+']').disabled=!s.enabled;}
-function drawRow(x,view){
- if(view==='sources')return `<article class="item"><b>${esc(x.title||x.username)}</b><p>@${esc(x.username)} · ${esc(x.city||'Таиланд')}${x.topic==='competitor'?' · Источник конкурента':''}</p><p>${esc(labels[x.access_status]||x.access_status)}</p><p>Проверен: ${esc(fmt(x.last_checked_at))} · Прочитан: ${esc(fmt(x.last_read_at))}</p><p>Сообщений прочитано: ${esc(x.messages_read||'0')}${x.pending_before?' · История ещё обрабатывается':''}</p>${x.last_error?`<p class="muted">${esc(x.last_error)}</p>`:''}${x.rules?`<p class="muted">Правила: ${esc(x.rules)}</p>`:''}<a class="btn soft" href="https://t.me/${esc(x.username)}" target="_blank" rel="noopener noreferrer">Источник</a></article>`;
+function drawRow(x,view,index){
+ if(view==='sources')return `<article class="item"><b>${esc(x.title||x.username)}</b><p>@${esc(x.username)} · ${esc(x.city||'Таиланд')}${x.topic==='competitor'?' · Источник конкурента':''}</p><p>${x.enabled?'Поиск включён':'Источник приостановлен'} · ${esc(labels[x.access_status]||x.access_status)}</p><p>Проверен: ${esc(fmt(x.last_checked_at))} · Прочитан: ${esc(fmt(x.last_read_at))}</p><p>Сообщений прочитано: ${esc(x.messages_read||'0')}${x.pending_before?' · История ещё обрабатывается':''}</p>${x.last_error?`<p class="muted">${esc(x.last_error)}</p>`:''}${x.rules?`<p class="muted">Правила: ${esc(x.rules)}</p>`:''}<a class="btn soft" href="https://t.me/${esc(x.username)}" target="_blank" rel="noopener noreferrer">Источник</a> <button class="btn soft" data-prospect-source-edit="${index}">Настройки источника</button></article>`;
  if(view==='runs')return `<article class="item"><b>${esc(labels[x.status]||x.status)}</b><p>${esc(fmt(x.started_at))}</p><p>Источников: ${esc(x.sources_checked)} · Сообщений: ${esc(x.messages_read)} · Запросов: ${esc(x.qualified)} · На проверке: ${esc(x.review)} · Отклонено: ${esc(x.rejected)} · Ошибок: ${esc(x.errors)}</p></article>`;
  const safe=/^https:\/\/t\.me\/[a-z0-9_]+\/\d+$/i.test(x.message_url||'');
  return `<article class="item"><b>${esc(labels[x.direction]||'Направление требует проверки')}</b><p>${esc(labels[x.decision]||x.decision)} · ${esc(x.source_title||x.source_username)}${x.source_topic==='competitor'?' · У конкурента':''} · ${esc(fmt(x.published_at))}</p><p style="white-space:pre-wrap;overflow-wrap:anywhere">${esc(x.message_text)}</p><p>${esc(x.reason)}</p>${x.facts?Object.entries(x.facts).map(([k,v])=>`<span class="pill">${esc(k)}: ${esc(v)}</span>`).join(''):''}<p class="muted">${x.decision==='rejected'?'Обращение не требуется.':'Отправка заблокирована: личность автора и доступный способ связи требуют проверки. Follow-up начнётся после подтверждённой отправки.'}</p>${safe?`<a class="btn soft" href="${esc(x.message_url)}" target="_blank" rel="noopener noreferrer">Исходное сообщение</a>`:''}</article>`;
@@ -18,10 +18,29 @@ async function load(s){
   if(d.view!==view||!Array.isArray(d.rows))throw Error('Некорректный ответ поиска');
   s.enabled=d.enabled===true;s.version=d.version;s.root.querySelector('[data-prospect-toggle]').textContent=s.enabled?'Приостановить поиск':'Включить поиск';for(const k of ['scan','classify'])s.root.querySelector('[data-prospect-'+k+']').disabled=!s.enabled||s.busy;
   const c=d.summary||{};s.root.querySelector('[data-prospect-summary]').textContent=`Источники: ${c.sources??0}; прочитаны: ${c.sources_read??0}; запросы: ${c.qualified??0}; требуют проверки: ${c.review??0}; отклонены: ${c.rejected??0}.`;
-  box.innerHTML=d.rows.map(x=>drawRow(x,view)).join('')||'<p class="muted">В этом списке пока нет записей.</p>';
+  s.rows=d.rows;box.innerHTML=d.rows.map((x,i)=>drawRow(x,view,i)).join('')||'<p class="muted">В этом списке пока нет записей.</p>';
   box.innerHTML+=`<div class="toolbar"><button class="btn soft" data-prospect-prev ${page===0?'disabled':''}>Назад</button><span>Страница ${page+1}</span><button class="btn soft" data-prospect-next ${!d.truncated||page>=5000?'disabled':''}>Далее</button></div>`;
+  box.onclick=e=>{const button=e.target.closest?.('[data-prospect-source-edit]');if(button&&view==='sources')editSource(s,s.rows[Number(button.dataset.prospectSourceEdit)]);};
   box.querySelector('[data-prospect-prev]').onclick=()=>{s.page=Math.max(0,page-1);load(s)};box.querySelector('[data-prospect-next]').onclick=()=>{s.page=page+1;load(s)};
  }catch(e){if(active(s)&&seq===s.seq)box.textContent=e.message||'Не удалось загрузить поиск'}
+}
+function editSource(s,x){
+ if(!active(s)||s.busy||!x||!/^[0-9a-f-]{36}$/i.test(x.id)||!Number.isFinite(Date.parse(x.edit_version)))return;
+ window.openSheet('Источник Telegram',`<form id="pcsProspectSourceForm"><h3 style="overflow-wrap:anywhere">${esc(x.title||x.username)}</h3><p>@${esc(x.username)}</p><label class="toggle-row"><input id="pcsSourceEnabled" type="checkbox" ${x.enabled?'checked':''}><span>Проверять этот источник</span></label><label class="toggle-row"><input id="pcsSourceCompetitor" type="checkbox" ${x.topic==='competitor'?'checked':''}><span>Источник конкурента</span></label><div class="field"><label for="pcsSourceRules">Правила сообщества для оператора</label><textarea id="pcsSourceRules" maxlength="2000" rows="4">${esc(x.rules||'')}</textarea></div><p class="muted">Приостановка сохраняет найденные запросы и позицию чтения. Изменение не запускает отдельную проверку или отправку сообщений.</p><p id="pcsSourceError" role="alert"></p><button class="btn" id="pcsSourceSave" type="submit">Сохранить настройки</button></form>`);
+ const root=document.querySelector('#pcsProspectSourceForm'),edit=sourceEdit={root,source:x,busy:false};
+ root.onsubmit=e=>{e.preventDefault();saveSource(s,edit)};
+}
+async function saveSource(s,edit){
+ const current=()=>active(s)&&sourceEdit===edit&&document.querySelector('#pcsProspectSourceForm')===edit.root;
+ if(!current()||s.busy||edit.busy)return;
+ const enabled=document.querySelector('#pcsSourceEnabled'),competitor=document.querySelector('#pcsSourceCompetitor'),rules=document.querySelector('#pcsSourceRules'),error=document.querySelector('#pcsSourceError'),button=document.querySelector('#pcsSourceSave');
+ const draft={id:edit.source.id,expected_version:edit.source.edit_version,enabled:enabled.checked,competitor:competitor.checked,rules:rules.value};
+ edit.busy=s.busy=true;enabled.disabled=competitor.disabled=rules.disabled=button.disabled=true;error.textContent='Сохраняю…';
+ try{const d=await window.opsCall('/prospecting/source-update',{method:'POST',body:JSON.stringify(draft)});if(!current())return;
+  if(!d.ok||d.source?.id!==draft.id||d.source.enabled!==draft.enabled||(d.source.topic==='competitor')!==draft.competitor||(d.source.rules||'')!==draft.rules.trim()||!Number.isFinite(Date.parse(d.source.edit_version)))throw Error('Сервер не подтвердил настройки. Обновите источник перед повтором.');
+  window.closeSheet();await load(s);
+ }catch(e){if(current())error.textContent=e.message||'Не удалось сохранить. Черновик остаётся в форме.';}
+ finally{edit.busy=false;release(s);if(current())enabled.disabled=competitor.disabled=rules.disabled=button.disabled=false;}
 }
 async function render(){
  const main=document.querySelector('#main');if(!main)return;

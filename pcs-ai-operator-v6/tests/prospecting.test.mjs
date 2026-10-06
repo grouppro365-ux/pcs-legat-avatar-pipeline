@@ -9,11 +9,21 @@ function fixture(){
  nodes['decision-field']={hidden:false};
  const root={querySelector:k=>k.includes('decision-field')?nodes['decision-field']:nodes[k.match(/data-prospect-([a-z]+)/)?.[1]]},main={innerHTML:''};
  const window={PCS:{page:'prospecting'},opsCall:(url,init)=>new Promise((resolve,reject)=>calls.push({url,init,resolve,reject})),toast(){}};
- const document={querySelector:k=>k==='#main'?main:k==='#pcsProspecting'?root:null};vm.runInNewContext(source,{window,document,URLSearchParams,Date,Object});return{window,nodes,calls,main};
+ const sheet={};window.openSheet=(title,html)=>{sheet.html=html;for(const id of ['pcsProspectSourceForm','pcsSourceEnabled','pcsSourceCompetitor','pcsSourceRules','pcsSourceError','pcsSourceSave'])sheet[id]={checked:false,value:'',textContent:'',disabled:false};};window.closeSheet=()=>{sheet.closed=true;delete sheet.pcsProspectSourceForm;};
+ const document={querySelector:k=>k==='#main'?main:k==='#pcsProspecting'?root:sheet[k.slice(1)]};vm.runInNewContext(source,{window,document,URLSearchParams,Date,Object});return{window,nodes,calls,main,sheet};
 }
 test('prospecting shows real counters, escaped source text and blocked contact rather than a send button',async()=>{
  const h=fixture(),p=h.window.pcsProspecting();h.calls[0].resolve({view:'requests',enabled:true,version:1,summary:{sources:35,sources_read:1,qualified:1,review:2,rejected:10},rows:[{message_text:'<script>alert(1)</script>',direction:'CAR_RENTAL',decision:'qualified',message_url:'https://evil.invalid',reason:'Need car'}]});await p;
  assert.match(h.nodes.summary.textContent,/прочитаны: 1/);assert.match(h.nodes.list.innerHTML,/&lt;script&gt;/);assert.doesNotMatch(h.nodes.list.innerHTML,/<script>|href="https:\/\/evil|Отправить/);assert.match(h.nodes.list.innerHTML,/Отправка заблокирована/);assert.match(h.main.innerHTML,/пока не подключена/);
+});
+
+test('source settings preserve a conflict draft, lock pending fields and prevent duplicate writes',async()=>{
+ const h=fixture(),p=h.window.pcsProspecting();h.calls[0].resolve({view:'requests',enabled:true,version:1,rows:[],summary:{}});await p;
+ h.nodes.view.value='sources';h.nodes.view.onchange();h.calls[1].resolve({view:'sources',enabled:true,version:1,rows:[{id:'10000000-0000-4000-8000-000000000001',username:'channel_test',title:'<script>unsafe</script>',enabled:true,topic:'community',rules:'',edit_version:'2026-10-06 15:00:00.123456+00'}],summary:{}});await new Promise(r=>setImmediate(r));
+ assert.match(h.nodes.list.innerHTML,/Поиск включён/);h.nodes.list.onclick({target:{closest:()=>({dataset:{prospectSourceEdit:'0'}})}});assert.match(h.sheet.html,/&lt;script&gt;/);assert.doesNotMatch(h.sheet.html,/<script>/);
+ h.sheet.pcsSourceEnabled.checked=false;h.sheet.pcsSourceCompetitor.checked=true;h.sheet.pcsSourceRules.value='draft rules';h.sheet.pcsProspectSourceForm.onsubmit({preventDefault(){}});h.sheet.pcsProspectSourceForm.onsubmit({preventDefault(){}});
+ assert.equal(h.calls.length,3);assert.equal(h.calls[2].url,'/prospecting/source-update');assert.equal(h.sheet.pcsSourceRules.disabled,true);assert.equal(JSON.parse(h.calls[2].init.body).expected_version,'2026-10-06 15:00:00.123456+00');
+ h.calls[2].reject(Error('Источник уже изменился'));await new Promise(r=>setImmediate(r));assert.equal(h.sheet.pcsSourceRules.value,'draft rules');assert.equal(h.sheet.pcsSourceRules.disabled,false);assert.match(h.sheet.pcsSourceError.textContent,/уже изменился/);assert.equal(h.sheet.closed,undefined);
 });
 test('late prospect responses cannot repaint another page and source/AI failures remain visible',async()=>{
  const h=fixture(),p=h.window.pcsProspecting();h.window.PCS.page='crm';h.calls[0].resolve({view:'requests',rows:[{message_text:'stale'}]});await p;assert.doesNotMatch(h.nodes.list.innerHTML,/stale/);
