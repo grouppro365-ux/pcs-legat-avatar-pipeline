@@ -1,0 +1,17 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {generationDispatch} from '../supabase/functions/_shared/generation-dispatch.mjs';
+const id='10000000-0000-4000-8000-000000000001';
+function harness(token,body=JSON.stringify({generation_id:id}),expected='server-secret',method='POST'){
+ const calls=[];const req=new Request('https://example.test/dispatch',{method,headers:token?{'x-pcs-internal-secret':token}:{},...(method==='POST'?{body}:{})});
+ const deps={secret:async name=>{calls.push(['secret',name]);if(expected instanceof Error)throw expected;return expected;},process:async value=>{calls.push(['process',value]);return {skip:'missing'};},json:(body,status=200)=>({body,status})};return {req,deps,calls};
+}
+test('unauthenticated dispatch cannot read secrets, generations or contact a provider',async()=>{const h=harness(null);assert.equal((await generationDispatch(h.req,h.deps)).status,401);assert.deepEqual(h.calls,[]);});
+test('incorrect or unconfigured secret never processes a generation',async()=>{for(const expected of ['server-secret','',null]){const h=harness('wrong',undefined,expected);assert.equal((await generationDispatch(h.req,h.deps)).status,401);assert.equal(h.calls.length,1);}});
+test('secret lookup failure fails closed without exposing its message',async()=>{const h=harness('server-secret',undefined,new Error('private database detail'));const result=await generationDispatch(h.req,h.deps);assert.equal(result.status,503);assert.equal(JSON.stringify(result).includes('private'),false);assert.equal(h.calls.length,1);});
+test('authorized internal dispatch preserves exact generation identity and result',async()=>{const h=harness('server-secret');assert.deepEqual(await generationDispatch(h.req,h.deps),{status:200,body:{ok:true,skip:'missing'}});assert.deepEqual(h.calls,[['secret','internal_retry_secret'],['process',id]]);});
+test('invalid JSON, ids and large payloads stop before processing',async()=>{for(const body of ['{','{}',JSON.stringify({generation_id:42}),JSON.stringify({generation_id:'bad'}),JSON.stringify({generation_id:id,padding:'x'.repeat(4096)})]){const h=harness('server-secret',body);assert.ok([400,413].includes((await generationDispatch(h.req,h.deps)).status));assert.equal(h.calls.length,1);}});
+test('unsupported method has no side effects',async()=>{const h=harness('server-secret',undefined,undefined,'GET');assert.equal((await generationDispatch(h.req,h.deps)).status,404);assert.deepEqual(h.calls,[]);});
+test('processing errors are sanitized',async()=>{const h=harness('server-secret');h.deps.process=async()=>{throw new Error('provider key details');};const result=await generationDispatch(h.req,h.deps);assert.equal(result.status,500);assert.equal(JSON.stringify(result).includes('provider key'),false);});
+test('both deployed entrypoints use authorization wrapper and dispatcher sends its header',()=>{for(const name of ['pcs-generation-humanize-v10','pcs-generation-postprocess-v9']){const source=readFileSync(new URL('../supabase/functions/'+name+'/index.ts',import.meta.url),'utf8');assert.match(source,/Deno\.serve\(req=>generationDispatch\(req,\{secret:sec,process,json:J\}\)\)/);}const sql=readFileSync(new URL('../server/sql/pcs_generation_dispatch_auth.sql',import.meta.url),'utf8');assert.equal((sql.match(/'x-pcs-internal-secret',public\.pcs_secret_get\('internal_retry_secret'\)/g)||[]).length,2);});
