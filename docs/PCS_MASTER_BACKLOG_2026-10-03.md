@@ -99,7 +99,7 @@ UNVERIFIED означает, что пока нет достаточного д�
 | 59 | FAILURE RECOVERY | PARTIAL: действующая worker-очередь и проверка неизвестной доставки; безопасный ручной enqueue и полное восстановление открыты |
 | 60 | DATA QUALITY | PARTIAL: опубликован read-only контроль Telegram/телефонных совпадений, просроченных шагов и шагов без срока; identity resolution и объединение открыты |
 | 61 | SEARCH | PARTIAL: действующий поиск по клиентам, каталогу, заявкам, партнёрам и сообщениям, страницы и переходы; отдельные сделки/content/email и native UI E2E открыты |
-| 62 | AI KNOWLEDGE | UNVERIFIED |
+| 62 | AI KNOWLEDGE | PARTIAL: опубликованы список, поиск, редактор с revision CAS, точные цены, права использования и атомарный audit; полный AI workflow и production CRUD после входа открыты |
 | 63 | DOCUMENT KNOWLEDGE | UNVERIFIED |
 | 64 | AI AUTHORITY MODEL | Требование; выполнение не подтверждено |
 | 65 | TESTING | PARTIAL: тесты отдельных сценариев |
@@ -270,3 +270,11 @@ PR35 слит с явного разрешения пользователя: mai
 
 Персональный Neon Auth остаётся открытым: доступный Neon connector требует project_id, list_projects не предоставлен. В доступном Vercel проекте нет env; прежний PCS Operations не найден в списке. Ни адреса Auth, ни project_id пока нет в подтверждённых настройках. Личности/права/закрытые ключи не подставлялись. Нужен подтверждённый адрес существующего PCS Operations/Auth либо project_id для чтения конфигурации.
 Мобильная fixture проверена на360/390 px: document345/345 и375/375 (вертикальная полоса прокрутки), editor sheet328/328 и358/358, выступающих элементов нет. Редактор сохраняет точнуюцену, исходные статус/доступ; тестовый409 оставляет изменённый черновик и видимуюошибку. Снимок pcs-knowledge-conflict-1791259530162.jpg. Проверка не обращалась к реальнымзаписям. Дополнительная защита: поля заморожены во время сохранения, завершение запроса не закрывает заменённый sheet. 445 Node tests и booking-flow прошли. SQLQA дополнен ограничением одного id при чтении карточки.
+
+## Публикация базы знаний и защита AI dispatch: 06.10.2026
+
+PR38 опубликован: main 80c59a25f7311c195542fa84b24a4fbd0866ceef, Vercel production dpl_BkT925wd8Fa7dADEFPFSzFSKdT7v READY. pcs-kb v5 ACTIVE; оба RPC SECURITY INVOKER, EXECUTE только service_role. Чтение и PATCH без авторизации возвращают401. Production HTML и два JS модуля совпали с проверенными исходниками. Реальные записи в проверке не менялись; авторизованный CRUD и Telegram WebView E2E остаются открытыми.
+
+Проверка действующих AI источников выявила два публичных POST обработчика без проверки отправителя: pcs-generation-postprocess-v9 v2 и pcs-generation-humanize-v10 v6. Подготовлен общий fail-closed guard с существующим internal_retry_secret; вход проверяется до JSON/private reads/process. Ограничение тела4096 bytes, UUID validation, безопасные ошибки. Существующий DB trigger сохраняет условия и адреса, добавляет служебный заголовок. 453 Node tests прошли; temporary SQL fixture с rollback проверила оба маршрута и отсутствие вызова для неподходящих состояний. Реальные генерации, сообщения, AI вызовы не запускались.
+
+В действующем postprocess-v9 уже есть чтение pcs_knowledge_items с active/customer_safe/auto_answer_allowed и valid_until. Это подтверждение существующего фильтра по исходнику, а не полного AI E2E. Публикация guard и безопасный контроль401 ещё требуются.
