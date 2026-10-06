@@ -1,0 +1,26 @@
+<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PCS — тестовая проверка CRM</title><link rel="stylesheet" href="../style.css?v=20260901-v26">
+<link rel="stylesheet" href="../design-restore-v21.css?v=20260901-v26">
+<link rel="stylesheet" href="../dashboard-hero-v22.css?v=20260901-v27">
+<link rel="stylesheet" href="../dashboard-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../inbox-v25.css?v=20260903-v36">
+<link rel="stylesheet" href="../calendar-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../connections-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../status-v24.css?v=20260901-v26">
+<link rel="stylesheet" href="../finance-v26.css?v=20261004-finance-tasks1">
+<link rel="stylesheet" href="../production-v26.css?v=20260901-v26b">
+<link rel="stylesheet" href="../approved-pages-v1.css?v=20260901-v27">
+<link rel="stylesheet" href="../layout-fix-v27.css?v=20260902-v27b">
+<link rel="stylesheet" href="../approved-mobile-v28.css?v=20260902-v28a">
+<link rel="stylesheet" href="../screen-banners-v29.css?v=20260902-v29a">
+<link rel="stylesheet" href="../layout-spacing-v30.css?v=20260902-v30a">
+<link rel="stylesheet" href="../system-banners-v31.css?v=20261005-mobile2">
+<link rel="stylesheet" href="../interactions-v32.css?v=20260903-v34a">
+<link rel="stylesheet" href="../system-normalizer-v1.css?v=20260903-v36">
+<link rel="stylesheet" href="../operator-ux-v37.css?v=20261005-due2">
+<link rel="stylesheet" href="../design-system.css?v=20261003">
+<link rel="stylesheet" href="../contracts-ui.css?v=20261003-history1"></head><body><div id="root"><p>Тестовая проверка интерфейса — без доступа к базе.</p><button class="btn" id="open">Качество CRM</button><p id="selected"></p></div><div id="sheet" class="sheet"><div id="sheetbox" class="sheetbox"></div></div><script>
+window.closeSheet=()=>{document.getElementById('sheet').classList.remove('on');document.body.classList.remove('sheet-open')};
+window.openSheet=(title,body)=>{document.getElementById('sheetbox').innerHTML='<div class="sheethead"><button class="iconbtn" onclick="closeSheet()">×</button><h2>'+title+'</h2></div><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p>'+body;document.getElementById('sheet').classList.add('on');document.body.classList.add('sheet-open')};
+window.openClient=id=>document.getElementById('selected').textContent='Переход в карточку: '+id;
+window.call=async path=>{const u=new URL(path,location.origin),view=u.searchParams.get('view'),page=Number(u.searchParams.get('page'));return {view,page,truncated:page===0,rows:[{id:'demo-1',name:'Тестовый клиент — длинное имя для проверки переноса',username:'demo_test_long_username',phone:'+66 (812) 345-678',city:'Паттайя',match_key:['telegram','phone'].includes(view)?'123456789':null,duplicate_count:2,next_action:'Связаться с клиентом и уточнить даты поиска квартиры. '+ 'Длинное описание следующего шага. '.repeat(7)+' https://example.com/'+ 'longtext'.repeat(15),next_action_at:view==='missing_date'?null:'2026-10-01T00:00:00Z'}]}};
+</script><script src="../data-quality.js?v=20261006-quality1"></script><script>document.getElementById('open').onclick=()=>pcsDataQuality.open();pcsDataQuality.open()</script></body></html>

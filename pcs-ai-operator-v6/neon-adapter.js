@@ -105,6 +105,7 @@ async function uiRoute(path,init){
 
   if(path==='/login'&&method==='POST')return jsonResponse(await manager('login',{method:'POST',body:{password:body.password||''},auth:false}));
   if(path.startsWith('/search')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/search')return jsonResponse(await manager('search',{params:{q:u.searchParams.get('q')||'',scope:u.searchParams.get('scope')||'all',page:u.searchParams.get('page')||'0'}}));}
+  if(path.startsWith('/data-quality')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/data-quality')return jsonResponse(await manager('data-quality',{params:{view:u.searchParams.get('view')||'telegram',page:u.searchParams.get('page')||'0'}}));}
   if(path==='/session')return jsonResponse(await manager('session'));
   if(path==='/notification-read'&&method==='POST')return jsonResponse(await manager('notification-read',{method:'POST',body}));
   if(path.startsWith('/audit')&&method==='GET'){const u=new URL(path,'https://pcs.invalid');if(u.pathname==='/audit')return jsonResponse(await manager('audit',{params:{source:u.searchParams.get('source')||'crm',page:u.searchParams.get('page')||'0'}}));}
