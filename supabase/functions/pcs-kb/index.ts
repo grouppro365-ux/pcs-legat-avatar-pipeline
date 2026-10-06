@@ -1,4 +1,5 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import {knowledgeInput,KnowledgeError} from './knowledge-policy.mjs';
 const BASE=Deno.env.get('SUPABASE_URL')!;
 const KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const sb=createClient(BASE,KEY,{auth:{persistSession:false}});
@@ -71,7 +72,15 @@ Deno.serve(async req=>{
       }));
       return json(photos);
     }
-    if(req.method==='GET'){
+    if(req.method==='GET'&&r.length===1&&r[0]==='list'){
+      const u=new URL(req.url),page=u.searchParams.get('page')||'0',q=(u.searchParams.get('q')||'').trim(),view=u.searchParams.get('view')||'all';
+      if(!/^\d{1,5}$/.test(page)||Number(page)>5000||q.length>120||!['all','active','draft','outdated','disabled','expired','customer_safe','approval_only','internal_only'].includes(view))return json({error:'Некорректный фильтр базы знаний'},400);
+      const {data,error}=await sb.rpc('pcs_knowledge_list_v1',{p_page:Number(page),p_query:q,p_view:view});if(error)throw error;return json(data);
+    }
+    if(req.method==='GET'&&r.length===1&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r[0])){
+      const {data,error}=await sb.rpc('pcs_knowledge_list_v1',{p_id:r[0]});if(error)throw error;return data?.rows?.[0]?json(data.rows[0]):json({error:'Запись не найдена'},404);
+    }
+    if(req.method==='GET'&&r.length===0){
       const {data,error}=await sb.from('pcs_knowledge_items').select('*').order('updated_at',{ascending:false});
       if(error)throw error;return json(data||[]);
     }
@@ -82,23 +91,13 @@ Deno.serve(async req=>{
       if(!data)return json({error:'Запись уже удалена или не найдена'},404);
       return json({ok:true,id:data.id});
     }
-    if(req.method==='POST'){
-      const b=await req.json();
-      if(!b.title||!b.category||!b.description)return json({error:'Название, категория и описание обязательны'},400);
-      const vis=['customer_safe','approval_only','internal_only'].includes(b.visibility)?b.visibility:'customer_safe';
-      const auto=vis==='customer_safe'&&!!b.auto_answer_allowed;
-      const rec={title:b.title,category:b.category,description:b.description,city:b.city||null,price:b.price??null,currency:b.currency||null,conditions:b.conditions||null,restrictions:b.restrictions||null,source:b.source||null,visibility:vis,status:auto?'active':vis==='internal_only'?'disabled':'draft',auto_answer_allowed:auto,verified_at:b.verified_at||new Date().toISOString(),valid_until:b.valid_until||null,operator_comment:b.operator_comment||null,answer_guidance:b.answer_guidance||null};
-      const {data,error}=await sb.from('pcs_knowledge_items').insert(rec).select('*').single();if(error)throw error;return json(data,201);
-    }
-    if(req.method==='PATCH'&&r[0]){
-      const b=await req.json();const allowed=['title','category','description','city','price','currency','conditions','restrictions','source','valid_until','verified_at','operator_comment','answer_guidance'];const p:any={};for(const k of allowed)if(k in b)p[k]=b[k];
-      if('visibility'in b)p.visibility=['customer_safe','approval_only','internal_only'].includes(b.visibility)?b.visibility:'customer_safe';
-      if('auto_answer_allowed'in b)p.auto_answer_allowed=!!b.auto_answer_allowed;
-      const current=(await sb.from('pcs_knowledge_items').select('visibility,auto_answer_allowed,revision').eq('id',r[0]).maybeSingle()).data;
-      const vis=p.visibility??current?.visibility??'customer_safe';const auto=vis==='customer_safe'&&(p.auto_answer_allowed??current?.auto_answer_allowed??false);
-      p.auto_answer_allowed=auto;p.status=auto?'active':vis==='internal_only'?'disabled':'draft';p.revision=Number(current?.revision||1)+1;p.updated_at=new Date().toISOString();
-      const {data,error}=await sb.from('pcs_knowledge_items').update(p).eq('id',r[0]).select('*').single();if(error)throw error;return json(data);
+    if((req.method==='POST'&&r.length===0)||(req.method==='PATCH'&&r.length===1)){
+      const create=req.method==='POST';if(!create&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(r[0]))return json({error:'Некорректный идентификатор'},400);
+      const raw=await req.text();if(new TextEncoder().encode(raw).byteLength>65536)return json({error:'Запись слишком большая'},413);let b;try{b=JSON.parse(raw)}catch{return json({error:'Некорректный запрос'},400)}
+      const input=knowledgeInput(b,create),{data,error}=await sb.rpc('pcs_knowledge_save_v1',{p_id:create?input.id:r[0],p_expected_revision:input.expected_revision,p_record:input.record});
+      if(error?.code==='40001'||error?.code==='23505')return json({error:'Запись изменилась. Черновик сохранён в форме; откройте актуальную запись перед повторным сохранением.'},409);
+      if(error?.code==='P0002')return json({error:'Запись не найдена'},404);if(error)throw error;return json(data,create?201:200);
     }
     return json({error:'Маршрут не найден'},404);
-  }catch(e){return json({error:e instanceof Error?e.message:'Внутренняя ошибка'},500)}
+  }catch(e){if(e instanceof KnowledgeError)return json({error:e.message},e.status);console.error('pcs-kb',{name:e instanceof Error?e.name:'Error'});return json({error:'Не удалось выполнить действие с базой знаний. Повторите позже.'},500)}
 });

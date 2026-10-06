@@ -5,7 +5,7 @@ let ticket=0,results=[],state={q:'',scope:'all',page:0};
 const valid=id=>typeof id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(id);
 function open(q=''){
  ticket++;state={q:String(q).trim(),scope:'all',page:0};
- openSheet('Поиск',`<form id="pcsSearchForm"><label>Клиент, телефон, каталог, заявка, партнёр или текст сообщения<input id="pcsSearchQuery" minlength="2" maxlength="120" required value="${esc(state.q)}" placeholder="Минимум 2 символа"></label><label>Где искать<select id="pcsSearchScope">${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><button class="btn" type="submit">Найти</button></form><div id="pcsSearchResults" aria-live="polite"></div>`);
+ openSheet('Поиск',`<form id="pcsSearchForm"><div class="field"><label for="pcsSearchQuery">Клиент, телефон, каталог, заявка, партнёр или текст сообщения</label><input id="pcsSearchQuery" minlength="2" maxlength="120" required value="${esc(state.q)}" placeholder="Минимум 2 символа"></div><div class="field"><label for="pcsSearchScope">Где искать</label><select id="pcsSearchScope" data-pcs-localized>${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><button class="btn" type="submit">Найти</button></form><div id="pcsSearchResults" aria-live="polite"></div>`);
  document.getElementById('pcsSearchForm').addEventListener('submit',e=>{e.preventDefault();state={q:document.getElementById('pcsSearchQuery').value.trim(),scope:document.getElementById('pcsSearchScope').value,page:0};run()});
  if(state.q.length>=2)run();
 }
@@ -24,7 +24,8 @@ async function run(){
 }
 function select(result){
  if(!result)return;const {scope,row}=result;
- if((scope==='contacts'||scope==='messages')&&valid(scope==='contacts'?row.id:row.contact_id)){ticket++;closeSheet();openClient(scope==='contacts'?row.id:row.contact_id,false);return}
+ if((scope==='contacts'||scope==='messages')&&valid(scope==='contacts'?row.id:row.contact_id)){ticket++;closeSheet();openClient(scope==='contacts'?row.id:row.contact_id);return}
+ if(scope==='applications'&&valid(row.id)&&window.pcsApplications?.openDetail){ticket++;closeSheet();window.pcsApplications.openDetail(row.id);return}
  ticket++;
  const labels={public_id:'Номер',title:'Название / клиент',client_contact:'Контакт',city:'Город',category:'Категория',entity_type:'Тип',operational_status:'Статус заявки',availability_status:'Доступность',legal_name:'Юридическое название',status:'Статус'};
  openSheet(names[scope],Object.entries(labels).filter(([k])=>row[k]!=null).map(([k,v])=>`<p><strong>${esc(v)}:</strong> ${esc(row[k])}</p>`).join('')+`<button class="btn soft" id="pcsSearchBack">Вернуться к поиску</button>`+(scope==='catalog'&&valid(row.id)?'<button class="btn" id="pcsSearchCatalog">Открыть карточку каталога</button>':''));

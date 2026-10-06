@@ -1,0 +1,30 @@
+import {readFileSync} from 'node:fs';
+const functions=['pcs_knowledge_save','pcs_knowledge_list'].map(name=>readFileSync(new URL('../server/sql/'+name+'.sql',import.meta.url),'utf8').replace(/^revoke .*\n|^grant .*\n/gm,'').replaceAll('public.pcs_','pg_temp.pcs_')).join('\n');
+const sql=`begin;
+create temp table pcs_knowledge_items(like public.pcs_knowledge_items including all) on commit drop;
+create temp table pcs_audit_logs(like public.pcs_audit_logs including all) on commit drop;
+${functions}
+do $qa$ declare qa_id uuid:='10000000-0000-4000-8000-000000000001';r jsonb;b jsonb;begin
+b:=jsonb_build_object('title','QA Rule','category','car_rent','description','Literal %_ search','visibility','customer_safe','status','active','auto_answer_allowed',true,'price','900719925474099.123456','currency','THB');
+r:=pg_temp.pcs_knowledge_save_v1(qa_id,null,b);
+if r->>'price'<>'900719925474099.123456' or r->>'revision'<>'1' or r?'media' then raise exception 'create projection assertion';end if;
+r:=pg_temp.pcs_knowledge_save_v1(qa_id,null,b);
+if (select count(*) from pg_temp.pcs_knowledge_items)<>1 or (select count(*) from pg_temp.pcs_audit_logs)<>1 then raise exception 'create retry assertion';end if;
+r:=pg_temp.pcs_knowledge_save_v1(qa_id,1,b||jsonb_build_object('description','Updated %_ terms','visibility','internal_only','auto_answer_allowed',false));
+if r->>'revision'<>'2' or (r->>'auto_answer_allowed')::boolean then raise exception 'update assertion';end if;
+begin perform pg_temp.pcs_knowledge_save_v1(qa_id,1,b);raise exception 'stale accepted';exception when serialization_failure then null;end;
+alter table pg_temp.pcs_audit_logs add constraint qa_audit_failure check(action<>'knowledge_updated') not valid;
+begin perform pg_temp.pcs_knowledge_save_v1(qa_id,2,b);raise exception 'audit failure ignored';exception when check_violation then null;end;
+if (select revision from pg_temp.pcs_knowledge_items where pcs_knowledge_items.id=qa_id)<>2 then raise exception 'audit rollback assertion';end if;
+alter table pg_temp.pcs_audit_logs drop constraint qa_audit_failure;
+insert into pg_temp.pcs_knowledge_items(title,category,description,visibility,status,auto_answer_allowed,valid_until) values('Expired','general','Expired rule','customer_safe','active',true,now()-interval '1 hour'),('Ready','general','Ready rule','customer_safe','active',true,now()+interval '1 day');
+r:=pg_temp.pcs_knowledge_list_v1(0,'','all',qa_id);if jsonb_array_length(r->'rows')<>1 or r->'rows'->0->>'id'<>qa_id::text then raise exception 'detail scope assertion';end if;
+r:=pg_temp.pcs_knowledge_list_v1(0,'%_','all');if jsonb_array_length(r->'rows')<>1 or (r->'rows'->0->>'auto_eligible')::boolean then raise exception 'literal search assertion';end if;
+r:=pg_temp.pcs_knowledge_list_v1(0,'','expired');if jsonb_array_length(r->'rows')<>1 or (r->'rows'->0->>'auto_eligible')::boolean then raise exception 'expiry assertion';end if;
+insert into pg_temp.pcs_knowledge_items(title,category,description,status,visibility,auto_answer_allowed) select 'Batch '||n,'batch','Terms','draft','approval_only',false from generate_series(1,55)n;
+r:=pg_temp.pcs_knowledge_list_v1(0,'','draft');if jsonb_array_length(r->'rows')<>50 or (r->>'has_more')::boolean is not true then raise exception 'lookahead assertion';end if;
+r:=pg_temp.pcs_knowledge_list_v1(1,'','draft');if jsonb_array_length(r->'rows')<>5 or (r->>'has_more')::boolean then raise exception 'page two assertion';end if;
+begin perform pg_temp.pcs_knowledge_list_v1(-1,'','all');raise exception 'bad page accepted';exception when raise_exception then if sqlerrm<>'invalid_knowledge_filter' then raise;end if;end;
+end $qa$;
+rollback;`;
+process.stdout.write(JSON.stringify({query:sql}));

@@ -4,13 +4,14 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse}={}){
+function adapterHarness({sendResponse,knowledgeResponse}={}){
   const item={id:itemId,entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
     revision:{ui:{description:'Existing description',category:'car_rent',conditions:'Insurance retained',source:'PCS'}}};
   const calls=[];const media=[{id:'photo-a',public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}];
   const window={fetch:async(url,init={})=>{
+    if(new URL(url).pathname.includes('/functions/v1/pcs-kb')){calls.push({knowledge:new URL(url).pathname,params:Object.fromEntries(new URL(url).searchParams),method:init.method,body:init.body,authorization:init.headers?.authorization});return knowledgeResponse?.()||Response.json({rows:[{id:itemId}],page:0});}
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,params:Object.fromEntries(new URL(url).searchParams),view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
@@ -45,6 +46,14 @@ function adapterHarness({sendResponse}={}){
 test('quality route forwards filters and the existing admin session',async()=>{
  const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/data-quality?view=phone&page=2');
  assert.equal(r.status,200);assert.deepEqual(await r.json(),{rows:[],view:'phone',page:2});assert.equal(h.calls[0].op,'data-quality');assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
+test('knowledge routes read the existing source and forward current admin session',async()=>{
+ const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/knowledge?page=2&q=%25_&view=active');assert.equal(r.status,200);assert.equal(h.calls[0].knowledge,'/functions/v1/pcs-kb/list');assert.equal(h.calls[0].params.q,'%_');assert.equal(h.calls[0].params.page,'2');assert.equal(h.calls[0].authorization,'Bearer fixture');
+ await h.window.fetch('https://pcs-stable.local/pcs-ui-api/knowledge/'+itemId+'/media');assert.equal(h.calls[1].knowledge,'/functions/v1/pcs-kb/'+itemId+'/media');
+});
+test('knowledge errors remain errors and invalid write routes do not reach backend',async()=>{
+ const h=adapterHarness({knowledgeResponse:()=>Response.json({error:'Unavailable'},{status:503})});const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/knowledge');assert.equal(r.status,503);assert.equal((await r.json()).error,'Unavailable');
+ const bad=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/knowledge/'+itemId,{method:'DELETE'});assert.equal(bad.status,405);assert.equal(h.calls.length,1);
 });
 test('catalog text edits update the existing id and preserve all commercial terms',async()=>{
   const h=adapterHarness();

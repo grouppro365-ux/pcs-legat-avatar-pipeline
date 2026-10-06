@@ -2,17 +2,18 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {knowledgeInput,KnowledgeError} from '../../supabase/functions/pcs-kb/knowledge-policy.mjs';
 
 const id='11111111-1111-4111-8111-111111111111';
-function backendHarness(media=[]){
+function backendHarness(media=[],options={}){
   const row={id,title:'Existing',revision:1,media};
-  const writes=[],removed=[];
+  const writes=[],removed=[],rpcCalls=[];
   const query={select(){return this},eq(){return this},gt(){return this},order(){return Promise.resolve({data:[row]})},maybeSingle(){return Promise.resolve({data:row})},single(){return Promise.resolve({data:row})},update(p){writes.push(p);Object.assign(row,p);return this}};
   const bucket={createSignedUrl:async key=>({data:{signedUrl:'https://private.example/'+key}}),upload:async()=>({error:null}),remove:async keys=>{removed.push(...keys);return {error:null}}};
   let handler;
-  const code=readFileSync(new URL('../../supabase/functions/pcs-kb/index.ts',import.meta.url),'utf8').replace(/^import .*\n/,'').replace(/\)!/g,')').replace(/:(?:any|string|Request)\b/g,'');
-  vm.runInNewContext(code,{Deno:{env:{get:()=> 'https://backend.example'},serve:h=>handler=h},createClient:()=>({from:()=>query,storage:{from:()=>bucket}}),fetch:async()=>new Response('{}'),Request,Response,URL,crypto,TextEncoder,Uint8Array,atob,console});
-  return {handler,writes,removed,row};
+  const code=readFileSync(new URL('../../supabase/functions/pcs-kb/index.ts',import.meta.url),'utf8').replace(/^import .*\n/gm,'').replace(/\)!/g,')').replace(/:(?:any|string|Request)\b/g,'');
+  vm.runInNewContext(code,{knowledgeInput,KnowledgeError,Deno:{env:{get:()=> 'https://backend.example'},serve:h=>handler=h},createClient:()=>({from:()=>query,storage:{from:()=>bucket},rpc:async(name,args)=>{rpcCalls.push({name,args});return options.rpc?options.rpc(name,args):{data:{rows:[]}}}}),fetch:async()=>new Response('{}'),Request,Response,URL,crypto,TextEncoder,Uint8Array,atob,console});
+  return {handler,writes,removed,row,rpcCalls};
 }
 
 test('knowledge photos are retrieved only through the authenticated record route with signed URLs',async()=>{
@@ -43,4 +44,12 @@ test('batch deletion validates every photo belongs to the record before deleting
   assert.equal((await remove(['photo-a'])).status,200);
   assert.deepEqual(Array.from(h.row.media,p=>p.id),['photo-b']);
   assert.deepEqual(h.removed,[id+'/a.png']);
+});
+test('knowledge list requires authentication and rejects invalid filters before querying',async()=>{
+ const h=backendHarness();assert.equal((await h.handler(new Request('https://backend.example/pcs-kb/list'))).status,401);
+ for(const query of ['page=-1','page=5001','view=wrong'])assert.equal((await h.handler(new Request('https://backend.example/pcs-kb/list?'+query,{headers:{authorization:'Bearer fixture'}}))).status,400);
+ assert.equal(h.rpcCalls.length,0);const r=await h.handler(new Request('https://backend.example/pcs-kb/list?page=2&view=draft&q=%25_',{headers:{authorization:'Bearer fixture'}}));assert.equal(r.status,200);assert.equal(h.rpcCalls[0].name,'pcs_knowledge_list_v1');assert.equal(h.rpcCalls[0].args.p_query,'%_');assert.equal(h.rpcCalls[0].args.p_page,2);
+});
+test('knowledge saves use CAS RPC and never mutate through direct update',async()=>{
+ const h=backendHarness([],{rpc:()=>({error:{code:'40001'}})}),body={title:'Rule',category:'car_rent',description:'Terms',status:'draft',visibility:'approval_only',auto_answer_allowed:false,price:'123456.123456',currency:'THB',expected_revision:3};const r=await h.handler(new Request('https://backend.example/pcs-kb/'+id,{method:'PATCH',headers:{authorization:'Bearer fixture'},body:JSON.stringify(body)}));assert.equal(r.status,409);assert.equal(h.writes.length,0);assert.equal(h.rpcCalls[0].name,'pcs_knowledge_save_v1');assert.equal(h.rpcCalls[0].args.p_expected_revision,3);assert.equal(h.rpcCalls[0].args.p_record.price,'123456.123456');
 });

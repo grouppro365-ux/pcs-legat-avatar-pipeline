@@ -1,0 +1,26 @@
+<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PCS — тестовая база знаний</title><link rel="stylesheet" href="../style.css?v=20260901-v26">
+<link rel="stylesheet" href="../design-restore-v21.css?v=20260901-v26">
+<link rel="stylesheet" href="../dashboard-hero-v22.css?v=20260901-v27">
+<link rel="stylesheet" href="../dashboard-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../inbox-v25.css?v=20260903-v36">
+<link rel="stylesheet" href="../calendar-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../connections-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../status-v24.css?v=20260901-v26">
+<link rel="stylesheet" href="../finance-v26.css?v=20261004-finance-tasks1">
+<link rel="stylesheet" href="../production-v26.css?v=20260901-v26b">
+<link rel="stylesheet" href="../approved-pages-v1.css?v=20260901-v27">
+<link rel="stylesheet" href="../layout-fix-v27.css?v=20260902-v27b">
+<link rel="stylesheet" href="../approved-mobile-v28.css?v=20260902-v28a">
+<link rel="stylesheet" href="../screen-banners-v29.css?v=20260902-v29a">
+<link rel="stylesheet" href="../layout-spacing-v30.css?v=20260902-v30a">
+<link rel="stylesheet" href="../system-banners-v31.css?v=20261005-mobile2">
+<link rel="stylesheet" href="../interactions-v32.css?v=20260903-v34a">
+<link rel="stylesheet" href="../system-normalizer-v1.css?v=20260903-v36">
+<link rel="stylesheet" href="../operator-ux-v37.css?v=20261005-due2">
+<link rel="stylesheet" href="../design-system.css?v=20261003">
+<link rel="stylesheet" href="../contracts-ui.css?v=20261003-history1"></head><body><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p><div id="root"><main id="main"></main></div><div id="sheet" class="sheet"><div id="sheetbox" class="sheetbox"></div></div><script>
+window.closeSheet=()=>{document.getElementById('sheet').classList.remove('on');document.body.classList.remove('sheet-open')};
+window.openSheet=(title,body)=>{document.getElementById('sheetbox').innerHTML='<div class="sheethead"><button class="iconbtn" onclick="closeSheet()">×</button><h2>'+title+'</h2></div><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p>'+body;document.getElementById('sheet').classList.add('on');document.body.classList.add('sheet-open')};
+window.esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));window.toast=console.log;
+window.call=async(path,opt={})=>{if(opt.method){const e=Error('Тестовый конфликт версии. Черновик остаётся в форме.');e.status=409;throw e;}const u=new URL(path,location.origin),page=Number(u.searchParams.get('page')),q=u.searchParams.get('q'),view=u.searchParams.get('view');return {page,q,view,has_more:page===0,rows:[{id:'11111111-1111-4111-8111-111111111111',revision:3,title:'Тестовое правило аренды — проверка длинного заголовка',description:'Тестовая подтверждённая информация для проверки переноса текста. '.repeat(4)+' https://example.com/'+ 'longtext'.repeat(15),category:'car_rent',city:'Паттайя',price:'900719925474099.123456',currency:'THB',status:'outdated',visibility:'customer_safe',auto_answer_allowed:false,auto_eligible:false,expired:true,source:'Тестовые данные для проверки интерфейса',valid_until:'2026-10-01T23:59:59Z',conditions:'Тестовые условия',restrictions:'Тестовые ограничения'}]}};
+</script><script src="../knowledge-editor.js?v=20261006-knowledge1"></script><script src="../knowledge-workspace.js?v=20261006-knowledge1"></script><script>pcsKnowledge26()</script></body></html>
