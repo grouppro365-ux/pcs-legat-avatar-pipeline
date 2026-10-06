@@ -1,0 +1,26 @@
+<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PCS — тестовые источники Telegram</title><link rel="stylesheet" href="../style.css?v=20260901-v26">
+<link rel="stylesheet" href="../design-restore-v21.css?v=20260901-v26">
+<link rel="stylesheet" href="../dashboard-hero-v22.css?v=20260901-v27">
+<link rel="stylesheet" href="../dashboard-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../inbox-v25.css?v=20260903-v36">
+<link rel="stylesheet" href="../calendar-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../connections-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../status-v24.css?v=20260901-v26">
+<link rel="stylesheet" href="../finance-v26.css?v=20261004-finance-tasks1">
+<link rel="stylesheet" href="../production-v26.css?v=20260901-v26b">
+<link rel="stylesheet" href="../approved-pages-v1.css?v=20260901-v27">
+<link rel="stylesheet" href="../layout-fix-v27.css?v=20260902-v27b">
+<link rel="stylesheet" href="../approved-mobile-v28.css?v=20260902-v28a">
+<link rel="stylesheet" href="../screen-banners-v29.css?v=20260902-v29a">
+<link rel="stylesheet" href="../layout-spacing-v30.css?v=20260902-v30a">
+<link rel="stylesheet" href="../system-banners-v31.css?v=20261005-mobile2">
+<link rel="stylesheet" href="../interactions-v32.css?v=20260903-v34a">
+<link rel="stylesheet" href="../system-normalizer-v1.css?v=20260903-v36">
+<link rel="stylesheet" href="../operator-ux-v37.css?v=20261005-due2">
+<link rel="stylesheet" href="../design-system.css?v=20261003">
+<link rel="stylesheet" href="../contracts-ui.css?v=20261003-history1"><link rel="stylesheet" href="../prospect-source-controls.css?v=20261006-source1"></head><body><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p><div id="root"><main id="main"></main></div><div id="sheet" class="sheet"><div id="sheetbox" class="sheetbox"></div></div><script>
+window.PCS={page:'prospecting'};window.toast=console.log;
+window.closeSheet=()=>{document.getElementById('sheet').classList.remove('on');document.body.classList.remove('sheet-open')};
+window.openSheet=(title,body)=>{document.getElementById('sheetbox').innerHTML='<div class="sheethead"><button class="iconbtn" onclick="closeSheet()">×</button><h2>'+title+'</h2></div><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p>'+body;document.getElementById('sheet').classList.add('on');document.body.classList.add('sheet-open')};
+window.opsCall=async(path,opt={})=>{if(opt.method){const e=Error('Тестовый конфликт версии. Черновик остаётся в форме.');e.status=409;throw e;}const u=new URL(path,location.origin),view=u.searchParams.get('view');return {view,page:Number(u.searchParams.get('page')),enabled:true,version:1,truncated:false,summary:{sources:2,sources_read:1,qualified:0,review:0,rejected:0},rows:view==='sources'?[{id:'11111111-1111-4111-8111-111111111111',username:'test_competitor',title:'Тестовый источник конкурента — проверка длинного названия и правил сообщества',city:'Паттайя',topic:'competitor',enabled:true,access_status:'unavailable',messages_read:'0',last_error:'public_history_unavailable',rules:'Тестовые правила сообщества для оператора. '+ 'Длинный текст для проверки переноса. '.repeat(4),edit_version:'2026-10-06 15:00:00.123456+00'},{id:'22222222-2222-4222-8222-222222222222',username:'test_community',title:'Тестовое сообщество — источник приостановлен',enabled:false,topic:'community',access_status:'public_readable',messages_read:'25',edit_version:'2026-10-06 15:00:00.123456+00'}]:[]}};
+</script><script src="../prospecting.js?v=20261006-source1"></script><script>pcsProspecting().then(()=>{const view=document.querySelector('[data-prospect-view]');view.value='sources';view.dispatchEvent(new Event('change'))})</script></body></html>
