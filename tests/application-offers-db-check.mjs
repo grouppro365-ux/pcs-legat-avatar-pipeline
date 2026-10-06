@@ -1,0 +1,21 @@
+import {applicationOffersQuery} from '../server/supabase/pcs-manager-live2/application-offers.mjs';
+const id='90000000-0000-4000-8000-000000000037',offer='90000000-0000-4000-8000-000000000038',catalog='90000000-0000-4000-8000-000000000039',partner='90000000-0000-4000-8000-000000000040';
+const query=source=>applicationOffersQuery(id,source,'0').query.replaceAll('$1',"'"+id+"'::uuid").replaceAll('$2','0');
+const sql=`do $qa$ declare v_rows jsonb;begin
+create temp table applications(like public.applications including defaults including constraints) on commit drop;
+create temp table pcs_partner_offers(like public.pcs_partner_offers including defaults including constraints) on commit drop;
+create temp table quote_snapshots(like public.quote_snapshots including defaults including constraints) on commit drop;
+create temp table catalog_items(id uuid,title text) on commit drop;
+create temp table partners(id uuid,public_name text) on commit drop;
+insert into partners values('${partner}','QA Partner');
+insert into applications(id,public_id,category,operational_status,selected_partner_offer_id) values('${id}','APP-QA-OFFERS','general','NEW','${offer}');
+insert into catalog_items values('${catalog}','QA Vehicle');
+insert into pcs_partner_offers(id,application_id,partner_id,catalog_item_id,status,client_price_thb,deposit_thb,currency_code,terms,partner_internal_note,expires_at) values('${offer}','${id}','${partner}','${catalog}','APPROVED',660.25,10000.05,'THB','QA terms','Must not leak',now()-interval '1 hour');
+insert into pcs_partner_offers(id,application_id,partner_id,status,client_price_thb,deposit_thb,currency_code) values(gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'SUBMITTED',999,0,'THB');
+select jsonb_agg(t) into v_rows from (${query('partner')}) t;
+if jsonb_array_length(v_rows)<>1 or v_rows->0->>'partner_name'<>'QA Partner' or v_rows->0->>'client_price_thb'<>'660.25' or v_rows->0->>'deposit_thb'<>'10000.05' or (v_rows->0->>'selected_in_application')::boolean is not true or (v_rows->0->>'deadline_passed')::boolean is not true or v_rows::text like '%Must not leak%' then raise exception 'partner projection assertion';end if;
+insert into quote_snapshots(application_id,version,currency,client_total,deposit,payment_recipient) values('${id}',1,'THB',123456.25,123.05,'PARTNER'),('${id}',2,'THB',123456.75,124.05,'PARTNER');
+select jsonb_agg(t) into v_rows from (${query('quotes')}) t;
+if jsonb_array_length(v_rows)<>2 or v_rows->0->>'version'<>'2' or v_rows->0->>'client_total'<>'123456.75' or v_rows->0->>'payment_recipient'<>'PARTNER' then raise exception 'quote projection assertion';end if;
+end $qa$;`;
+process.stdout.write(JSON.stringify({query:sql}));
