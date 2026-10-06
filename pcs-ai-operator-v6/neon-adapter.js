@@ -10,6 +10,7 @@
 const MANAGER='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-manager-live2';
 const SETTINGS='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-admin-config-v15';
 const CATALOG_ADMIN='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-catalog-admin';
+const KNOWLEDGE='https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-kb';
 const nativeFetch=window.fetch.bind(window);
 const jsonResponse=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json;charset=utf-8','cache-control':'no-store'}});
 const parseBody=async init=>{if(!init?.body)return{};if(typeof init.body==='string'){try{return JSON.parse(init.body)}catch{return{}}}try{return JSON.parse(await new Response(init.body).text())}catch{return{}}};
@@ -47,6 +48,15 @@ async function settingsApi(path,{method='GET',body=null}={}){
   try{d=text?JSON.parse(text):{}}catch{d={error:text||`HTTP ${r.status}`}}
   if(!r.ok)throw new Error(d?.error||d?.message||`HTTP ${r.status}`);
   return d;
+}
+
+async function knowledgeRoute(path,init={}){
+ const u=new URL(path||'/','https://pcs.invalid'),method=String(init.method||'GET').toUpperCase(),id='[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
+ const root=u.pathname==='/',record=new RegExp('^/'+id+'$','i').test(u.pathname),media=new RegExp('^/'+id+'/media$','i').test(u.pathname);
+ if(!((root&&['GET','POST'].includes(method))||(record&&['GET','PATCH'].includes(method))||(media&&['GET','POST','DELETE'].includes(method))))return appError('Маршрут базы знаний не поддерживается.',405);
+ const target=new URL(KNOWLEDGE+(root?'':u.pathname));if(root&&method==='GET'&&u.search){target.pathname+='/list';for(const k of ['page','q','view'])if(u.searchParams.has(k))target.searchParams.set(k,u.searchParams.get(k));}
+ const headers={accept:'application/json'};if(init.body!=null)headers['content-type']='application/json';if(currentToken())headers.authorization='Bearer '+currentToken();
+ return nativeFetch(target.toString(),{method,headers,body:init.body,cache:'no-store'});
 }
 
 const normalizeCatalog=x=>({
@@ -208,8 +218,7 @@ async function uiRoute(path,init){
     return jsonResponse(await manager('approval-action',{method:'POST',body:{id:approvalRoute[1],action:approvalRoute[2],expected_version:body.expected_version,...(approvalRoute[2]==='send'?{text:body.text}:{})}}));
   }
   if(/^\/approvals\//.test(path))return appError('Согласование не найдено.',404);
-  if(path==='/knowledge'&&method==='GET')return jsonResponse([]);
-  if(path==='/knowledge'&&method!=='GET')return appError('Редактор базы знаний пока доступен только в основной панели.',409);
+  if(path==='/knowledge'||path.startsWith('/knowledge/')||path.startsWith('/knowledge?'))return knowledgeRoute(path.slice('/knowledge'.length)||'/',init);
 
   if(path==='/status'&&method==='GET'){
     const s=await manager('status');
@@ -389,7 +398,7 @@ window.fetch=async function(input,init={}){
     if(r.k==='ops')return await opsRoute(r.path,init);
     if(r.k==='catalogAdmin')return await catalogAdminRoute(init);
     if(r.k==='errors')return await errorsRoute(r.path,init);
-    if(r.k==='knowledge'&&String(init?.method||'GET').toUpperCase()==='GET')return jsonResponse([]);
+    if(r.k==='knowledge')return await knowledgeRoute(r.path,init);
     return appError(`${r.k}: этот модуль ещё не подключён к стабильному Mini App`,410);
   }catch(e){
     console.error('[PCS backend adapter]',r.k,r.path,e);
@@ -397,4 +406,3 @@ window.fetch=async function(input,init={}){
   }
 };
 })();
-
