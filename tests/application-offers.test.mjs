@@ -5,6 +5,7 @@ import {applicationOffersQuery,readApplicationOffers} from '../server/supabase/p
 const id='11111111-1111-4111-8111-111111111111';
 test('offer and quote pages bind application identity and omit internal financial/contact payloads',async()=>{
  for(const source of ['partner','quotes']){const x=applicationOffersQuery(id,source,'2');assert.deepEqual(x.params,[id,100]);assert.match(x.query,/application_id=\$1/);assert.match(x.query,/limit 51 offset \$2/);assert.doesNotMatch(x.query,/select \*|partner_internal_note|commercial_snapshot|internal_breakdown|partner_breakdown|client_contact|public_snapshot/);
+ if(source==='partner'){assert.match(x.query,/p.public_name partner_name/);assert.match(x.query,/left join partners p on p.id=o.partner_id/);assert.doesNotMatch(x.query,/legal_name|owner_user_id/);}
  let calls=0;const d=await readApplicationOffers({query:async()=>++calls===1?[{id,public_id:'APP-QA'}]:Array.from({length:51},(_,i)=>({id:String(i)}))},id,source,'2');assert.equal(d.rows.length,50);assert.equal(d.truncated,true);assert.equal(d.source,source);assert.equal(d.page,2);}
 });
 test('invalid filters and missing application are rejected before offer read',async()=>{
