@@ -14,6 +14,7 @@ function adapterHarness({sendResponse}={}){
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,params:Object.fromEntries(new URL(url).searchParams),view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
+    if(op==='data-quality')return Response.json({rows:[],view:new URL(url).searchParams.get('view'),page:Number(new URL(url).searchParams.get('page'))});
     if(op==='prospecting')return Response.json({rows:[],view:new URL(url).searchParams.get('view')});
     if(op==='prospecting-source')return Response.json({ok:true});
     if(op==='prospecting-scan')return Response.json({ok:true,outreach_sent:0});
@@ -41,6 +42,10 @@ function adapterHarness({sendResponse}={}){
   return {window,item,calls,media};
 }
 
+test('quality route forwards filters and the existing admin session',async()=>{
+ const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/data-quality?view=phone&page=2');
+ assert.equal(r.status,200);assert.deepEqual(await r.json(),{rows:[],view:'phone',page:2});assert.equal(h.calls[0].op,'data-quality');assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
 test('catalog text edits update the existing id and preserve all commercial terms',async()=>{
   const h=adapterHarness();
   const response=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId,
