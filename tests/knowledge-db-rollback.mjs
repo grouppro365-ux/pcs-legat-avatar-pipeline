@@ -18,6 +18,7 @@ begin perform pg_temp.pcs_knowledge_save_v1(qa_id,2,b);raise exception 'audit fa
 if (select revision from pg_temp.pcs_knowledge_items where pcs_knowledge_items.id=qa_id)<>2 then raise exception 'audit rollback assertion';end if;
 alter table pg_temp.pcs_audit_logs drop constraint qa_audit_failure;
 insert into pg_temp.pcs_knowledge_items(title,category,description,visibility,status,auto_answer_allowed,valid_until) values('Expired','general','Expired rule','customer_safe','active',true,now()-interval '1 hour'),('Ready','general','Ready rule','customer_safe','active',true,now()+interval '1 day');
+r:=pg_temp.pcs_knowledge_list_v1(0,'','all',qa_id);if jsonb_array_length(r->'rows')<>1 or r->'rows'->0->>'id'<>qa_id::text then raise exception 'detail scope assertion';end if;
 r:=pg_temp.pcs_knowledge_list_v1(0,'%_','all');if jsonb_array_length(r->'rows')<>1 or (r->'rows'->0->>'auto_eligible')::boolean then raise exception 'literal search assertion';end if;
 r:=pg_temp.pcs_knowledge_list_v1(0,'','expired');if jsonb_array_length(r->'rows')<>1 or (r->'rows'->0->>'auto_eligible')::boolean then raise exception 'expiry assertion';end if;
 insert into pg_temp.pcs_knowledge_items(title,category,description,status,visibility,auto_answer_allowed) select 'Batch '||n,'batch','Terms','draft','approval_only',false from generate_series(1,55)n;
