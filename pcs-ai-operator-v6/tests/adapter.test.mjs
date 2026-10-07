@@ -4,11 +4,12 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse,knowledgeResponse}={}){
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave}={}){
   const item={id:itemId,entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
     revision:{ui:{description:'Existing description',category:'car_rent',conditions:'Insurance retained',source:'PCS'}}};
+  if(catalogRevision!==undefined)item.revision=catalogRevision;
   const calls=[];const media=[{id:'photo-a',public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}];
   const window={fetch:async(url,init={})=>{
     if(new URL(url).pathname.includes('/functions/v1/pcs-kb')){calls.push({knowledge:new URL(url).pathname,params:Object.fromEntries(new URL(url).searchParams),method:init.method,body:init.body,authorization:init.headers?.authorization});return knowledgeResponse?.()||Response.json({rows:[{id:itemId}],page:0});}
@@ -35,6 +36,7 @@ function adapterHarness({sendResponse,knowledgeResponse}={}){
     if(op==='services')return new Response(JSON.stringify([{...item,entity_type:'SERVICE'}]));
     if(op==='catalog-save'){
       Object.assign(item,body);item.revision={ui:{description:body.description,category:body.category,conditions:body.conditions,source:body.source}};
+      afterCatalogSave?.(item);
       return new Response(JSON.stringify({ok:true,id:itemId}));
     }
     return new Response(JSON.stringify({error:'Unexpected operation '+op}),{status:404});
@@ -175,4 +177,31 @@ test('application-offer adapter keeps scoped identity, source and page with admi
  const calls=[],window={fetch:async(url,init)=>{calls.push({url:new URL(url),init});return Response.json({rows:[]})}};
  vm.runInNewContext(readFileSync(new URL('../neon-adapter.js',import.meta.url),'utf8'),{window,URL,Response,localStorage:{pcsToken:'fixture'},console:{error(){}}});
  await window.fetch('https://pcs-stable.local/pcs-ui-api/application-offers/'+itemId+'?source=quotes&page=2');const r=calls[0];assert.equal(r.url.searchParams.get('op'),'application-offers');assert.equal(r.url.searchParams.get('id'),itemId);assert.equal(r.url.searchParams.get('source'),'quotes');assert.equal(r.url.searchParams.get('page'),'2');assert.equal(r.init.headers.authorization,'Bearer fixture');
+});
+
+const savePrice=h=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'pricing',id:itemId,base_price:750,deposit_thb:12000})});
+test('changing catalog price retains the nested canonical description, category, conditions and source',async()=>{
+ const h=adapterHarness(),response=await savePrice(h);assert.equal(response.status,200);
+ const saved=h.calls.find(x=>x.op==='catalog-save').body;
+ assert.deepEqual([saved.description,saved.category,saved.conditions,saved.source],['Existing description','car_rent','Insurance retained','PCS']);
+ assert.equal(saved.client_price_thb,750);assert.equal(saved.deposit_thb,12000);assert.equal(saved.internal_net_thb,520);
+ assert.equal(h.calls.filter(x=>x.op==='catalog-detail').length,2);
+});
+test('catalog pricing retains legacy fields separately and respects intentional empty current values',async()=>{
+ for(const revision of [{legacy:{description:'Old text',category:'car_rent',conditions:'Old conditions',source:'Owner'}},{ui:{description:''},legacy:{description:'Old text',category:'car_rent',conditions:'Old conditions'},legacy_extra:{source:'Owner'}}]){
+  const h=adapterHarness({catalogRevision:revision}),response=await savePrice(h);assert.equal(response.status,200);
+  const saved=h.calls.find(x=>x.op==='catalog-save').body;
+  assert.equal(saved.description,revision.ui?'':'Old text');assert.equal(saved.category,'car_rent');assert.equal(saved.conditions,'Old conditions');assert.equal(saved.source,'Owner');
+ }
+});
+test('invalid revision text and mismatched item cannot silently overwrite catalog data',async()=>{
+ for(const revision of [null,'bad',{ui:{description:{text:'bad'}}},{ui:[]}]){
+  const h=adapterHarness({catalogRevision:revision});assert.equal((await savePrice(h)).status,503);assert.ok(!h.calls.some(x=>x.op==='catalog-save'));
+ }
+ const h=adapterHarness();h.item.id='another';assert.equal((await savePrice(h)).status,503);assert.ok(!h.calls.some(x=>x.op==='catalog-save'));
+});
+test('catalog pricing reports lost revision fields instead of confirming success',async()=>{
+ const h=adapterHarness({afterCatalogSave:item=>{item.revision.ui.conditions='';}});
+ const response=await savePrice(h);assert.equal(response.status,503);assert.match((await response.json()).error,/сохранность текста/);
+ assert.equal(h.calls.filter(x=>x.op==='catalog-save').length,1);
 });

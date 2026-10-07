@@ -190,7 +190,7 @@ async function uiRoute(path,init){
     const detail=await manager('catalog-detail',{id});
     const item=detail.item;
     if(!item||String(item.id)!==id)return appError('Запись не найдена',404);
-    const revision=item.revision?.ui||item.revision?.legacy||item.revision?.legacy_extra||{};
+    const revision=catalogRevisionFields(item);
     const payload={id,entity_type:item.entity_type,title:item.title,city:item.city,
       publication_status:item.publication_status,moderation_status:item.moderation_status,
       availability_status:item.availability_status,client_price_thb:item.client_price_thb,
@@ -338,6 +338,25 @@ async function catalogAdminProxy(body){
   return data;
 }
 
+function catalogRevisionFields(item){
+  const record=item?.revision;
+  if(!record||typeof record!=='object'||Array.isArray(record))throw new Error('Некорректная версия карточки. Обновите каталог.');
+  const fields={};
+  for(const key of ['description','category','conditions','source']){
+    let value='';
+    for(const branch of ['ui','legacy','legacy_extra']){
+      const data=record?.[branch];
+      if(data!==undefined&&data!==null&&(typeof data!=='object'||Array.isArray(data)))throw new Error('Некорректная версия карточки. Обновите каталог.');
+      if(data?.[key]!==undefined&&data[key]!==null){
+        if(typeof data[key]!=='string')throw new Error('Некорректный текст карточки. Обновите каталог.');
+        value=data[key];break;
+      }
+    }
+    fields[key]=value;
+  }
+  return fields;
+}
+
 async function saveCatalogPricing(body){
   const id=String(body.id||'');
   const price=Number(body.base_price);
@@ -349,7 +368,8 @@ async function saveCatalogPricing(body){
   const hasDeposit=body.deposit_thb!==undefined&&body.deposit_thb!==null&&body.deposit_thb!=='';
   const deposit=hasDeposit?Number(body.deposit_thb):Number(item.deposit_thb??0);
   if(!Number.isFinite(deposit)||deposit<0)throw new Error('Укажите корректный депозит');
-  const revision=detail.revision?.ui||detail.revision?.legacy||detail.revision?.legacy_extra||{};
+  if(String(item.id)!==id)throw new Error('Сервер вернул другую карточку. Обновите каталог.');
+  const revision=catalogRevisionFields(item);
   const saved=await manager('catalog-save',{method:'POST',body:{
     id,
     entity_type:item.entity_type,
@@ -368,6 +388,8 @@ async function saveCatalogPricing(body){
   }});
   const verified=await manager('catalog-detail',{id});
   if(Number(verified.item?.client_price_thb)!==price||Number(verified.item?.deposit_thb)!==deposit)throw new Error('Сервер не подтвердил сохранение цены и депозита');
+  const savedRevision=catalogRevisionFields(verified.item);
+  if(String(verified.item?.id)!==id||Object.keys(revision).some(key=>savedRevision[key]!==revision[key]))throw new Error('Цена сохранена, но сервер не подтвердил сохранность текста карточки. Обновите каталог.');
   return {ok:true,item:{...saved.item,...verified.item,base_price:price,price,deposit:deposit,deposit_thb:deposit}};
 }
 
