@@ -150,6 +150,13 @@ async function uiRoute(path,init){
   if(/^\/crm\/[^/]+\/selected-media$/.test(path))return appError('Отправка выбранного медиа ещё не подключена к стабильному Mini App.',409);
   if(/^\/crm\/[^/]+\/(tasks|complete-task|action)/.test(path))return appError('Изменение CRM из этого экрана пока ограничено безопасным режимом.',409);
 
+  if(path==='/catalog'&&method==='POST'){
+    const allowed=['request_id','title','city','entity_type','category','description','conditions','source','client_price_thb','deposit_thb'];
+    if(Object.keys(body).some(k=>!allowed.includes(k))||typeof body.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.request_id))return appError('Некорректный черновик карточки',400);
+    const receipt=await manager('catalog-save',{method:'POST',body});
+    if(!receipt?.ok||String(receipt.id).toLowerCase()!==body.request_id.toLowerCase()||receipt.version!==1||typeof receipt.public_id!=='string')return appError('Сервер не подтвердил создание карточки. Повторите сохранение.',503);
+    return jsonResponse(receipt);
+  }
   if(path==='/catalog'&&method==='GET')return jsonResponse((await manager('catalog')).map(normalizeCatalog));
   m=path.match(/^\/catalog\/([^/]+)\/media(?:\/([^/]+))?$/);
   if(m){
