@@ -37,7 +37,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='services')return new Response(JSON.stringify([{...item,entity_type:'SERVICE'}]));
     if(op==='catalog-save'&&body.request_id)return createResponse?.(body)||Response.json({ok:true,id:body.request_id,public_id:'PCS-TEST',version:1,replayed:false});
     if(op==='catalog-save'){
-      Object.assign(item,body);item.revision={ui:{description:body.description,category:body.category,conditions:body.conditions,source:body.source}};
+      Object.assign(item,body);if(Object.hasOwn(body,'description'))item.revision={ui:{description:body.description,category:body.category,conditions:body.conditions,source:body.source}};
       afterCatalogSave?.(item);
       return new Response(JSON.stringify({ok:true,id:itemId}));
     }
@@ -185,15 +185,15 @@ const savePrice=h=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{
 test('changing catalog price retains the nested canonical description, category, conditions and source',async()=>{
  const h=adapterHarness(),response=await savePrice(h);assert.equal(response.status,200);
  const saved=h.calls.find(x=>x.op==='catalog-save').body;
- assert.deepEqual([saved.description,saved.category,saved.conditions,saved.source],['Existing description','car_rent','Insurance retained','PCS']);
- assert.equal(saved.client_price_thb,750);assert.equal(saved.deposit_thb,12000);assert.equal(saved.internal_net_thb,520);
+ assert.equal(h.item.revision.ui.description,'Existing description');assert.equal(h.item.revision.ui.conditions,'Insurance retained');
+ assert.equal(saved.client_price_thb,'750.00');assert.equal(saved.deposit_thb,'12000.00');assert.equal(saved.internal_net_thb,undefined);assert.equal(h.item.internal_net_thb,520);
  assert.equal(h.calls.filter(x=>x.op==='catalog-detail').length,2);
 });
 test('catalog pricing retains legacy fields separately and respects intentional empty current values',async()=>{
  for(const revision of [{legacy:{description:'Old text',category:'car_rent',conditions:'Old conditions',source:'Owner'}},{ui:{description:''},legacy:{description:'Old text',category:'car_rent',conditions:'Old conditions'},legacy_extra:{source:'Owner'}}]){
   const h=adapterHarness({catalogRevision:revision}),response=await savePrice(h);assert.equal(response.status,200);
   const saved=h.calls.find(x=>x.op==='catalog-save').body;
-  assert.equal(saved.description,revision.ui?'':'Old text');assert.equal(saved.category,'car_rent');assert.equal(saved.conditions,'Old conditions');assert.equal(saved.source,'Owner');
+  assert.equal(saved.description,undefined);assert.deepEqual(h.item.revision,revision);
  }
 });
 test('invalid revision text and mismatched item cannot silently overwrite catalog data',async()=>{
@@ -230,4 +230,12 @@ test('archive uses existing manager authentication and exact original version wi
 test('archive rejects missing version and unconfirmed or mismatched receipts',async()=>{
  const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'delete',id:itemId})});assert.equal(r.status,400);assert.equal(h.calls.length,0);
  for(const receipt of [{ok:true},{ok:true,id:itemId,version:2,edit_version:'2026-10-07',publication_status:'PUBLISHED',availability_status:'UNAVAILABLE'},{ok:true,id:'22222222-2222-4222-8222-222222222222',version:2,edit_version:'2026-10-07',publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'}])assert.equal((await archive(adapterHarness({archiveResponse:()=>Response.json(receipt)}))).status,503);
+});
+
+test('pricing forwards exact decimal strings, rejects blank price and preserves omitted or clears explicit deposit',async()=>{
+ const send=(h,b)=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'pricing',id:itemId,expected_version:h.item.edit_version,...b})});
+ for(const price of ['',null,true,'1e3','1.234','1000000000000']){const h=adapterHarness();assert.equal((await send(h,{base_price:price})).status,503);assert.ok(!h.calls.some(x=>x.op==='catalog-save'));}
+ const h=adapterHarness();assert.equal((await send(h,{base_price:'999999999999,99'})).status,200);const saved=h.calls.find(x=>x.op==='catalog-save').body;assert.equal(saved.client_price_thb,'999999999999.99');assert.ok(!Object.hasOwn(saved,'deposit_thb'));assert.equal(h.item.deposit_thb,10000);
+ const cleared=adapterHarness();assert.equal((await send(cleared,{base_price:'660,25',deposit_thb:''})).status,200);assert.equal(cleared.calls.find(x=>x.op==='catalog-save').body.deposit_thb,null);
+ const unavailable=adapterHarness();assert.equal((await send(unavailable,{base_price:'660',base_price_period:'month'})).status,409);assert.ok(!unavailable.calls.some(x=>x.op==='catalog-save'));
 });
