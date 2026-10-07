@@ -1,0 +1,27 @@
+<!doctype html><html lang="ru" data-theme="light"><head><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PCS — тестовое архивирование</title><link rel="stylesheet" href="../style.css?v=20260901-v26">
+<link rel="stylesheet" href="../design-restore-v21.css?v=20260901-v26">
+<link rel="stylesheet" href="../dashboard-hero-v22.css?v=20260901-v27">
+<link rel="stylesheet" href="../dashboard-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../inbox-v25.css?v=20260903-v36">
+<link rel="stylesheet" href="../calendar-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../connections-v25.css?v=20260901-v26">
+<link rel="stylesheet" href="../status-v24.css?v=20260901-v26">
+<link rel="stylesheet" href="../finance-v26.css?v=20261004-finance-tasks1">
+<link rel="stylesheet" href="../production-v26.css?v=20260901-v26b">
+<link rel="stylesheet" href="../approved-pages-v1.css?v=20260901-v27">
+<link rel="stylesheet" href="../layout-fix-v27.css?v=20260902-v27b">
+<link rel="stylesheet" href="../approved-mobile-v28.css?v=20260902-v28a">
+<link rel="stylesheet" href="../screen-banners-v29.css?v=20260902-v29a">
+<link rel="stylesheet" href="../layout-spacing-v30.css?v=20260902-v30a">
+<link rel="stylesheet" href="../system-banners-v31.css?v=20261005-mobile2">
+<link rel="stylesheet" href="../interactions-v32.css?v=20260903-v34a">
+<link rel="stylesheet" href="../system-normalizer-v1.css?v=20260903-v36">
+<link rel="stylesheet" href="../operator-ux-v37.css?v=20261005-due2">
+<link rel="stylesheet" href="../design-system.css?v=20261003">
+<link rel="stylesheet" href="../contracts-ui.css?v=20261003-history1"><link rel="stylesheet" href="../prospect-source-controls.css?v=20261006-source1"><link rel="stylesheet" href="../catalog-create.css?v=20261007-create1"></head><body><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p><main><h1>Каталог PCS</h1><button class="btn" onclick="confirmDeleteCatalog('11111111-1111-4111-8111-111111111111')">Архивировать тестовую карточку</button></main><div id="sheet" class="sheet"><div id="sheetbox" class="sheetbox"></div></div><script>
+window.PCS={catalog:[{id:'11111111-1111-4111-8111-111111111111',title:'Тестовая услуга с длинным названием для проверки переноса',edit_version:'2026-10-07 13:00:00.123456+00'}]};window.pricingManager=async()=>{};
+window.closeSheet=()=>{document.getElementById('sheet').classList.remove('on');document.body.classList.remove('sheet-open')};
+window.openSheet=(title,body)=>{document.getElementById('sheetbox').innerHTML='<div class="sheethead"><button class="iconbtn" onclick="closeSheet()">×</button><h2>'+title+'</h2></div><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p>'+body;document.getElementById('sheet').classList.add('on');document.body.classList.add('sheet-open')};
+window.esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));window.toast=msg=>{document.getElementById('testResult').textContent=msg};window.catalog=async()=>{};let attempts=0;
+window.adminCall=async()=>{if(++attempts===1)throw Error('Карточка уже изменена другим оператором. Обновите карточку перед архивированием.');return {ok:true};};
+</script><p id="testResult" role="status"></p><script src="../catalog-safety.js?v=20261007-archive1"></script></body></html>

@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse}={}){
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse}={}){
   const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
@@ -29,6 +29,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='approval-action')return Response.json({ok:true});
     if(op==='send')return sendResponse?.()||Response.json({ok:true,message_id:123});
     if(op==='tasks')return Response.json({tasks:[{id:'task1',contact_id:'contact1',title:'Task'}],truncated:false});
+    if(op==='catalog-archive')return archiveResponse?.(body)||Response.json({ok:true,id:body.id,version:2,edit_version:'2026-10-07 15:00:00+00',publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'});
     if(op==='catalog-detail')return new Response(JSON.stringify({item,media}));
     if(op==='media-add'){media.push({id:'photo-new',public_url:'https://example.test/new.jpg'});return new Response(JSON.stringify({ok:true,id:'photo-new'}));}
     if(op==='media-delete'){const index=media.findIndex(x=>x.id===body.id);if(index>=0)media.splice(index,1);return new Response(JSON.stringify({ok:true}));}
@@ -220,4 +221,13 @@ test('catalog creation forwards a stable request id and accepts only a confirmed
  const bad=adapterHarness({createResponse:()=>Response.json(receipt)});assert.equal((await bad.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog',{method:'POST',body:JSON.stringify(body)})).status,503);
  }
  const bad=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog',{method:'POST',body:JSON.stringify({...body,publication_status:'PUBLISHED'})});assert.equal(bad.status,400);
+});
+
+const archive=h=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'delete',id:itemId,expected_version:h.item.edit_version})});
+test('archive uses existing manager authentication and exact original version without legacy proxy',async()=>{
+ const h=adapterHarness();const r=await archive(h);assert.equal(r.status,200);assert.equal(h.calls.length,1);assert.equal(h.calls[0].op,'catalog-archive');assert.equal(h.calls[0].body.expected_version,h.item.edit_version);assert.equal(h.calls[0].authorization,'Bearer fixture');
+});
+test('archive rejects missing version and unconfirmed or mismatched receipts',async()=>{
+ const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'delete',id:itemId})});assert.equal(r.status,400);assert.equal(h.calls.length,0);
+ for(const receipt of [{ok:true},{ok:true,id:itemId,version:2,edit_version:'2026-10-07',publication_status:'PUBLISHED',availability_status:'UNAVAILABLE'},{ok:true,id:'22222222-2222-4222-8222-222222222222',version:2,edit_version:'2026-10-07',publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'}])assert.equal((await archive(adapterHarness({archiveResponse:()=>Response.json(receipt)}))).status,503);
 });
