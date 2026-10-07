@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave}={}){
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse}={}){
   const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
@@ -34,6 +34,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='media-delete'){const index=media.findIndex(x=>x.id===body.id);if(index>=0)media.splice(index,1);return new Response(JSON.stringify({ok:true}));}
     if(op==='media-order')return new Response(JSON.stringify({ok:true}));
     if(op==='services')return new Response(JSON.stringify([{...item,entity_type:'SERVICE'}]));
+    if(op==='catalog-save'&&body.request_id)return createResponse?.(body)||Response.json({ok:true,id:body.request_id,public_id:'PCS-TEST',version:1,replayed:false});
     if(op==='catalog-save'){
       Object.assign(item,body);item.revision={ui:{description:body.description,category:body.category,conditions:body.conditions,source:body.source}};
       afterCatalogSave?.(item);
@@ -210,4 +211,13 @@ test('stale catalog form cannot overwrite newer server text or price',async()=>{
  const h=adapterHarness();for(const [url,body]of [['/pcs-ui-api/catalog/'+itemId,{title:'Old draft'}],['/pcs-catalog-admin',{action:'pricing',id:itemId,base_price:750}]]){
  const response=await h.window.fetch('https://pcs-stable.local'+url,{method:url.includes('catalog-admin')?'POST':'PATCH',body:JSON.stringify({...body,expected_version:'2026-10-01 00:00:00+00'})});assert.equal(response.status,409);
  }assert.ok(!h.calls.some(x=>x.op==='catalog-save'));
+});
+
+test('catalog creation forwards a stable request id and accepts only a confirmed receipt',async()=>{
+ const h=adapterHarness();const body={request_id:itemId,title:'New service',category:'service',entity_type:'SERVICE',client_price_thb:'660.25'};
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.calls.find(x=>x.op==='catalog-save').body.request_id,itemId);
+ for(const receipt of [{ok:true,id:'different',version:1,public_id:'PCS-X'},{ok:true,id:itemId,version:2,public_id:'PCS-X'}]){
+ const bad=adapterHarness({createResponse:()=>Response.json(receipt)});assert.equal((await bad.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog',{method:'POST',body:JSON.stringify(body)})).status,503);
+ }
+ const bad=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog',{method:'POST',body:JSON.stringify({...body,publication_status:'PUBLISHED'})});assert.equal(bad.status,400);
 });
