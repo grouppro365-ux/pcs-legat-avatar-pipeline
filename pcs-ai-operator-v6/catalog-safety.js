@@ -3,20 +3,42 @@ const oldPricing=window.pricingManager;
 window.pricingManager=async function(id){
   await oldPricing(id);
   const x=PCS.catalog.find(v=>v.id===id);if(!x)return;
-  const base=document.querySelector('#basePrice')?.closest('.field');
+  const priceInput=document.querySelector('#basePrice');
+  if(priceInput){priceInput.type='text';priceInput.inputMode='decimal';priceInput.maxLength=30;}
+  const base=priceInput?.closest('.field');
   base?.insertAdjacentHTML('beforeend',`<input type="hidden" id="catalogPriceVersion" value="${esc(x.edit_version||'')}">`);
   const isRent=/_rent$/.test(x.category||'');
   if(base&&!document.querySelector('#basePricePeriod')){
     const opts=isRent?`<option value="day" ${x.base_price_period==='day'?'selected':''}>День</option><option value="week" ${x.base_price_period==='week'?'selected':''}>Неделя</option><option value="month" ${x.base_price_period==='month'?'selected':''}>Месяц</option>`:`<option value="one_time" selected>Единоразовая цена</option>`;
-    const note=isRent?'Система рассчитывает аренду из выбранной базовой единицы. Сезонный коэффициент и коэффициент длительности применяются прозрачно поверх базовой суммы.':'Для продажи цена единоразовая; сезонные арендные коэффициенты не применяются.';
-    base.insertAdjacentHTML('afterend',`<div class="field"><label>Базовая цена указана за</label><select id="basePricePeriod">${opts}</select><div class="muted">${note}</div></div>`);
+    const note='Период цены сохранён в карточке. Изменение периода пока не подключено.';
+    base.insertAdjacentHTML('afterend',`<div class="field"><label>Базовая цена указана за</label><select id="basePricePeriod" disabled>${opts}</select><div class="muted">${note}</div></div>`);
   }
   if(isRent&&!document.querySelector('#depositThb')){
-    const priceLabel=base?.querySelector('label');if(priceLabel)priceLabel.textContent='Цена в сутки, THB';
-    document.querySelector('#basePricePeriod')?.closest('.field')?.insertAdjacentHTML('afterend',`<div class="field"><label>Депозит за сохранность авто, THB</label><input id="depositThb" type="number" min="0" step="1" value="${esc(x.deposit??x.deposit_thb??'')}"><div class="muted">Депозит не является ценой аренды и отображается отдельно.</div></div>`);
+    const priceLabel=base?.querySelector('label');if(priceLabel)priceLabel.textContent='Цена за выбранный период, THB';
+    document.querySelector('#basePricePeriod')?.closest('.field')?.insertAdjacentHTML('afterend',`<div class="field"><label>Депозит за сохранность авто, THB</label><input id="depositThb" type="text" inputmode="decimal" maxlength="30" value="${esc(x.deposit??x.deposit_thb??'')}"><div class="muted">Депозит отображается отдельно. Пустое поле означает, что сумма не указана.</div></div>`);
   }
+  const period=document.querySelector('#basePricePeriod');if(period){period.value=x.base_price_period??x.price_period??x.rate_period??(isRent?'day':'one_time');period.disabled=true;}
+  const lock=document.querySelector('#pricingLocked');if(lock){lock.disabled=true;lock.checked=Boolean(x.pricing_locked);lock.closest('label')?.insertAdjacentHTML('afterend','<p class="muted">Изменение сезонной блокировки пока не подключено.</p>');}
+  const button=document.querySelector('button[onclick^="saveBasePrice("]');
+  if(button){button.id='catalogPriceSave';button.insertAdjacentHTML('beforebegin','<p id="catalogPriceError" role="alert" aria-live="polite" style="overflow-wrap:anywhere"></p>');}
 };
-window.saveBasePrice=async function(id){try{const period=document.querySelector('#basePricePeriod')?.value||'one_time';const depositInput=document.querySelector('#depositThb');await adminCall({action:'pricing',id,expected_version:document.querySelector('#catalogPriceVersion')?.value||'',base_price:Number(document.querySelector('#basePrice').value),deposit_thb:depositInput?Number(depositInput.value):undefined,base_price_period:period,pricing_locked:document.querySelector('#pricingLocked').checked});PCS.catalog=await call('/catalog');toast('Цена и депозит сохранены');closeSheet();catalog()}catch(e){toast(e.message)}};
+const priceSaves=new WeakMap();
+window.saveBasePrice=async function(id){
+ const input=document.querySelector('#basePrice'),button=document.querySelector('#catalogPriceSave'),error=document.querySelector('#catalogPriceError');
+ if(!input||!button||priceSaves.has(input))return;
+ priceSaves.set(input,'pending');button.disabled=true;if(error)error.textContent='';
+ const fields=[input,document.querySelector('#depositThb')].filter(Boolean);fields.forEach(x=>x.disabled=true);
+ try{
+  const deposit=document.querySelector('#depositThb');
+  const result=await adminCall({action:'pricing',id,expected_version:document.querySelector('#catalogPriceVersion')?.value||'',base_price:input.value, ...(deposit?{deposit_thb:deposit.value}:{})});
+  if(result?.ok!==true)throw Error('Сервер не подтвердил сохранение. Обновите карточку для проверки.');
+  priceSaves.set(input,'saved');
+  if(document.querySelector('#basePrice')===input)closeSheet();
+  toast('Цена и депозит сохранены');
+  try{PCS.catalog=await call('/catalog');await catalog()}catch{toast('Сохранение подтверждено. Обновите список каталога.');}
+ }catch(e){priceSaves.delete(input);if(document.querySelector('#basePrice')===input&&error)error.textContent=e.message||'Не удалось сохранить цену';}
+ finally{button.disabled=false;fields.forEach(x=>x.disabled=false);}
+};
 let archiveState=null;
 window.confirmDeleteCatalog=function(id){
  if(archiveState?.busy)return;

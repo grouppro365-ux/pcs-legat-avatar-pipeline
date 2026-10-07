@@ -365,41 +365,34 @@ function catalogRevisionFields(item){
   return fields;
 }
 
+function exactCatalogMoney(value,label,nullable=false){
+  if(nullable&&(value===null||value===''))return null;
+  if(!['string','number'].includes(typeof value)||(typeof value==='number'&&!Number.isFinite(value)))throw new Error('Укажите корректную '+label);
+  const text=String(value).trim().replace(',','.');
+  if(!/^\d{1,12}(?:\.\d{1,2})?$/.test(text))throw new Error('Укажите корректную '+label+' — до двух знаков после запятой.');
+  const [whole,fraction='']=text.split('.');return whole.replace(/^0+(?=\d)/,'')+'.'+fraction.padEnd(2,'0');
+}
 async function saveCatalogPricing(body){
   const id=String(body.id||'');
-  const price=Number(body.base_price);
+  const price=exactCatalogMoney(body.base_price,'цену');
   if(!id)throw new Error('Не выбрана карточка каталога');
-  if(!Number.isFinite(price)||price<0)throw new Error('Укажите корректную цену');
-
   const detail=await manager('catalog-detail',{id});
   const item=detail.item||{};
-  const hasDeposit=body.deposit_thb!==undefined&&body.deposit_thb!==null&&body.deposit_thb!=='';
-  const deposit=hasDeposit?Number(body.deposit_thb):Number(item.deposit_thb??0);
-  if(!Number.isFinite(deposit)||deposit<0)throw new Error('Укажите корректный депозит');
+  const hasDeposit=Object.hasOwn(body,'deposit_thb')&&body.deposit_thb!==undefined;
+  const deposit=exactCatalogMoney(hasDeposit?body.deposit_thb:(item.deposit_thb??null),'сумму депозита',true);
   if(String(item.id)!==id)throw new Error('Сервер вернул другую карточку. Обновите каталог.');
   if(typeof body.expected_version!=='string'||body.expected_version!==item.edit_version)throw Object.assign(new Error('Карточка уже изменилась. Обновите её перед сохранением цены.'),{status:409});
+  const period=item.base_price_period??item.price_period??item.rate_period??(/_rent$/.test(catalogRevisionFields(item).category)?'day':'one_time');
+  if(body.base_price_period!==undefined&&body.base_price_period!==period||body.pricing_locked!==undefined&&body.pricing_locked!==Boolean(item.pricing_locked))throw Object.assign(new Error('Изменение периода и сезонной блокировки пока не подключено. Обновите карточку.'),{status:409});
   const revision=catalogRevisionFields(item);
-  const saved=await manager('catalog-save',{method:'POST',body:{
-    id,expected_version:body.expected_version,
-    entity_type:item.entity_type,
-    title:item.title,
-    city:item.city,
-    publication_status:item.publication_status,
-    moderation_status:item.moderation_status,
-    availability_status:item.availability_status,
-    client_price_thb:price,
-    deposit_thb:deposit,
-    internal_net_thb:item.internal_net_thb,
-    description:revision.description||'',
-    category:revision.category||'',
-    conditions:revision.conditions||'',
-    source:revision.source||''
-  }});
+  const payload={id,expected_version:body.expected_version,client_price_thb:price};
+  if(hasDeposit)payload.deposit_thb=deposit;
+  await manager('catalog-save',{method:'POST',body:payload});
   const verified=await manager('catalog-detail',{id});
-  if(Number(verified.item?.client_price_thb)!==price||Number(verified.item?.deposit_thb)!==deposit)throw new Error('Сервер не подтвердил сохранение цены и депозита');
+  if(exactCatalogMoney(verified.item?.client_price_thb,'цену')!==price||exactCatalogMoney(verified.item?.deposit_thb??null,'сумму депозита',true)!==deposit)throw new Error('Сервер не подтвердил сохранение цены и депозита');
   const savedRevision=catalogRevisionFields(verified.item);
   if(String(verified.item?.id)!==id||Object.keys(revision).some(key=>savedRevision[key]!==revision[key]))throw new Error('Цена сохранена, но сервер не подтвердил сохранность текста карточки. Обновите каталог.');
-  return {ok:true,item:{...saved.item,...verified.item,base_price:price,price,deposit:deposit,deposit_thb:deposit}};
+  return {ok:true,item:{...verified.item,base_price:price,price,deposit,deposit_thb:deposit}};
 }
 
 async function catalogAdminRoute(init){
