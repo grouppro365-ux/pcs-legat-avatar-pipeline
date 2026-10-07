@@ -19,7 +19,7 @@ test('only explicit high-confidence quoted evidence qualifies; facts cannot be h
  const facts=validateClassifications([message],{results:[{...result,city:'Phuket',budget:'20000',dates:'2026-12-01'}]},now)[0].facts;assert.deepEqual(facts,{language:'ru'});
 });
 test('unknown/old/future time and forwarded requests cannot bypass source/author review',()=>{
- for(const change of [{published_at:null},{published_at:'2026-09-01T12:00:00Z'},{published_at:'2026-10-06T12:00:00Z'},{forwarded:true}])assert.equal(validateClassifications([{...message,...change}],{results:[result]},now)[0].decision,'review');
+ for(const change of [{published_at:null},{published_at:'not-a-date'},{published_at:123},{published_at:'2026-09-01T12:00:00Z'},{published_at:'2026-10-06T12:00:00Z'},{forwarded:true}])assert.equal(validateClassifications([{...message,...change}],{results:[result]},now)[0].decision,'review');
 });
 test('missing or duplicated ids, invented directions and malformed confidence reject the full model batch',()=>{
  for(const data of [{results:[]},{results:[{...result,id:'other'}]},{results:[{...result,direction:'PROPERTY_RENTAL'}]},{results:[{...result,confidence:1.2}]}])assert.throws(()=>validateClassifications([message],data,now),/ai_invalid_response/);
@@ -63,6 +63,13 @@ test('forwarded irrelevant news and advertisements remain rejected instead of cr
 
 // Seller listings must fail even when the external model confidently labels them as buyers.
 const negativeDemandCases=[
+ ['Condo for sale. I want to buy another property','PROPERTY_PURCHASE'],
+ ['Looking for a car to rent? Book with us in Phuket','CAR_RENTAL'],
+ ['Want to buy a condo? Contact us in Pattaya','PROPERTY_PURCHASE'],
+ ['Looking for a condo to buy? Great properties available','PROPERTY_PURCHASE'],
+ ['Car for rent in Phuket. Contact us','CAR_RENTAL'],
+ ['We have cars for rent, looking for customers','CAR_RENTAL'],
+ ['ต้องการเช่ารถ? ให้เช่ารถที่ภูเก็ต','CAR_RENTAL'],
  ['Совершенно новый кондик пентхаус на 8 этаже в Чалонг. В квартире есть: кухня, мебель. Цена 25000 бат. Контакт: Viktoria','PROPERTY_PURCHASE'],
  ['Вилла в комплексе Peykaa Estate. Площадь участка: 700 кв. м. 1 месяц: 500000 THB. Дополнительные фото по запросу.','PROPERTY_PURCHASE'],
  ['Аренда авто MG5 Pro. Страховка включена. Почему выбирают нас? Напишите нам для бронирования.','CAR_RENTAL'],
@@ -86,6 +93,13 @@ for(const [text,direction] of negativeDemandCases)test('never qualifies supplier
  assert.notEqual(out.decision,'qualified');
 });
 const positiveDemandCases=[
+ ['Возьму авто в аренду на неделю в Паттайе','CAR_RENTAL'],
+ ['Does anyone know where I can rent a car in Phuket?','CAR_RENTAL'],
+ ['Where can we rent cars in Pattaya?','CAR_RENTAL'],
+ ['I am looking for a condo for sale in Pattaya','PROPERTY_PURCHASE'],
+ ['Looking for a condo to buy in Pattaya','PROPERTY_PURCHASE'],
+ ['We are looking to buy a house in Phuket','PROPERTY_PURCHASE'],
+ ['ต้องการเช่ารถที่ภูเก็ต','CAR_RENTAL'],
  ['Хочу купить кондо в Джомтьене для сдачи в аренду','PROPERTY_PURCHASE'],
  ['Рассматриваем покупку квартиры на Пхукете','PROPERTY_PURCHASE'],
  ['Кто продаёт кондо? Ищу купить для себя','PROPERTY_PURCHASE'],
@@ -106,4 +120,11 @@ for(const [text,direction] of positiveDemandCases)test('preserves explicit clien
 test('a literal object description cannot be used as buyer evidence inside a genuine request',()=>{
  const text='Хочу купить кондо. Пентхаус на 8 этаже';
  assert.equal(validateClassifications([{...message,text}],{results:[{...result,direction:'PROPERTY_PURCHASE',evidence:'Пентхаус на 8 этаже'}]},now)[0].decision,'review');
+});
+
+test("improved demand recognition never promotes a model rejection or low-confidence result",()=>{
+ const text="Возьму авто в аренду на неделю";
+ for(const change of [{decision:"rejected",direction:null},{decision:"review"},{confidence:0.5}]){
+  assert.notEqual(validateClassifications([{...message,text}],{results:[{...result,evidence:text,...change}]},now)[0].decision,"qualified");
+ }
 });
