@@ -28,10 +28,18 @@ test('catalog and existing service rows expose editing the selected id and photo
 });
 test('saving an edit immediately updates the existing card description without losing its tariff',async()=>{
  const h=harness();
- for(const [key,value]of Object.entries({catalogEditTitle37:'MG5 updated',catalogEditCity37:'Pattaya',catalogEditDescription37:'New description',catalogEditConditions37:'New conditions'}))h.nodes[key]={value};
+ for(const [key,value]of Object.entries({catalogEditVersion37:'2026-10-07 13:00:00.123456+00',catalogEditTitle37:'MG5 updated',catalogEditCity37:'Pattaya',catalogEditDescription37:'New description',catalogEditConditions37:'New conditions'}))h.nodes[key]={value};
  h.window.call=async()=>({ok:true,item:{...h.item,title:'MG5 updated'}});
  await h.window.saveCatalog37(h.item.id,{disabled:false});
  assert.equal(h.item.description,'New description');assert.equal(h.item.price,660);
  assert.equal(h.window.PCS_EXTRAS37[0].description,'New description');
  assert.match(h.nodes.pcsApCatalogList37.innerHTML,/New description/);
+});
+
+test('catalog conflict retains entered draft and the captured original version',async()=>{
+ const h=harness();const version='2026-10-07 13:00:00.123456+00';
+ for(const [key,value]of Object.entries({catalogEditVersion37:version,catalogEditTitle37:'Draft title',catalogEditCity37:'Pattaya',catalogEditDescription37:'Draft text',catalogEditConditions37:'Draft terms'}))h.nodes[key]={value};
+ let request;h.window.call=async(path,init)=>{request=JSON.parse(init.body);throw Error('Карточка уже изменена');};
+ const button={disabled:false};await h.window.saveCatalog37(h.item.id,button);
+ assert.equal(request.expected_version,version);assert.equal(h.nodes.catalogEditDescription37.value,'Draft text');assert.equal(h.nodes.catalogEditVersion37.value,version);assert.equal(button.disabled,false);assert.equal(h.item.title,'MG5');
 });
