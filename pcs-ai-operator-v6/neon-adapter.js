@@ -191,7 +191,8 @@ async function uiRoute(path,init){
     const item=detail.item;
     if(!item||String(item.id)!==id)return appError('Запись не найдена',404);
     const revision=catalogRevisionFields(item);
-    const payload={id,entity_type:item.entity_type,title:item.title,city:item.city,
+    if(typeof body.expected_version!=='string'||body.expected_version!==item.edit_version)return appError('Карточка уже изменилась. Черновик остаётся в форме; обновите карточку.',409);
+    const payload={id,expected_version:body.expected_version,entity_type:item.entity_type,title:item.title,city:item.city,
       publication_status:item.publication_status,moderation_status:item.moderation_status,
       availability_status:item.availability_status,client_price_thb:item.client_price_thb,
       deposit_thb:item.deposit_thb,internal_net_thb:item.internal_net_thb,
@@ -369,9 +370,10 @@ async function saveCatalogPricing(body){
   const deposit=hasDeposit?Number(body.deposit_thb):Number(item.deposit_thb??0);
   if(!Number.isFinite(deposit)||deposit<0)throw new Error('Укажите корректный депозит');
   if(String(item.id)!==id)throw new Error('Сервер вернул другую карточку. Обновите каталог.');
+  if(typeof body.expected_version!=='string'||body.expected_version!==item.edit_version)throw Object.assign(new Error('Карточка уже изменилась. Обновите её перед сохранением цены.'),{status:409});
   const revision=catalogRevisionFields(item);
   const saved=await manager('catalog-save',{method:'POST',body:{
-    id,
+    id,expected_version:body.expected_version,
     entity_type:item.entity_type,
     title:item.title,
     city:item.city,

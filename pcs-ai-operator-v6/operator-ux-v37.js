@@ -19,12 +19,14 @@ window.editCatalog37=async function(id){
   const detail=await call('/catalog/'+encodeURIComponent(id));
   const x=detail.item;if(!x||String(x.id)!==String(id))throw new Error('Запись не найдена');
   const r=x.revision?.ui||x.revision?.legacy||x.revision?.legacy_extra||{};
-  openSheet('Редактировать услугу',`<div class="v37-catalog-editor"><p class="v37-editor-context">${esc37(x.title)}</p><div class="field"><label for="catalogEditTitle37">Название</label><input id="catalogEditTitle37" value="${esc37(x.title)}" maxlength="500"></div><div class="field"><label for="catalogEditCity37">Город</label><input id="catalogEditCity37" value="${esc37(x.city)}" maxlength="200"></div><div class="field"><label for="catalogEditDescription37">Описание</label><textarea id="catalogEditDescription37" rows="5">${esc37(r.description)}</textarea></div><div class="field"><label for="catalogEditConditions37">Условия</label><textarea id="catalogEditConditions37" rows="4">${esc37(r.conditions)}</textarea></div><p class="muted">Цена и депозит сохраняются без изменений.</p><div class="v37-editor-actions"><button class="btn" type="button" onclick="saveCatalog37('${esc37(id)}',this)">Сохранить</button><button class="btn soft" type="button" onclick="mediaManager('${esc37(id)}')">Фото</button></div></div>`);
+  openSheet('Редактировать услугу',`<div class="v37-catalog-editor"><input type="hidden" id="catalogEditVersion37" data-item-id="${esc37(id)}" value="${esc37(x.edit_version)}"><p class="v37-editor-context">${esc37(x.title)}</p><div class="field"><label for="catalogEditTitle37">Название</label><input id="catalogEditTitle37" value="${esc37(x.title)}" maxlength="500"></div><div class="field"><label for="catalogEditCity37">Город</label><input id="catalogEditCity37" value="${esc37(x.city)}" maxlength="200"></div><div class="field"><label for="catalogEditDescription37">Описание</label><textarea id="catalogEditDescription37" rows="5">${esc37(r.description)}</textarea></div><div class="field"><label for="catalogEditConditions37">Условия</label><textarea id="catalogEditConditions37" rows="4">${esc37(r.conditions)}</textarea></div><p class="muted">Цена и депозит сохраняются без изменений.</p><div class="v37-editor-actions"><button class="btn" type="button" onclick="saveCatalog37('${esc37(id)}',this)">Сохранить</button><button class="btn soft" type="button" onclick="mediaManager('${esc37(id)}')">Фото</button></div></div>`);
  }catch(e){toast(e.message||'Не удалось открыть запись')}
 };
 window.saveCatalog37=async function(id,button){
  if(button?.disabled)return;
- const body={title:document.getElementById('catalogEditTitle37')?.value||'',city:document.getElementById('catalogEditCity37')?.value||'',description:document.getElementById('catalogEditDescription37')?.value||'',conditions:document.getElementById('catalogEditConditions37')?.value||''};
+ const versionField=document.getElementById('catalogEditVersion37');
+ if(versionField?.dataset?.itemId&&versionField.dataset.itemId!==String(id)){toast('Открыта другая карточка');return}
+ const body={expected_version:versionField?.value||'',title:document.getElementById('catalogEditTitle37')?.value||'',city:document.getElementById('catalogEditCity37')?.value||'',description:document.getElementById('catalogEditDescription37')?.value||'',conditions:document.getElementById('catalogEditConditions37')?.value||''};
  if(!body.title.trim()){toast('Укажите название');return}
  if(button)button.disabled=true;
  try{
@@ -32,6 +34,7 @@ window.saveCatalog37=async function(id,button){
   for(const rows of [window.PCS?.catalog,window.PCS_EXTRAS37]){
    const x=rows?.find(v=>String(v.id)===String(id));if(x)Object.assign(x,result.item,body,{name:result.item.title});
   }
+  if(versionField===document.getElementById('catalogEditVersion37')&&result.item?.edit_version)versionField.value=result.item.edit_version;
   drawCatalog37();drawExtras37();toast('Изменения сохранены');
  }catch(e){toast(e.message||'Не удалось сохранить')}finally{if(button)button.disabled=false}
 };

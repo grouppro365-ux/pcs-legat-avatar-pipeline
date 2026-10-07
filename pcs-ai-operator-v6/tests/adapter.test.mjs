@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
 function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave}={}){
-  const item={id:itemId,entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
+  const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
     revision:{ui:{description:'Existing description',category:'car_rent',conditions:'Insurance retained',source:'PCS'}}};
@@ -61,7 +61,7 @@ test('knowledge errors remain errors and invalid write routes do not reach backe
 test('catalog text edits update the existing id and preserve all commercial terms',async()=>{
   const h=adapterHarness();
   const response=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId,
-    {method:'PATCH',body:JSON.stringify({title:'MG5 updated',description:'New description'})});
+    {method:'PATCH',body:JSON.stringify({expected_version:h.item.edit_version,title:'MG5 updated',description:'New description'})});
   assert.equal(response.status,200,'catalog patch should save existing record');
   const save=h.calls.find(x=>x.op==='catalog-save')?.body;
   assert.equal(save?.id,itemId);assert.equal(save.title,'MG5 updated');
@@ -179,7 +179,7 @@ test('application-offer adapter keeps scoped identity, source and page with admi
  await window.fetch('https://pcs-stable.local/pcs-ui-api/application-offers/'+itemId+'?source=quotes&page=2');const r=calls[0];assert.equal(r.url.searchParams.get('op'),'application-offers');assert.equal(r.url.searchParams.get('id'),itemId);assert.equal(r.url.searchParams.get('source'),'quotes');assert.equal(r.url.searchParams.get('page'),'2');assert.equal(r.init.headers.authorization,'Bearer fixture');
 });
 
-const savePrice=h=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'pricing',id:itemId,base_price:750,deposit_thb:12000})});
+const savePrice=h=>h.window.fetch('https://pcs-stable.local/pcs-catalog-admin',{method:'POST',body:JSON.stringify({action:'pricing',id:itemId,expected_version:h.item.edit_version,base_price:750,deposit_thb:12000})});
 test('changing catalog price retains the nested canonical description, category, conditions and source',async()=>{
  const h=adapterHarness(),response=await savePrice(h);assert.equal(response.status,200);
  const saved=h.calls.find(x=>x.op==='catalog-save').body;
@@ -204,4 +204,10 @@ test('catalog pricing reports lost revision fields instead of confirming success
  const h=adapterHarness({afterCatalogSave:item=>{item.revision.ui.conditions='';}});
  const response=await savePrice(h);assert.equal(response.status,503);assert.match((await response.json()).error,/сохранность текста/);
  assert.equal(h.calls.filter(x=>x.op==='catalog-save').length,1);
+});
+
+test('stale catalog form cannot overwrite newer server text or price',async()=>{
+ const h=adapterHarness();for(const [url,body]of [['/pcs-ui-api/catalog/'+itemId,{title:'Old draft'}],['/pcs-catalog-admin',{action:'pricing',id:itemId,base_price:750}]]){
+ const response=await h.window.fetch('https://pcs-stable.local'+url,{method:url.includes('catalog-admin')?'POST':'PATCH',body:JSON.stringify({...body,expected_version:'2026-10-01 00:00:00+00'})});assert.equal(response.status,409);
+ }assert.ok(!h.calls.some(x=>x.op==='catalog-save'));
 });
