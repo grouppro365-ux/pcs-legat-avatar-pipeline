@@ -405,7 +405,13 @@ async function saveCatalogPricing(body){
 async function catalogAdminRoute(init){
   const body=await parseBody(init);
   if(body.action==='pricing')return jsonResponse(await saveCatalogPricing(body));
-  if(['delete','rules','upsert_rule','delete_rule'].includes(String(body.action||'')))return jsonResponse(await catalogAdminProxy(body));
+  if(body.action==='delete'){
+    if(Object.keys(body).some(k=>!['action','id','expected_version'].includes(k))||typeof body.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)||typeof body.expected_version!=='string'||!Number.isFinite(Date.parse(body.expected_version)))return appError('Обновите карточку перед архивированием.',400);
+    const receipt=await manager('catalog-archive',{method:'POST',body:{id:body.id,expected_version:body.expected_version}});
+    if(receipt?.ok!==true||String(receipt.id).toLowerCase()!==body.id.toLowerCase()||!Number.isInteger(receipt.version)||receipt.version<2||typeof receipt.edit_version!=='string'||!Number.isFinite(Date.parse(receipt.edit_version))||receipt.publication_status!=='ARCHIVED'||receipt.availability_status!=='UNAVAILABLE')return appError('Сервер не подтвердил архивирование. Обновите карточку для проверки.',503);
+    return jsonResponse(receipt);
+  }
+  if(['rules','upsert_rule','delete_rule'].includes(String(body.action||'')))return jsonResponse(await catalogAdminProxy(body));
   return appError('Это действие каталога пока не поддерживается в Mini App.',409);
 }
 

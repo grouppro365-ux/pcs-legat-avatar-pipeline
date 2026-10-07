@@ -17,6 +17,24 @@ window.pricingManager=async function(id){
   }
 };
 window.saveBasePrice=async function(id){try{const period=document.querySelector('#basePricePeriod')?.value||'one_time';const depositInput=document.querySelector('#depositThb');await adminCall({action:'pricing',id,expected_version:document.querySelector('#catalogPriceVersion')?.value||'',base_price:Number(document.querySelector('#basePrice').value),deposit_thb:depositInput?Number(depositInput.value):undefined,base_price_period:period,pricing_locked:document.querySelector('#pricingLocked').checked});PCS.catalog=await call('/catalog');toast('Цена и депозит сохранены');closeSheet();catalog()}catch(e){toast(e.message)}};
-window.confirmDeleteCatalog=function(id){const x=PCS.catalog.find(v=>v.id===id);if(!x)return;openSheet('Убрать объект из каталога?',`<div class="danger-box"><h3>${esc(x.title)}</h3><p>Позиция будет архивирована и сразу перестанет показываться клиентам и ИИ. История бронирований, договоров и финансов сохранится.</p></div><div class="toolbar"><button class="btn ghost" onclick="closeSheet()">Отмена</button><button class="btn danger" onclick="deleteCatalog('${id}')">Архивировать</button></div>`)};
-window.deleteCatalog=async function(id){try{await adminCall({action:'delete',id});closeSheet();toast('Объект архивирован');await catalog()}catch(e){toast(e.message)}};
+let archiveState=null;
+window.confirmDeleteCatalog=function(id){
+ if(archiveState?.busy)return;
+ const x=PCS.catalog.find(v=>v.id===id);if(!x)return;
+ archiveState={id,expected_version:x.edit_version||'',busy:false};
+ openSheet('Убрать объект из каталога?',`<div class="danger-box"><h3>${esc(x.title)}</h3><p>Позиция будет архивирована. История бронирований, договоров и финансов сохранится.</p></div><p id="catalogArchiveError" role="alert" aria-live="polite" style="overflow-wrap:anywhere"></p><div class="toolbar"><button class="btn ghost" onclick="closeSheet()">Отмена</button><button id="catalogArchiveSave" class="btn danger" onclick="deleteCatalog('${id}')">Архивировать</button></div>`);
+};
+window.deleteCatalog=async function(id){
+ const state=archiveState,button=document.querySelector('#catalogArchiveSave'),error=document.querySelector('#catalogArchiveError');
+ if(!state||state.id!==id||state.busy||!button)return;
+ state.busy=true;button.disabled=true;if(error)error.textContent='';
+ try{
+  await adminCall({action:'delete',id,expected_version:state.expected_version});
+  const x=PCS.catalog.find(v=>v.id===id);if(x){x.publication_status='ARCHIVED';x.availability_status='UNAVAILABLE';}
+  if(document.querySelector('#catalogArchiveSave')===button)closeSheet();
+  archiveState=null;toast('Объект архивирован');
+  try{await catalog()}catch{toast('Архивирование подтверждено. Обновите список каталога.');}
+ }catch(e){if(document.querySelector('#catalogArchiveSave')===button&&error)error.textContent=e.message||'Не удалось подтвердить архивирование. Обновите карточку для проверки.';}
+ finally{state.busy=false;button.disabled=false;}
+};
 })();

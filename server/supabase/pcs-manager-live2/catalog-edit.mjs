@@ -56,3 +56,9 @@ export function catalogCreateQuery(b){
  where c.id=$1::uuid and r.payload->'_pcs_create_request'=$4::jsonb->'_pcs_create_request' and not exists(select 1 from inserted)`,params:[request_id.toLowerCase(),'PCS-'+request_id.toUpperCase(),JSON.stringify(patch),JSON.stringify(payload),crypto.randomUUID()]};
 }
 export async function createCatalog(sql,b){const q=catalogCreateQuery(b),rows=await sql.query(q.query,q.params);if(!rows.length)throw new CrmError('Этот идентификатор уже используется или запись ещё сохраняется. Повторите исходный запрос; для другого черновика нужен новый идентификатор.',409);return {ok:true,...rows[0]};}
+
+export async function archiveCatalog(sql,b){
+ if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['id','expected_version'].includes(k)))throw new CrmError('Обновите карточку перед архивированием.',400);
+ const saved=await updateCatalog(sql,{id:b.id,expected_version:b.expected_version,publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'});
+ return {...saved,publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'};
+}

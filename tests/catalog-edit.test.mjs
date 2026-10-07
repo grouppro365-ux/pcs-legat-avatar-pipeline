@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {catalogEditQuery,updateCatalog,catalogCreateQuery,createCatalog} from '../server/supabase/pcs-manager-live2/catalog-edit.mjs';
+import {catalogEditQuery,updateCatalog,catalogCreateQuery,createCatalog,archiveCatalog} from '../server/supabase/pcs-manager-live2/catalog-edit.mjs';
 const draft={id:'10000000-0000-4000-8000-000000000001',expected_version:'2026-10-07 13:00:00.123456+00',title:'Updated',description:'Terms',client_price_thb:'999999999999.99'};
 test('catalog update binds exact version and writes one dependent revision preserving unrelated payload',()=>{const q=catalogEditQuery(draft);assert.match(q.query,/updated_at::text=\$2 for update/);assert.match(q.query,/insert into catalog_revisions/);assert.match(q.query,/exists\(select 1 from revision/);assert.equal(JSON.parse(q.params[2]).client_price_thb,draft.client_price_thb);assert.equal(JSON.parse(q.params[3]).description,'Terms');assert.doesNotMatch(q.query,/owner_partner_id=|public_id=/);});
 test('invalid catalog drafts fail before writing',async()=>{for(const b of [null,{...draft,id:'bad'},{...draft,expected_version:'bad'},{...draft,owner_partner_id:'other'},{...draft,client_price_thb:-1},{...draft,title:''},{...draft,conditions:{}},{...draft,deposit_thb:true}])await assert.rejects(()=>updateCatalog({query:()=>assert.fail('write')},b),e=>e.status===400);});
@@ -9,3 +9,13 @@ const create={request_id:draft.id,title:'New service',description:'Terms',client
 test('catalog create atomically binds draft and first revision to a stable request identity',()=>{const q=catalogCreateQuery(create);assert.equal(q.params[0],draft.id);assert.match(q.query,/on conflict\(id\) do nothing/);assert.match(q.query,/first_revision/);assert.match(q.query,/r.version=1/);const payload=JSON.parse(q.params[3]);assert.equal(payload.ui.description,'Terms');assert.equal(payload._pcs_create_request.data.client_price_thb,'660.25');assert.equal(payload._pcs_create_request.request_id,draft.id);});
 test('invalid creates never write or publish without review',async()=>{for(const b of [null,{}, {...create,request_id:'bad'},{...create,title:''},{...create,id:draft.id},{...create,publication_status:'PUBLISHED'},{...create,moderation_status:'APPROVED'},{...create,owner_partner_id:draft.id}])await assert.rejects(()=>createCatalog({query:()=>assert.fail('write')},b),e=>e.status===400);});
 test('create conflict cannot overwrite existing content and retry returns the existing receipt',async()=>{await assert.rejects(()=>createCatalog({query:async()=>[]},create),e=>e.status===409);const row={id:draft.id,public_id:'PCS-TEST',version:1,replayed:true};assert.deepEqual(await createCatalog({query:async()=>[row]},create),{ok:true,...row});});
+
+test('archive only accepts identity and captured version, preserving atomic history',async()=>{
+ let written;const sql={query:async(query,params)=>{written={query,params};return [{id:draft.id,version:3,edit_version:'2026-10-07 14:00:00+00'}];}};
+ const result=await archiveCatalog(sql,{id:draft.id,expected_version:draft.expected_version});
+ assert.deepEqual(JSON.parse(written.params[2]),{publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'});assert.deepEqual(JSON.parse(written.params[3]),{});
+ assert.match(written.query,/updated_at::text=\$2 for update/);assert.match(written.query,/insert into catalog_revisions/);
+ assert.equal(result.publication_status,'ARCHIVED');assert.equal(result.availability_status,'UNAVAILABLE');
+ for(const b of [null,{id:draft.id},{id:draft.id,expected_version:'bad'},{id:draft.id,expected_version:draft.expected_version,title:'override'}])await assert.rejects(()=>archiveCatalog({query:()=>assert.fail('write')},b),e=>e.status===400);
+ await assert.rejects(()=>archiveCatalog({query:async()=>[]},{id:draft.id,expected_version:draft.expected_version}),e=>e.status===409);
+});
