@@ -34,3 +34,25 @@ export function catalogEditQuery(b){
  ) select s.id,s.version,s.updated_at::text edit_version from saved s where exists(select 1 from revision r where r.item_id=s.id)`,params:[b.id,b.expected_version,JSON.stringify(patch),JSON.stringify(ui),crypto.randomUUID()]};
 }
 export async function updateCatalog(sql,b){const q=catalogEditQuery(b),rows=await sql.query(q.query,q.params);if(!rows.length)throw new CrmError('Карточка уже изменена. Черновик сохранён; обновите карточку перед повтором.',409);return {ok:true,...rows[0]};}
+
+export function catalogCreateQuery(b){
+ if(!b||typeof b!=='object'||Array.isArray(b)||typeof b.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.request_id)||Object.hasOwn(b,'id')||Object.hasOwn(b,'expected_version'))throw new CrmError('Для создания нужен идентификатор запроса. Повторите тот же запрос при сбое.',400);
+ if(!b.title||b.publication_status&&b.publication_status!=='DRAFT'||b.moderation_status&&b.moderation_status!=='DRAFT')throw new CrmError('Новая карточка создаётся как черновик с названием.',400);
+ const {request_id,...input}=b;
+ const normalized={entity_type:'SERVICE',city:null,publication_status:'DRAFT',moderation_status:'DRAFT',availability_status:'REQUIRES_CONFIRMATION',description:'',category:'',conditions:'',source:'',client_price_thb:null,deposit_thb:null,internal_net_thb:null,...input};
+ const valid=catalogEditQuery({...normalized,id:request_id,expected_version:'2000-01-01T00:00:00Z'});
+ const patch=JSON.parse(valid.params[2]),ui=JSON.parse(valid.params[3]);
+ const fingerprint={request_id:request_id.toLowerCase(),data:patch,ui};
+ const payload={ui,_pcs_create_request:fingerprint};
+ return {query:`with inserted as (
+ insert into catalog_items(id,public_id,entity_type,title,city,publication_status,moderation_status,availability_status,version,client_price_thb,deposit_thb,internal_net_thb,created_at,updated_at)
+ values($1::uuid,$2,$3::jsonb->>'entity_type',$3::jsonb->>'title',$3::jsonb->>'city','DRAFT','DRAFT',$3::jsonb->>'availability_status',1,($3::jsonb->>'client_price_thb')::numeric,($3::jsonb->>'deposit_thb')::numeric,($3::jsonb->>'internal_net_thb')::numeric,now(),clock_timestamp())
+ on conflict(id) do nothing returning id,public_id
+ ), first_revision as (
+ insert into catalog_revisions(id,item_id,version,status,payload,created_at)
+ select $5::uuid,i.id,1,'DRAFT',$4::jsonb,now() from inserted i returning item_id
+ ) select i.id,i.public_id,1::int version,false replayed from inserted i where exists(select 1 from first_revision r where r.item_id=i.id)
+ union all select c.id,c.public_id,1::int version,true replayed from catalog_items c join catalog_revisions r on r.item_id=c.id and r.version=1
+ where c.id=$1::uuid and r.payload->'_pcs_create_request'=$4::jsonb->'_pcs_create_request' and not exists(select 1 from inserted)`,params:[request_id.toLowerCase(),'PCS-'+request_id.toUpperCase(),JSON.stringify(patch),JSON.stringify(payload),crypto.randomUUID()]};
+}
+export async function createCatalog(sql,b){const q=catalogCreateQuery(b),rows=await sql.query(q.query,q.params);if(!rows.length)throw new CrmError('Этот идентификатор уже используется или запись ещё сохраняется. Повторите исходный запрос; для другого черновика нужен новый идентификатор.',409);return {ok:true,...rows[0]};}
