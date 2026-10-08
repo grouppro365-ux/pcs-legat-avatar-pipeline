@@ -417,3 +417,11 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - 671 tests passed до финального CSS ограничения ширины textarea; targeted/UI/backend 55 passed. Final full suite/diff check ещё требуется. Browser/визуальная QA по указанию пользователя не запускалась; реальные лиды/отправки не менялись. Полное ТЗ остаётся открытым.
 
 - Финальный полный прогон после CSS ограничений: 671 passed, git diff --check чистый. SQL rollback подтверждён; server/frontend публикация нового блока пока не выполнялась.
+
+
+### 2026-10-08 — PR55 опубликован; возврат отклонённого лида на проверку
+- PR55 merge 9198cdbf24636755e14c9a3b80262a1e82f9914a, manager v50 ACTIVE (26 файлов проверены), production dpl_CYU45GxHnrx6tsBM3Bu1opQX6pVg READY. 13 merge files и HTML/prospecting.js/neon-adapter.js/CSS на canonical/bot alias совпали; unauth request-reject 401.
+- Подготовлен ручной возврат rejected записи в review: обязательные причина/подтверждение, exact original updated_at, атомарный audit before/receipt. Direction остаётся null, outreach blocked_identity; источник, message_text, contact_id и author_verified не меняются. Это не ручное подтверждение клиентского намерения и не разрешение первого сообщения.
+- Reject/restore используют общий код валидации/CAS/audit/replay, но разные audit actions и restore action в сохранённом input. UUID нельзя переиспользовать для другого действия; прежние reject receipts без action остаются совместимыми. Pending draft закреплён в текущей форме, double click запрещён, retry тот же, reload persistence не добавлялась.
+- SQL QA187393/187396 HTTP200 на temporary LIKE actual operator requests/audit_logs, rollback Z0001: restore audit failure/stale/wrong-phase отказ, review receipt и durable marker, identity/message сохранены, существующий worker может проверить восстановленную запись, outbound остаётся blocked_identity; опубликованный reject сценарий повторно прошёл все assertions. Реальные записи/сообщения не менялись.
+- 676 full tests passed, targeted/UI/backend 58 passed, diff check чистый. Browser/визуальная QA остановлена по указанию пользователя. Server/frontend нового блока ещё не опубликованы; всё ТЗ остаётся открытым.

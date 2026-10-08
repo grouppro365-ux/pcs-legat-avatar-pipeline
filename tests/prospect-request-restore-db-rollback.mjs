@@ -1,0 +1,28 @@
+import {prospectRestoreQuery} from '../server/supabase/pcs-manager-live2/prospect-request-review.mjs';
+import {saveReviewClassifications} from '../server/supabase/pcs-manager-live2/prospect-engine.mjs';
+const id='11111111-1111-4111-8111-111111111111',request_id='22222222-2222-4222-8222-222222222222',version='2026-10-08 10:00:00.123456+00';
+const literal=x=>"'"+String(x).replaceAll("'","''")+"'";
+const q=prospectRestoreQuery({id,request_id,expected_version:version,reason:'Rejected by mistake'});
+const statement=q.query.replace(/\$(\d+)\b/g,(_,n)=>literal(q.params[Number(n)-1])).replace('select s.* from saved s','select to_jsonb(s) into result from saved s');
+const input=`jsonb_build_array(jsonb_build_object('id','${id}','message_text','Need car','expected_updated_at',result->>'edit_version','decision','qualified','direction','CAR_RENTAL','reason','Rechecked request','evidence','Need car','facts','{}'::jsonb,'outreach_status','blocked_identity'))`;
+const worker=saveReviewClassifications.replace(/\$(\d+)\b/g,(_,n)=>n==='1'?input:literal(n==='2'?'QA-model':n==='3'?'QA-version':'55555555-5555-4555-8555-555555555555')).replace('select id,decision from saved','select count(*) into worker_count from saved');
+console.log(`do $qa$ declare result jsonb;worker_count int;begin begin
+set local timezone='UTC';set local search_path=pg_temp,public;
+create temp table pcs_prospect_requests(like public.pcs_prospect_requests including all) on commit drop;
+create temp table audit_logs(like public.audit_logs including all) on commit drop;
+insert into pcs_prospect_requests(id,source_id,telegram_message_id,message_url,message_text,decision,reason,qualification_version,qualification_model,outreach_status,updated_at,contact_id,author_verified) values('${id}','qa-source',1,'https://t.me/qa_source/1','Need car','rejected','Old rejection','QA','QA-AI','not_applicable','${version}','qa-contact',false);
+alter table audit_logs add constraint qa_audit_fail check(action<>'prospect_request_restored') not valid;
+begin ${statement};raise exception 'audit failure ignored';exception when check_violation then null;end;
+if (select decision from pcs_prospect_requests where id='${id}')<>'rejected' or (select updated_at::text from pcs_prospect_requests where id='${id}')<>'${version}' or (select count(*) from audit_logs)<>0 then raise exception 'partial restore on audit error';end if;
+alter table audit_logs drop constraint qa_audit_fail;
+update pcs_prospect_requests set updated_at=clock_timestamp() where id='${id}';
+${statement};if result is not null then raise exception 'stale restore accepted';end if;
+update pcs_prospect_requests set updated_at='${version}',decision='review' where id='${id}';
+${statement};if result is not null then raise exception 'non-rejected restore accepted';end if;
+update pcs_prospect_requests set decision='rejected' where id='${id}';
+${statement};if result->>'decision'<>'review' or result->>'direction' is not null or result->>'outreach_status'<>'blocked_identity' or (select count(*) from audit_logs)<>1 then raise exception 'unsafe restore receipt';end if;
+if (select message_text from pcs_prospect_requests where id='${id}')<>'Need car' or (select contact_id from pcs_prospect_requests where id='${id}')<>'qa-contact' or (select author_verified from pcs_prospect_requests where id='${id}') then raise exception 'identity/message changed';end if;
+if not exists(select 1 from audit_logs where id='${request_id}' and payload->'receipt'=result and payload->'input'->>'action'='restore' and payload->'before'->>'decision'='rejected') then raise exception 'restore marker missing';end if;
+${worker};if worker_count<>1 or (select decision from pcs_prospect_requests where id='${id}')<>'qualified' or (select outreach_status from pcs_prospect_requests where id='${id}')<>'blocked_identity' or (select count(*) from audit_logs)<>2 then raise exception 'review worker unavailable or outbound unlocked';end if;
+${statement};if result is not null or (select count(*) from audit_logs)<>2 then raise exception 'duplicate restore';end if;
+raise exception using errcode='Z0001',message='QA rollback';exception when sqlstate 'Z0001' then null;end;end $qa$;`);
