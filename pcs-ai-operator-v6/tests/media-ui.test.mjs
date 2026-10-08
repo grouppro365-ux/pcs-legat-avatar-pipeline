@@ -11,7 +11,7 @@ function harness(){
   openSheet:(title,body)=>{nodes.pcsMediaEditor={querySelectorAll:()=>[]};sheets.push({title,body})},esc:s=>String(s||''),toast:s=>notices.push(s),confirm:()=>true,
   crypto:{randomUUID:()=>String(calls.length)},URL:{createObjectURL:()=>'/preview',revokeObjectURL(){}},
   FileReader:class{readAsDataURL(){this.result='data:image/jpeg;base64,/9j/';this.onload()}},
-  call:async(path,opt={})=>{calls.push({path,opt});if(opt.method==='POST')return{ok:true};if(opt.method==='DELETE')return{ok:true,deleted:opt.body&&JSON.parse(opt.body).ids?JSON.parse(opt.body).ids:[path.split('/').pop()]};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'}]},setTimeout(){}};
+  call:async(path,opt={})=>{calls.push({path,opt});if(opt.method==='POST')return opt.body&&path.endsWith('/order')?{ok:true,id,ids:JSON.parse(opt.body).ids}:{ok:true};if(opt.method==='DELETE')return{ok:true,deleted:opt.body&&JSON.parse(opt.body).ids?JSON.parse(opt.body).ids:[path.split('/').pop()]};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'}]},setTimeout(){}};
  vm.createContext(context);vm.runInContext(readFileSync(new URL('../media.js',import.meta.url),'utf8'),context);
  return {context,item,calls,sheets,nodes,notices};
 }
@@ -26,7 +26,7 @@ test('photo editor loads real ids and uploads selected files through the authent
  assert.equal(JSON.parse(uploaded.opt.body).content_type,'image/jpeg');
 });
 test('cover button sends one full gallery order rather than individual unsupported patches',async()=>{
- const h=harness();h.context.call=async(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return {ok:true};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}]};
+ const h=harness();h.context.call=async(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return {ok:true,id,ids:JSON.parse(opt.body).ids};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}]};
  await h.context.window.mediaManager(id);await h.context.window.makeMain(id,'photo-b');
  const ordered=h.calls.find(c=>c.opt.method==='POST');assert.ok(ordered);
  assert.equal(ordered.path,'/catalog/'+id+'/media/order');
@@ -45,7 +45,7 @@ test('photo selection deletes a batch only after confirmation',async()=>{
 
 test('double cover click is blocked while the gallery read is pending',async()=>{
  const h=harness();await h.context.window.mediaManager(id);let resolve;
- h.context.call=(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return Promise.resolve({ok:true});return new Promise(r=>resolve=r)};
+ h.context.call=(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return Promise.resolve({ok:true,id,ids:JSON.parse(opt.body).ids});return new Promise(r=>resolve=r)};
  const first=h.context.window.makeMain(id,'photo-a');await h.context.window.makeMain(id,'photo-a');
  assert.equal(h.calls.filter(x=>x.opt.method==='POST').length,0);
  h.nodes.pcsMediaEditor={querySelectorAll:()=>[]};resolve([{id:'photo-a'}]);await first;
@@ -87,4 +87,14 @@ test('busy upload cannot clear, remove or expand its captured queue',async()=>{
  const h=harness();await h.context.window.mediaManager(id);const file={name:'a.jpg',size:123,type:'image/jpeg',lastModified:1};h.context.addPhotoFiles([file]);
  h.context.PCS.mediaBusy=true;h.context.clearPhotoQueue();h.context.removeQueued(h.context.PCS.queue[0].id);h.context.addPhotoFiles([{...file,name:'b.jpg'}]);
  assert.equal(h.context.PCS.queue.length,1);assert.equal(h.context.PCS.queue[0].file.name,'a.jpg');
+});
+
+test('cover selection preserves the opened gallery version across a later read',async()=>{
+ const h=harness();await h.context.window.mediaManager(id);
+ h.context.call=async(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return {ok:true,id,ids:JSON.parse(opt.body).ids};return [{id:'photo-a',gallery_version:'b'.repeat(32)},{id:'photo-b',gallery_version:'b'.repeat(32)}]};
+ await h.context.window.makeMain(id,'photo-b');const call=h.calls.find(x=>x.opt.method==='POST');assert.equal(JSON.parse(call.opt.body).expected_version,'a'.repeat(32));
+});
+test('incorrect cover receipt never claims success or reloads the editor',async()=>{
+ const h=harness();await h.context.window.mediaManager(id);h.context.call=async(path,opt={})=>opt.method==='POST'?{ok:true,id,ids:['photo-a','photo-b']}:[{id:'photo-a'},{id:'photo-b'}];
+ await h.context.window.makeMain(id,'photo-b');assert.equal(h.sheets.length,1);assert.equal(h.context.PCS.mediaBusy,false);assert.ok(!h.notices.includes('Обложка изменена'));assert.ok(h.notices.some(x=>/не подтвердил/.test(x)));
 });
