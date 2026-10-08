@@ -174,13 +174,16 @@ async function uiRoute(path,init){
     }
     if(method==='GET'&&!mid)return jsonResponse(gallery);
     if(method==='POST'&&!mid){
-      if(gallery.length>=30)return appError('Лимит 30 фото достигнут',400);
+      if(typeof body.request_id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.request_id))return appError('Не указан идентификатор загрузки.',400);
+      if(gallery.length>=30&&!gallery.some(x=>String(x.id)===body.request_id))return appError('Лимит 30 фото достигнут',400);
       if(!['image/jpeg','image/png','image/webp'].includes(body.content_type))return appError('Разрешены JPG, PNG и WEBP',400);
       const data=String(body.content_base64||'').replace(/^data:[^,]+,/,'');
       if(!data||data.length>Math.ceil(10*1024*1024/3)*4||!/^[A-Za-z0-9+/]*={0,2}$/.test(data))return appError('Некорректный файл или размер больше 10 МБ',400);
-      return jsonResponse(await manager('media-add',{method:'POST',body:{item_id:id,
+      const receipt=await manager('media-add',{method:'POST',body:{item_id:id,request_id:body.request_id,
         filename:body.filename||'image.jpg',content_type:body.content_type,content_base64:data,
-        media_type:'image',sort_order:gallery.length}}));
+        media_type:'image',sort_order:gallery.length}});
+      if(receipt?.ok!==true||String(receipt.id).toLowerCase()!==body.request_id.toLowerCase()||typeof receipt.url!=='string'||!receipt.url.startsWith('https://'))return appError('Сервер не подтвердил загрузку. Повторите тот же файл, не добавляя его заново.',503);
+      return jsonResponse(receipt);
     }
     if(method==='DELETE'){
       const ids=[...new Set(mid?[mid]:(Array.isArray(body.ids)?body.ids:[]))];
