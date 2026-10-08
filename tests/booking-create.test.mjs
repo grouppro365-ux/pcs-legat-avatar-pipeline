@@ -32,3 +32,23 @@ test('invalid financial terms fail before database or photo operations',async()=
  }
  const f=fixture(),b=input();b.qualification_data={...b.qualification_data,total_amount:100.25,deposit_amount:100.25,currency:'THB'};assert.equal((await createBooking(f.db,b,null)).ok,true);
 });
+
+test('booking and minimal audit use one dependent statement, with no second write on replay',async()=>{
+ const f=fixture(),b=input();b.client_contact='private contact';b.internal_notes='private note';
+ const first=await createBooking(f.db,b,null);await createBooking(f.db,b,null);
+ assert.equal(f.writes.length,1);const {q,p}=f.writes[0];
+ assert.match(q,/with created as/);assert.match(q,/insert into audit_events/);
+ assert.match(q,/'ADMIN','booking_create','applications'/);assert.match(q,/from created returning entity_id/);
+ assert.match(q,/exists\(select 1 from audited a where a.entity_id=c.id::text\)/);
+ assert.equal(p[11],request_id);assert.equal(first.replayed,false);
+ const audit=q.slice(q.indexOf('insert into audit_events'));assert.doesNotMatch(audit,/client_contact|client_name|internal_notes|photo|total_amount|deposit_amount/);
+});
+test('audit failure propagates without a success receipt; original request can be retried',async()=>{
+ const f=fixture();let failed=true;const db={query:async(q,p)=>{
+ if(!q.startsWith('select')&&failed){failed=false;throw new Error('audit unavailable');}
+ return f.db.query(q,p);
+ }};
+ await assert.rejects(()=>createBooking(db,input(),null),/audit unavailable/);
+ assert.equal(f.writes.length,0);
+ const saved=await createBooking(db,input(),null);assert.equal(saved.replayed,false);assert.equal(f.writes.length,1);
+});

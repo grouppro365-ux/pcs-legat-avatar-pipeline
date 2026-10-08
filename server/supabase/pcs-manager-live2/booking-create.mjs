@@ -13,6 +13,19 @@ export function validateBookingMoney(q){
  if(q.deposit_amount>0&&(q.total_amount==null||q.deposit_amount>q.total_amount))throw new CrmError('Предоплата не должна превышать стоимость аренды. Укажите полную стоимость.',400);
  if(q.currency!==undefined&&!['THB','USD','RUB'].includes(q.currency))throw new CrmError('Неизвестная валюта брони',400);
 }
+// Both writes share one statement: a failed audit leaves no booking.
+export const bookingCreateSql=`with created as (
+ insert into applications(id,public_id,client_name,client_contact,category,city,item_id,operational_status,priority,client_visible_notes,internal_notes,qualification_data,created_at,updated_at)
+ values($1::uuid,$2,$3,$4,'booking',$5,$6::uuid,$7,$8,$9,$10,$11::jsonb,now(),now())
+ on conflict ((qualification_data->>'booking_idempotency_key')) where category='booking' and qualification_data->>'booking_idempotency_key' is not null do nothing
+ returning id,public_id,item_id,operational_status,qualification_data
+ ),audited as (
+ insert into audit_events(actor_role,action,entity_type,entity_id,patch,reason,result)
+ select 'ADMIN','booking_create','applications',id::text,
+ jsonb_build_object('request_id',$12::text,'public_id',public_id,'item_id',item_id,'operational_status',operational_status,
+ 'start_date',qualification_data->>'start_date','end_date',qualification_data->>'end_date'),
+ 'Explicit PCS booking creation','SUCCESS' from created returning entity_id
+ ) select c.id,c.public_id from created c where exists(select 1 from audited a where a.entity_id=c.id::text)`;
 export async function createBooking(biz,b,uploadPhoto){
  if(!uuid(b.request_id)||b.id||b.category!=='booking')throw new CrmError('Некорректный номер запроса создания брони',400);
  const dates=b.qualification_data||{};if(!uuid(b.item_id)||!calendarDate(dates.start_date)||!calendarDate(dates.end_date)||dates.end_date<=dates.start_date)throw new CrmError('Укажите автомобиль и корректные даты: окончание позже начала.',400);
@@ -25,9 +38,7 @@ export async function createBooking(biz,b,uploadPhoto){
  if(b.photo?.content_base64){const up=await uploadPhoto(b.photo);q.photo_url=up.url;q.photo_name=b.photo.filename||null;q.photo_content_type=b.photo.content_type||null;}
  q.booking_idempotency_key=b.request_id;q.booking_request_hash=hash;
  const id=crypto.randomUUID(),publicId='APP-'+Date.now().toString(36).toUpperCase()+'-'+id.slice(0,8).toUpperCase();
- const rows=await biz.query(`insert into applications(id,public_id,client_name,client_contact,category,city,item_id,operational_status,priority,client_visible_notes,internal_notes,qualification_data,created_at,updated_at)
- values($1::uuid,$2,$3,$4,'booking',$5,$6::uuid,$7,$8,$9,$10,$11::jsonb,now(),now())
- on conflict ((qualification_data->>'booking_idempotency_key')) where category='booking' and qualification_data->>'booking_idempotency_key' is not null do nothing returning id,public_id`,[id,publicId,input.client_name,input.client_contact,input.city,input.item_id,input.operational_status,input.priority,input.client_visible_notes,input.internal_notes,JSON.stringify(q)]);
+ const rows=await biz.query(bookingCreateSql,[id,publicId,input.client_name,input.client_contact,input.city,input.item_id,input.operational_status,input.priority,input.client_visible_notes,input.internal_notes,JSON.stringify(q),b.request_id]);
  if(rows.length)return{ok:true,id:rows[0].id,public_id:rows[0].public_id,replayed:false};
  const saved=await receipt();if(saved)return saved;throw new CrmError('Результат сохранения пока не подтверждён. Повторите с той же формой.',409);
 }
