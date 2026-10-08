@@ -379,3 +379,13 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - SQL QA186473 HTTP200: temporary LIKE actual catalog_media/audit_events; audit error не оставляет частичный порядок, чужой/неполный список и stale metadata отклоняются, успешная обложка выставляет порядок 0/1/2 и одну audit, фото другой карточки не меняется, повтор со старой версией отклоняется. Всё откатилось Z0001; production фото не менялись.
 - 635 Node tests passed; добавлены проверки сохранности открытой версии при новом GET, неверной квитанции и server 409. Повторный прогон после общего валидатора ещё требуется.
 - Работа выполняется только в облаке без браузера. Server/frontend публикация ещё не выполнена. Идемпотентность upload, полная сериализация с concurrent upload и cleanup Storage остаются открытыми; полное ТЗ не закрыто.
+
+
+### 2026-10-08 — публикация PR51 и повторная загрузка фото
+- PR51 опубликован после согласия пользователя: merge 532dd23f8441b61261e546c0226ee31eef1e20bf, manager v46 ACTIVE (24 файла проверены), production dpl_FdZSjTyn2iZKJfpAgvhdXXkbdNKn READY. Frontend на canonical и bot alias совпал; unauth media-order 401.
+- Новый upload использует UUID очереди и SHA256(filename, MIME, bytes), фиксированный путь Storage. Повтор подтверждённого запроса возвращает тот же id без новой загрузки; другой файл/карточка с тем же id отклоняется. UUID сохраняется при retry текущей очереди, но не после reload/clear.
+- Metadata, parent timestamp и audit записываются атомарно; parent CAS и лимит 30 проверяются до INSERT. Audit photo_id/upload_fingerprint сохраняет маркер завершения: старый запрос не восстанавливает удалённое фото, включая проверку маркера внутри SQL.
+- SQL QA186559 HTTP200, temporary LIKE actual tables, полностью rollback Z0001: audit failure, stale parent, capacity, успешная запись, неизменные title/price, retry и deleted-photo refusal. Реальные Storage uploads и клиентские записи не использовались.
+- Работа в облаке без браузера. Полная сериализация upload/order/delete, cleanup объектов Storage и сохранение upload-очереди после reload остаются открытыми. Этот блок не закрывает всё ТЗ.
+
+- Финальный прогон 106 test.mjs файлов без browser integration: 652 passed, git diff --check чистый. Browser integration требует отсутствующую зависимость и по указанию пользователя не запускалась; отдельный unit-прогон UI/backend 584 passed.

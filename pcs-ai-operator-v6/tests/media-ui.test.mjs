@@ -5,13 +5,13 @@ import vm from 'node:vm';
 const id='11111111-1111-4111-8111-111111111111';
 function harness(){
  const item={id,title:'MG5',media_items:[]},calls=[],sheets=[];
- const nodes={},notices=[];const node=key=>nodes[key]||=( {classList:{toggle(){},add(){},remove(){}},style:{},querySelectorAll:()=>[],addEventListener(){},dataset:{},innerHTML:'',textContent:''});
+ const nodes={},notices=[];let nextId=0;const node=key=>nodes[key]||=( {classList:{toggle(){},add(){},remove(){}},style:{},querySelectorAll:()=>[],addEventListener(){},dataset:{},innerHTML:'',textContent:''});
  const PCS={catalog:[item]};
  const context={PCS,window:{},document:{getElementById:key=>key==='pcsMediaEditor'?(nodes[key]||null):node(key),querySelectorAll:()=>[]},$:node,
   openSheet:(title,body)=>{nodes.pcsMediaEditor={querySelectorAll:()=>[]};sheets.push({title,body})},esc:s=>String(s||''),toast:s=>notices.push(s),confirm:()=>true,
-  crypto:{randomUUID:()=>String(calls.length)},URL:{createObjectURL:()=>'/preview',revokeObjectURL(){}},
+  crypto:{randomUUID:()=>('44444444-4444-4444-8444-'+String(++nextId).padStart(12,'0'))},URL:{createObjectURL:()=>'/preview',revokeObjectURL(){}},
   FileReader:class{readAsDataURL(){this.result='data:image/jpeg;base64,/9j/';this.onload()}},
-  call:async(path,opt={})=>{calls.push({path,opt});if(opt.method==='POST')return opt.body&&path.endsWith('/order')?{ok:true,id,ids:JSON.parse(opt.body).ids}:{ok:true};if(opt.method==='DELETE')return{ok:true,deleted:opt.body&&JSON.parse(opt.body).ids?JSON.parse(opt.body).ids:[path.split('/').pop()]};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'}]},setTimeout(){}};
+  call:async(path,opt={})=>{calls.push({path,opt});if(opt.method==='POST')return opt.body&&path.endsWith('/order')?{ok:true,id,ids:JSON.parse(opt.body).ids}:{ok:true,id:JSON.parse(opt.body).request_id};if(opt.method==='DELETE')return{ok:true,deleted:opt.body&&JSON.parse(opt.body).ids?JSON.parse(opt.body).ids:[path.split('/').pop()]};return [{id:'photo-a',gallery_version:'a'.repeat(32),public_url:'https://example.test/a.jpg'}]},setTimeout(){}};
  vm.createContext(context);vm.runInContext(readFileSync(new URL('../media.js',import.meta.url),'utf8'),context);
  return {context,item,calls,sheets,nodes,notices};
 }
@@ -79,7 +79,7 @@ test('file queue rejects unsupported images and deduplicates one selected batch'
 test('completed upload does not reopen the gallery over another sheet',async()=>{
  const h=harness();await h.context.window.mediaManager(id);h.context.addPhotoFiles([{name:'a.jpg',size:123,type:'image/jpeg',lastModified:1}]);let resolve;
  h.context.call=(path,opt={})=>{h.calls.push({path,opt});return opt.method==='POST'?new Promise(r=>resolve=r):Promise.resolve([{id:'photo-a'}])};
- const pending=h.context.window.uploadPhotoQueue();await Promise.resolve();delete h.nodes.pcsMediaEditor;resolve({ok:true});await pending;
+ const pending=h.context.window.uploadPhotoQueue();await Promise.resolve();delete h.nodes.pcsMediaEditor;resolve({ok:true,id:h.context.PCS.queue[0].id});await pending;
  assert.equal(h.sheets.length,1);assert.equal(h.context.PCS.mediaBusy,false);assert.equal(h.context.PCS.queue[0].status,'done');
 });
 
@@ -97,4 +97,10 @@ test('cover selection preserves the opened gallery version across a later read',
 test('incorrect cover receipt never claims success or reloads the editor',async()=>{
  const h=harness();await h.context.window.mediaManager(id);h.context.call=async(path,opt={})=>opt.method==='POST'?{ok:true,id,ids:['photo-a','photo-b']}:[{id:'photo-a'},{id:'photo-b'}];
  await h.context.window.makeMain(id,'photo-b');assert.equal(h.sheets.length,1);assert.equal(h.context.PCS.mediaBusy,false);assert.ok(!h.notices.includes('Обложка изменена'));assert.ok(h.notices.some(x=>/не подтвердил/.test(x)));
+});
+
+test('retrying the failed photo retains its original upload request id and bytes',async()=>{
+ const h=harness();await h.context.window.mediaManager(id);h.context.addPhotoFiles([{name:'a.jpg',size:123,type:'image/jpeg',lastModified:1}]);
+ h.context.call=async(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')throw Error('Timeout');return[{id:'photo-a',gallery_version:'a'.repeat(32)}]};
+ await h.context.window.uploadPhotoQueue();await h.context.window.uploadPhotoQueue();const posts=h.calls.filter(x=>x.opt.method==='POST');assert.equal(posts.length,2);assert.equal(posts[0].opt.body,posts[1].opt.body);assert.equal(JSON.parse(posts[0].opt.body).request_id,h.context.PCS.queue[0].id);assert.equal(h.context.PCS.queue[0].status,'error');
 });

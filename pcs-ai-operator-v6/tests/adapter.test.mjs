@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
-const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse,mediaDeleteResponse,mediaOrderResponse}={}){
+const itemId='11111111-1111-4111-8111-111111111111',photoNewId='55555555-5555-4555-8555-555555555555';
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse,mediaDeleteResponse,mediaOrderResponse,mediaAddResponse}={}){
   const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
@@ -31,7 +31,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='tasks')return Response.json({tasks:[{id:'task1',contact_id:'contact1',title:'Task'}],truncated:false});
     if(op==='catalog-archive')return archiveResponse?.(body)||Response.json({ok:true,id:body.id,version:2,edit_version:'2026-10-07 15:00:00+00',publication_status:'ARCHIVED',availability_status:'UNAVAILABLE'});
     if(op==='catalog-detail')return new Response(JSON.stringify({item,media}));
-    if(op==='media-add'){media.push({id:'photo-new',public_url:'https://example.test/new.jpg'});return new Response(JSON.stringify({ok:true,id:'photo-new'}));}
+    if(op==='media-add'){if(mediaAddResponse)return mediaAddResponse(body);if(!media.some(x=>x.id===body.request_id))media.push({id:body.request_id,public_url:'https://example.test/new.jpg'});return Response.json({ok:true,id:body.request_id,url:'https://example.test/new.jpg'});}
     if(op==='media-delete'){if(mediaDeleteResponse)return mediaDeleteResponse(body);for(let i=media.length-1;i>=0;i--)if(body.ids.includes(media[i].id))media.splice(i,1);return Response.json({ok:true,id:body.item_id,deleted:body.ids});}
     if(op==='media-order')return mediaOrderResponse?.(body)||Response.json({ok:true,id:body.item_id,ids:body.ids});
     if(op==='services')return new Response(JSON.stringify([{...item,entity_type:'SERVICE'}]));
@@ -94,9 +94,9 @@ test('selecting a cover reorders the existing gallery without removing any photo
 test('photo routes load the real gallery, add an image and delete only selected ids',async()=>{
  const h=adapterHarness();const url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media';
  const gallery=await h.window.fetch(url);assert.equal(gallery.status,200);assert.equal((await gallery.json()).length,2);
- const added=await h.window.fetch(url,{method:'POST',body:JSON.stringify({filename:'new.jpg',content_type:'image/jpeg',content_base64:'/9j/'})});
+ const added=await h.window.fetch(url,{method:'POST',body:JSON.stringify({request_id:photoNewId,filename:'new.jpg',content_type:'image/jpeg',content_base64:'/9j/'})});
  assert.equal(added.status,200);assert.equal(h.calls.find(x=>x.op==='media-add').body.item_id,itemId);
- const deleted=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({ids:['photo-a','photo-new'],expected_version:'a'.repeat(32)})});
+ const deleted=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({ids:['photo-a',photoNewId],expected_version:'a'.repeat(32)})});
  assert.equal(deleted.status,200);assert.deepEqual(h.media.map(x=>x.id),['photo-b']);assert.equal(h.calls.filter(x=>x.op==='media-delete').length,1);assert.equal(h.calls.find(x=>x.op==='media-delete').body.expected_version,'a'.repeat(32));
 });
 
@@ -260,4 +260,15 @@ test('cover route preserves backend conflict and scopes one request to its catal
  const h=adapterHarness({mediaOrderResponse:()=>Response.json({error:'Gallery changed'},{status:409})});
  const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)})});
  assert.equal(r.status,409);const calls=h.calls.filter(x=>x.op==='media-order');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)});assert.equal(h.media.length,2);
+});
+
+test('upload adapter requires a stable id and refuses a mismatched upload receipt',async()=>{
+ const h=adapterHarness({mediaAddResponse:()=>Response.json({ok:true,id:'other',url:'https://example.test/a.jpg'})}),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media',body={filename:'a.jpg',content_type:'image/jpeg',content_base64:'/9j/'};
+ assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify(body)})).status,400);assert.equal(h.calls.filter(x=>x.op==='media-add').length,0);
+ assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({...body,request_id:photoNewId})})).status,503);assert.equal(h.calls.find(x=>x.op==='media-add').body.request_id,photoNewId);
+});
+test('upload retry can reach the server at capacity when its photo already exists',async()=>{
+ const h=adapterHarness(),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media',body={request_id:photoNewId,filename:'a.jpg',content_type:'image/jpeg',content_base64:'/9j/'};
+ await h.window.fetch(url,{method:'POST',body:JSON.stringify(body)});while(h.media.length<30)h.media.push({id:'fixture-'+h.media.length});
+ const r=await h.window.fetch(url,{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.media.length,30);
 });
