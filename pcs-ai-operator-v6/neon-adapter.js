@@ -182,12 +182,10 @@ async function uiRoute(path,init){
     if(method==='DELETE'){
       const ids=[...new Set(mid?[mid]:(Array.isArray(body.ids)?body.ids:[]))];
       if(!ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Выберите фото именно этой записи',400);
-      const deleted=[];
-      for(const photoId of ids){
-        try{await manager('media-delete',{method:'POST',body:{id:photoId}});deleted.push(photoId)}
-        catch(e){return jsonResponse({error:'Удалена только часть фото. Обновите список перед повтором.',deleted},409)}
-      }
-      return jsonResponse({ok:true,deleted});
+      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version))return appError('Обновите галерею перед удалением фотографий.',400);
+      const receipt=await manager('media-delete',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version}});
+      if(receipt?.ok!==true||String(receipt.id)!==id||!Array.isArray(receipt.deleted)||receipt.deleted.length!==ids.length||!ids.every(x=>receipt.deleted.includes(x)))return appError('Сервер не подтвердил удаление выбранных фото. Обновите галерею для проверки.',503);
+      return jsonResponse(receipt);
     }
   }
   m=path.match(/^\/catalog\/([^/]+)$/);

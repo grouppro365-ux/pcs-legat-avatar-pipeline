@@ -26,7 +26,7 @@ window.closeSheet=()=>{document.getElementById('sheet').classList.remove('on');d
 window.openSheet=(title,body)=>{document.getElementById('sheetbox').innerHTML='<div class="sheethead"><button class="iconbtn" onclick="closeSheet()">×</button><h2>'+esc(title)+'</h2></div><p class="pill warn">ТЕСТОВЫЕ ДАННЫЕ · без записи в базу</p>'+body;document.getElementById('sheet').classList.add('on');document.body.classList.add('sheet-open')};
 window.toast=msg=>document.getElementById('testResult').textContent=msg;
 const picture=label=>'data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#e6f1ef"/><text x="200" y="150" text-anchor="middle" font-size="30" fill="#214d49">'+label+'</text></svg>');
-let photos=[{id:'photo-a',public_url:picture('Тест A')},{id:'photo-b',public_url:picture('Тест Б')}];
+let photos=[{id:'photo-a',gallery_version:'a'.repeat(32),public_url:picture('Тест A')},{id:'photo-b',gallery_version:'a'.repeat(32),public_url:picture('Тест Б')}];
 window.call=async(path,opt={})=>{
  if(!opt.method)return photos.map(x=>({...x}));
  await new Promise(resolve=>setTimeout(resolve,500));
@@ -35,4 +35,4 @@ window.call=async(path,opt={})=>{
  if(path.endsWith('/order')){const ids=JSON.parse(opt.body).ids;photos=ids.map(id=>photos.find(x=>x.id===id));return{ok:true}}
  return {ok:true};
 };
-</script><script src="../media.js?v=20261008-photo1"></script></body></html>
+</script><script src="../media.js?v=20261008-photo2"></script></body></html>
