@@ -389,3 +389,13 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - Работа в облаке без браузера. Полная сериализация upload/order/delete, cleanup объектов Storage и сохранение upload-очереди после reload остаются открытыми. Этот блок не закрывает всё ТЗ.
 
 - Финальный прогон 106 test.mjs файлов без browser integration: 652 passed, git diff --check чистый. Browser integration требует отсутствующую зависимость и по указанию пользователя не запускалась; отдельный unit-прогон UI/backend 584 passed.
+
+
+### 2026-10-08 — PR52 опубликован; общий конфликт фотографий
+- PR52 merge d76811f66bd91dbbe5de054739a8c32b86a930f8, manager v47 ACTIVE (25 файлов), production dpl_3ehyWtCwZphoPWHjx5KzKWHX6tBw READY. 12 merge files и HTML/media.js/neon-adapter.js на обоих адресах совпали; unauth media-add 401.
+- Подготовлена общая блокировка catalog_items для delete/order, как у upload: исходный parent updated_at передаётся отдельно от gallery hash, parent блокируется до gallery rows, успешная операция атомарно обновляет timestamp вместе с audit. Поэтому действия со старой версией parent отклоняются даже при неизменном hash галереи.
+- gallery_item_version читается с media в одном SQL snapshot; форма фиксирует оба исходных значения и сохраняет их при промежуточном GET. Adapter не подставляет свежую версию вместо открытой. Старые clients без parent version получают отказ с предложением обновить галерею.
+- SQL QA186615/186616 HTTP200 на temporary LIKE actual catalog_items/media/audit: stale parent отдельно от gallery hash, audit failure rollback, foreign/partial/stale media, успешные delete/order, timestamp изменён, title/price сохранены. Всё rollback Z0001. Повторный прогон после добавления явного parent rollback assertion требуется.
+- 655 tests passed без browser integration, diff check чистый. Реальный двухсессионный concurrent E2E не выполнялся; проверены общая parent CAS/lock схема и stale-state SQL сценарии. Browser/layout QA остановлена по указанию пользователя. Полное ТЗ, Storage cleanup и upload queue persistence остаются открытыми.
+
+- Повторные SQL QA186619/186620 HTTP200 подтвердили явную проверку rollback parent timestamp при ошибке audit. Повторный полный прогон: 655 passed.
