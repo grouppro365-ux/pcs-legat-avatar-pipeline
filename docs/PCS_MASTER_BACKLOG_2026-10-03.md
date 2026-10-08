@@ -399,3 +399,11 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - 655 tests passed без browser integration, diff check чистый. Реальный двухсессионный concurrent E2E не выполнялся; проверены общая parent CAS/lock схема и stale-state SQL сценарии. Browser/layout QA остановлена по указанию пользователя. Полное ТЗ, Storage cleanup и upload queue persistence остаются открытыми.
 
 - Повторные SQL QA186619/186620 HTTP200 подтвердили явную проверку rollback parent timestamp при ошибке audit. Повторный полный прогон: 655 passed.
+
+
+### 2026-10-08 — PR53 опубликован; фильтры найденных запросов
+- PR53 merge ba8a66646ab38260bb34a833ec9653f3ea2f9f17, manager v48 ACTIVE (25 файлов проверены), production dpl_CinatAVxstFJZHCM1Nvjq6oeL2R7 READY. 15 merge files и frontend на canonical/bot alias совпали; unauth media-order/delete 401.
+- Подготовлен отбор Telegram requests по CAR_RENTAL / PROPERTY_PURCHASE и дате: recent по умолчанию (7 дней, не позже now+5min) или вся история. Фильтры применяются в SQL до pagination, сочетаются с competitor/decision. Старые, undated и будущие сообщения не попадают в recent; они остаются в истории. Это не подтверждение незакрытой потребности.
+- Счётчики qualified/review/rejected используют тот же scope направления/даты/конкурентов; sources/source_read ограничены видом источников. Выбор фильтра сбрасывает page, pagination и competitor сохраняют выбор. UI проверяет echo view/page/decision/source_kind/direction/freshness и игнорирует поздние ответы.
+- SQL QA186712 HTTP200 на temporary LIKE actual operator sources/requests: свежие/старые/undated/future, оба направления, competitor, decision, pagination и scoped summary. Полный rollback Z0001; real requests не менялись.
+- 661 tests passed; после уточнения подписи counters 7 UI tests повторно passed, diff check чистый. Новых Telegram/OpenRouter запросов и отправок не выполняли. Responsive grid существующей страницы поддерживает один столбец до 700px; browser/визуальная проверка не запускалась по указанию пользователя. Полное ТЗ остаётся открытым.
