@@ -167,7 +167,10 @@ async function uiRoute(path,init){
     if(mid==='order'&&method==='POST'){
       const ids=Array.isArray(body.ids)?body.ids:[];
       if(ids.length!==gallery.length||new Set(ids).size!==ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Список фото изменился. Обновите галерею.',409);
-      return jsonResponse(await manager('media-order',{method:'POST',body:{ids}}));
+      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version))return appError('Обновите галерею перед сменой обложки.',400);
+      const receipt=await manager('media-order',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version}});
+      if(receipt?.ok!==true||String(receipt.id)!==id||!Array.isArray(receipt.ids)||receipt.ids.length!==ids.length||ids.some((x,i)=>receipt.ids[i]!==x))return appError('Сервер не подтвердил порядок фото. Обновите галерею для проверки.',503);
+      return jsonResponse(receipt);
     }
     if(method==='GET'&&!mid)return jsonResponse(gallery);
     if(method==='POST'&&!mid){

@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111';
-function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse,mediaDeleteResponse}={}){
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse,mediaDeleteResponse,mediaOrderResponse}={}){
   const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
@@ -33,7 +33,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='catalog-detail')return new Response(JSON.stringify({item,media}));
     if(op==='media-add'){media.push({id:'photo-new',public_url:'https://example.test/new.jpg'});return new Response(JSON.stringify({ok:true,id:'photo-new'}));}
     if(op==='media-delete'){if(mediaDeleteResponse)return mediaDeleteResponse(body);for(let i=media.length-1;i>=0;i--)if(body.ids.includes(media[i].id))media.splice(i,1);return Response.json({ok:true,id:body.item_id,deleted:body.ids});}
-    if(op==='media-order')return new Response(JSON.stringify({ok:true}));
+    if(op==='media-order')return mediaOrderResponse?.(body)||Response.json({ok:true,id:body.item_id,ids:body.ids});
     if(op==='services')return new Response(JSON.stringify([{...item,entity_type:'SERVICE'}]));
     if(op==='catalog-save'&&body.request_id)return createResponse?.(body)||Response.json({ok:true,id:body.request_id,public_id:'PCS-TEST',version:1,replayed:false});
     if(op==='catalog-save'){
@@ -87,7 +87,7 @@ test('batch photo deletion rejects ids belonging to a different record before an
 test('selecting a cover reorders the existing gallery without removing any photos',async()=>{
  const h=adapterHarness();
  const response=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',
-   {method:'POST',body:JSON.stringify({ids:['photo-b','photo-a']})});
+   {method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32)})});
  assert.equal(response.status,200);assert.deepEqual(h.calls.find(c=>c.op==='media-order')?.body.ids,['photo-b','photo-a']);
  assert.equal(h.media.length,2);
 });
@@ -249,4 +249,15 @@ test('media delete without a version is blocked and mismatched receipt is not su
  const h=adapterHarness({mediaDeleteResponse:()=>Response.json({ok:true,id:itemId,deleted:['photo-b']})}),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/photo-a';
  assert.equal((await h.window.fetch(url,{method:'DELETE',body:'{}'})).status,400);assert.equal(h.calls.filter(x=>x.op==='media-delete').length,0);
  const r=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({expected_version:'a'.repeat(32)})});assert.equal(r.status,503);assert.equal(h.media.length,2);
+});
+
+test('cover route requires the opened version and validates exact order in the receipt',async()=>{
+ const h=adapterHarness({mediaOrderResponse:()=>Response.json({ok:true,id:itemId,ids:['photo-a','photo-b']})}),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order';
+ assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a']})})).status,400);assert.equal(h.calls.filter(x=>x.op==='media-order').length,0);
+ assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32)})})).status,503);
+});
+test('cover route preserves backend conflict and scopes one request to its catalog item',async()=>{
+ const h=adapterHarness({mediaOrderResponse:()=>Response.json({error:'Gallery changed'},{status:409})});
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)})});
+ assert.equal(r.status,409);const calls=h.calls.filter(x=>x.op==='media-order');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)});assert.equal(h.media.length,2);
 });
