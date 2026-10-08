@@ -280,3 +280,5 @@ test('gallery mutations require the originally opened parent version before cont
  }
  assert.equal(h.calls.filter(x=>x.op==='media-delete'||x.op==='media-order').length,0);assert.equal(h.media.length,2);
 });
+
+test('prospect direction and freshness filters pass unchanged with the admin session',async()=>{const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting?direction=PROPERTY_PURCHASE&freshness=all&source_kind=competitor');assert.equal(r.status,200);assert.equal(h.calls[0].params.direction,'PROPERTY_PURCHASE');assert.equal(h.calls[0].params.freshness,'all');assert.equal(h.calls[0].params.source_kind,'competitor');assert.equal(h.calls[0].authorization,'Bearer fixture')});
