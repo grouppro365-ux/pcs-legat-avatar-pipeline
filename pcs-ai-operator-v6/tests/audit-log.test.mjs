@@ -14,3 +14,29 @@ test('long field lists stay compact, use readable labels, and escape expanded va
  const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'applications.insert',changed_fields:['id','city','item_id','category','public_id','reserved_vehicle_id','<img>']}]});await p;
  const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/Все изменённые поля \(7\)/);assert.match(html,/<details><summary/);assert.match(html,/Зарезервированный автомобиль/);assert.doesNotMatch(html,/<img>|reserved_vehicle_id/);assert.ok(html.indexOf('Зарезервированный автомобиль')>html.indexOf('<details>'));
 });
+
+test('recent booking, gallery, prospect and communication events render readable operator history',async()=>{
+ const records=[
+ {action:'booking_create',actor:'ADMIN',entity_type:'applications',result:'SUCCESS',changed_fields:['request_id','public_id','item_id','start_date','end_date','operational_status']},
+ {action:'catalog_media_add',actor:'ADMIN',entity_type:'catalog_items',changed_fields:['photo_id','upload_fingerprint']},
+ {action:'catalog_media_delete',actor:'ADMIN',changed_fields:['deleted_photo_ids']},
+ {action:'catalog_media_order',actor:'ADMIN',changed_fields:['photo_order']},
+ {action:'prospect_source_updated',actor:'admin',entity_type:'prospect_source',changed_fields:['enabled','topic','rules']},
+ {action:'prospect_request_rejected',actor:'admin',entity_type:'prospect_request'},
+ {action:'prospect_request_restored',actor:'admin',entity_type:'prospect_request'},
+ {action:'crm_message_sent',actor:'admin',entity_type:'message'},
+ {action:'crm_delivery_confirmed_by_operator',actor:'pcs-manager-admin',entity_type:'message',changed_fields:['method','note']},
+ {action:'ai_answer_sent',actor:'admin',entity_type:'ai_generation'},
+ {action:'ai_answer_rejected',actor:'admin',entity_type:'ai_generation'}
+ ];
+ const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:records});await p;
+ const html=h.nodes.pcsAuditList.innerHTML;
+ for(const label of ['Бронь создана','Начало аренды','Окончание аренды','Фото добавлено','Фото удалены','Порядок фото изменён','Настройки источника Telegram изменены','Запрос Telegram отклонён','Запрос Telegram возвращён на проверку','Сообщение отправлено','Доставка подтверждена оператором','Согласованный ответ отправлен','Ответ ИИ отклонён','Способ подтверждения'])assert.ok(html.includes(label),label);
+ for(const r of records){assert.ok(!html.includes(r.action),r.action);for(const field of r.changed_fields||[])assert.ok(!html.includes(field),field);}
+ assert.doesNotMatch(html,/pcs-manager-admin|· admin|ai_generation|prospect_request/);
+ assert.equal(h.calls.length,1);
+});
+test('unknown journal event names remain visible and safely escaped',async()=>{
+ const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'new_event_<script>',actor:'external_<img>',entity_type:'unknown_<svg>',changed_fields:['future_<iframe>']}]});await p;
+ const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/new_event_&lt;script&gt;/);assert.match(html,/future_&lt;iframe&gt;/);assert.doesNotMatch(html,/<script>|<img>|<svg>|<iframe>/);
+});
