@@ -167,8 +167,8 @@ async function uiRoute(path,init){
     if(mid==='order'&&method==='POST'){
       const ids=Array.isArray(body.ids)?body.ids:[];
       if(ids.length!==gallery.length||new Set(ids).size!==ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Список фото изменился. Обновите галерею.',409);
-      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version))return appError('Обновите галерею перед сменой обложки.',400);
-      const receipt=await manager('media-order',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version}});
+      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version)||typeof body.expected_item_version!=='string'||body.expected_item_version.length>80||!Number.isFinite(Date.parse(body.expected_item_version)))return appError('Обновите галерею перед сменой обложки.',400);
+      const receipt=await manager('media-order',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version,expected_item_version:body.expected_item_version}});
       if(receipt?.ok!==true||String(receipt.id)!==id||!Array.isArray(receipt.ids)||receipt.ids.length!==ids.length||ids.some((x,i)=>receipt.ids[i]!==x))return appError('Сервер не подтвердил порядок фото. Обновите галерею для проверки.',503);
       return jsonResponse(receipt);
     }
@@ -188,8 +188,8 @@ async function uiRoute(path,init){
     if(method==='DELETE'){
       const ids=[...new Set(mid?[mid]:(Array.isArray(body.ids)?body.ids:[]))];
       if(!ids.length||ids.some(value=>!gallery.some(photo=>String(photo.id)===String(value))))return appError('Выберите фото именно этой записи',400);
-      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version))return appError('Обновите галерею перед удалением фотографий.',400);
-      const receipt=await manager('media-delete',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version}});
+      if(typeof body.expected_version!=='string'||!/^[0-9a-f]{32}$/.test(body.expected_version)||typeof body.expected_item_version!=='string'||body.expected_item_version.length>80||!Number.isFinite(Date.parse(body.expected_item_version)))return appError('Обновите галерею перед удалением фотографий.',400);
+      const receipt=await manager('media-delete',{method:'POST',body:{item_id:id,ids,expected_version:body.expected_version,expected_item_version:body.expected_item_version}});
       if(receipt?.ok!==true||String(receipt.id)!==id||!Array.isArray(receipt.deleted)||receipt.deleted.length!==ids.length||!ids.every(x=>receipt.deleted.includes(x)))return appError('Сервер не подтвердил удаление выбранных фото. Обновите галерею для проверки.',503);
       return jsonResponse(receipt);
     }

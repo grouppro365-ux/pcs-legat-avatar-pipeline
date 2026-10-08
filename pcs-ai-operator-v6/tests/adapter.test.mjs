@@ -87,7 +87,7 @@ test('batch photo deletion rejects ids belonging to a different record before an
 test('selecting a cover reorders the existing gallery without removing any photos',async()=>{
  const h=adapterHarness();
  const response=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',
-   {method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32)})});
+   {method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})});
  assert.equal(response.status,200);assert.deepEqual(h.calls.find(c=>c.op==='media-order')?.body.ids,['photo-b','photo-a']);
  assert.equal(h.media.length,2);
 });
@@ -96,7 +96,7 @@ test('photo routes load the real gallery, add an image and delete only selected 
  const gallery=await h.window.fetch(url);assert.equal(gallery.status,200);assert.equal((await gallery.json()).length,2);
  const added=await h.window.fetch(url,{method:'POST',body:JSON.stringify({request_id:photoNewId,filename:'new.jpg',content_type:'image/jpeg',content_base64:'/9j/'})});
  assert.equal(added.status,200);assert.equal(h.calls.find(x=>x.op==='media-add').body.item_id,itemId);
- const deleted=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({ids:['photo-a',photoNewId],expected_version:'a'.repeat(32)})});
+ const deleted=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({ids:['photo-a',photoNewId],expected_version:'a'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})});
  assert.equal(deleted.status,200);assert.deepEqual(h.media.map(x=>x.id),['photo-b']);assert.equal(h.calls.filter(x=>x.op==='media-delete').length,1);assert.equal(h.calls.find(x=>x.op==='media-delete').body.expected_version,'a'.repeat(32));
 });
 
@@ -242,24 +242,24 @@ test('pricing forwards exact decimal strings, rejects blank price and preserves 
 
 test('media deletion forwards one captured gallery version and preserves conflict responses',async()=>{
  const h=adapterHarness({mediaDeleteResponse:()=>Response.json({error:'Gallery changed'},{status:409})});
- const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media',{method:'DELETE',body:JSON.stringify({ids:['photo-a','photo-b'],expected_version:'b'.repeat(32)})});
- assert.equal(r.status,409);assert.equal(h.media.length,2);const calls=h.calls.filter(x=>x.op==='media-delete');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-a','photo-b'],expected_version:'b'.repeat(32)});
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media',{method:'DELETE',body:JSON.stringify({ids:['photo-a','photo-b'],expected_version:'b'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})});
+ assert.equal(r.status,409);assert.equal(h.media.length,2);const calls=h.calls.filter(x=>x.op==='media-delete');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-a','photo-b'],expected_version:'b'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'});
 });
 test('media delete without a version is blocked and mismatched receipt is not success',async()=>{
  const h=adapterHarness({mediaDeleteResponse:()=>Response.json({ok:true,id:itemId,deleted:['photo-b']})}),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/photo-a';
  assert.equal((await h.window.fetch(url,{method:'DELETE',body:'{}'})).status,400);assert.equal(h.calls.filter(x=>x.op==='media-delete').length,0);
- const r=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({expected_version:'a'.repeat(32)})});assert.equal(r.status,503);assert.equal(h.media.length,2);
+ const r=await h.window.fetch(url,{method:'DELETE',body:JSON.stringify({expected_version:'a'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})});assert.equal(r.status,503);assert.equal(h.media.length,2);
 });
 
 test('cover route requires the opened version and validates exact order in the receipt',async()=>{
  const h=adapterHarness({mediaOrderResponse:()=>Response.json({ok:true,id:itemId,ids:['photo-a','photo-b']})}),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order';
  assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a']})})).status,400);assert.equal(h.calls.filter(x=>x.op==='media-order').length,0);
- assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32)})})).status,503);
+ assert.equal((await h.window.fetch(url,{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'a'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})})).status,503);
 });
 test('cover route preserves backend conflict and scopes one request to its catalog item',async()=>{
  const h=adapterHarness({mediaOrderResponse:()=>Response.json({error:'Gallery changed'},{status:409})});
- const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)})});
- assert.equal(r.status,409);const calls=h.calls.filter(x=>x.op==='media-order');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-b','photo-a'],expected_version:'b'.repeat(32)});assert.equal(h.media.length,2);
+ const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media/order',{method:'POST',body:JSON.stringify({ids:['photo-b','photo-a'],expected_version:'b'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'})});
+ assert.equal(r.status,409);const calls=h.calls.filter(x=>x.op==='media-order');assert.equal(calls.length,1);assert.deepEqual(calls[0].body,{item_id:itemId,ids:['photo-b','photo-a'],expected_version:'b'.repeat(32),expected_item_version:'2026-10-08 10:00:00.123456+00'});assert.equal(h.media.length,2);
 });
 
 test('upload adapter requires a stable id and refuses a mismatched upload receipt',async()=>{
@@ -271,4 +271,12 @@ test('upload retry can reach the server at capacity when its photo already exist
  const h=adapterHarness(),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media',body={request_id:photoNewId,filename:'a.jpg',content_type:'image/jpeg',content_base64:'/9j/'};
  await h.window.fetch(url,{method:'POST',body:JSON.stringify(body)});while(h.media.length<30)h.media.push({id:'fixture-'+h.media.length});
  const r=await h.window.fetch(url,{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.media.length,30);
+});
+
+test('gallery mutations require the originally opened parent version before contacting a mutation handler',async()=>{
+ const h=adapterHarness(),url='https://pcs-stable.local/pcs-ui-api/catalog/'+itemId+'/media';
+ for(const [path,method] of [[url,'DELETE'],[url+'/order','POST']]){
+ const r=await h.window.fetch(path,{method,body:JSON.stringify({ids:['photo-a','photo-b'],expected_version:'a'.repeat(32)})});assert.equal(r.status,400);
+ }
+ assert.equal(h.calls.filter(x=>x.op==='media-delete'||x.op==='media-order').length,0);assert.equal(h.media.length,2);
 });
