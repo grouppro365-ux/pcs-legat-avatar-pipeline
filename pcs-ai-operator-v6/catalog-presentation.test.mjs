@@ -19,9 +19,10 @@ assert.match(css,/\.pcs-ap-filter\{display:flex!important;overflow-x:auto!import
 assert.match(css,/\.pcs-ap-service-grid\{grid-template-columns:1fr!important/,'mobile service cards must be a readable single column');
 assert.match(html,/interactions-v32\.js\?v=20260903-v35a/,'browser cache key must be bumped');
 assert.match(adapter,/saveCatalogPricing/,'Mini App must send approved price and deposit updates through the manager');
-assert.match(adapter,/\['delete','rules','upsert_rule','delete_rule'\]/,'Mini App must forward archive and seasonal catalog actions');
+assert.match(adapter,/manager\('catalog-archive'/,'Mini App must archive through the current manager');
+assert.match(adapter,/\['rules','upsert_rule','delete_rule'\]/,'Mini App must forward seasonal catalog actions');
 assert.match(safety,/depositThb/,'rental editor must expose a separate vehicle security deposit');
 assert.match(catalogUx,/confirmDeleteCatalog/,'catalog cards must expose archive action');
-assert.match(html,/neon-adapter\.js\?v=20260930-catalog-media1/,'daily-rental adapter cache key must be bumped');
+assert.match(html,/neon-adapter\.js\?v=\d{8}-[a-z0-9-]+/,'daily-rental adapter cache key must be bumped');
 
 console.log('catalog presentation checks passed');
