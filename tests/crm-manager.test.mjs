@@ -19,12 +19,12 @@ import * as approvals from '../server/supabase/pcs-manager-live2/approval-policy
 import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
-async function fixture({taskRows,applicationRows}={}){
+async function fixture({taskRows,applicationRows,queryResult}={}){
  let handler;const writes=[],reads=[];
  const sql=async(strings,...params)=>{
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
- };sql.query=async(q,p)=>{writes.push({q,p});return[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
+ };sql.query=async(q,p)=>{writes.push({q,p});return queryResult?queryResult(q,p):[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
@@ -150,3 +150,20 @@ test('internal scanner rejects anonymous access and wrong methods before any dat
 test('operational overview and notification/application reads are admin-only and GET-only',async()=>{const f=await fixture();for(const op of ['dashboard','notifications','operational-application','audit']){assert.equal((await f.call(op,{method:'GET',auth:''})).status,401);assert.equal((await f.call(op,{method:'POST'})).status,405);}assert.equal(f.writes.length,0);});
 
 test('notification acknowledgement rejects GET and malformed payload before mutation',async()=>{const f=await fixture();assert.equal((await f.call('notification-read',{method:'GET'})).status,405);assert.equal((await f.call('notification-read',{body:{id:'bad',expected_version:'bad'}})).status,400);assert.equal(f.writes.length,0);});
+
+test('new booking requests cannot bypass audited creation by omitting the request UUID',async()=>{
+ const f=await fixture(),base={category:'booking',item_id:'22222222-2222-4222-8222-222222222222',operational_status:'AWAITING_PARTNER_CONFIRMATION',qualification_data:{start_date:'2026-10-10',end_date:'2026-10-20'},photo:{content_base64:'QA',filename:'qa.jpg'}};
+ for(const key of [undefined,null,'', 'not-a-uuid']){
+ const body={...base,...(key===undefined?{}:{request_id:key})};
+ const response=await f.call('application-save',{body});assert.equal(response.status,400);assert.match((await response.json()).error,/номер запроса/);
+ }
+ assert.equal(f.writes.length,0);assert.equal(f.reads.length,0);
+ assert.equal((await f.call('application-save',{body:base,auth:''})).status,401);
+});
+test('the manager routes valid booking creation through the atomic booking/audit query',async()=>{
+ const f=await fixture({queryResult:(q,p)=>q.startsWith('select')?[]:[{id:p[0],public_id:p[1]}]});
+ const response=await f.call('application-save',{body:{category:'booking',request_id:'33333333-3333-4333-8333-333333333333',item_id:'22222222-2222-4222-8222-222222222222',qualification_data:{start_date:'2026-10-10',end_date:'2026-10-20'}}});
+ assert.equal(response.status,200);const receipt=await response.json();assert.equal(receipt.ok,true);assert.equal(receipt.replayed,false);assert.match(receipt.public_id,/^APP-/);
+ const mutations=f.writes.filter(x=>!x.q.startsWith('select'));assert.equal(mutations.length,1);assert.match(mutations[0].q,/insert into audit_events/);assert.equal(mutations[0].p[0],receipt.id);
+ assert.equal(f.reads.length,0,'no generic legacy INSERT');
+});
