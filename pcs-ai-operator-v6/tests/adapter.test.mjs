@@ -18,6 +18,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
     if(op==='data-quality')return Response.json({rows:[],view:new URL(url).searchParams.get('view'),page:Number(new URL(url).searchParams.get('page'))});
     if(op==='prospecting')return Response.json({rows:[],view:new URL(url).searchParams.get('view')});
+    if(op==='prospecting-request-reject')return Response.json({ok:true});
     if(op==='prospecting-source-update')return Response.json({ok:true});
     if(op==='prospecting-source')return Response.json({ok:true});
     if(op==='prospecting-scan')return Response.json({ok:true,outreach_sent:0});
@@ -282,3 +283,5 @@ test('gallery mutations require the originally opened parent version before cont
 });
 
 test('prospect direction and freshness filters pass unchanged with the admin session',async()=>{const h=adapterHarness();const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting?direction=PROPERTY_PURCHASE&freshness=all&source_kind=competitor');assert.equal(r.status,200);assert.equal(h.calls[0].params.direction,'PROPERTY_PURCHASE');assert.equal(h.calls[0].params.freshness,'all');assert.equal(h.calls[0].params.source_kind,'competitor');assert.equal(h.calls[0].authorization,'Bearer fixture')});
+
+test('manual prospect rejection forwards the original decision identity and admin session',async()=>{const h=adapterHarness(),body={id:itemId,request_id:photoNewId,expected_version:'2026-10-08 10:00:00.123456+00',reason:'Seller advertisement'};const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/request-reject',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.calls[0].op,'prospecting-request-reject');assert.deepEqual(h.calls[0].body,body);assert.equal(h.calls[0].authorization,'Bearer fixture')});
