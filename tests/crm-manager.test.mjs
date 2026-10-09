@@ -22,7 +22,7 @@ const cid='cmcontact1',secret='unit-test-only';
 async function fixture({taskRows,applicationRows,queryResult}={}){
  let handler;const writes=[],reads=[];
  const sql=async(strings,...params)=>{
-  const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return applicationRows||[];if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
+  const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return queryResult?queryResult(q,p):[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
@@ -100,7 +100,7 @@ test('existing active, completed and cancelled bookings cannot be edited, reclas
 });
 test('booking changes racing with handover cannot report a successful generic update',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
- const r=await f.call('application-save',{body:{id:applicationId,category:'booking',operational_status:'CONFIRMED'}});
+ const r=await f.call('application-save',{body:{id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',category:'booking',operational_status:'CONFIRMED'}});
  assert.equal(r.status,409);assert.match(f.writes[0].q,/operational_status not in \('SERVICE_IN_PROGRESS','COMPLETED','CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'\)/);
 });
 test('missing bookings do not produce success and ordinary non-booking flows keep their status route',async()=>{
@@ -112,7 +112,7 @@ test('missing bookings do not produce success and ordinary non-booking flows kee
 
 test('generic booking save retains its category when omitted and rejects invented booking states',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
- assert.equal((await f.call('application-save',{body:{id:applicationId,operational_status:'CONFIRMED'}})).status,409);
+ assert.equal((await f.call('application-save',{body:{id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',operational_status:'CONFIRMED'}})).status,409);
  assert.ok(f.writes[0].p.includes('booking'));
  assert.equal((await f.call('application-status',{body:{id:applicationId,status:'FAKE'}})).status,400);
  assert.equal(f.writes.length,1);
@@ -166,4 +166,28 @@ test('the manager routes valid booking creation through the atomic booking/audit
  assert.equal(response.status,200);const receipt=await response.json();assert.equal(receipt.ok,true);assert.equal(receipt.replayed,false);assert.match(receipt.public_id,/^APP-/);
  const mutations=f.writes.filter(x=>!x.q.startsWith('select'));assert.equal(mutations.length,1);assert.match(mutations[0].q,/insert into audit_events/);assert.equal(mutations[0].p[0],receipt.id);
  assert.equal(f.reads.length,0,'no generic legacy INSERT');
+});
+
+const bookingVersion='2026-10-09 00:00:00.123456+00';
+test('booking mutations reject missing and stale versions before writes or uploads',async()=>{
+ for(const op of ['application-save','application-status'])for(const expected_version of [undefined,null,'',bookingVersion+'0','2026-10-09T00:00:00.123Z']){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
+  const r=await f.call(op,{body:{id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version,photo:{content_base64:'must-not-upload'}}});
+  assert.equal(r.status,expected_version?409:400);assert.equal(f.writes.length,0);
+ }
+});
+test('booking save and status recheck exact versions inside SQL after the initial read',async()=>{
+ for(const op of ['application-save','application-status']){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
+  const r=await f.call(op,{body:{id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion}});
+  assert.equal(r.status,409);assert.equal(f.writes.length,1);
+  assert.match(f.writes[0].q,/updated_at::text=\?/);assert.ok(f.writes[0].p.includes(bookingVersion));assert.match(f.writes[0].q,/updated_at=clock_timestamp\(\)/);
+ }
+});
+test('booking list and detail expose the full server timestamp without JavaScript rounding',async()=>{
+ for(const op of ['applications','application-detail&id='+applicationId]){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',edit_version:bookingVersion}]});
+  assert.equal((await f.call(op,{method:'GET'})).status,200);
+  assert.match(f.reads.find(x=>x.q.includes('from applications')).q,/a.updated_at::text edit_version/);
+ }
 });

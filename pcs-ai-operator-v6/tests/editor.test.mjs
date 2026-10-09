@@ -44,7 +44,7 @@ test('runtime scripts have explicit release keys, including the current send mod
  assert.ok(html.includes('finance-v26.js?v=20261004-balance1'));
  assert.ok(html.includes('router-v26.js?v=20261004-prospect2'));
  assert.ok(html.includes('prospecting.js?v=20261008-review2'));
- assert.ok(html.includes('neon-adapter.js?v=20261008-review2'));
+ assert.ok(html.includes('neon-adapter.js?v=20261009-booking-version1'));
  assert.ok(html.includes('dashboard-v25.js?v=20261005-due2'));
  assert.ok(html.includes('notifications.js?v=20261005-operations2'));
  for(const file of ['operator-ux-v37.js','media.js'])assert.match(html,new RegExp(file.replaceAll('.','\\.')+'\\?v=\\d{8}-[a-z0-9-]+'));
