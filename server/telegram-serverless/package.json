@@ -1,0 +1,12 @@
+{
+  "name": "pcs-telegram-serverless",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-miniapp.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "status": "tgcloud status",
+    "fetch": "tgcloud fetch"
+  },
+  "devDependencies": {"@tgcloud/cli": "0.2.0"}
+}
