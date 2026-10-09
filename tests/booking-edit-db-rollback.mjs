@@ -1,10 +1,14 @@
 import {readAudit} from '../server/supabase/pcs-manager-live2/operations-read.mjs';
 import {bookingEditQuery} from '../server/supabase/pcs-manager-live2/booking-edit.mjs';
 const id='90000000-0000-4000-8000-000000000061';
-const b={id,expected_version:'2000-01-01',operational_status:'CONFIRMED',status:'CANCELLED_BY_CLIENT',client_name:'QA updated',client_contact:'QA private',internal_notes:'QA private notes',qualification_data:{start_date:'2026-10-11',end_date:'2026-10-21',total_amount:100,deposit_amount:10,currency:'THB'}};
+const b={id,item_id:'90000000-0000-4000-8000-000000000062',expected_version:'2000-01-01',operational_status:'CONFIRMED',status:'CANCELLED_BY_CLIENT',client_name:'QA updated',client_contact:'QA private',internal_notes:'QA private notes',qualification_data:{start_date:'2026-10-11',end_date:'2026-10-21',total_amount:100,deposit_amount:10,currency:'THB'}};
 const literal=v=>v===null?'null':Array.isArray(v)?'ARRAY['+v.map(literal).join(',')+']':"'"+String(v).replaceAll("'","''")+"'";
-const statement=kind=>{const x=bookingEditQuery(b,kind);return x.query.replace(/\$(\d+)/g,(_,n)=>n==='2'?'v_version':literal(x.params[Number(n)-1])).replace(' ) select s.id,',' ) select count(*) into v_count from (select s.id,')+') result;';};
+const statement=(kind,patch={})=>{const x=bookingEditQuery({...b,...patch},kind);return x.query.replace(/\$(\d+)/g,(_,n)=>n==='2'?'v_version':literal(x.params[Number(n)-1])).replace(' ) select s.id,',' ) select count(*) into v_count from (select s.id,')+') result;';};
 const edit=statement('edit'),status=statement('status');
+const overlap=statement('edit',{qualification_data:{...b.qualification_data,end_date:'2026-10-22'}});
+const unchanged=statement('edit');
+const changedNew=statement('edit',{operational_status:'NEW',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
+const cancelledEdit=statement('edit',{operational_status:'CANCELLED_BY_PARTNER',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
 let scopedRead;await readAudit(null,{query:async q=>{scopedRead=q;return[]}},'business','0',id);
 let auditRead;await readAudit(null,{query:async q=>{auditRead=q;return[]}},'business');
 const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance jsonb;v_history jsonb;BEGIN BEGIN
@@ -17,6 +21,7 @@ const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance
  IF (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>0 THEN RAISE EXCEPTION 'edit audit rollback failed'; END IF;
  ALTER TABLE audit_events DROP CONSTRAINT qa_audit_fail;
  ${edit}
+ IF (SELECT operational_status FROM applications WHERE id='${id}')<>'AWAITING_PARTNER_CONFIRMATION' OR (SELECT patch->'after'->>'operational_status' FROM audit_events WHERE action='booking_updated')<>'AWAITING_PARTNER_CONFIRMATION' THEN RAISE EXCEPTION 'changed rental terms kept confirmation'; END IF;
  IF v_count<>1 OR (SELECT client_name FROM applications WHERE id='${id}')<>'QA updated' OR (SELECT qualification_data->>'start_date' FROM applications WHERE id='${id}')<>'2026-10-11' THEN RAISE EXCEPTION 'edit receipt failed'; END IF;
  IF (SELECT updated_at::text FROM applications WHERE id='${id}')=v_version OR (SELECT count(*) FROM audit_events WHERE action='booking_updated')<>1 THEN RAISE EXCEPTION 'edit version or audit failed'; END IF;
  IF (SELECT patch->'before'->>'start_date' FROM audit_events WHERE action='booking_updated')<>'2026-10-10' OR (SELECT patch->'after'->>'start_date' FROM audit_events WHERE action='booking_updated')<>'2026-10-11' OR EXISTS(SELECT 1 FROM audit_events WHERE patch::text LIKE '%QA private%' OR patch::text LIKE '%total_amount%') THEN RAISE EXCEPTION 'audit snapshot failed'; END IF;
@@ -42,6 +47,23 @@ const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance
  IF jsonb_array_length(v_history)<>2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(v_history) e WHERE e->>'entity_id'<>'${id}' OR e->>'entity_type'<>'applications') THEN RAISE EXCEPTION 'scoped pagination leaked other records'; END IF;
  SELECT count(*) INTO v_count FROM (${scopedRead.replaceAll('$1','50').replaceAll('$2',literal(id))}) r;
  IF v_count<>0 THEN RAISE EXCEPTION 'scoped second page includes unrelated records'; END IF;
+ BEGIN
+ UPDATE applications SET operational_status='CONFIRMED',reserved_vehicle_id='${b.item_id}' WHERE id='${id}';
+ SELECT updated_at::text INTO v_version FROM applications WHERE id='${id}';
+ ${unchanged}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CONFIRMED' THEN RAISE EXCEPTION 'unchanged terms lost confirmation'; END IF;
+ INSERT INTO applications(id,public_id,category,item_id,reserved_vehicle_id,operational_status,qualification_data) VALUES('90000000-0000-4000-8000-000000000063','APP-QA-OVERLAP','booking','${b.item_id}','${b.item_id}','CONFIRMED','{"start_date":"2026-10-21","end_date":"2026-10-30"}'::jsonb);
+ SELECT updated_at::text,to_jsonb(a) INTO v_version,v_before FROM applications a WHERE id='${id}';
+ SELECT count(*) INTO v_count FROM audit_events;
+ BEGIN ${overlap} RAISE EXCEPTION 'overlap was accepted'; EXCEPTION WHEN exclusion_violation THEN NULL; END;
+ IF (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>v_count THEN RAISE EXCEPTION 'overlap rollback changed booking or audit'; END IF;
+ ${changedNew}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'AWAITING_PARTNER_CONFIRMATION' THEN RAISE EXCEPTION 'NEW bypassed term reconfirmation'; END IF;
+ SELECT updated_at::text INTO v_version FROM applications WHERE id='${id}';
+ ${cancelledEdit}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CANCELLED_BY_PARTNER' THEN RAISE EXCEPTION 'cancellation edit became active'; END IF;
+ RAISE EXCEPTION USING ERRCODE='Z0002',MESSAGE='rental edit checks passed';
+ EXCEPTION WHEN SQLSTATE 'Z0002' THEN NULL; END;
  RAISE EXCEPTION USING ERRCODE='Z0001',MESSAGE='QA passed; rollback all temporary data';
  EXCEPTION WHEN SQLSTATE 'Z0001' THEN NULL; END; END $qa$;`;
 process.stdout.write(JSON.stringify({query}));
