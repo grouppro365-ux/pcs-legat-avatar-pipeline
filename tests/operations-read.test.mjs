@@ -47,3 +47,11 @@ test('audit reads keep canonical sources separate, page consistently and omit pa
  for(const args of [['other','0'],['crm','-1'],['business','5001']])await assert.rejects(()=>readAudit(db('unsafe'),db('unsafe'),...args),e=>e.status===400);
  await assert.rejects(()=>readAudit({query:async()=>{throw Error('Unavailable')}},db('unused')),/Unavailable/);
 });
+
+test('business audit exposes only whitelisted before/after booking terms',async()=>{
+ const {readAudit}=await import('../server/supabase/pcs-manager-live2/operations-read.mjs');let query;
+ await readAudit(null,{query:async q=>{query=q;return[]}},'business');
+ assert.match(query,/action in \('booking_updated','booking_status_updated'\)/);assert.match(query,/booking_change/);
+ for(const key of ['item_id','operational_status','start_date','end_date'])for(const side of ['before','after'])assert.ok(query.includes("patch#>'{"+side+','+key+"}'"));
+ assert.doesNotMatch(query,/client_contact|client_name|internal_notes|photo_url|total_amount|deposit_amount/);
+});
