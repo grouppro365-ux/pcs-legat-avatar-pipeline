@@ -299,10 +299,12 @@ async function opsRoute(path,init){
     const b=await parseBody(init),id=decodeURIComponent(reservationMatch[1]);
     const existing=await manager('application-detail',{id});
     if(String(existing.category||'')!=='booking')return appError('Это не бронь.',409);
-    if(Object.keys(b).length===1&&b.status){
+    if(typeof b.expected_version!=='string'||!b.expected_version)return appError('Обновите список бронирований перед сохранением.',400);
+    if(b.expected_version!==existing.edit_version)return appError('Бронь уже изменена. Введённые данные сохранены в форме; обновите карточку перед повтором.',409);
+    if(Object.keys(b).every(k=>['status','expected_version'].includes(k))&&b.status){
       const status=bookingStatusToServer[b.status];
       if(!status)return appError('Неизвестный статус брони.',400);
-      await manager('application-status',{method:'POST',body:{id,status}});
+      await manager('application-status',{method:'POST',body:{id,status,expected_version:b.expected_version}});
       const updated=await manager('application-detail',{id});
       if(updated?.operational_status!==status)return appError('Сервер не подтвердил изменение статуса.',502);
       return jsonResponse({ok:true,id});
@@ -326,7 +328,7 @@ async function opsRoute(path,init){
     if(contactId&&!client)return appError('Клиент не найден. Обновите список.',404);
     const expectedStatus=changedTerms?'AWAITING_PARTNER_CONFIRMATION':existing.operational_status;
     const expectedData={...prior,start_date:start,end_date:end,total_amount:total,deposit_amount:deposit,currency,contact_id:contactId||null};
-    await manager('application-save',{method:'POST',body:{id,item_id:item,client_name:client?.name||client?.username||existing.client_name||null,client_contact:client?.phone||client?.username||existing.client_contact||null,category:'booking',city:existing.city||null,operational_status:expectedStatus,priority:existing.priority||'NORMAL',client_visible_notes:existing.client_visible_notes||null,internal_notes:String(b.notes||''),qualification_data:expectedData}});
+    await manager('application-save',{method:'POST',body:{id,expected_version:b.expected_version,item_id:item,client_name:client?.name||client?.username||existing.client_name||null,client_contact:client?.phone||client?.username||existing.client_contact||null,category:'booking',city:existing.city||null,operational_status:expectedStatus,priority:existing.priority||'NORMAL',client_visible_notes:existing.client_visible_notes||null,internal_notes:String(b.notes||''),qualification_data:expectedData}});
     const updated=await manager('application-detail',{id}),data=updated.qualification_data||{};
     if(String(updated.item_id)!==item||String(data.start_date)!==start||String(data.end_date)!==end||Number(data.total_amount)!==total||Number(data.deposit_amount)!==deposit||String(updated.operational_status)!==expectedStatus)return appError('Сервер не подтвердил сохранение брони.',502);
     return jsonResponse({ok:true,id,status:bookingStatusFromServer(expectedStatus)});
