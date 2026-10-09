@@ -47,3 +47,18 @@ test('booking history renders bounded escaped before/after values only for booki
  const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'booking_updated',entity_type:'applications',booking_change:{before:{operational_status:'NEW',start_date:'2026-10-10',item_id:'<script>',client_contact:'secret'},after:{operational_status:'CONFIRMED',start_date:'2026-10-11',item_id:'new',client_contact:'other secret'}}},{action:'other',entity_type:'applications',booking_change:{before:{start_date:'hidden'},after:{start_date:'also hidden'}}}]});await p;
  const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/Изменения брони: до и после/);assert.match(html,/Новая/);assert.match(html,/Подтверждена/);assert.match(html,/2026-10-10/);assert.match(html,/2026-10-11/);assert.doesNotMatch(html,/<script>|secret|hidden|client_contact/);
 });
+
+test('booking history opens the exact application and keeps its filter while paging',async()=>{
+ const id='11111111-1111-4111-8111-111111111111',h=fixture(),p=h.window.pcsAudit.open({applicationId:id});
+ assert.equal(h.calls[0].url,'/audit?source=business&page=0&application_id='+id);assert.equal(h.nodes.pcsAuditSource.disabled,true);
+ h.calls[0].resolve({source:'business',page:0,application_id:id,rows:[{entity_type:'applications',entity_id:id,action:'booking_create'}],truncated:true});await p;
+ h.nodes.pcsAuditNext.onclick();assert.equal(h.calls[1].url,'/audit?source=business&page=1&application_id='+id);
+ h.calls[1].resolve({source:'business',page:1,application_id:id,rows:[],truncated:false});await tick();
+ h.nodes.pcsAuditSource.onchange({target:{value:'crm'}});assert.equal(h.calls.length,2);
+});
+test('booking history refuses wrong-scope replies and foreign rows',async()=>{
+ const id='11111111-1111-4111-8111-111111111111';
+ for(const patch of [{application_id:'other'},{rows:[{entity_type:'applications',entity_id:'other'}]},{rows:[{entity_type:'catalog_items',entity_id:id}]}]){
+  const h=fixture(),p=h.window.pcsAudit.open({applicationId:id});h.calls[0].resolve({source:'business',page:0,application_id:id,rows:[],...patch});await p;assert.equal(h.nodes.pcsAuditList.textContent,'Некорректный ответ журнала');
+ }
+});

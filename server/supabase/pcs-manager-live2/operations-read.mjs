@@ -81,11 +81,13 @@ export async function markNotificationRead(biz,b){
  return{ok:true,id:rows[0].id,read_at:rows[0].read_at};
 }
 
-export async function readAudit(op,biz,source='crm',rawPage='0'){
+export async function readAudit(op,biz,source='crm',rawPage='0',applicationId=''){
  if(!['crm','business'].includes(source)||typeof rawPage!=='string'||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000)throw new CrmError('Некорректный фильтр журнала',400);
+ if(applicationId!==''&&(source!=='business'||typeof applicationId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(applicationId)))throw new CrmError('Некорректный номер заявки в журнале',400);
  const page=Number(rawPage),sql=source==='crm'?op:biz;
- const query=source==='crm'
+ let query=source==='crm'
  ? `select id,actor,action,entity_type,entity_id,created_at,payload->'changed_fields' changed_fields from audit_logs order by created_at desc,id desc limit 51 offset $1`
  : `select id,actor_role actor,action,entity_type,entity_id,result,created_at,case when entity_type='applications' and action in ('booking_updated','booking_status_updated') then jsonb_build_object('before',jsonb_build_object('item_id',patch#>'{before,item_id}','operational_status',patch#>'{before,operational_status}','start_date',patch#>'{before,start_date}','end_date',patch#>'{before,end_date}'),'after',jsonb_build_object('item_id',patch#>'{after,item_id}','operational_status',patch#>'{after,operational_status}','start_date',patch#>'{after,start_date}','end_date',patch#>'{after,end_date}')) else null end booking_change,coalesce((select jsonb_agg(k) from jsonb_object_keys(case when jsonb_typeof(patch->'before')='object' or jsonb_typeof(patch->'after')='object' then (case when jsonb_typeof(patch->'before')='object' then patch->'before' else '{}'::jsonb end)||(case when jsonb_typeof(patch->'after')='object' then patch->'after' else '{}'::jsonb end) when jsonb_typeof(patch)='object' then patch else '{}'::jsonb end) k where case when jsonb_typeof(patch->'before')='object' or jsonb_typeof(patch->'after')='object' then patch->'before'->k is distinct from patch->'after'->k else true end),'[]'::jsonb) changed_fields from audit_events order by created_at desc,id desc limit 51 offset $1`;
- const rows=await sql.query(query,[page*50]);return{source,page,rows:rows.slice(0,50),truncated:rows.length>50};
+ if(applicationId)query=query.replace('from audit_events order by',"from audit_events where entity_type='applications' and entity_id=$2 order by");
+ const rows=await sql.query(query,applicationId?[page*50,applicationId]:[page*50]);return{source,page,...(applicationId?{application_id:applicationId}:{}),rows:rows.slice(0,50),truncated:rows.length>50};
 }

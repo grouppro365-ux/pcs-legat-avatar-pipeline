@@ -15,6 +15,7 @@ function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCat
     if(new URL(url).pathname.includes('/functions/v1/pcs-kb')){calls.push({knowledge:new URL(url).pathname,params:Object.fromEntries(new URL(url).searchParams),method:init.method,body:init.body,authorization:init.headers?.authorization});return knowledgeResponse?.()||Response.json({rows:[{id:itemId}],page:0});}
     const op=new URL(url).searchParams.get('op');
     const body=init.body?JSON.parse(init.body):null; calls.push({op,body,params:Object.fromEntries(new URL(url).searchParams),view:new URL(url).searchParams.get('view'),authorization:init.headers?.authorization});
+    if(op==='audit')return Response.json({source:'business',page:2,rows:[]});
     if(op==='delivery-review')return Response.json({ok:true,operator_confirmed:true,review:{id:body.message_id,contact_id:new URL(url).searchParams.get('id')}});
     if(op==='data-quality')return Response.json({rows:[],view:new URL(url).searchParams.get('view'),page:Number(new URL(url).searchParams.get('page'))});
     if(op==='prospecting')return Response.json({rows:[],view:new URL(url).searchParams.get('view')});
@@ -288,3 +289,8 @@ test('prospect direction and freshness filters pass unchanged with the admin ses
 test('manual prospect rejection forwards the original decision identity and admin session',async()=>{const h=adapterHarness(),body={id:itemId,request_id:photoNewId,expected_version:'2026-10-08 10:00:00.123456+00',reason:'Seller advertisement'};const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/request-reject',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.calls[0].op,'prospecting-request-reject');assert.deepEqual(h.calls[0].body,body);assert.equal(h.calls[0].authorization,'Bearer fixture')});
 
 test('restore prospect route preserves original version, decision identity and admin session',async()=>{const h=adapterHarness(),body={id:itemId,request_id:photoNewId,expected_version:'2026-10-08 10:00:00.123456+00',reason:'Wrong rejection'};const r=await h.window.fetch('https://pcs-stable.local/pcs-ops-api/prospecting/request-restore',{method:'POST',body:JSON.stringify(body)});assert.equal(r.status,200);assert.equal(h.calls[0].op,'prospecting-request-restore');assert.deepEqual(h.calls[0].body,body);assert.equal(h.calls[0].authorization,'Bearer fixture')});
+
+test('booking history forwards the original application ID and page to the manager',async()=>{
+ const h=adapterHarness();await h.window.fetch('https://pcs-stable.local/pcs-ui-api/audit?source=business&page=2&application_id='+itemId);
+ const c=h.calls.find(x=>x.op==='audit');assert.ok(c);assert.equal(c.params.application_id,itemId);assert.equal(c.params.page,'2');assert.equal(c.params.source,'business');
+});

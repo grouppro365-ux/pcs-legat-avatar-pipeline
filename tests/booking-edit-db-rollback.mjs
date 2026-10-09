@@ -5,6 +5,7 @@ const b={id,expected_version:'2000-01-01',operational_status:'CONFIRMED',status:
 const literal=v=>v===null?'null':Array.isArray(v)?'ARRAY['+v.map(literal).join(',')+']':"'"+String(v).replaceAll("'","''")+"'";
 const statement=kind=>{const x=bookingEditQuery(b,kind);return x.query.replace(/\$(\d+)/g,(_,n)=>n==='2'?'v_version':literal(x.params[Number(n)-1])).replace(' ) select s.id,',' ) select count(*) into v_count from (select s.id,')+') result;';};
 const edit=statement('edit'),status=statement('status');
+let scopedRead;await readAudit(null,{query:async q=>{scopedRead=q;return[]}},'business','0',id);
 let auditRead;await readAudit(null,{query:async q=>{auditRead=q;return[]}},'business');
 const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance jsonb;v_history jsonb;BEGIN BEGIN
  CREATE TEMP TABLE applications (LIKE public.applications INCLUDING ALL) ON COMMIT DROP;
@@ -35,6 +36,12 @@ const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance
  SELECT updated_at::text INTO v_version FROM applications WHERE id='${id}';
  ${edit}
  IF v_count<>0 OR (SELECT count(*) FROM audit_events)<>2 THEN RAISE EXCEPTION 'locked booking changed'; END IF;
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,reason,result) SELECT 'ADMIN','booking_create','applications','90000000-0000-4000-8000-000000000099','{}'::jsonb,'QA unrelated','SUCCESS' FROM generate_series(1,60);
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,reason,result) VALUES('ADMIN','catalog_media_add','catalog_items','${id}','{}'::jsonb,'QA other entity','SUCCESS');
+ SELECT jsonb_agg(to_jsonb(r)) INTO v_history FROM (${scopedRead.replaceAll('$1','0').replaceAll('$2',literal(id))}) r;
+ IF jsonb_array_length(v_history)<>2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(v_history) e WHERE e->>'entity_id'<>'${id}' OR e->>'entity_type'<>'applications') THEN RAISE EXCEPTION 'scoped pagination leaked other records'; END IF;
+ SELECT count(*) INTO v_count FROM (${scopedRead.replaceAll('$1','50').replaceAll('$2',literal(id))}) r;
+ IF v_count<>0 THEN RAISE EXCEPTION 'scoped second page includes unrelated records'; END IF;
  RAISE EXCEPTION USING ERRCODE='Z0001',MESSAGE='QA passed; rollback all temporary data';
  EXCEPTION WHEN SQLSTATE 'Z0001' THEN NULL; END; END $qa$;`;
 process.stdout.write(JSON.stringify({query}));

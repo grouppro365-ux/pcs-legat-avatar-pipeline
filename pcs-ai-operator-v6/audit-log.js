@@ -27,16 +27,19 @@
  async function load(s){
   if(!active(s))return;const seq=++s.sequence,source=s.source,page=s.page;s.root.textContent='Загружаю журнал…';
   document.getElementById('pcsAuditPrev').disabled=true;document.getElementById('pcsAuditNext').disabled=true;
-  try{const d=await window.call('/audit?'+new URLSearchParams({source,page}));if(!active(s)||seq!==s.sequence)return;
-   if(d.source!==source||d.page!==page||!Array.isArray(d.rows))throw Error('Некорректный ответ журнала');
+  try{const d=await window.call('/audit?'+new URLSearchParams({source,page,...(s.applicationId?{application_id:s.applicationId}:{})}));if(!active(s)||seq!==s.sequence)return;
+   if(d.source!==source||d.page!==page||!Array.isArray(d.rows)||(s.applicationId&&(d.application_id!==s.applicationId||d.rows.some(x=>x.entity_type!=='applications'||x.entity_id!==s.applicationId))))throw Error('Некорректный ответ журнала');
    s.root.innerHTML=d.rows.map(x=>`<article class="item" style="overflow-wrap:anywhere"><b>${esc(label(x.action)||'Действие PCS')}</b><p>${esc(time(x.created_at))} · ${esc(label(x.actor)||'Исполнитель не указан')}${x.result?' · '+esc(label(x.result)):''}</p><p>${esc(label(x.entity_type))} · ${esc(x.entity_id)}</p>${fields(x.changed_fields)}${bookingChange(x)}</article>`).join('')||'<p class="muted">В этом источнике записей нет.</p>';
    document.getElementById('pcsAuditPrev').disabled=page===0;document.getElementById('pcsAuditNext').disabled=!d.truncated||page>=5000;
   }catch(e){if(active(s)&&seq===s.sequence)s.root.textContent=e.message||'Журнал временно недоступен. Повторите загрузку.';}
  }
- async function open(){
-  window.openSheet('Журнал действий',`<p class="muted">История сохранённых действий. Выберите источник; показаны изменённые поля. Для изменений брони доступны значения до и после.</p><div class="toolbar"><select aria-label="Источник журнала" id="pcsAuditSource" style="min-height:44px;max-width:100%"><option value="crm">CRM и коммуникации</option><option value="business">Каталог и операции</option></select><button class="btn soft" id="pcsAuditRefresh">Обновить</button></div><div id="pcsAuditList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsAuditPrev" disabled>Назад</button><button class="btn soft" id="pcsAuditNext" disabled>Далее</button></div>`);
-  const s=state={root:document.getElementById('pcsAuditList'),source:'crm',page:0,sequence:0};
-  document.getElementById('pcsAuditSource').onchange=e=>{s.source=e.target.value;s.page=0;load(s)};
+ async function open(options){
+  const applicationId=options?.applicationId||'';if(applicationId&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(applicationId))throw Error('Некорректный номер брони');
+  window.openSheet(applicationId?'История брони':'Журнал действий',`<p class="muted">${applicationId?'История выбранной брони.':'История сохранённых действий. Выберите источник;'} Показаны изменённые поля. Для изменений брони доступны значения до и после.</p><div class="toolbar"><select aria-label="Источник журнала" id="pcsAuditSource" style="min-height:44px;max-width:100%"><option value="crm">CRM и коммуникации</option><option value="business">Каталог и операции</option></select><button class="btn soft" id="pcsAuditRefresh">Обновить</button></div><div id="pcsAuditList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsAuditPrev" disabled>Назад</button><button class="btn soft" id="pcsAuditNext" disabled>Далее</button></div>`);
+  const s=state={root:document.getElementById('pcsAuditList'),source:applicationId?'business':'crm',applicationId,page:0,sequence:0};
+  const selector=document.getElementById('pcsAuditSource');selector.value=s.source;selector.disabled=!!applicationId;
+  if(applicationId)selector.setAttribute?.('aria-label','История выбранной брони');
+  document.getElementById('pcsAuditSource').onchange=e=>{if(s.applicationId)return;s.source=e.target.value;s.page=0;load(s)};
   document.getElementById('pcsAuditRefresh').onclick=()=>load(s);
   document.getElementById('pcsAuditPrev').onclick=()=>{s.page=Math.max(0,s.page-1);load(s)};
   document.getElementById('pcsAuditNext').onclick=()=>{s.page++;load(s)};await load(s);

@@ -7,7 +7,7 @@ test('booking cards show saved payment states separately from reservation lifecy
  const ctx={esc:x=>String(x??'').replaceAll('<','&lt;'),money:(n,c)=>n+' '+c,bookingStatus:()=> 'Подтверждено'};vm.createContext(ctx);
  vm.runInContext(source.slice(source.indexOf('function bookingPaymentStatus('),source.indexOf('async function bookingsPage('))+source.slice(source.indexOf('function reservationCard('),source.indexOf('window.editReservation=')),ctx);
  for(const [status,label] of [['PARTIALLY_PAID','Частично оплачено'],['PAID_TO_PARTNER','Оплачено партнёру'],['REFUND_PENDING','Ожидается возврат'],['DISPUTED','Спор по оплате'],['UNKNOWN','Статус не указан'],['<script>','Статус не указан']]){
-  const html=ctx.reservationCard({status:'confirmed',payment_status:status,deposit_amount:999,start_date:'2026-10-10',end_date:'2026-10-20',pcs_catalog_items:{title:'Car'},total_amount:1000,currency:'THB'});assert.ok(html.includes('Оплата: '+label));assert.ok(html.includes('Подтверждено'));assert.doesNotMatch(html,/<script>/);
+  const html=ctx.reservationCard({id:'11111111-1111-4111-8111-111111111111',status:'confirmed',payment_status:status,deposit_amount:999,start_date:'2026-10-10',end_date:'2026-10-20',pcs_catalog_items:{title:'Car'},total_amount:1000,currency:'THB'});assert.ok(html.includes('Оплата: '+label));assert.ok(html.includes("pcsAudit.open({applicationId:'11111111-1111-4111-8111-111111111111'})"));assert.ok(html.includes('Подтверждено'));assert.doesNotMatch(html,/<script>/);
  }
 });
 test('paid counter only includes saved payments to partner, regardless of draft advance amounts',async()=>{
