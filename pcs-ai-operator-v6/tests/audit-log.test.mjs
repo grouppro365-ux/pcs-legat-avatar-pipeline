@@ -17,6 +17,8 @@ test('long field lists stay compact, use readable labels, and escape expanded va
 
 test('recent booking, gallery, prospect and communication events render readable operator history',async()=>{
  const records=[
+ {action:'booking_updated',actor:'ADMIN',entity_type:'applications',changed_fields:['item_id','start_date','end_date','operational_status']},
+ {action:'booking_status_updated',actor:'ADMIN',entity_type:'applications',changed_fields:['operational_status']},
  {action:'booking_create',actor:'ADMIN',entity_type:'applications',result:'SUCCESS',changed_fields:['request_id','public_id','item_id','start_date','end_date','operational_status']},
  {action:'catalog_media_add',actor:'ADMIN',entity_type:'catalog_items',changed_fields:['photo_id','upload_fingerprint']},
  {action:'catalog_media_delete',actor:'ADMIN',changed_fields:['deleted_photo_ids']},
@@ -31,7 +33,7 @@ test('recent booking, gallery, prospect and communication events render readable
  ];
  const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:records});await p;
  const html=h.nodes.pcsAuditList.innerHTML;
- for(const label of ['Бронь создана','Начало аренды','Окончание аренды','Фото добавлено','Фото удалены','Порядок фото изменён','Настройки источника Telegram изменены','Запрос Telegram отклонён','Запрос Telegram возвращён на проверку','Сообщение отправлено','Доставка подтверждена оператором','Согласованный ответ отправлен','Ответ ИИ отклонён','Способ подтверждения'])assert.ok(html.includes(label),label);
+ for(const label of ['Бронь создана','Условия брони изменены','Статус брони изменён','Начало аренды','Окончание аренды','Фото добавлено','Фото удалены','Порядок фото изменён','Настройки источника Telegram изменены','Запрос Telegram отклонён','Запрос Telegram возвращён на проверку','Сообщение отправлено','Доставка подтверждена оператором','Согласованный ответ отправлен','Ответ ИИ отклонён','Способ подтверждения'])assert.ok(html.includes(label),label);
  for(const r of records){assert.ok(!html.includes(r.action),r.action);for(const field of r.changed_fields||[])assert.ok(!html.includes(field),field);}
  assert.doesNotMatch(html,/pcs-manager-admin|· admin|ai_generation|prospect_request/);
  assert.equal(h.calls.length,1);
@@ -39,4 +41,9 @@ test('recent booking, gallery, prospect and communication events render readable
 test('unknown journal event names remain visible and safely escaped',async()=>{
  const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'new_event_<script>',actor:'external_<img>',entity_type:'unknown_<svg>',changed_fields:['future_<iframe>']}]});await p;
  const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/new_event_&lt;script&gt;/);assert.match(html,/future_&lt;iframe&gt;/);assert.doesNotMatch(html,/<script>|<img>|<svg>|<iframe>/);
+});
+
+test('booking history renders bounded escaped before/after values only for booking events',async()=>{
+ const h=fixture(),p=h.window.pcsAudit.open();h.calls[0].resolve({source:'crm',page:0,rows:[{action:'booking_updated',entity_type:'applications',booking_change:{before:{operational_status:'NEW',start_date:'2026-10-10',item_id:'<script>',client_contact:'secret'},after:{operational_status:'CONFIRMED',start_date:'2026-10-11',item_id:'new',client_contact:'other secret'}}},{action:'other',entity_type:'applications',booking_change:{before:{start_date:'hidden'},after:{start_date:'also hidden'}}}]});await p;
+ const html=h.nodes.pcsAuditList.innerHTML;assert.match(html,/Изменения брони: до и после/);assert.match(html,/Новая/);assert.match(html,/Подтверждена/);assert.match(html,/2026-10-10/);assert.match(html,/2026-10-11/);assert.doesNotMatch(html,/<script>|secret|hidden|client_contact/);
 });
