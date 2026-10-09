@@ -55,3 +55,10 @@ test('business audit exposes only whitelisted before/after booking terms',async(
  for(const key of ['item_id','operational_status','start_date','end_date'])for(const side of ['before','after'])assert.ok(query.includes("patch#>'{"+side+','+key+"}'"));
  assert.doesNotMatch(query,/client_contact|client_name|internal_notes|photo_url|total_amount|deposit_amount/);
 });
+
+test('application history filters entity and identity before pagination and binds all values',async()=>{
+ const {readAudit}=await import('../server/supabase/pcs-manager-live2/operations-read.mjs');const id='11111111-1111-4111-8111-111111111111';let call;
+ const db={query:async(q,p)=>{call={q,p};return Array.from({length:51},()=>({entity_type:'applications',entity_id:id}))}};
+ const r=await readAudit(null,db,'business','2',id);assert.equal(r.application_id,id);assert.equal(r.rows.length,50);assert.equal(r.truncated,true);assert.deepEqual(call.p,[100,id]);assert.match(call.q,/where entity_type='applications' and entity_id=\$2 order by created_at desc,id desc limit 51 offset \$1/);
+ for(const [source,value]of [['crm',id],['business','bad'],['business',"';drop table applications"],['business',null]])await assert.rejects(()=>readAudit(db,{query:()=>assert.fail('invalid read')},source,'0',value),e=>e.status===400);
+});
