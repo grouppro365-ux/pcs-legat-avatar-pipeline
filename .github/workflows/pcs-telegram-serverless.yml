@@ -1,0 +1,64 @@
+name: PCS Telegram Serverless
+on:
+  push:
+    branches: [main]
+    paths: ["server/telegram-serverless/**", ".github/workflows/pcs-telegram-serverless.yml"]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Publish tested Mini App and API transport on Telegram
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: pcs-telegram-serverless
+  cancel-in-progress: false
+jobs:
+  validate-and-build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PCS_TGCLOUD_ENABLED: ${{ secrets.TGCLOUD_TOKEN != '' }}
+    defaults:
+      run:
+        working-directory: server/telegram-serverless
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install pinned CLI
+        run: npm ci --ignore-scripts
+      - name: Verify migration package
+        run: npm test
+      - name: Build committed Mini App
+        run: node scripts/build-miniapp.mjs "$SOURCE_SHA"
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+      - name: Verify build
+        run: node scripts/verify-build.mjs
+      - name: Confirm PCS bot identity
+        if: env.PCS_TGCLOUD_ENABLED == 'true' && (github.event_name == 'push' || inputs.deploy)
+        run: node scripts/validate-target.mjs
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+      - name: Read deployed state
+        if: env.PCS_TGCLOUD_ENABLED == 'true' && (github.event_name == 'push' || inputs.deploy)
+        run: npx --no-install tgcloud fetch
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+      - name: Publish selected modules and static files
+        if: env.PCS_TGCLOUD_ENABLED == 'true' && (github.event_name == 'push' || inputs.deploy)
+        run: npx --no-install tgcloud push tgcloud/lib/legacy-api.js tgcloud/endpoints/pcsApi.js tgcloud/endpoints/migrationStatus.js tgcloud/endpoints/deploymentIdentity.js dist/
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+      - name: Confirm published static files
+        if: env.PCS_TGCLOUD_ENABLED == 'true' && (github.event_name == 'push' || inputs.deploy)
+        run: node scripts/verify-live.mjs
+        env:
+          TGCLOUD_TOKEN: ${{ secrets.TGCLOUD_TOKEN }}
+      - name: Report access required
+        if: env.PCS_TGCLOUD_ENABLED != 'true'
+        run: echo 'Build verified; publication requires the PCS BotFather Serverless CLI token in the repository secret TGCLOUD_TOKEN.'

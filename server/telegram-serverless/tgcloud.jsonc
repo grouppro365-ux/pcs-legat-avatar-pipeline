@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/@tgcloud/cli/schema/tgcloud.json",
+  "static": {
+    "source": "dist",
+    "spa": false,
+    "headers": [
+      {"path": "/*", "set": {"Referrer-Policy": "no-referrer", "Cache-Control": "no-cache"}}
+    ]
+  }
+}
