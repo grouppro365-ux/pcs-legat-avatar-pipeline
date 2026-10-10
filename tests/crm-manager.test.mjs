@@ -20,12 +20,12 @@ import * as approvals from '../server/supabase/pcs-manager-live2/approval-policy
 import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
-async function fixture({taskRows,applicationRows,queryResult}={}){
+async function fixture({taskRows,applicationRows,queryResult,catalogRows}={}){
  let handler;const writes=[],reads=[],uploads=[];
  const sql=async(strings,...params)=>{
-  const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
+  const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...validBookingTerms,...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
- };sql.query=async(q,p)=>{writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
+ };sql.query=async(q,p)=>{if(q.startsWith('select id from catalog_items')){reads.push({q,params:p});return catalogRows||[];}writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async(url)=>{if(String(url).includes('/storage/'))uploads.push(url);return Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret})},Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
@@ -214,4 +214,14 @@ test('invalid booking terms fail before photo upload or SQL mutation',async()=>{
   const r=await f.call('application-save',{body:{...validBookingTerms,...patch,id:applicationId,expected_version:bookingVersion,operational_status:'CONFIRMED',photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
   assert.equal(r.status,400);assert.equal(f.uploads.length,0);assert.equal(f.writes.length,0);
  }
+});
+
+test('unavailable catalog terms are refused before upload and a valid catalog reaches the audited write',async()=>{
+ const applicationRows=[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}];
+ const body={...validBookingTerms,id:applicationId,expected_version:bookingVersion,operational_status:'CONFIRMED',qualification_data:{start_date:'2026-10-11',end_date:'2026-10-20'}};
+ const denied=await fixture({applicationRows});
+ const response=await denied.call('application-save',{body:{...body,photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
+ assert.equal(response.status,409);assert.match((await response.json()).error,/опубликованный автомобиль/);assert.equal(denied.uploads.length,0);assert.equal(denied.writes.length,0);
+ const allowed=await fixture({applicationRows,catalogRows:[{id:body.item_id}],queryResult:()=>[{id:applicationId,operational_status:'AWAITING_PARTNER_CONFIRMATION',edit_version:'new-version'}]});
+ assert.equal((await allowed.call('application-save',{body})).status,200);assert.equal(allowed.writes.length,1);assert.match(allowed.writes[0].q,/eligible_item as materialized/);assert.match(allowed.writes[0].q,/exists\(select 1 from eligible_item\)/);
 });

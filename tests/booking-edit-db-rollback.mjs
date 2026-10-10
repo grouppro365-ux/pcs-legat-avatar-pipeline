@@ -7,11 +7,15 @@ const statement=(kind,patch={})=>{const x=bookingEditQuery({...b,...patch},kind)
 const edit=statement('edit'),status=statement('status');
 const overlap=statement('edit',{qualification_data:{...b.qualification_data,end_date:'2026-10-22'}});
 const unchanged=statement('edit');
+const missingItem=statement('edit',{item_id:'90000000-0000-4000-8000-000000000064'});
 const changedNew=statement('edit',{operational_status:'NEW',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
 const cancelledEdit=statement('edit',{operational_status:'CANCELLED_BY_PARTNER',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
 let scopedRead;await readAudit(null,{query:async q=>{scopedRead=q;return[]}},'business','0',id);
 let auditRead;await readAudit(null,{query:async q=>{auditRead=q;return[]}},'business');
-const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance jsonb;v_history jsonb;BEGIN BEGIN
+const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance jsonb;v_history jsonb;v_patch jsonb;v_audit_count int;BEGIN BEGIN
+ CREATE TEMP TABLE catalog_revisions (LIKE public.catalog_revisions INCLUDING ALL) ON COMMIT DROP;
+ CREATE TEMP TABLE catalog_items (LIKE public.catalog_items INCLUDING ALL) ON COMMIT DROP;
+ INSERT INTO catalog_items(id,public_id,title,entity_type,publication_status,moderation_status,availability_status,client_price_thb) VALUES('${b.item_id}','CAT-QA-BOOKING-EDIT','QA vehicle','VEHICLE','PUBLISHED','APPROVED','AVAILABLE',100);
  CREATE TEMP TABLE applications (LIKE public.applications INCLUDING ALL) ON COMMIT DROP;
  CREATE TEMP TABLE audit_events (LIKE public.audit_events INCLUDING ALL) ON COMMIT DROP;
  INSERT INTO applications(id,public_id,client_name,client_contact,category,operational_status,qualification_data) VALUES('${id}','APP-QA-BOOKING-AUDIT','QA original','QA original private','booking','NEW','{"start_date":"2026-10-10","end_date":"2026-10-20"}'::jsonb);
@@ -52,6 +56,24 @@ const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance
  SELECT updated_at::text INTO v_version FROM applications WHERE id='${id}';
  ${unchanged}
  IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CONFIRMED' THEN RAISE EXCEPTION 'unchanged terms lost confirmation'; END IF;
+ SELECT updated_at::text,to_jsonb(a) INTO v_version,v_before FROM applications a WHERE id='${id}';
+ SELECT count(*) INTO v_audit_count FROM audit_events;
+ FOR v_patch IN SELECT value FROM jsonb_array_elements('[{"entity_type":"PROPERTY"},{"availability_status":"UNAVAILABLE"},{"publication_status":"DRAFT"},{"moderation_status":"DRAFT"},{"client_price_thb":0},{"client_price_thb":null},{"publication_starts_at":"2099-01-01"},{"publication_ends_at":"2000-01-01"}]'::jsonb) LOOP
+ UPDATE catalog_items SET entity_type=coalesce(v_patch->>'entity_type','VEHICLE'),availability_status=coalesce(v_patch->>'availability_status','AVAILABLE'),publication_status=coalesce(v_patch->>'publication_status','PUBLISHED'),moderation_status=coalesce(v_patch->>'moderation_status','APPROVED'),client_price_thb=case when v_patch ? 'client_price_thb' then (v_patch->>'client_price_thb')::numeric else 100 end,publication_starts_at=(v_patch->>'publication_starts_at')::timestamptz,publication_ends_at=(v_patch->>'publication_ends_at')::timestamptz WHERE id='${b.item_id}';
+ ${changedNew}
+ IF v_count<>0 OR (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>v_audit_count THEN RAISE EXCEPTION 'ineligible catalog edited booking: %',v_patch; END IF;
+ END LOOP;
+ ${missingItem}
+ IF v_count<>0 OR (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before THEN RAISE EXCEPTION 'missing catalog item edited booking'; END IF;
+ ${unchanged}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CONFIRMED' THEN RAISE EXCEPTION 'catalog ineligibility blocked unchanged terms'; END IF;
+ UPDATE catalog_items SET entity_type='VEHICLE',availability_status='AVAILABLE',publication_status='PUBLISHED',moderation_status='APPROVED',client_price_thb=100,publication_starts_at=null,publication_ends_at=null WHERE id='${b.item_id}';
+ SELECT updated_at::text,to_jsonb(a) INTO v_version,v_before FROM applications a WHERE id='${id}';
+ SELECT count(*) INTO v_audit_count FROM audit_events;
+ INSERT INTO catalog_revisions(id,item_id,version,status,payload) VALUES('90000000-0000-4000-8000-000000000065','${b.item_id}',1,'APPROVED','{"ui":{"category":"car_sale"}}'::jsonb);
+ ${changedNew}
+ IF v_count<>0 OR (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>v_audit_count THEN RAISE EXCEPTION 'sale vehicle accepted for rental'; END IF;
+ UPDATE catalog_revisions SET payload='{"ui":{"category":"car_rent"}}'::jsonb WHERE item_id='${b.item_id}';
  INSERT INTO applications(id,public_id,category,item_id,reserved_vehicle_id,operational_status,qualification_data) VALUES('90000000-0000-4000-8000-000000000063','APP-QA-OVERLAP','booking','${b.item_id}','${b.item_id}','CONFIRMED','{"start_date":"2026-10-21","end_date":"2026-10-30"}'::jsonb);
  SELECT updated_at::text,to_jsonb(a) INTO v_version,v_before FROM applications a WHERE id='${id}';
  SELECT count(*) INTO v_count FROM audit_events;

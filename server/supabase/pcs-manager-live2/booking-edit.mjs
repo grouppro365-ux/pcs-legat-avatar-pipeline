@@ -4,6 +4,15 @@ import {inventoryParams} from './inventory-check.mjs';
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 const editable=['NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED'];
 const targets=[...editable,'CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
+const cancellations=['CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
+const rentalCategory=`lower(coalesce((select payload->'ui'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'ui' order by version desc limit 1),(select payload->'legacy'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'legacy' order by version desc limit 1),(select payload->'legacy_extra'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'legacy_extra' order by version desc limit 1),'car_rent'))='car_rent'`;
+const bookableVehicle=`${rentalCategory} and entity_type='VEHICLE' and availability_status='AVAILABLE' and client_price_thb>0 and publication_status='PUBLISHED' and moderation_status='APPROVED' and (publication_starts_at is null or publication_starts_at<=now()) and (publication_ends_at is null or publication_ends_at>now())`;
+export async function validateBookingEditCatalog(biz,b,current){
+ const q=b.qualification_data||{},old=current.qualification_data||{};
+ if(cancellations.includes(b.operational_status)||(String(current.item_id||'').toLowerCase()===String(b.item_id||'').toLowerCase()&&old.start_date===q.start_date&&old.end_date===q.end_date))return;
+ const rows=await biz.query(`select id from catalog_items where id=$1::uuid and ${bookableVehicle} limit 1`,[b.item_id]);
+ if(!rows.length)throw new CrmError('Для изменения объекта или дат выберите доступный опубликованный автомобиль с подтверждённым тарифом.',409);
+}
 export function validateBookingEditInput(b){
  const q=b.qualification_data||{};
  validateBookingMoney(q);
@@ -17,11 +26,16 @@ export function bookingEditQuery(b,kind='edit'){
  const patch=kind==='status'?{}:{client_name:b.client_name||null,client_contact:b.client_contact||null,city:b.city||null,item_id:b.item_id||null,priority:b.priority||'NORMAL',client_visible_notes:b.client_visible_notes||null,internal_notes:b.internal_notes||null,qualification_data:b.qualification_data||{}};
  const columns=kind==='status'?'':`,client_name=$4::jsonb->>'client_name',client_contact=$4::jsonb->>'client_contact',city=$4::jsonb->>'city',item_id=($4::jsonb->>'item_id')::uuid,priority=$4::jsonb->>'priority',client_visible_notes=$4::jsonb->>'client_visible_notes',internal_notes=$4::jsonb->>'internal_notes',qualification_data=$4::jsonb->'qualification_data'`;
  // The locked original row supplies the before snapshot. Both writes commit or roll back together.
- const savedStatus=kind==='status'?'$3':`case when $3 in ('NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED') and (c.item_id is distinct from ($4::jsonb->>'item_id')::uuid or c.qualification_data->>'start_date' is distinct from $4::jsonb->'qualification_data'->>'start_date' or c.qualification_data->>'end_date' is distinct from $4::jsonb->'qualification_data'->>'end_date') then 'AWAITING_PARTNER_CONFIRMATION' else $3 end`;
+ const changedTerms=`(c.item_id is distinct from ($4::jsonb->>'item_id')::uuid or c.qualification_data->>'start_date' is distinct from $4::jsonb->'qualification_data'->>'start_date' or c.qualification_data->>'end_date' is distinct from $4::jsonb->'qualification_data'->>'end_date')`;
+ const savedStatus=kind==='status'?'$3':`case when $3 in ('NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED') and ${changedTerms} then 'AWAITING_PARTNER_CONFIRMATION' else $3 end`;
+ const eligible=kind==='status'?'':`,eligible_item as materialized (
+ select id from catalog_items where id=($4::jsonb->>'item_id')::uuid and ${bookableVehicle} and exists(select 1 from candidate c where ${changedTerms}) for update
+ )`;
+ const catalogGuard=kind==='status'?'':` and (not ${changedTerms} or $3 in ('CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER') or exists(select 1 from eligible_item))`;
  return {query:`with candidate as materialized (
  select id,item_id,operational_status,qualification_data,updated_at from applications where id=$1::uuid and category='booking' and updated_at::text=$2 and operational_status=any($6::text[]) for update
- ),saved as (
- update applications a set operational_status=${savedStatus},updated_at=clock_timestamp()${columns} from candidate c where a.id=c.id returning a.id,a.item_id,a.operational_status,a.qualification_data,a.updated_at
+ )${eligible},saved as (
+ update applications a set operational_status=${savedStatus},updated_at=clock_timestamp()${columns} from candidate c where a.id=c.id${catalogGuard} returning a.id,a.item_id,a.operational_status,a.qualification_data,a.updated_at
  ),audited as (
  insert into audit_events(actor_role,action,entity_type,entity_id,patch,reason,result)
  select 'ADMIN',$5,'applications',s.id::text,jsonb_build_object(
@@ -32,6 +46,6 @@ export function bookingEditQuery(b,kind='edit'){
 }
 export async function updateBooking(biz,b,kind='edit'){
  const q=bookingEditQuery(b,kind),rows=await biz.query(q.query,q.params);
- if(!rows.length)throw new CrmError('Бронь уже изменена или недоступна для редактирования. Обновите карточку; введённые данные сохранены в форме.',409);
+ if(!rows.length)throw new CrmError('Бронь или доступность автомобиля уже изменились. Обновите карточку; введённые данные сохранены в форме.',409);
  return {ok:true,...rows[0]};
 }
