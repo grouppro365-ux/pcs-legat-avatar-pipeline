@@ -21,17 +21,17 @@ import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs'
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const cid='cmcontact1',secret='unit-test-only';
 async function fixture({taskRows,applicationRows,queryResult}={}){
- let handler;const writes=[],reads=[];
+ let handler;const writes=[],reads=[],uploads=[];
  const sql=async(strings,...params)=>{
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async()=>Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret}),Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async(url)=>{if(String(url).includes('/storage/'))uploads.push(url);return Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret})},Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
  const token=data+'.'+Buffer.from(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(data))).toString('base64url');
- return{writes,reads,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
+ return{writes,reads,uploads,call:async(op,{method='POST',body={},auth=token}={})=>handler(new Request('https://test.invalid?op='+op+'&id='+cid,{method,headers:auth?{authorization:'Bearer '+auth}:{},body:method==='GET'?undefined:JSON.stringify(body)}))};
 }
 test('all new mutations require a valid admin token before any write',async()=>{
  const f=await fixture();for(const op of ['client-save','task-create','task-complete','send','approval-action','notification-read','prospecting-source-update','catalog-save'])for(const auth of ['', 'forged.token'])assert.equal((await f.call(op,{auth})).status,401);assert.equal(f.writes.length,0);
@@ -81,6 +81,7 @@ test('task queue pagination remains parameterized and does not claim a total',as
  const q=f.reads.find(x=>x.q.includes('from tasks t'));assert.equal(q.params.at(-1),400);assert.match(q.q,/offset \?/);
 });
 
+const validBookingTerms={item_id:'22222222-2222-4222-8222-222222222222',qualification_data:{start_date:'2026-10-10',end_date:'2026-10-20'}};
 const applicationId='11111111-1111-4111-8111-111111111111';
 test('generic booking routes cannot forge handover or return',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
@@ -101,7 +102,7 @@ test('existing active, completed and cancelled bookings cannot be edited, reclas
 });
 test('booking changes racing with handover cannot report a successful generic update',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
- const r=await f.call('application-save',{body:{id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',category:'booking',operational_status:'CONFIRMED'}});
+ const r=await f.call('application-save',{body:{...validBookingTerms,id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',category:'booking',operational_status:'CONFIRMED'}});
  assert.equal(r.status,409);assert.match(f.writes[0].q,/operational_status=any\(\$6::text\[\]\)/);
 });
 test('missing bookings do not produce success and ordinary non-booking flows keep their status route',async()=>{
@@ -113,7 +114,7 @@ test('missing bookings do not produce success and ordinary non-booking flows kee
 
 test('generic booking save retains its category when omitted and rejects invented booking states',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED'}]});
- assert.equal((await f.call('application-save',{body:{id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',operational_status:'CONFIRMED'}})).status,409);
+ assert.equal((await f.call('application-save',{body:{...validBookingTerms,id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',operational_status:'CONFIRMED'}})).status,409);
  assert.match(f.writes[0].q,/category='booking'/);
  assert.equal((await f.call('application-status',{body:{id:applicationId,status:'FAKE'}})).status,400);
  assert.equal(f.writes.length,1);
@@ -173,14 +174,14 @@ const bookingVersion='2026-10-09 00:00:00.123456+00';
 test('booking mutations reject missing and stale versions before writes or uploads',async()=>{
  for(const op of ['application-save','application-status'])for(const expected_version of [undefined,null,'',bookingVersion+'0','2026-10-09T00:00:00.123Z']){
   const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
-  const r=await f.call(op,{body:{id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version,photo:{content_base64:'must-not-upload'}}});
+  const r=await f.call(op,{body:{...validBookingTerms,id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version,photo:{content_base64:'must-not-upload'}}});
   assert.equal(r.status,expected_version?409:400);assert.equal(f.writes.length,0);
  }
 });
 test('booking save and status recheck exact versions inside SQL after the initial read',async()=>{
  for(const op of ['application-save','application-status']){
   const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
-  const r=await f.call(op,{body:{id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion}});
+  const r=await f.call(op,{body:{...validBookingTerms,id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion}});
   assert.equal(r.status,409);assert.equal(f.writes.length,1);
   assert.match(f.writes[0].q,/updated_at::text=\$2/);assert.ok(f.writes[0].p.includes(bookingVersion));assert.match(f.writes[0].q,/updated_at=clock_timestamp\(\)/);
  }
@@ -197,7 +198,7 @@ test('existing booking edits and status changes require the single audited write
  for(const op of ['application-save','application-status']){
   const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}],queryResult:()=>[{id:applicationId,operational_status:'CONFIRMED',edit_version:'new-version'}]});
   assert.equal((await f.call(op,{auth:''})).status,401);
-  const r=await f.call(op,{body:{id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion}});
+  const r=await f.call(op,{body:{...validBookingTerms,id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion}});
   assert.equal(r.status,200);assert.equal((await r.json()).edit_version,'new-version');assert.equal(f.writes.length,1);
   assert.match(f.writes[0].q,/insert into audit_events/);assert.equal(f.writes[0].p[4],op==='application-save'?'booking_updated':'booking_status_updated');
  }
@@ -205,4 +206,12 @@ test('existing booking edits and status changes require the single audited write
 test('manager cannot return success after a booking audit write fails',async()=>{
  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}],queryResult:()=>{throw Error('audit failure')}});
  const r=await f.call('application-status',{body:{id:applicationId,status:'CONFIRMED',expected_version:bookingVersion}});assert.equal(r.status,500);assert.equal(f.writes.length,1);
+});
+
+test('invalid booking terms fail before photo upload or SQL mutation',async()=>{
+ for(const patch of [{item_id:null},{item_id:'bad'},{qualification_data:{}},{qualification_data:{start_date:'2026-02-30',end_date:'2026-03-05'}},{qualification_data:{start_date:'2026-10-20',end_date:'2026-10-10'}},{qualification_data:{start_date:'2026-10-10',end_date:'2026-10-10'}}]){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
+  const r=await f.call('application-save',{body:{...validBookingTerms,...patch,id:applicationId,expected_version:bookingVersion,operational_status:'CONFIRMED',photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
+  assert.equal(r.status,400);assert.equal(f.uploads.length,0);assert.equal(f.writes.length,0);
+ }
 });

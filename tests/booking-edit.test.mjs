@@ -26,3 +26,8 @@ test('successful booking mutation returns only its persisted receipt',async()=>{
  let calls=0;const row={id:b().id,operational_status:'CONFIRMED',edit_version:'new-full-version'};
  const result=await updateBooking({query:async()=>{calls++;return[row]}},b());assert.deepEqual(result,{ok:true,...row});assert.equal(calls,1);
 });
+
+test('invalid calendar dates and vehicle identities are refused by the direct edit module',async()=>{
+ const db={query:()=>assert.fail('invalid terms reached SQL')};
+ for(const patch of [{item_id:null},{item_id:'bad'},{qualification_data:{}},{qualification_data:{start_date:'2026-02-30',end_date:'2026-03-05'}},{qualification_data:{start_date:'2026-10-20',end_date:'2026-10-10'}}])await assert.rejects(()=>updateBooking(db,{...b(),...patch}),e=>e.status===400);
+});
