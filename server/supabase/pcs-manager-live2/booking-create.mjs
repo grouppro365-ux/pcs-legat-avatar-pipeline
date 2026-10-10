@@ -1,3 +1,4 @@
+import {bookableVehicle,requireBookableVehicle} from './booking-catalog.mjs';
 import {CrmError} from './crm-policy.mjs';
 import {calendarDate} from './inventory-check.mjs';
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
@@ -14,9 +15,11 @@ export function validateBookingMoney(q){
  if(q.currency!==undefined&&!['THB','USD','RUB'].includes(q.currency))throw new CrmError('Неизвестная валюта брони',400);
 }
 // Both writes share one statement: a failed audit leaves no booking.
-export const bookingCreateSql=`with created as (
+export const bookingCreateSql=`with eligible_item as materialized (
+ select id from catalog_items where id=$6::uuid and ${bookableVehicle} for update
+ ),created as (
  insert into applications(id,public_id,client_name,client_contact,category,city,item_id,operational_status,priority,client_visible_notes,internal_notes,qualification_data,created_at,updated_at)
- values($1::uuid,$2,$3,$4,'booking',$5,$6::uuid,$7,$8,$9,$10,$11::jsonb,now(),now())
+ select $1::uuid,$2,$3,$4,'booking',$5,i.id,$7,$8,$9,$10,$11::jsonb,now(),now() from eligible_item i where true
  on conflict ((qualification_data->>'booking_idempotency_key')) where category='booking' and qualification_data->>'booking_idempotency_key' is not null do nothing
  returning id,public_id,item_id,operational_status,qualification_data
  ),audited as (
@@ -35,10 +38,13 @@ export async function createBooking(biz,b,uploadPhoto){
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(stable(input))))),x=>x.toString(16).padStart(2,'0')).join('');
  const receipt=async()=>{const rows=await biz.query("select id,public_id,qualification_data->>'booking_request_hash' request_hash from applications where category='booking' and qualification_data->>'booking_idempotency_key'=$1 limit 1",[b.request_id]);if(!rows.length)return null;if(rows[0].request_hash!==hash)throw new CrmError('Этот запрос уже использован для другой брони. Обновите форму перед сохранением.',409);return{ok:true,id:rows[0].id,public_id:rows[0].public_id,replayed:true};};
  const previous=await receipt();if(previous)return previous;
+ await requireBookableVehicle(biz,b.item_id);
  if(b.photo?.content_base64){const up=await uploadPhoto(b.photo);q.photo_url=up.url;q.photo_name=b.photo.filename||null;q.photo_content_type=b.photo.content_type||null;}
  q.booking_idempotency_key=b.request_id;q.booking_request_hash=hash;
  const id=crypto.randomUUID(),publicId='APP-'+Date.now().toString(36).toUpperCase()+'-'+id.slice(0,8).toUpperCase();
  const rows=await biz.query(bookingCreateSql,[id,publicId,input.client_name,input.client_contact,input.city,input.item_id,input.operational_status,input.priority,input.client_visible_notes,input.internal_notes,JSON.stringify(q),b.request_id]);
  if(rows.length)return{ok:true,id:rows[0].id,public_id:rows[0].public_id,replayed:false};
- const saved=await receipt();if(saved)return saved;throw new CrmError('Результат сохранения пока не подтверждён. Повторите с той же формой.',409);
+ const saved=await receipt();if(saved)return saved;
+ await requireBookableVehicle(biz,b.item_id);
+ throw new CrmError('Результат сохранения пока не подтверждён. Повторите с той же формой.',409);
 }

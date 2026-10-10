@@ -1,3 +1,4 @@
+import {bookableVehicle,requireBookableVehicle} from './booking-catalog.mjs';
 import {CrmError} from './crm-policy.mjs';
 import {validateBookingMoney} from './booking-create.mjs';
 import {inventoryParams} from './inventory-check.mjs';
@@ -5,13 +6,10 @@ const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 const editable=['NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED'];
 const targets=[...editable,'CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
 const cancellations=['CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
-const rentalCategory=`lower(coalesce((select payload->'ui'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'ui' order by version desc limit 1),(select payload->'legacy'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'legacy' order by version desc limit 1),(select payload->'legacy_extra'->>'category' from catalog_revisions where item_id=catalog_items.id and payload ? 'legacy_extra' order by version desc limit 1),'car_rent'))='car_rent'`;
-const bookableVehicle=`${rentalCategory} and entity_type='VEHICLE' and availability_status='AVAILABLE' and client_price_thb>0 and publication_status='PUBLISHED' and moderation_status='APPROVED' and (publication_starts_at is null or publication_starts_at<=now()) and (publication_ends_at is null or publication_ends_at>now())`;
 export async function validateBookingEditCatalog(biz,b,current){
  const q=b.qualification_data||{},old=current.qualification_data||{};
  if(cancellations.includes(b.operational_status)||(String(current.item_id||'').toLowerCase()===String(b.item_id||'').toLowerCase()&&old.start_date===q.start_date&&old.end_date===q.end_date))return;
- const rows=await biz.query(`select id from catalog_items where id=$1::uuid and ${bookableVehicle} limit 1`,[b.item_id]);
- if(!rows.length)throw new CrmError('Для изменения объекта или дат выберите доступный опубликованный автомобиль с подтверждённым тарифом.',409);
+ await requireBookableVehicle(biz,b.item_id);
 }
 export function validateBookingEditInput(b){
  const q=b.qualification_data||{};

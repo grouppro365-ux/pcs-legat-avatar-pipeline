@@ -25,7 +25,7 @@ async function fixture({taskRows,applicationRows,queryResult,catalogRows}={}){
  const sql=async(strings,...params)=>{
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...validBookingTerms,...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
- };sql.query=async(q,p)=>{if(q.startsWith('select id from catalog_items')){reads.push({q,params:p});return catalogRows||[];}writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
+ };sql.query=async(q,p)=>{if(q.startsWith('select id from catalog_items')){reads.push({q,params:p});return catalogRows||[{id:p[0]}];}writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
  const context={...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async(url)=>{if(String(url).includes('/storage/'))uploads.push(url);return Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret})},Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
@@ -167,7 +167,7 @@ test('the manager routes valid booking creation through the atomic booking/audit
  const response=await f.call('application-save',{body:{category:'booking',request_id:'33333333-3333-4333-8333-333333333333',item_id:'22222222-2222-4222-8222-222222222222',qualification_data:{start_date:'2026-10-10',end_date:'2026-10-20'}}});
  assert.equal(response.status,200);const receipt=await response.json();assert.equal(receipt.ok,true);assert.equal(receipt.replayed,false);assert.match(receipt.public_id,/^APP-/);
  const mutations=f.writes.filter(x=>!x.q.startsWith('select'));assert.equal(mutations.length,1);assert.match(mutations[0].q,/insert into audit_events/);assert.equal(mutations[0].p[0],receipt.id);
- assert.equal(f.reads.length,0,'no generic legacy INSERT');
+ assert.equal(f.reads.filter(x=>x.q.includes('from catalog_items')).length,1,'one catalog preflight and no generic legacy INSERT');
 });
 
 const bookingVersion='2026-10-09 00:00:00.123456+00';
@@ -219,9 +219,15 @@ test('invalid booking terms fail before photo upload or SQL mutation',async()=>{
 test('unavailable catalog terms are refused before upload and a valid catalog reaches the audited write',async()=>{
  const applicationRows=[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}];
  const body={...validBookingTerms,id:applicationId,expected_version:bookingVersion,operational_status:'CONFIRMED',qualification_data:{start_date:'2026-10-11',end_date:'2026-10-20'}};
- const denied=await fixture({applicationRows});
+ const denied=await fixture({applicationRows,catalogRows:[]});
  const response=await denied.call('application-save',{body:{...body,photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
  assert.equal(response.status,409);assert.match((await response.json()).error,/опубликованный автомобиль/);assert.equal(denied.uploads.length,0);assert.equal(denied.writes.length,0);
  const allowed=await fixture({applicationRows,catalogRows:[{id:body.item_id}],queryResult:()=>[{id:applicationId,operational_status:'AWAITING_PARTNER_CONFIRMATION',edit_version:'new-version'}]});
  assert.equal((await allowed.call('application-save',{body})).status,200);assert.equal(allowed.writes.length,1);assert.match(allowed.writes[0].q,/eligible_item as materialized/);assert.match(allowed.writes[0].q,/exists\(select 1 from eligible_item\)/);
+});
+
+test('new booking catalog refusal happens before upload and the atomic INSERT',async()=>{
+ const f=await fixture({catalogRows:[],queryResult:()=>[]});
+ const r=await f.call('application-save',{body:{category:'booking',request_id:'33333333-3333-4333-8333-333333333333',...validBookingTerms,photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
+ assert.equal(r.status,409);assert.equal(f.uploads.length,0);assert.equal(f.writes.filter(x=>!x.q.startsWith('select')).length,0);
 });
