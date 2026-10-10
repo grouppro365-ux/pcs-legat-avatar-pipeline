@@ -4,6 +4,7 @@ import {createBooking,bookingDatabaseError} from '../server/supabase/pcs-manager
 const request_id='11111111-1111-4111-8111-111111111111',item_id='22222222-2222-4222-8222-222222222222';
 const input=()=>({request_id,item_id,category:'booking',operational_status:'AWAITING_PARTNER_CONFIRMATION',client_name:'QA',qualification_data:{start_date:'2026-10-10',end_date:'2026-10-20',booking_idempotency_key:'forged',booking_request_hash:'forged'}});
 function fixture(){let saved=null;const writes=[];return{writes,db:{query:async(q,p)=>{
+ if(q.startsWith('select id from catalog_items'))return[{id:item_id}];
  if(q.startsWith('select'))return saved?[saved]:[];
  writes.push({q,p});const data=JSON.parse(p[10]);saved={id:p[0],public_id:p[1],request_hash:data.booking_request_hash};return[{id:saved.id,public_id:saved.public_id}];
  }}};}
@@ -15,7 +16,7 @@ test('a repeated request returns its original receipt without another booking or
  await assert.rejects(()=>createBooking(f.db,{...b,qualification_data:{...b.qualification_data,end_date:'2026-10-21'}},null),e=>e.status===409);
 });
 test('the loser of an idempotency insert race reads the committed original receipt',async()=>{
- let hash,reads=0;const db={query:async(q,p)=>{if(q.startsWith('select')){reads++;return reads===1?[]:[{id:'original',public_id:'APP-original',request_hash:hash}];}hash=JSON.parse(p[10]).booking_request_hash;return[];}};
+ let hash,reads=0;const db={query:async(q,p)=>{if(q.startsWith('select id from catalog_items'))return[{id:item_id}];if(q.startsWith('select')){reads++;return reads===1?[]:[{id:'original',public_id:'APP-original',request_hash:hash}];}hash=JSON.parse(p[10]).booking_request_hash;return[];}};
  const result=await createBooking(db,input(),null);assert.equal(result.id,'original');assert.equal(result.replayed,true);
 });
 test('invalid identities, dates and reused request content cannot reach a write',async()=>{
@@ -37,7 +38,7 @@ test('booking and minimal audit use one dependent statement, with no second writ
  const f=fixture(),b=input();b.client_contact='private contact';b.internal_notes='private note';
  const first=await createBooking(f.db,b,null);await createBooking(f.db,b,null);
  assert.equal(f.writes.length,1);const {q,p}=f.writes[0];
- assert.match(q,/with created as/);assert.match(q,/insert into audit_events/);
+ assert.match(q,/created as/);assert.match(q,/insert into audit_events/);
  assert.match(q,/'ADMIN','booking_create','applications'/);assert.match(q,/from created returning entity_id/);
  assert.match(q,/exists\(select 1 from audited a where a.entity_id=c.id::text\)/);
  assert.equal(p[11],request_id);assert.equal(first.replayed,false);
@@ -51,4 +52,22 @@ test('audit failure propagates without a success receipt; original request can b
  await assert.rejects(()=>createBooking(db,input(),null),/audit unavailable/);
  assert.equal(f.writes.length,0);
  const saved=await createBooking(db,input(),null);assert.equal(saved.replayed,false);assert.equal(f.writes.length,1);
+});
+
+test('unavailable vehicles fail before any photo or booking write',async()=>{
+ let reads=0;const db={query:async(q)=>{assert.ok(q.startsWith('select'));reads++;return[];}};
+ await assert.rejects(()=>createBooking(db,{...input(),photo:{content_base64:'QA'}},()=>assert.fail('unavailable upload')),e=>e.status===409);assert.equal(reads,2);
+});
+test('a confirmed retry still returns its receipt after the catalog becomes unavailable',async()=>{
+ const f=fixture(),first=await createBooking(f.db,input(),null);let reads=0;
+ const db={query:async(q,p)=>{reads++;assert.match(q,/booking_idempotency_key/);return f.db.query(q,p);}};
+ const replay=await createBooking(db,input(),()=>assert.fail('replay upload'));assert.equal(replay.id,first.id);assert.equal(replay.replayed,true);assert.equal(reads,1);
+});
+test('catalog changes between preflight and insertion return conflict without a success receipt',async()=>{
+ let catalogs=0,writes=0;const db={query:async(q)=>{
+ if(q.startsWith('select id from catalog_items'))return ++catalogs===1?[{id:item_id}]:[];
+ if(q.startsWith('select'))return[];
+ writes++;assert.match(q,/eligible_item as materialized/);assert.match(q,/for update/);assert.match(q,/from eligible_item i where true/);return[];
+ }};
+ await assert.rejects(()=>createBooking(db,input(),null),e=>e.status===409);assert.equal(writes,1);assert.equal(catalogs,2);
 });
