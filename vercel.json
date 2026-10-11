@@ -5,11 +5,29 @@
     {
       "source": "/(.*)",
       "headers": [
-        {"key":"X-Content-Type-Options","value":"nosniff"},
-        {"key":"Referrer-Policy","value":"no-referrer"},
-        {"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=()"},
-        {"key":"Cache-Control","value":"no-store"}
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/pcs-auth/:path*",
+      "destination": "https://ep-small-cell-av1ecg0k.neonauth.c-11.us-east-1.aws.neon.tech/neondb/auth/:path*"
     }
   ]
 }

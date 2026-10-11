@@ -4,11 +4,12 @@
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const states={NEW:'Новая заявка',TRIAGE:'Уточняем запрос',MATCHING:'Подбираем предложение',QUOTE_READY:'Предложения готовы',QUOTE_SENT:'Предложения отправлены',AWAITING_CLIENT_DECISION:'Ожидаем выбора',AWAITING_PARTNER_CONFIRMATION:'Подтверждение условий',CONFIRMED:'Сделка подтверждена',SERVICE_IN_PROGRESS:'Услуга выполняется',COMPLETED:'Услуга завершена',CANCELLED_BY_CLIENT:'Отменена клиентом',CANCELLED_BY_PARTNER:'Отменена партнёром',PAID_TO_PARTNER:'Оплата подтверждена',PARTIALLY_PAID:'Частичная оплата',AWAITING_PAYMENT:'Ожидаем оплату',INSTRUCTIONS_SENT:'Реквизиты доступны',NOT_REQUIRED_YET:'Оплата пока не требуется',PENDING:'На проверке',VERIFIED:'Подтверждено',REJECTED:'Отклонено',SUBMITTED:'Проверка оператором',APPROVED:'Можно выбрать',ACCEPTED:'Выбрано'};
  const label=x=>states[x]||x||'—';
- let token=location.hash.slice(1),data,busy=false,sequence=0;
+ let token=location.hash.slice(1),data,busy=false,sequence=0,accountMode=false,authEpoch=0;
+ const auth=window.PCSCabinetAuth,account=document.getElementById('account'),accountStatus=document.getElementById('accountStatus');
  if(/^[a-f0-9]{64}$/.test(token)){sessionStorage.setItem('pcsCabinetToken',token);history.replaceState(null,'',location.pathname);}else token=sessionStorage.getItem('pcsCabinetToken')||'';
  const notice=document.getElementById('notice');
- async function api(body){const r=await fetch(API,{method:body?'POST':'GET',headers:{authorization:'Bearer '+token,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Не удалось выполнить действие');return d;}
- async function refresh(){const seq=++sequence,current=token,result=await api();if(current!==token||seq!==sequence)return;data=result;render();notice.className='';notice.textContent='Доступ до '+new Date(data.expires_at).toLocaleString('ru-RU');}
+ async function api(body){let credential=token;if(accountMode){const r=await auth.token();if(r.error||!r.data?.token)throw Error('Войдите в учётную запись');credential=r.data.token;}const r=await fetch(accountMode?API.replace('op=portal','op=portal-account'):API,{method:body?'POST':'GET',headers:{authorization:'Bearer '+credential,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Не удалось выполнить действие');return d;}
+ async function refresh(){const seq=++sequence,current=token,result=await api();if(current!==token||seq!==sequence)return;data=result;render();notice.className='';account.hidden=accountMode;notice.textContent='Доступ до '+new Date(data.expires_at).toLocaleString('ru-RU');}
  const controls=(a)=>{
   if(data.role==='PARTNER'){
    if(a.operational_status==='AWAITING_PARTNER_CONFIRMATION'&&a.partner_response_status==='NOT_SENT')return `<button data-action="confirm" data-app="${a.id}">Подтвердить выбранные условия</button><button data-action="decline" data-app="${a.id}">Отказаться</button>`;
@@ -36,7 +37,25 @@
  }
  document.addEventListener('submit',e=>{const form=e.target;if(!form.dataset.action)return;e.preventDefault();act(form,Object.fromEntries(new FormData(form)));});
  document.addEventListener('click',e=>{const b=e.target.closest('button[data-action]');if(b)act(b,b.dataset.offer?{offer_id:b.dataset.offer}:{});});
- document.getElementById('refresh').onclick=()=>{if(!busy&&token)refresh().catch(e=>notice.textContent=e.message);};
- document.getElementById('logout').onclick=()=>{sessionStorage.removeItem('pcsCabinetToken');token='';data=null;sequence++;document.getElementById('request').textContent='';document.getElementById('applications').textContent='';notice.textContent='Вы вышли из кабинета. Для входа откройте персональную ссылку.';};
- if(token)refresh().catch(e=>notice.textContent=e.message);else notice.textContent='Откройте персональную ссылку, которую выдал оператор PCS.';
+ document.getElementById('refresh').onclick=()=>{if(!busy&&(token||accountMode))refresh().catch(e=>notice.textContent=e.message);};
+ document.getElementById('logout').onclick=async()=>{authEpoch++;accountMode=false;account.hidden=false;sessionStorage.removeItem('pcsCabinetToken');token='';data=null;sequence++;document.getElementById('request').textContent='';document.getElementById('applications').textContent='';notice.textContent='Вы вышли из кабинета.';try{const r=await auth.signOut();if(r.error)throw Error('signout');}catch{accountStatus.textContent='Не удалось завершить сессию входа. Повторите выход.';};};
+ async function connectAccount(){
+  const epoch=authEpoch;accountMode=true;
+  if(token){await api({action:'bind',invitation:token});if(epoch!==authEpoch)return;sessionStorage.removeItem('pcsCabinetToken');token='';}
+  await refresh();accountStatus.textContent='Вход выполнен';
+ }
+ async function signIn(signup=false){
+  const epoch=authEpoch;
+  const form=document.getElementById('accountForm');if(!form.reportValidity())return;
+  const email=document.getElementById('accountEmail').value.trim(),password=document.getElementById('accountPassword').value,name=document.getElementById('accountName').value.trim();
+  form.querySelectorAll('button').forEach(x=>x.disabled=true);accountStatus.textContent=signup?'Создаём учётную запись…':'Входим…';
+  try{const r=signup?await auth.signUp.email({email,password,name:name||email.split('@')[0]}):await auth.signIn.email({email,password});if(r.error)throw Error(r.error.message||'Не удалось войти');if(epoch!==authEpoch)return;document.getElementById('accountPassword').value='';await connectAccount();}
+  catch(e){accountStatus.textContent=e.message;accountMode=false;}
+  finally{form.querySelectorAll('button').forEach(x=>x.disabled=false);}
+ }
+ document.getElementById('accountForm').onsubmit=e=>{e.preventDefault();signIn();};
+ document.getElementById('accountSignup').onclick=()=>signIn(true);
+ document.getElementById('accountBind').onclick=()=>connectAccount().catch(e=>{accountMode=false;accountStatus.textContent=e.message;});
+ if(token)refresh().catch(e=>notice.textContent=e.message);else notice.textContent='Войдите в учётную запись или откройте персональную ссылку оператора.';
+ auth.getSession().then(async r=>{if(r.error)throw Error(r.error.message);if(r.data?.user){if(token)document.getElementById('accountBind').hidden=false;else await connectAccount();}}).catch(e=>{accountMode=false;accountStatus.textContent=e.message||'Не удалось восстановить сессию';});
 })();
