@@ -16,3 +16,5 @@
 При следующей доработке reuse first: готовые SDK/auth primitives, установленный cron и канонический outbox; прикладной код ограничить проверками прав, связями PCS и отображением. Не включать старый customer-followup sender просто флагом: его job сейчас inactive, source читает Supabase каталог и делает внешние отправки до долговечной квитанции. Использовать действующий canonical availability и delivery state machine.
 
 Отправка реквизитов переиспользует установленный cron, pcs_workflow_outbox и Conversation Hub delivery state machine. Платёжные SDK не добавлены.
+
+Аккаунты используют существующий Neon Managed Better Auth (https://github.com/better-auth/better-auth), официальный клиент https://github.com/neondatabase/neon-js и https://github.com/panva/jose. Версии закреплены в package-lock.json, лицензии bundled dependencies сохранены в PCS_AUTH_THIRD_PARTY_LICENSES.txt. Прикладной код PCS связывает identity с уже существующими бизнес-ролями, без собственной системы паролей.

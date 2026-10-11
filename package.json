@@ -1,1 +1,14 @@
-{"private":true,"scripts":{"dev":"node tools/preview-server.mjs"}}
+{
+  "private": true,
+  "scripts": {
+    "dev": "node tools/preview-server.mjs",
+    "build:cabinet-auth": "esbuild tools/cabinet-auth-entry.mjs --bundle --format=iife --platform=browser --target=es2022 --minify --legal-comments=external --outfile=pcs-ai-operator-v6/cabinet-auth-sdk.js"
+  },
+  "dependencies": {
+    "@neondatabase/auth": "0.5.0-beta",
+    "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
