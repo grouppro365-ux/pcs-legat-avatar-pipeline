@@ -6,9 +6,16 @@ const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f
 const editable=['NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED'];
 const targets=[...editable,'CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
 const cancellations=['CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER'];
+const reserving=['AWAITING_PARTNER_CONFIRMATION','CONFIRMED'];
+export async function validateBookingStatusCatalog(biz,status,current){
+ if(!reserving.includes(status)||status===current.operational_status)return;
+ const q=current.qualification_data||{};
+ inventoryParams(current.item_id,q.start_date,q.end_date);
+ await requireBookableVehicle(biz,current.item_id);
+}
 export async function validateBookingEditCatalog(biz,b,current){
  const q=b.qualification_data||{},old=current.qualification_data||{};
- if(cancellations.includes(b.operational_status)||(String(current.item_id||'').toLowerCase()===String(b.item_id||'').toLowerCase()&&old.start_date===q.start_date&&old.end_date===q.end_date))return;
+ if(cancellations.includes(b.operational_status)||(String(current.item_id||'').toLowerCase()===String(b.item_id||'').toLowerCase()&&old.start_date===q.start_date&&old.end_date===q.end_date&&(!reserving.includes(b.operational_status)||b.operational_status===current.operational_status)))return;
  await requireBookableVehicle(biz,b.item_id);
 }
 export function validateBookingEditInput(b){
@@ -26,10 +33,14 @@ export function bookingEditQuery(b,kind='edit'){
  // The locked original row supplies the before snapshot. Both writes commit or roll back together.
  const changedTerms=`(c.item_id is distinct from ($4::jsonb->>'item_id')::uuid or c.qualification_data->>'start_date' is distinct from $4::jsonb->'qualification_data'->>'start_date' or c.qualification_data->>'end_date' is distinct from $4::jsonb->'qualification_data'->>'end_date')`;
  const savedStatus=kind==='status'?'$3':`case when $3 in ('NEW','AWAITING_PARTNER_CONFIRMATION','CONFIRMED') and ${changedTerms} then 'AWAITING_PARTNER_CONFIRMATION' else $3 end`;
- const eligible=kind==='status'?'':`,eligible_item as materialized (
- select id from catalog_items where id=($4::jsonb->>'item_id')::uuid and ${bookableVehicle} and exists(select 1 from candidate c where ${changedTerms}) for update
+ const promotion=`($3 in ('AWAITING_PARTNER_CONFIRMATION','CONFIRMED') and c.operational_status is distinct from $3)`;
+ const needsCatalog=kind==='status'?promotion:`($3 not in ('CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER') and (${changedTerms} or ${promotion}))`;
+ const item=kind==='status'?'c.item_id':"($4::jsonb->>'item_id')::uuid";
+ const validDates=kind==='status'?` and pcs.booking_range(c.qualification_data) is not null and c.qualification_data->>'end_date'>c.qualification_data->>'start_date'`:'';
+ const eligible=`,eligible_item as materialized (
+ select id from catalog_items where ${bookableVehicle} and exists(select 1 from candidate c where catalog_items.id=${item} and ${needsCatalog}${validDates}) for update
  )`;
- const catalogGuard=kind==='status'?'':` and (not ${changedTerms} or $3 in ('CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER') or exists(select 1 from eligible_item))`;
+ const catalogGuard=` and (not ${needsCatalog} or exists(select 1 from eligible_item))`;
  return {query:`with candidate as materialized (
  select id,item_id,operational_status,qualification_data,updated_at from applications where id=$1::uuid and category='booking' and updated_at::text=$2 and operational_status=any($6::text[]) for update
  )${eligible},saved as (
