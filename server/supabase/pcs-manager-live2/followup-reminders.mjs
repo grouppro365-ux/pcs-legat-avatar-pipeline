@@ -1,4 +1,5 @@
 import {terminalApplicationStatuses} from './operations-read.mjs';
+import {createWorkflowNotices} from './workflow-notices.mjs';
 export const followupReminderQuery=`with due as materialized (
  select a.id,a.public_id,a.follow_up_at,'application-followup:'||a.id::text||':'||md5(extract(epoch from a.follow_up_at)::text) dedupe_key
  from applications a where a.follow_up_at<=now() and a.operational_status<>all($1::text[]) and not exists(
@@ -21,6 +22,7 @@ export async function internalFollowupReminders(req,{base,key,biz},transport=fet
  const supplied=req.headers.get('x-pcs-internal-secret');if(!supplied)return {status:401,body:{error:'unauthorized'}};
  try{const r=await transport(base+'/rest/v1/rpc/pcs_secret_get',{method:'POST',headers:{apikey:key,authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({p_name:'internal_retry_secret'}),signal:AbortSignal.timeout(10000)});
   if(!r.ok)return {status:503,body:{error:'worker_unavailable'}};if(!equal(supplied,await r.json()))return {status:401,body:{error:'unauthorized'}};
-  return {status:200,body:await createFollowupReminders(biz)};
+  const reminders=await createFollowupReminders(biz);
+  return {status:200,body:{...reminders,workflow:await createWorkflowNotices(biz)}};
  }catch{return {status:503,body:{error:'worker_unavailable'}};}
 }
