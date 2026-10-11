@@ -69,3 +69,5 @@ Payment dispatch release checks: 740 Node tests passed; isolated Neon SQL rollba
 Проверено на изолированной ветке: настоящие sign-up, session restoration, JWT issuance, sign-out, sign-in; JWT проверен jose и отвергнут с чужим issuer. SQL rollback проверил привязку, повтор, чужую личность, потребление ссылки, блокировку и отзыв. Тестовые identity созданы только на QA branch, без сообщений реальным клиентам. UI browser/Telegram E2E остаётся исключённым. Shared SMTP существующего Auth остаётся прежним; настройка recovery/custom SMTP и внутренние staff/team роли — отдельный остаток. Sign-out прекращает сессию SDK; уже выданный JWT имеет окно до 15 минут, отзыв PCS access проверяется на каждом запросе.
 
 Account release validation: 752 Node tests passed; managed Auth HTTP flow and canonical account SQL rollback passed.
+
+Production proxy correction: direct Vercel external rewrites forward a hostname Neon rejects. A bounded same-origin auth forwarding function strips platform hostname headers, preserves HttpOnly cookies and accepts only the five implemented auth operations.
