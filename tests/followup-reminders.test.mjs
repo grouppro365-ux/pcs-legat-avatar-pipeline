@@ -15,3 +15,9 @@ test('internal worker refuses method/missing/wrong secrets and sanitizes failure
 test('valid internal secret only creates in-app notifications without external sends',async()=>{
  const r=await internalFollowupReminders(req('POST','expected'),{base:'https://test',key:'server',biz:{query:async(q)=>q.includes('pcs_workflow_outbox')?[{created:0,marked:0}]:[{created:0}]}},async(url,opts)=>{assert.equal(url,'https://test/rest/v1/rpc/pcs_secret_get');assert.equal(JSON.parse(opts.body).p_name,'internal_retry_secret');return Response.json('expected')});assert.equal(r.status,200);assert.equal(r.body.workflow.marked,0);assert.equal(r.body.created,0);assert.equal(r.body.client_messages_sent,0);
 });
+test('payment dispatch is invoked only after the internal worker secret is validated',async()=>{
+ let sends=0;const context={base:'https://test',key:'server',biz:{query:async(q)=>q.includes('pcs_workflow_outbox')?[{created:0,marked:0}]:[{created:0}]},payments:async()=>{sends++;return {sent:0}}};
+ const transport=async()=>Response.json('expected');
+ assert.equal((await internalFollowupReminders(req('POST','wrong'),context,transport)).status,401);assert.equal(sends,0);
+ const result=await internalFollowupReminders(req('POST','expected'),context,transport);assert.equal(result.status,200);assert.equal(sends,1);assert.equal(result.body.payment_delivery.sent,0);
+});

@@ -35,7 +35,7 @@
 
 Ссылочный вход — ограниченный кабинет, не полная регистрация/Neon Auth с управлением командой и персональными staff-правами. Вывод ограничен последними 100 заявками и 500 предложениями/переводами; архив требует дальнейшей пагинации. Нет автоматического межканального объединения идентичностей. Нет загрузки частных чеков; кабинет передаёт номер перевода/банковское подтверждение текстом.
 
-Оплата здесь — проверенный перевод партнёру, не банковский эквайринг. PCS-collects маршрут, возвраты, депозитный ledger, счета, партнёрские settlement/dispute и сводная revenue-аналитика ещё требуют интеграции; новые платёжные подтверждения видны в console сделки, не объединены с прежней Supabase finance-ledger витриной. Автомобильная бронь и договор остаются отдельным существующим путём, общая услуга не создаёт резерв машины без item/dates.
+По уточнению пользователя платёжные интеграции и эквайринг исключены из объёма: бот отправляет сохранённые реквизиты, оператор проверяет поступление. PCS-collects маршрут, возвраты, депозитный ledger, счета, партнёрские settlement/dispute и сводная revenue-аналитика остаются отдельными задачами; новые платёжные подтверждения видны в console сделки, не объединены с прежней Supabase finance-ledger витриной. Автомобильная бронь и договор остаются отдельным существующим путём, общая услуга не создаёт резерв машины без item/dates.
 
 В более широком ТЗ также остаются контент/публикации и видео, attribution/learning, завершение облачного deployment/Telegram Serverless и реальная приёмка. Нельзя считать количество тестов процентом готовности.
 
@@ -48,4 +48,14 @@
 
 ## Автоматические действия после сделки
 - Published manager v63 adds operator notifications from four canonical deal events through the existing 5-minute cron worker. Replays dedupe by event UUID, audit and event receipt are atomic, existing receipts can be repaired. External delivery status and attempts remain untouched.
-- 733 Node tests and isolated SQL projection rollback checks passed. This closes internal operator reminders for these stages, not external client/partner outbox delivery or payment acquiring.
+- 733 Node tests and isolated SQL projection rollback checks passed. This closes internal operator reminders for these stages, external client/partner delivery remains a separate scope. Payment acquiring was explicitly excluded by the user.
+
+## Отправка реквизитов ботом
+
+Уточнение пользователя 2026-10-11: никаких платёжных интеграций. Сохранение реквизитов партнёра для подтверждённой заявки запускает автоматическую отправку через существующий 5-минутный cron. Канал берётся из связанного runtime contact. Цена услуги и возвратный депозит показаны отдельно; реквизиты отправляются дословно, без AI генерации. Устаревшая версия не отправляется; выбранный канал закрепляется на повтор.
+
+Outbox привязан к заявке и версии реквизитов. Используется существующая квитанция Conversation Hub; при сбое записи истории доставка не повторяется. Неизвестная доставка, отсутствующий канал/контакт и слишком длинные реквизиты передаются оператору (notification/task), без обрезки банковских данных. Поступление денег по-прежнему проверяет оператор. Это автоматизация отправки реквизитов, а не автоматическая проверка банка. Новых production таблиц и постоянных процессов не требуется.
+
+Проверки: unit tests для текста, устаревших данных, повторов, восстановления истории и неизвестной доставки; изолированный SQL rollback для очереди, версии, lease owner и атомарного audit. SQL fixtures используют временные копии таблиц без FK/triggers; два конкурентных соединения отдельно не проверялись. Browser/Telegram UI E2E остаётся исключённым по указанию пользователя.
+
+Payment dispatch release checks: 740 Node tests passed; isolated Neon SQL rollback passed. Current production eligible count before release: 0.

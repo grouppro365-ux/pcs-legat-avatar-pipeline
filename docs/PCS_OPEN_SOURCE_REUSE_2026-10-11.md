@@ -11,6 +11,8 @@
 | PCS offer/client/partner confirmation functions | Existing business Neon `pcs.accept_partner_offer`, `pcs.partner_decide_selected_offer`, `pcs.client_confirm_selected_offer` | Кабинеты вызывают существующую бизнес-логику через проверку владельца, роли, версии и стадии, вместо параллельного CRM/сделочного механизма. |
 | Postgres job queue candidate | https://github.com/timgit/pg-boss | Найден готовый вариант для более широких durable jobs. Пока не добавлен: существующие pcs_workflow_outbox и cron уже есть. Замена потребует миграции старых событий и проверки доставок, а не только установки npm. |
 
-Открытые интеграционные задачи: обработчик workflow outbox, безопасный customer follow-up, полноценный cabinet/account/team auth, refunds/settlements/эквайринг. Наличие библиотек не доказывает эти сценарии готовыми.
+Открытые интеграционные задачи: обработчик workflow outbox, безопасный customer follow-up, полноценный cabinet/account/team auth, refunds/settlements. Эквайринг исключён пользователем; для оплаты нужны только сохранённые реквизиты и проверка оператором. Наличие библиотек не доказывает эти сценарии готовыми.
 
 При следующей доработке reuse first: готовые SDK/auth primitives, установленный cron и канонический outbox; прикладной код ограничить проверками прав, связями PCS и отображением. Не включать старый customer-followup sender просто флагом: его job сейчас inactive, source читает Supabase каталог и делает внешние отправки до долговечной квитанции. Использовать действующий canonical availability и delivery state machine.
+
+Отправка реквизитов переиспользует установленный cron, pcs_workflow_outbox и Conversation Hub delivery state machine. Платёжные SDK не добавлены.

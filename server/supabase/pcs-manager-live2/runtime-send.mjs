@@ -2,7 +2,7 @@ import { processMessage } from './message-processing.mjs';
 import { CrmError } from './crm-policy.mjs';
 import { uuid } from './portal-workflow.mjs';
 export async function sendRuntimeMessage(db,id,b,transport){
- if(!uuid(id)||!uuid(b.request_id)||!['telegram','line','whatsapp','instagram','facebook'].includes(b.channel)||typeof b.text!=='string'||!b.text.trim()||b.text.length>1800||Object.keys(b).some(k=>!['request_id','channel','text'].includes(k)))throw new CrmError('Проверьте канал и текст сообщения',400);
+ if(!uuid(id)||!uuid(b.request_id)||!['telegram','line','whatsapp','instagram','facebook'].includes(b.channel)||typeof b.text!=='string'||!b.text.trim()||b.text.length>(b.channel==='telegram'?4000:1800)||Object.keys(b).some(k=>!['request_id','channel','text'].includes(k)))throw new CrmError('Проверьте канал и текст сообщения',400);
  const found=await db.from('pcs_contacts').select('id,name,telegram_chat_id,business_connection_id,line_contact,whatsapp,instagram,facebook').eq('id',id).single();
  if(found.error||!found.data)throw new CrmError('Контакт не найден',404);const contact=found.data,text=b.text.trim();
  if(b.channel==='telegram'&&(!contact.telegram_chat_id||!contact.business_connection_id))throw new CrmError('Telegram-диалог не связан с бизнес-подключением',409);
