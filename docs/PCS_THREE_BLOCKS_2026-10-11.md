@@ -44,3 +44,8 @@
 - RLS включён на четырёх новых таблицах, PUBLIC table grants отсутствуют. Реальным клиентам QA-сообщения не отправлялись. Authenticated browser/Telegram production E2E остаётся открытым.
 - Follow-up correction: сравнение runtime команды выполняется по стабильным полям, а не порядку ключей JSON. Regression fixture теперь сериализует записи с перестановкой ключей, как PostgreSQL JSONB; повтор и восстановление истории проходят без дополнительной отправки.
 - Готовые SDK и scheduler переиспользуются; решения с GitHub и границы интеграции перечислены в PCS_OPEN_SOURCE_REUSE_2026-10-11.md.
+
+
+## Автоматические действия после сделки
+- Published manager v63 adds operator notifications from four canonical deal events through the existing 5-minute cron worker. Replays dedupe by event UUID, audit and event receipt are atomic, existing receipts can be repaired. External delivery status and attempts remain untouched.
+- 733 Node tests and isolated SQL projection rollback checks passed. This closes internal operator reminders for these stages, not external client/partner outbox delivery or payment acquiring.

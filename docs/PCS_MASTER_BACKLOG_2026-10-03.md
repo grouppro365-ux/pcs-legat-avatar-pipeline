@@ -515,3 +515,11 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - Production migration выполнена одной транзакцией, PR67 merge e7c451e72a5fe192004cd3b3a354bc0ce65f9e5b. Manager v61 ACTIVE, 32 files matched. Vercel production READY, cabinet assets and index matched, anonymous admin routes 401 and invalid scoped access 403. Четыре новые таблицы имеют RLS и закрыты для PUBLIC.
 - Базовые входящие/кабинеты/проверенная оплата теперь опубликованы; полный ТЗ не отмечается COMPLETE. В проверке установлено, что pg_cron уже работает для памяти контактов, внутренних напоминаний, public rules, retry и prospecting; customer follow-up job выключен. Не включать старый sender до проверки канонического каталога и неизвестной доставки.
 - Исправлен JSONB key-order conflict при повторе ручного runtime send; regression хранит записи с перестановкой ключей.
+
+
+### 2026-10-11 — runtime replay и автоматические уведомления о сделке
+- PR68 merge 22105acdf00287ba062f16fce9461310aa1e3a00, manager v62 ACTIVE. Повтор ручного runtime ответа больше не зависит от порядка PostgreSQL JSONB keys. 731 regression tests passed.
+- Manager v63 ACTIVE, 33 release files matched. Existing followup-reminder-worker теперь также проецирует PARTNER_OFFER_ACCEPTED, PARTNER_FINAL_CONFIRMED, PARTNER_FINAL_DECLINED и CLIENT_BOOKING_CONFIRMED из canonical outbox в существующий operator notification centre. Действующий pg_cron job targets_current_worker=true, active=true, каждые 5 минут; отдельный scheduler/schema не создавался.
+- SQL projection атомарна с audit и receipt marker, lock SKIP LOCKED и dedupe per event. Статус/attempts/sent_at внешнего outbox не меняются; внутреннее уведомление не выдаётся за сообщение клиенту.
+- 733 Node tests passed. SQL QA на isolated Neon branch и temporary LIKE actual tables INCLUDING ALL подтвердил 4 события, отсутствие дублей, сохранение PENDING/attempts, восстановление существующей notification receipt и полный откат notice/marker при audit failure. Temporary copies omit FK/triggers and do not prove two-session concurrency. Authenticated server worker smoke uses existing secret server-to-server; credentials are never returned to the client.
+- External outbox fanout/customer followup, полноценные account/team permissions, acquiring/refunds/settlement, cross-channel identity и production browser/Telegram E2E остаются открытыми.
