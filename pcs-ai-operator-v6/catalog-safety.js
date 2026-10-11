@@ -21,6 +21,24 @@ window.pricingManager=async function(id){
   const lock=document.querySelector('#pricingLocked');if(lock){lock.disabled=true;lock.checked=Boolean(x.pricing_locked);lock.closest('label')?.insertAdjacentHTML('afterend','<p class="muted">Изменение сезонной блокировки пока не подключено.</p>');}
   const button=document.querySelector('button[onclick^="saveBasePrice("]');
   if(button){button.id='catalogPriceSave';button.insertAdjacentHTML('beforebegin','<p id="catalogPriceError" role="alert" aria-live="polite" style="overflow-wrap:anywhere"></p>');}
+  const seasonButton=document.querySelector('button[onclick^="addSeasonRule("]');
+  if(seasonButton){seasonButton.id='catalogSeasonSave';seasonButton.insertAdjacentHTML('beforebegin','<p id="catalogSeasonResult" role="status" aria-live="polite" style="overflow-wrap:anywhere"></p>');}
+};
+const seasonSaves=new WeakMap();
+window.addSeasonRule=async function(id){
+ const from=document.querySelector('#seasonFrom'),to=document.querySelector('#seasonTo'),mult=document.querySelector('#seasonMult'),button=document.querySelector('#catalogSeasonSave'),feedback=document.querySelector('#catalogSeasonResult');
+ if(!from||!to||!mult||!button||seasonSaves.has(from))return;
+ const name=document.querySelector('#seasonName'),fields=[from,to,mult,name].filter(Boolean);
+ seasonSaves.set(from,'pending');button.disabled=true;button.textContent='Сохраняем…';fields.forEach(x=>x.disabled=true);if(feedback)feedback.textContent='Сохраняем сезон…';
+ try{
+  const result=await adminCall({action:'upsert_rule',id,name:name?.value.trim()||'Сезон',date_from:from.value.trim(),date_to:to.value.trim(),multiplier:Number(mult.value),priority:100,is_active:true});
+  if(result?.ok!==true||!result.rule?.id)throw Error('Сервер не подтвердил добавление сезона. Проверьте список перед повтором.');
+  seasonSaves.set(from,'saved');if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent='Сезон добавлен';
+  toast('Сезон добавлен');
+  try{PCS.catalog=await call('/catalog');await catalog();if(document.querySelector('#seasonFrom')===from)await window.pricingManager(id);}
+  catch{if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent='Сезон сохранён. Обновите карточку, чтобы увидеть его в списке.';}
+ }catch(e){seasonSaves.delete(from);if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent=e.message||'Не удалось добавить сезон';}
+ finally{const saved=seasonSaves.get(from)==='saved';button.disabled=saved;button.textContent=saved?'Сезон сохранён':'Добавить сезон';fields.forEach(x=>x.disabled=false);}
 };
 const priceSaves=new WeakMap();
 window.saveBasePrice=async function(id){
