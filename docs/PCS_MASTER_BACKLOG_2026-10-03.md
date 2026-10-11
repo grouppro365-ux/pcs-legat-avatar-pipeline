@@ -509,3 +509,9 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - PR66 опубликован, manager v60 ACTIVE. Подготовлены общий входящий поток, scoped кабинеты и канонический сценарий заявка → предложение → подтверждения → проверенная оплата партнёру. Детали и открытые границы: PCS_THREE_BLOCKS_2026-10-11.md.
 - 731 Node test passed. Полный rollback SQL journey на изолированной Neon ветке прошёл, отсутствие schema/fixtures после отката подтверждено отдельно. Production migration/API/frontend этого пакета ещё не опубликованы: автоматическая проверка отклонила точную миграцию рабочей базы и требует отдельного явного подтверждения.
 - Не отмечать три блока или всё ТЗ COMPLETE: межканальная identity, автономные workers/outbox, полный account/team auth, эквайринг/refunds/settlements и production E2E остаются открытыми.
+
+
+### 2026-10-11 — PR67 опубликован после точного подтверждения
+- Production migration выполнена одной транзакцией, PR67 merge e7c451e72a5fe192004cd3b3a354bc0ce65f9e5b. Manager v61 ACTIVE, 32 files matched. Vercel production READY, cabinet assets and index matched, anonymous admin routes 401 and invalid scoped access 403. Четыре новые таблицы имеют RLS и закрыты для PUBLIC.
+- Базовые входящие/кабинеты/проверенная оплата теперь опубликованы; полный ТЗ не отмечается COMPLETE. В проверке установлено, что pg_cron уже работает для памяти контактов, внутренних напоминаний, public rules, retry и prospecting; customer follow-up job выключен. Не включать старый sender до проверки канонического каталога и неизвестной доставки.
+- Исправлен JSONB key-order conflict при повторе ручного runtime send; regression хранит записи с перестановкой ключей.
