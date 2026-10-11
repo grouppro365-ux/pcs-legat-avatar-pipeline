@@ -1,3 +1,5 @@
+import * as portalWorkflow from '../server/supabase/pcs-manager-live2/portal-workflow.mjs';
+import * as unifiedInboxModule from '../server/supabase/pcs-manager-live2/unified-inbox.mjs';
 import * as bookingEdit from '../server/supabase/pcs-manager-live2/booking-edit.mjs';
 import * as catalogEdit from '../server/supabase/pcs-manager-live2/catalog-edit.mjs';
 import * as prospectEdit from '../server/supabase/pcs-manager-live2/prospect-source-edit.mjs';
@@ -26,7 +28,7 @@ async function fixture({taskRows,applicationRows,queryResult,catalogRows}={}){
   const q=strings.join('?');reads.push({q,params});if(q.startsWith('update applications')){writes.push({q,p:params});return []}if(q.includes('from applications'))return (applicationRows||[]).map(x=>({...validBookingTerms,...x,edit_version:x.edit_version||'2026-10-09 00:00:00.123456+00'}));if(q.includes('from contacts'))return[{id:cid,edit_version:'2026-10-03 00:00:00',status:'NEW',priority:'NORMAL'}];
   if(q.includes('from tasks'))return taskRows||[{id:'task1',contact_id:cid,title:'Real task'}];return[];
  };sql.query=async(q,p)=>{if(q.startsWith('select id from catalog_items')){reads.push({q,params:p});return catalogRows||[{id:p[0]}];}writes.push({q,p});return queryResult?queryResult(q,p):q.includes("'Explicit PCS booking change'")?[]:[{id:cid,edit_version:'2026-10-03 01:00:00'}]};
- const context={...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async(url)=>{if(String(url).includes('/storage/'))uploads.push(url);return Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret})},Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
+ const context={...portalWorkflow,...unifiedInboxModule,...bookingEdit,...catalogEdit,...bookingCreate,...policy,...login,...delivery,...approvals,...monitor,...search,...finance,...taskEdit,...deliveryReview,...prospect,...prospectEdit,...prospectWorker,...operations,neon:()=>sql,crypto:globalThis.crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,fetch:async(url)=>{if(String(url).includes('/storage/'))uploads.push(url);return Response.json({neon_database_url:'test',business_neon_database_url:'test',edge_session_secret:secret})},Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),context);
  const b64=s=>Buffer.from(s).toString('base64url'),data=b64(JSON.stringify({role:'admin',exp:Date.now()+60000}));
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
@@ -239,3 +241,5 @@ test('status and unchanged-term edit cannot confirm an unavailable vehicle',asyn
   assert.equal(r.status,409);assert.equal(f.writes.length,0);assert.equal(f.uploads.length,0);
  }
 });
+
+test('workflow and unified endpoints reject anonymous requests and wrong methods',async()=>{const f=await fixture();for(const op of ['workflow','workflow-action','unified-inbox','runtime-conversation','runtime-intake','runtime-send'])assert.equal((await f.call(op,{auth:''})).status,401);for(const op of ['workflow','unified-inbox','runtime-conversation'])assert.equal((await f.call(op)).status,405);for(const op of ['workflow-action','runtime-intake','runtime-send'])assert.equal((await f.call(op,{method:'GET'})).status,405);assert.equal((await f.call('portal',{method:'GET',auth:''})).status,401);});

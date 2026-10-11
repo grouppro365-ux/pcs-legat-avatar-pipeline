@@ -422,6 +422,7 @@ async function errorsRoute(path,init){
   return appError('Повтор требует проверки обработчика. Отправка с неизвестной доставкой не повторяется автоматически.',409);
 }
 
+window.pcsManagerRequest=manager;
 window.__PCS_BACKEND_ADAPTER__={api:MANAGER,settingsApi:SETTINGS,version:'2026-09-02.1'};
 try{Object.defineProperty(window,'PCS_API',{configurable:true,get(){return 'https://pcs-stable.local/pcs-ui-api'},set(){}})}catch{}
 
