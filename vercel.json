@@ -27,7 +27,7 @@
   "rewrites": [
     {
       "source": "/pcs-auth/:path*",
-      "destination": "https://ep-small-cell-av1ecg0k.neonauth.c-11.us-east-1.aws.neon.tech/neondb/auth/:path*"
+      "destination": "/api/pcs-auth/:path*"
     }
   ]
 }
