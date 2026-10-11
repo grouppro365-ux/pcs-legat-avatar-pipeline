@@ -1,0 +1,182 @@
+-- Scoped cabinet links; canonical applications/offers remain in the existing CRM.
+CREATE TABLE IF NOT EXISTS pcs.portal_access (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), token_hash text UNIQUE NOT NULL,
+ role text NOT NULL CHECK(role IN ('CLIENT','PARTNER')),
+ client_profile_id uuid REFERENCES public.client_profiles(id), partner_id uuid REFERENCES public.partners(id),
+ expires_at timestamptz NOT NULL, revoked_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(),
+ CHECK ((role='CLIENT' AND client_profile_id IS NOT NULL AND partner_id IS NULL) OR
+        (role='PARTNER' AND partner_id IS NOT NULL AND client_profile_id IS NULL))
+);
+CREATE TABLE IF NOT EXISTS pcs.portal_commands (
+ access_id uuid REFERENCES pcs.portal_access(id), request_id uuid,
+ fingerprint text NOT NULL, result jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now(),
+ PRIMARY KEY(access_id,request_id)
+);
+CREATE TABLE IF NOT EXISTS pcs.application_payment_instructions (
+ application_id uuid PRIMARY KEY REFERENCES public.applications(id),
+ recipient text NOT NULL CHECK(recipient='PARTNER'), instructions text NOT NULL CHECK(length(instructions) BETWEEN 1 AND 4000),
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS pcs.application_payment_claims (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), application_id uuid NOT NULL REFERENCES public.applications(id),
+ client_profile_id uuid NOT NULL REFERENCES public.client_profiles(id), amount_thb numeric(14,2) NOT NULL CHECK(amount_thb>0),
+ reference text NOT NULL CHECK(length(reference) BETWEEN 1 AND 500),
+ status text NOT NULL DEFAULT 'PENDING' CHECK(status IN ('PENDING','VERIFIED','REJECTED')),
+ review_note text, reviewed_at timestamptz, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS portal_claims_application_idx ON pcs.application_payment_claims(application_id,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS portal_claim_reference_idx ON pcs.application_payment_claims(application_id,lower(reference)) WHERE status<>'REJECTED';
+ALTER TABLE pcs.portal_access ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pcs.portal_commands ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pcs.application_payment_instructions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pcs.application_payment_claims ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON pcs.portal_access,pcs.portal_commands,pcs.application_payment_instructions,pcs.application_payment_claims FROM PUBLIC;
+
+CREATE OR REPLACE FUNCTION pcs.portal_home(p_hash text) RETURNS jsonb LANGUAGE plpgsql
+ SET search_path=pg_catalog,public AS $fn$
+DECLARE s pcs.portal_access%ROWTYPE; apps jsonb; offers jsonb; payments jsonb;
+BEGIN
+ SELECT * INTO s FROM pcs.portal_access WHERE token_hash=p_hash AND revoked_at IS NULL AND expires_at>now();
+ IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ IF s.role='CLIENT' AND NOT EXISTS(SELECT 1 FROM client_profiles WHERE id=s.client_profile_id AND blocked IS NOT TRUE AND merged_into_id IS NULL) THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ IF s.role='PARTNER' AND NOT EXISTS(SELECT 1 FROM partners WHERE id=s.partner_id AND status='ACTIVE') THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ SELECT coalesce(jsonb_agg(to_jsonb(x) ORDER BY x.updated_at DESC),'[]') INTO apps FROM (
+  SELECT a.id,a.public_id,a.category,a.city,a.operational_status,a.partner_response_status,a.client_payment_status,
+   a.selected_partner_offer_id,a.updated_at,a.updated_at::text edit_version,
+   CASE WHEN s.role='CLIENT' THEN a.client_visible_notes ELSE a.partner_visible_notes END notes,
+   a.accepted_offer_snapshot->>'client_price_thb' agreed_price_thb,
+   a.accepted_offer_snapshot->>'deposit_thb' deposit_thb,a.accepted_offer_snapshot->>'terms' agreed_terms,
+   i.instructions payment_instructions,i.recipient payment_recipient
+  FROM applications a LEFT JOIN pcs.application_payment_instructions i ON i.application_id=a.id
+  WHERE (s.role='CLIENT' AND a.client_profile_id=s.client_profile_id) OR (s.role='PARTNER' AND a.assigned_partner_id=s.partner_id)
+  ORDER BY a.updated_at DESC,a.id LIMIT 100
+ ) x;
+ SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') INTO offers FROM (
+  SELECT o.id,o.application_id,o.partner_id,o.status,o.client_price_thb::text,o.deposit_thb::text,o.terms,o.expires_at,
+   o.updated_at::text edit_version,p.public_name partner_name,c.title item_title
+  FROM pcs_partner_offers o JOIN applications a ON a.id=o.application_id JOIN partners p ON p.id=o.partner_id LEFT JOIN catalog_items c ON c.id=o.catalog_item_id
+  WHERE a.id IN (SELECT (v->>'id')::uuid FROM jsonb_array_elements(apps) v)
+   AND ((s.role='CLIENT' AND a.client_profile_id=s.client_profile_id AND o.status IN ('APPROVED','ACCEPTED') AND (o.expires_at IS NULL OR o.expires_at>now() OR o.status='ACCEPTED'))
+     OR (s.role='PARTNER' AND o.partner_id=s.partner_id AND a.assigned_partner_id=s.partner_id))
+  ORDER BY o.created_at DESC,o.id LIMIT 500
+ ) x;
+ SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') INTO payments FROM (
+  SELECT c.id,c.application_id,c.amount_thb::text,c.reference,c.status,c.review_note,c.created_at
+  FROM pcs.application_payment_claims c WHERE c.application_id IN (SELECT (v->>'id')::uuid FROM jsonb_array_elements(apps) v)
+  ORDER BY c.created_at DESC,c.id LIMIT 500
+ ) x;
+ RETURN jsonb_build_object('role',s.role,'expires_at',s.expires_at,'applications',apps,'offers',offers,'payments',payments,'limit',100);
+END $fn$;
+
+CREATE OR REPLACE FUNCTION pcs.portal_action(p_hash text,p_action text,p_request uuid,p_payload jsonb) RETURNS jsonb LANGUAGE plpgsql
+ SET search_path=pg_catalog,public AS $fn$
+DECLARE s pcs.portal_access%ROWTYPE; a applications%ROWTYPE; previous pcs.portal_commands%ROWTYPE;
+ result jsonb; fingerprint text; new_id uuid; profile client_profiles%ROWTYPE; total numeric;
+BEGIN
+ SELECT * INTO s FROM pcs.portal_access WHERE token_hash=p_hash AND revoked_at IS NULL AND expires_at>now() FOR SHARE;
+ IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ IF s.role='CLIENT' AND NOT EXISTS(SELECT 1 FROM client_profiles WHERE id=s.client_profile_id AND blocked IS NOT TRUE AND merged_into_id IS NULL) THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ IF s.role='PARTNER' AND NOT EXISTS(SELECT 1 FROM partners WHERE id=s.partner_id AND status='ACTIVE') THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+ IF p_request IS NULL OR jsonb_typeof(p_payload)<>'object' THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+ -- Serialise retries before reading the command receipt, including create-request retries.
+ PERFORM pg_advisory_xact_lock(hashtextextended(s.id::text||':'||p_request::text,0));
+ fingerprint:=encode(digest(p_action||':'||p_payload::text,'sha256'),'hex');
+ SELECT * INTO previous FROM pcs.portal_commands WHERE access_id=s.id AND request_id=p_request;
+ IF FOUND THEN IF previous.fingerprint<>fingerprint THEN RAISE EXCEPTION 'portal_retry_changed' USING ERRCODE='23505'; END IF; RETURN previous.result; END IF;
+ IF p_action='request' AND s.role='CLIENT' THEN
+  IF length(trim(coalesce(p_payload->>'need',''))) NOT BETWEEN 1 AND 4000 OR length(coalesce(p_payload->>'city',''))>200 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+  SELECT * INTO profile FROM client_profiles WHERE id=s.client_profile_id;
+  INSERT INTO applications(public_id,client_profile_id,client_name,client_contact,category,city,client_visible_notes,source_code,operational_status,human_review_required,next_action_code)
+  VALUES('APP-'||replace(gen_random_uuid()::text,'-',''),s.client_profile_id,profile.display_name,profile.contact,'general',nullif(trim(p_payload->>'city'),''),trim(p_payload->>'need'),'CLIENT_PORTAL','NEW',true,'QUALIFY_REQUEST') RETURNING id INTO new_id;
+  result:=jsonb_build_object('ok',true,'application_id',new_id,'status','NEW');
+ ELSE
+  SELECT * INTO a FROM applications WHERE id=(p_payload->>'application_id')::uuid FOR UPDATE;
+  IF NOT FOUND OR NOT ((s.role='CLIENT' AND a.client_profile_id=s.client_profile_id) OR (s.role='PARTNER' AND a.assigned_partner_id=s.partner_id)) THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
+  IF coalesce(p_payload->>'expected_version','')<>a.updated_at::text THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001'; END IF;
+  IF p_action='submit-offer' AND s.role='PARTNER' THEN
+   IF a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') OR a.selected_partner_offer_id IS NOT NULL THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF coalesce(p_payload->>'price','') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR (p_payload->>'price')::numeric<=0 OR coalesce(p_payload->>'deposit','0') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR length(trim(coalesce(p_payload->>'terms',''))) NOT BETWEEN 1 AND 4000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   INSERT INTO pcs_partner_offers(application_id,partner_id,status,client_price_thb,deposit_thb,terms,submitted_at,expires_at)
+   VALUES(a.id,s.partner_id,'SUBMITTED',(p_payload->>'price')::numeric,coalesce(p_payload->>'deposit','0')::numeric,trim(p_payload->>'terms'),now(),now()+interval '7 days') RETURNING id INTO new_id;
+   UPDATE applications SET human_review_required=true,next_action_code='REVIEW_PARTNER_OFFER',updated_at=clock_timestamp() WHERE id=a.id;
+   result:=jsonb_build_object('ok',true,'offer_id',new_id,'status','SUBMITTED');
+  ELSIF p_action='select-offer' AND s.role='CLIENT' THEN
+   IF a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   PERFORM 1 FROM partners p JOIN pcs_partner_offers o ON o.partner_id=p.id WHERE o.id=(p_payload->>'offer_id')::uuid AND o.application_id=a.id AND p.status='ACTIVE' FOR SHARE OF p;
+   IF NOT FOUND THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   result:=pcs.accept_partner_offer(a.id,(p_payload->>'offer_id')::uuid,s.client_profile_id);
+  ELSIF p_action IN ('confirm','decline') AND s.role='PARTNER' THEN
+   result:=pcs.partner_decide_selected_offer(a.id,s.partner_id,p_action='confirm');
+  ELSIF p_action='confirm' AND s.role='CLIENT' THEN
+   result:=pcs.client_confirm_selected_offer(a.id,s.client_profile_id);
+   UPDATE applications SET client_payment_status='AWAITING_PAYMENT',updated_at=clock_timestamp() WHERE id=a.id;
+  ELSIF p_action='payment' AND s.role='CLIENT' THEN
+   IF a.operational_status<>'CONFIRMED' OR a.client_payment_status NOT IN ('AWAITING_PAYMENT','PARTIALLY_PAID','INSTRUCTIONS_SENT') OR NOT EXISTS(SELECT 1 FROM pcs.application_payment_instructions WHERE application_id=a.id) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF coalesce(p_payload->>'amount','') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR (p_payload->>'amount')::numeric<=0 OR length(trim(coalesce(p_payload->>'reference',''))) NOT BETWEEN 1 AND 500 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   INSERT INTO pcs.application_payment_claims(application_id,client_profile_id,amount_thb,reference) VALUES(a.id,s.client_profile_id,(p_payload->>'amount')::numeric,trim(p_payload->>'reference')) RETURNING id INTO new_id;
+   UPDATE applications SET human_review_required=true,next_action_code='VERIFY_PAYMENT',updated_at=clock_timestamp() WHERE id=a.id;
+   result:=jsonb_build_object('ok',true,'claim_id',new_id,'status','PENDING');
+  ELSE RAISE EXCEPTION 'portal_action_forbidden' USING ERRCODE='42501'; END IF;
+ END IF;
+ INSERT INTO pcs.portal_commands(access_id,request_id,fingerprint,result) VALUES(s.id,p_request,fingerprint,result);
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('PORTAL_'||s.role,'portal.'||p_action,'applications',coalesce(a.id,new_id)::text,jsonb_build_object('access_id',s.id,'request_id',p_request),'SUCCESS');
+ RETURN result;
+END $fn$;
+REVOKE ALL ON FUNCTION pcs.portal_home(text),pcs.portal_action(text,text,uuid,jsonb) FROM PUBLIC;
+
+CREATE OR REPLACE FUNCTION pcs.portal_admin_action(p_action text,p_payload jsonb) RETURNS jsonb LANGUAGE plpgsql
+ SET search_path=pg_catalog,public AS $fn$
+DECLARE a applications%ROWTYPE; o pcs_partner_offers%ROWTYPE; c pcs.application_payment_claims%ROWTYPE;
+ idv uuid; total numeric; expected numeric; new_status text; result jsonb;
+BEGIN
+ IF p_action='issue-access' THEN
+  IF p_payload->>'role'='CLIENT' AND EXISTS(SELECT 1 FROM client_profiles WHERE id=(p_payload->>'profile_id')::uuid AND blocked IS NOT TRUE AND merged_into_id IS NULL) THEN
+   INSERT INTO pcs.portal_access(token_hash,role,client_profile_id,expires_at) VALUES(p_payload->>'hash','CLIENT',(p_payload->>'profile_id')::uuid,now()+interval '7 days') RETURNING id INTO idv;
+  ELSIF p_payload->>'role'='PARTNER' AND EXISTS(SELECT 1 FROM partners WHERE id=(p_payload->>'profile_id')::uuid AND status='ACTIVE') THEN
+   INSERT INTO pcs.portal_access(token_hash,role,partner_id,expires_at) VALUES(p_payload->>'hash','PARTNER',(p_payload->>'profile_id')::uuid,now()+interval '7 days') RETURNING id INTO idv;
+  ELSE RAISE EXCEPTION 'portal_invalid_profile' USING ERRCODE='22023'; END IF;
+  result:=jsonb_build_object('ok',true,'access_id',idv);
+ ELSIF p_action='revoke-access' THEN
+  UPDATE pcs.portal_access SET revoked_at=clock_timestamp() WHERE id=(p_payload->>'access_id')::uuid RETURNING id INTO idv;
+  IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_not_found' USING ERRCODE='P0002'; END IF;
+  result:=jsonb_build_object('ok',true,'access_id',idv);
+ ELSE
+  SELECT * INTO a FROM applications WHERE id=(p_payload->>'application_id')::uuid FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'portal_application_not_found' USING ERRCODE='P0002'; END IF;
+  IF coalesce(p_payload->>'expected_version','')<>a.updated_at::text THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001'; END IF;
+  IF p_action='assign-partner' THEN
+   IF a.selected_partner_offer_id IS NOT NULL OR a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF NOT EXISTS(SELECT 1 FROM partners WHERE id=(p_payload->>'partner_id')::uuid AND status='ACTIVE') THEN RAISE EXCEPTION 'portal_invalid_profile' USING ERRCODE='22023'; END IF;
+   UPDATE applications SET assigned_partner_id=(p_payload->>'partner_id')::uuid,operational_status='MATCHING',updated_at=clock_timestamp() WHERE id=a.id;
+  ELSIF p_action='review-offer' THEN
+   SELECT * INTO o FROM pcs_partner_offers WHERE id=(p_payload->>'offer_id')::uuid AND application_id=a.id FOR UPDATE;
+   IF NOT FOUND OR o.status<>'SUBMITTED' OR o.updated_at::text<>coalesce(p_payload->>'offer_version','') OR a.selected_partner_offer_id IS NOT NULL OR o.partner_id IS DISTINCT FROM a.assigned_partner_id OR o.expires_at<=now() OR NOT EXISTS(SELECT 1 FROM partners WHERE id=o.partner_id AND status='ACTIVE') THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001'; END IF;
+   IF a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF p_payload->>'decision' NOT IN ('APPROVED','REJECTED') OR p_payload->>'decision' IS NULL THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   UPDATE pcs_partner_offers SET status=p_payload->>'decision',reviewed_at=now(),updated_at=clock_timestamp() WHERE id=o.id;
+   UPDATE applications SET operational_status=CASE WHEN p_payload->>'decision'='APPROVED' THEN 'QUOTE_READY' ELSE operational_status END,updated_at=clock_timestamp() WHERE id=a.id;
+  ELSIF p_action='payment-instructions' THEN
+   IF a.operational_status<>'CONFIRMED' OR a.selected_partner_offer_id IS NULL OR NOT EXISTS(SELECT 1 FROM partners WHERE id=a.assigned_partner_id AND client_payment_recipient='PARTNER' AND pcs_collects_client_payment IS NOT TRUE) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF length(trim(coalesce(p_payload->>'instructions',''))) NOT BETWEEN 1 AND 4000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   INSERT INTO pcs.application_payment_instructions(application_id,recipient,instructions) VALUES(a.id,'PARTNER',trim(p_payload->>'instructions')) ON CONFLICT(application_id) DO UPDATE SET instructions=excluded.instructions,updated_at=clock_timestamp();
+   UPDATE applications SET client_payment_status=CASE WHEN client_payment_status IN ('NOT_REQUIRED_YET','AWAITING_PAYMENT','INSTRUCTIONS_SENT') THEN 'INSTRUCTIONS_SENT' ELSE client_payment_status END,updated_at=clock_timestamp() WHERE id=a.id;
+  ELSIF p_action='review-payment' THEN
+   SELECT * INTO c FROM pcs.application_payment_claims WHERE id=(p_payload->>'claim_id')::uuid AND application_id=a.id FOR UPDATE;
+   IF NOT FOUND OR c.status<>'PENDING' OR c.updated_at::text<>coalesce(p_payload->>'claim_version','') THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001'; END IF;
+   IF a.operational_status<>'CONFIRMED' OR p_payload->>'decision' NOT IN ('VERIFIED','REJECTED') OR p_payload->>'decision' IS NULL OR length(trim(coalesce(p_payload->>'note',''))) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   IF p_payload->>'decision'='VERIFIED' THEN
+    IF NOT EXISTS(SELECT 1 FROM pcs.application_payment_instructions WHERE application_id=a.id AND recipient='PARTNER') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+    expected:=(a.accepted_offer_snapshot->>'client_price_thb')::numeric;
+    SELECT coalesce(sum(amount_thb),0)+c.amount_thb INTO total FROM pcs.application_payment_claims WHERE application_id=a.id AND status='VERIFIED';
+    IF expected IS NULL OR expected<=0 OR total>expected THEN RAISE EXCEPTION 'portal_payment_exceeds_price' USING ERRCODE='23514'; END IF;
+    new_status:=CASE WHEN total=expected THEN 'PAID_TO_PARTNER' ELSE 'PARTIALLY_PAID' END;
+   ELSE new_status:=a.client_payment_status; END IF;
+   UPDATE pcs.application_payment_claims SET status=p_payload->>'decision',review_note=trim(p_payload->>'note'),reviewed_at=now(),updated_at=clock_timestamp() WHERE id=c.id;
+   UPDATE applications SET client_payment_status=new_status,next_action_code=CASE WHEN new_status='PAID_TO_PARTNER' THEN 'PREPARE_SERVICE' ELSE next_action_code END,updated_at=clock_timestamp() WHERE id=a.id;
+  ELSE RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+  idv:=a.id;result:=jsonb_build_object('ok',true,'application_id',a.id);
+ END IF;
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('ADMIN','portal.admin.'||p_action,CASE WHEN p_action IN ('issue-access','revoke-access') THEN 'portal_access' ELSE 'applications' END,idv::text,p_payload-'hash','SUCCESS');
+ RETURN result;
+END $fn$;
+REVOKE ALL ON FUNCTION pcs.portal_admin_action(text,jsonb) FROM PUBLIC;
