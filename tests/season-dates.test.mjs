@@ -5,6 +5,7 @@ import {normalizeSeasonDate,seasonDateRange} from '../server/supabase/pcs-catalo
 test('screenshot season dates normalize to exact ISO dates without locale ambiguity',()=>{
  assert.deepEqual(seasonDateRange('01.10.2026','30.04.2027'),{date_from:'2026-10-01',date_to:'2027-04-30'});
  assert.equal(normalizeSeasonDate('01.02.2026'),'2026-02-01');
+ assert.deepEqual(seasonDateRange('2026.10.01','2027.04.30'),{date_from:'2026-10-01',date_to:'2027-04-30'});
  assert.deepEqual(seasonDateRange('2026-10-01','2027-04-30'),seasonDateRange(' 01.10.2026 ','30.04.2027'));
 });
 test('catalog save handler writes normalized screenshot dates and rejects invalid input before insert',async()=>{
@@ -19,7 +20,7 @@ test('catalog save handler writes normalized screenshot dates and rejects invali
  assert.equal(invalid.status,400);assert.equal(inserted.length,1);
 });
 test('invalid dates and reversed or empty ranges cannot reach storage',()=>{
- for(const date of ['31.04.2027','29.02.2026','2026-02-30','2026-13-01','01/02/2026','garbage','',null,12])assert.equal(normalizeSeasonDate(date),null);
+ for(const date of ['31.04.2027','29.02.2026','2026-02-30','2026.04.31','2026-10.01','2026-13-01','01/02/2026','garbage','',null,12])assert.equal(normalizeSeasonDate(date),null);
  assert.equal(normalizeSeasonDate('29.02.2028'),'2028-02-29');
  for(const range of [['30.04.2027','01.10.2026'],['01.10.2026','01.10.2026'],['31.04.2027','01.05.2027']])assert.equal(seasonDateRange(...range),null);
 });

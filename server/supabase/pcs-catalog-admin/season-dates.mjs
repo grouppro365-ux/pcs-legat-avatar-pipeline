@@ -1,8 +1,8 @@
 export function normalizeSeasonDate(value){
  if(typeof value!=='string')return null;
  const input=value.trim();let year,month,day;
- let match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(input);
- if(match)[,year,month,day]=match;
+ let match=/^(\d{4})([-.])(\d{2})\2(\d{2})$/.exec(input);
+ if(match){year=match[1];month=match[3];day=match[4];}
  else{match=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(input);if(!match)return null;[,day,month,year]=match;}
  const y=Number(year),m=Number(month),d=Number(day);
  if(y<1000||y>9999||m<1||m>12||d<1)return null;
