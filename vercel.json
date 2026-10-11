@@ -27,7 +27,7 @@
   "rewrites": [
     {
       "source": "/pcs-auth/:path*",
-      "destination": "/api/pcs-auth/:path*"
+      "destination": "/api/pcs-auth?auth_path=:path*"
     }
   ]
 }
