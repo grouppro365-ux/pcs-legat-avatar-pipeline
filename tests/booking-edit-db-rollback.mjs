@@ -7,6 +7,8 @@ const statement=(kind,patch={})=>{const x=bookingEditQuery({...b,...patch},kind)
 const edit=statement('edit'),status=statement('status');
 const overlap=statement('edit',{qualification_data:{...b.qualification_data,end_date:'2026-10-22'}});
 const unchanged=statement('edit');
+const confirm=statement('status',{status:'CONFIRMED'});
+const hold=statement('status',{status:'AWAITING_PARTNER_CONFIRMATION'});
 const missingItem=statement('edit',{item_id:'90000000-0000-4000-8000-000000000064'});
 const changedNew=statement('edit',{operational_status:'NEW',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
 const cancelledEdit=statement('edit',{operational_status:'CANCELLED_BY_PARTNER',qualification_data:{...b.qualification_data,start_date:'2026-10-12'}});
@@ -86,6 +88,30 @@ const query=`DO $qa$ DECLARE v_version text;v_count int;v_before jsonb;v_finance
  IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CANCELLED_BY_PARTNER' THEN RAISE EXCEPTION 'cancellation edit became active'; END IF;
  RAISE EXCEPTION USING ERRCODE='Z0002',MESSAGE='rental edit checks passed';
  EXCEPTION WHEN SQLSTATE 'Z0002' THEN NULL; END;
+ BEGIN
+ UPDATE applications SET operational_status='NEW',item_id='${b.item_id}',qualification_data='{"start_date":"2026-10-11","end_date":"2026-10-21"}'::jsonb WHERE id='${id}';
+ SELECT updated_at::text,to_jsonb(a) INTO v_version,v_before FROM applications a WHERE id='${id}';
+ SELECT count(*) INTO v_audit_count FROM audit_events;
+ UPDATE catalog_items SET availability_status='UNAVAILABLE' WHERE id='${b.item_id}';
+ ${confirm}
+ IF v_count<>0 OR (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>v_audit_count THEN RAISE EXCEPTION 'status confirmation bypassed catalog'; END IF;
+ ${hold}
+ IF v_count<>0 THEN RAISE EXCEPTION 'hold bypassed catalog'; END IF;
+ UPDATE catalog_items SET availability_status='AVAILABLE' WHERE id='${b.item_id}';
+ ALTER TABLE audit_events ADD CONSTRAINT qa_confirmation_audit_fail CHECK(action<>'booking_status_updated') NOT VALID;
+ BEGIN ${confirm} RAISE EXCEPTION 'confirmation audit failure expected'; EXCEPTION WHEN check_violation THEN NULL; END;
+ IF (SELECT to_jsonb(a) FROM applications a WHERE id='${id}') IS DISTINCT FROM v_before OR (SELECT count(*) FROM audit_events)<>v_audit_count THEN RAISE EXCEPTION 'confirmation audit rollback failed'; END IF;
+ ALTER TABLE audit_events DROP CONSTRAINT qa_confirmation_audit_fail;
+ ${confirm}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CONFIRMED' THEN RAISE EXCEPTION 'valid confirmation failed'; END IF;
+ UPDATE applications SET operational_status='NEW',qualification_data='{"start_date":"2026-10-11","end_date":"2026-10-11"}'::jsonb WHERE id='${id}';
+ SELECT updated_at::text INTO v_version FROM applications WHERE id='${id}';
+ ${confirm}
+ IF v_count<>0 THEN RAISE EXCEPTION 'equal rental dates accepted for confirmation'; END IF;
+ ${status}
+ IF v_count<>1 OR (SELECT operational_status FROM applications WHERE id='${id}')<>'CANCELLED_BY_CLIENT' THEN RAISE EXCEPTION 'invalid dates prevented cancellation'; END IF;
+ RAISE EXCEPTION USING ERRCODE='Z0003',MESSAGE='status checks passed';
+ EXCEPTION WHEN SQLSTATE 'Z0003' THEN NULL; END;
  RAISE EXCEPTION USING ERRCODE='Z0001',MESSAGE='QA passed; rollback all temporary data';
  EXCEPTION WHEN SQLSTATE 'Z0001' THEN NULL; END; END $qa$;`;
 process.stdout.write(JSON.stringify({query}));

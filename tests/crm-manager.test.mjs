@@ -231,3 +231,11 @@ test('new booking catalog refusal happens before upload and the atomic INSERT',a
  const r=await f.call('application-save',{body:{category:'booking',request_id:'33333333-3333-4333-8333-333333333333',...validBookingTerms,photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
  assert.equal(r.status,409);assert.equal(f.uploads.length,0);assert.equal(f.writes.filter(x=>!x.q.startsWith('select')).length,0);
 });
+
+test('status and unchanged-term edit cannot confirm an unavailable vehicle',async()=>{
+ for(const op of ['application-status','application-save']){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'NEW',edit_version:bookingVersion}],catalogRows:[]});
+  const r=await f.call(op,{body:{...validBookingTerms,id:applicationId,status:'CONFIRMED',operational_status:'CONFIRMED',expected_version:bookingVersion,photo:{content_base64:'YQ=='}}});
+  assert.equal(r.status,409);assert.equal(f.writes.length,0);assert.equal(f.uploads.length,0);
+ }
+});
