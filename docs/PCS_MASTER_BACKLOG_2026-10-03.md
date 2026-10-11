@@ -523,3 +523,6 @@ PR44 опубликован в main007d9f119412e79e100af9f7dd15383296ef3f2a; man
 - SQL projection атомарна с audit и receipt marker, lock SKIP LOCKED и dedupe per event. Статус/attempts/sent_at внешнего outbox не меняются; внутреннее уведомление не выдаётся за сообщение клиенту.
 - 733 Node tests passed. SQL QA на isolated Neon branch и temporary LIKE actual tables INCLUDING ALL подтвердил 4 события, отсутствие дублей, сохранение PENDING/attempts, восстановление существующей notification receipt и полный откат notice/marker при audit failure. Temporary copies omit FK/triggers and do not prove two-session concurrency. Authenticated server worker smoke uses existing secret server-to-server; credentials are never returned to the client.
 - External outbox fanout/customer followup, полноценные account/team permissions, acquiring/refunds/settlement, cross-channel identity и production browser/Telegram E2E остаются открытыми.
+
+### Уточнение оплаты 2026-10-11
+Пользователь исключил платёжные интеграции и эквайринг из текущих трёх блоков. Требуемый путь: бот отправляет сохранённые реквизиты партнёра; клиент передаёт подтверждение; оператор проверяет поступление и фиксирует оплату. Автоматическая отправка использует существующее расписание и outbox; неизвестная доставка передаётся оператору.
