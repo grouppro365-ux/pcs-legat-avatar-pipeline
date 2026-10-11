@@ -12,7 +12,7 @@ export async function sendRuntimeMessage(db,id,b,transport){
  const key='operator:'+id+':'+b.request_id;
  const prior=await db.from('pcs_channel_events').select('payload').eq('channel',b.channel).eq('external_event_id',key).maybeSingle();
  if(prior.error)throw new CrmError('Не удалось проверить предыдущую отправку',503);
- if(prior.data?.payload?.outgoing&&JSON.stringify(prior.data.payload.outgoing)!==JSON.stringify(outgoing))throw new CrmError('Текст повторной команды изменён. Проверьте историю.',409);
+ if(prior.data?.payload?.outgoing&&Object.keys(outgoing).some(k=>prior.data.payload.outgoing[k]!==outgoing[k]))throw new CrmError('Текст повторной команды изменён. Проверьте историю.',409);
  const result=await processMessage({db,channel:b.channel,key,
   handle:run=>run.send(outgoing),
   send:out=>transport(out,contact),
