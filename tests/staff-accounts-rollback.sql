@@ -1,0 +1,24 @@
+DECLARE u uuid:=gen_random_uuid(); uid uuid; client uuid:=gen_random_uuid(); r jsonb;
+BEGIN
+ INSERT INTO neon_auth."user"(id,name,email,"emailVerified","createdAt","updatedAt",banned) VALUES(u,'Synthetic staff','staff-'||u::text||'@example.invalid',false,now(),now(),false);
+ IF pcs.staff_context(u) IS NOT NULL THEN RAISE EXCEPTION 'QA signup grants staff access'; END IF;
+ PERFORM pcs.staff_manage(u,'CONCIERGE_MANAGER',true);
+ r:=pcs.staff_context(u);uid:=(r->>'user_id')::uuid;
+ IF NOT(r->'permissions' ? 'applications.quote') OR r->'permissions' ? '*' THEN RAISE EXCEPTION 'QA wrong role';END IF;
+ BEGIN PERFORM pcs.staff_workflow_action(u,'review-payment','{}');RAISE EXCEPTION 'QA concierge can verify payment';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
+ INSERT INTO client_profiles(id,display_name,contact) VALUES(client,'Synthetic client','test');
+ r:=pcs.staff_workflow_action(u,'issue-access',jsonb_build_object('role','CLIENT','profile_id',client,'hash',repeat('a',64)));
+ IF r->>'ok'<>'true' OR NOT EXISTS(SELECT 1 FROM audit_events WHERE action='staff.workflow.issue-access' AND entity_id=uid::text) THEN RAISE EXCEPTION 'QA missing staff audit';END IF;
+ PERFORM pcs.staff_manage(u,'AUDITOR_READONLY',true);
+ IF pcs.staff_context(u)->'permissions' ? 'applications.quote' THEN RAISE EXCEPTION 'QA previous role retained';END IF;
+ BEGIN PERFORM pcs.staff_workflow_action(u,'issue-access','{}');RAISE EXCEPTION 'QA auditor write';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
+ UPDATE neon_auth."user" SET banned=true WHERE id=u;
+ IF pcs.staff_context(u) IS NOT NULL THEN RAISE EXCEPTION 'QA banned staff';END IF;
+ UPDATE neon_auth."user" SET banned=false WHERE id=u;
+ PERFORM pcs.staff_manage(u,'AUDITOR_READONLY',false);
+ IF pcs.staff_context(u) IS NOT NULL THEN RAISE EXCEPTION 'QA revoked staff';END IF;
+ UPDATE app_users SET active=true WHERE id=uid;
+ INSERT INTO memberships(user_id,role,active) VALUES(uid,'OWNER',true);
+ BEGIN PERFORM pcs.staff_manage(u,'OPS_ADMIN',true);RAISE EXCEPTION 'QA owner modified';EXCEPTION WHEN insufficient_privilege THEN NULL;END;
+ BEGIN PERFORM pcs.staff_manage(u,'SUPER_ADMIN',true);RAISE EXCEPTION 'QA owner created';EXCEPTION WHEN invalid_parameter_value THEN NULL;END;
+END;

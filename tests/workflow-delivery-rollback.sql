@@ -1,0 +1,30 @@
+DECLARE client uuid:=gen_random_uuid(); contact uuid:=gen_random_uuid(); partner uuid:=gen_random_uuid(); app uuid:=gen_random_uuid(); offer uuid:=gen_random_uuid(); job uuid; rev text; n int;
+BEGIN
+ INSERT INTO system_settings(key,value) VALUES('workflow_client_delivery',jsonb_build_object('enabled_from',now()-interval '1 minute')) ON CONFLICT(key) DO UPDATE SET value=excluded.value;
+ INSERT INTO client_profiles(id,display_name,contact,source_contact_id) VALUES(client,'QA workflow','QA only',contact);
+ INSERT INTO partners(id,public_name,status) VALUES(partner,'QA provider','ACTIVE');
+ INSERT INTO applications(id,public_id,client_profile_id,assigned_partner_id,category,operational_status) VALUES(app,'QA-'||app,client,partner,'general','QUOTE_READY');
+ INSERT INTO pcs_partner_offers(id,application_id,partner_id,status,client_price_thb,deposit_thb,terms,reviewed_at,expires_at) VALUES(offer,app,partner,'APPROVED',1000,200,'Synthetic public terms',now(),now()+interval '1 day');
+ EXECUTE $enqueue$__ENQUEUE__$enqueue$;
+ SELECT id,payload->>'revision' INTO job,rev FROM pcs_workflow_outbox WHERE aggregate_id=app AND event_type='CLIENT_WORKFLOW_NOTICE_READY';
+ IF job IS NULL THEN RAISE EXCEPTION 'QA offer not queued';END IF;
+ EXECUTE $enqueue$__ENQUEUE__$enqueue$;
+ IF (SELECT count(*) FROM pcs_workflow_outbox WHERE aggregate_id=app AND event_type='CLIENT_WORKFLOW_NOTICE_READY')<>1 THEN RAISE EXCEPTION 'QA duplicate message';END IF;
+ EXECUTE 'select count(*) from ('||$current$__CURRENT__$current$||') x' INTO n USING app,client,rev,contact;
+ IF n<>1 THEN RAISE EXCEPTION 'QA eligible offer missing';END IF;
+ UPDATE client_profiles SET blocked=true WHERE id=client;
+ EXECUTE 'select count(*) from ('||$current$__CURRENT__$current$||') x' INTO n USING app,client,rev,contact;
+ IF n<>0 THEN RAISE EXCEPTION 'QA blocked recipient eligible';END IF;
+ UPDATE client_profiles SET blocked=false WHERE id=client;
+ UPDATE applications SET operational_status='AWAITING_PARTNER_CONFIRMATION',selected_partner_offer_id=offer WHERE id=app;
+ EXECUTE 'select count(*) from ('||$current$__CURRENT__$current$||') x' INTO n USING app,client,rev,contact;
+ IF n<>0 THEN RAISE EXCEPTION 'QA obsolete offer eligible';END IF;
+ INSERT INTO pcs_workflow_outbox(aggregate_type,aggregate_id,event_type,idempotency_key,payload) VALUES('APPLICATION',app,'PARTNER_FINAL_CONFIRMED','qa:'||app,'{}');
+ UPDATE applications SET partner_response_status='ACCEPTED' WHERE id=app;
+ EXECUTE $enqueue$__ENQUEUE__$enqueue$;
+ IF NOT EXISTS(SELECT 1 FROM pcs_workflow_outbox WHERE aggregate_id=app AND payload->>'kind'='PARTNER_FINAL_CONFIRMED') THEN RAISE EXCEPTION 'QA final confirmation not queued';END IF;
+ -- Unknown/historical state is never converted into client-visible delivery.
+ UPDATE system_settings SET value=jsonb_build_object('enabled_from',now()+interval '1 day') WHERE key='workflow_client_delivery';
+ EXECUTE 'select count(*) from ('||$current$__CURRENT__$current$||') x' INTO n USING app,client,rev,contact;
+ IF n<>0 THEN RAISE EXCEPTION 'QA historical delivery';END IF;
+END;

@@ -43,19 +43,20 @@ export function paymentInstructionsText(p,language='ru'){
  const note=th?'ชำระให้ผู้ให้บริการตามข้อมูลด้านล่าง หลังโอนโปรดส่งหมายเลขรายการหรือหลักฐาน เจ้าหน้าที่จะตรวจสอบยอดชำระ':en?'Pay the partner using the details below. After payment, send the transfer reference or confirmation. An operator will verify the payment.':'Оплата партнёру по реквизитам ниже. После перевода пришлите номер операции или подтверждение. Поступление проверит оператор.';
  return `${title} · ${p.public_id||'PCS'}\n${amount}: ${p.price} THB${/^\d+(?:\.\d{1,2})?$/.test(p.deposit||'')?`\n${deposit}: ${p.deposit} THB`:''}\n\n${p.instructions.trim()}\n\n${note}`;
 }
-export async function dispatchPaymentInstructions(biz,db,transport){
- await biz.query(enqueuePaymentInstructions,[]);const jobs=await biz.query(claimPaymentInstructions,[]);
+export async function dispatchPaymentInstructions(biz,db,transport,options={}){
+ const enqueue=options.enqueue||enqueuePaymentInstructions,claim=options.claim||claimPaymentInstructions,currentQuery=options.current||currentPaymentInstructions,finish=options.finish||finishPaymentInstructions,textFor=options.text||paymentInstructionsText;
+ await biz.query(enqueue,[]);const jobs=await biz.query(claim,[]);
  const stats={sent:0,duplicates:0,review:0,superseded:0,retry:0};
  for(const job of jobs){
   const p=job.payload,owner=p.payment_worker_owner;let channel=p.channel,status='CANCELLED',reason='preflight_failed';
   try{
-   const current=await biz.query(currentPaymentInstructions,[p.application_id,p.client_profile_id,p.revision,p.contact_id]);
+   const current=await biz.query(currentQuery,[p.application_id,p.client_profile_id,p.revision,p.contact_id]);
    if(!current.length){reason='superseded';stats.superseded++;}
    else {
     const found=await db.from('pcs_contacts').select('id,preferred_channel,detected_language,language,telegram_chat_id,business_connection_id').eq('id',p.contact_id).single();
     if(found.error||!found.data)throw Error('payment_contact_missing');const contact=found.data;
     if(!channel)channel=['telegram','line','whatsapp','instagram','facebook'].includes(contact.preferred_channel)?contact.preferred_channel:contact.telegram_chat_id&&contact.business_connection_id?'telegram':null;
-    const text=p.delivery_text||paymentInstructionsText(p,contact.detected_language||contact.language);
+    const text=p.delivery_text||textFor(p,contact.detected_language||contact.language);
     if(!p.delivery_text){
      if(!channel)throw Error('payment_channel_missing');
      if(text.length>(channel==='telegram'?4000:1800))throw Error('payment_instructions_too_long');
@@ -74,7 +75,7 @@ export async function dispatchPaymentInstructions(biz,db,transport){
    if(['sent','failed'].includes(event?.status)&&job.attempts<5){status='FAILED';reason='recoverable_recording_failure';stats.retry++;}
    else{reason='delivery_review_required';stats.review++;}
   }
-  const result=await biz.query(finishPaymentInstructions,[job.id,owner,status,reason]);
+  const result=await biz.query(finish,[job.id,owner,status,reason]);
   if(!result.length)throw Error('payment_delivery_lease_lost');
  }
  return {ok:true,...stats};
