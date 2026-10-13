@@ -1,3 +1,4 @@
+import {createSlaEscalations} from './sla-escalation.mjs';
 import {terminalApplicationStatuses} from './operations-read.mjs';
 import {createWorkflowNotices} from './workflow-notices.mjs';
 export const followupReminderQuery=`with due as materialized (
@@ -22,8 +23,8 @@ export async function internalFollowupReminders(req,{base,key,biz,payments,deliv
  const supplied=req.headers.get('x-pcs-internal-secret');if(!supplied)return {status:401,body:{error:'unauthorized'}};
  try{const r=await transport(base+'/rest/v1/rpc/pcs_secret_get',{method:'POST',headers:{apikey:key,authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({p_name:'internal_retry_secret'}),signal:AbortSignal.timeout(10000)});
   if(!r.ok)return {status:503,body:{error:'worker_unavailable'}};if(!equal(supplied,await r.json()))return {status:401,body:{error:'unauthorized'}};
-  const reminders=await createFollowupReminders(biz);
+  const reminders=await createFollowupReminders(biz),sla_escalation=await createSlaEscalations(biz);
   const workflow=await createWorkflowNotices(biz),payment_delivery=payments?await payments():null,workflow_delivery=deliveries?await deliveries():null;
-  return {status:200,body:{...reminders,workflow,...(payment_delivery?{payment_delivery}: {}),...(workflow_delivery?{workflow_delivery}: {}),client_messages_sent:(payment_delivery?.sent||0)+(workflow_delivery?.sent||0)}};
+  return {status:200,body:{...reminders,workflow,sla_escalation,...(payment_delivery?{payment_delivery}: {}),...(workflow_delivery?{workflow_delivery}: {}),client_messages_sent:(payment_delivery?.sent||0)+(workflow_delivery?.sent||0)}};
  }catch{return {status:503,body:{error:'worker_unavailable'}};}
 }
