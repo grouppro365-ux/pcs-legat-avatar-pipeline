@@ -33,3 +33,11 @@ test('portal errors expose a safe conflict and deny forbidden access',()=>{
  assert.equal(portalDatabaseError({message:'portal_version_conflict',code:'40001'}).status,409);
  assert.equal(portalDatabaseError({message:'database unavailable'}),null);
 });
+test('vehicle offer requires explicit vehicle and both rental dates without accepting another profile',()=>{
+ const base={action:'submit-offer',request_id:id,payload:{application_id:id,expected_version:'version',price:'1000',deposit:'200',terms:'Rental'}};
+ assert.equal(portalCommand(base),base);
+ const rental={...base,payload:{...base.payload,catalog_item_id:id,start_date:'2112-01-10',end_date:'2112-01-15'}};
+ assert.equal(portalCommand(rental),rental);
+ for(const extra of [{start_date:'2112-01-10'},{catalog_item_id:id},{catalog_item_id:'bad',start_date:'2112-01-10',end_date:'2112-01-15'},{...rental.payload,partner_id:id}])assert.throws(()=>portalCommand({...base,payload:{...base.payload,...extra}}));
+ assert.equal(portalDatabaseError({message:'vehicle_offer_dates_invalid',code:'22023'}).status,400);
+});

@@ -34,7 +34,7 @@ REVOKE ALL ON pcs.portal_access,pcs.portal_commands,pcs.application_payment_inst
 
 CREATE OR REPLACE FUNCTION pcs.portal_home(p_hash text) RETURNS jsonb LANGUAGE plpgsql
  SET search_path=pg_catalog,public AS $fn$
-DECLARE s pcs.portal_access%ROWTYPE; apps jsonb; offers jsonb; payments jsonb;
+DECLARE s pcs.portal_access%ROWTYPE; apps jsonb; offers jsonb; payments jsonb; vehicles jsonb;
 BEGIN
  SELECT * INTO s FROM pcs.portal_access WHERE token_hash=p_hash AND revoked_at IS NULL AND expires_at>now();
  IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
@@ -45,6 +45,7 @@ BEGIN
    a.selected_partner_offer_id,a.updated_at,a.updated_at::text edit_version,
    CASE WHEN s.role='CLIENT' THEN a.client_visible_notes ELSE a.partner_visible_notes END notes,
    a.accepted_offer_snapshot->>'client_price_thb' agreed_price_thb,
+   a.accepted_offer_snapshot#>>'{availability_snapshot,booking,start_date}' start_date,a.accepted_offer_snapshot#>>'{availability_snapshot,booking,end_date}' end_date,
    a.accepted_offer_snapshot->>'deposit_thb' deposit_thb,a.accepted_offer_snapshot->>'terms' agreed_terms,
    i.instructions payment_instructions,i.recipient payment_recipient
   FROM applications a LEFT JOIN pcs.application_payment_instructions i ON i.application_id=a.id
@@ -53,7 +54,8 @@ BEGIN
  ) x;
  SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') INTO offers FROM (
   SELECT o.id,o.application_id,o.partner_id,o.status,o.client_price_thb::text,o.deposit_thb::text,o.terms,o.expires_at,
-   o.updated_at::text edit_version,p.public_name partner_name,c.title item_title
+   o.updated_at::text edit_version,p.public_name partner_name,coalesce(o.public_snapshot->>'title',c.title) item_title,o.catalog_item_id,
+   o.availability_snapshot#>>'{booking,start_date}' start_date,o.availability_snapshot#>>'{booking,end_date}' end_date
   FROM pcs_partner_offers o JOIN applications a ON a.id=o.application_id JOIN partners p ON p.id=o.partner_id LEFT JOIN catalog_items c ON c.id=o.catalog_item_id
   WHERE a.id IN (SELECT (v->>'id')::uuid FROM jsonb_array_elements(apps) v)
    AND ((s.role='CLIENT' AND a.client_profile_id=s.client_profile_id AND o.status IN ('APPROVED','ACCEPTED') AND (o.expires_at IS NULL OR o.expires_at>now() OR o.status='ACCEPTED'))
@@ -65,13 +67,14 @@ BEGIN
   FROM pcs.application_payment_claims c WHERE c.application_id IN (SELECT (v->>'id')::uuid FROM jsonb_array_elements(apps) v)
   ORDER BY c.created_at DESC,c.id LIMIT 500
  ) x;
- RETURN jsonb_build_object('role',s.role,'expires_at',s.expires_at,'applications',apps,'offers',offers,'payments',payments,'limit',100);
+ SELECT coalesce(jsonb_agg(to_jsonb(x)),'[]') INTO vehicles FROM (SELECT id,title FROM catalog_items WHERE s.role='PARTNER' AND owner_partner_id=s.partner_id AND entity_type='VEHICLE' AND publication_status='PUBLISHED' AND moderation_status='APPROVED' AND availability_status='AVAILABLE' ORDER BY title,id LIMIT 500) x;
+ RETURN jsonb_build_object('vehicles',vehicles,'role',s.role,'expires_at',s.expires_at,'applications',apps,'offers',offers,'payments',payments,'limit',100);
 END $fn$;
 
 CREATE OR REPLACE FUNCTION pcs.portal_action(p_hash text,p_action text,p_request uuid,p_payload jsonb) RETURNS jsonb LANGUAGE plpgsql
  SET search_path=pg_catalog,public AS $fn$
 DECLARE s pcs.portal_access%ROWTYPE; a applications%ROWTYPE; previous pcs.portal_commands%ROWTYPE;
- result jsonb; fingerprint text; new_id uuid; profile client_profiles%ROWTYPE; total numeric;
+ result jsonb; fingerprint text; new_id uuid; profile client_profiles%ROWTYPE; total numeric; vehicle public.catalog_items%ROWTYPE; booking jsonb;
 BEGIN
  SELECT * INTO s FROM pcs.portal_access WHERE token_hash=p_hash AND revoked_at IS NULL AND expires_at>now() FOR SHARE;
  IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
@@ -96,8 +99,14 @@ BEGIN
   IF p_action='submit-offer' AND s.role='PARTNER' THEN
    IF a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') OR a.selected_partner_offer_id IS NOT NULL THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
    IF coalesce(p_payload->>'price','') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR (p_payload->>'price')::numeric<=0 OR coalesce(p_payload->>'deposit','0') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR length(trim(coalesce(p_payload->>'terms',''))) NOT BETWEEN 1 AND 4000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
-   INSERT INTO pcs_partner_offers(application_id,partner_id,status,client_price_thb,deposit_thb,terms,submitted_at,expires_at)
-   VALUES(a.id,s.partner_id,'SUBMITTED',(p_payload->>'price')::numeric,coalesce(p_payload->>'deposit','0')::numeric,trim(p_payload->>'terms'),now(),now()+interval '7 days') RETURNING id INTO new_id;
+   booking:='{}'::jsonb;vehicle:=NULL;
+   IF nullif(p_payload->>'catalog_item_id','') IS NOT NULL THEN
+    SELECT * INTO vehicle FROM catalog_items WHERE id=(p_payload->>'catalog_item_id')::uuid AND owner_partner_id=s.partner_id AND entity_type='VEHICLE' AND publication_status='PUBLISHED' AND moderation_status='APPROVED' AND availability_status='AVAILABLE' FOR SHARE;
+    IF NOT FOUND THEN RAISE EXCEPTION 'portal_vehicle_unavailable' USING ERRCODE='42501';END IF;
+    booking:=pcs.vehicle_offer_booking(p_payload->>'start_date',p_payload->>'end_date');
+   ELSIF nullif(p_payload->>'start_date','') IS NOT NULL OR nullif(p_payload->>'end_date','') IS NOT NULL THEN RAISE EXCEPTION 'portal_vehicle_dates_without_vehicle' USING ERRCODE='22023';END IF;
+   INSERT INTO pcs_partner_offers(application_id,partner_id,catalog_item_id,status,client_price_thb,deposit_thb,terms,public_snapshot,availability_snapshot,submitted_at,expires_at)
+   VALUES(a.id,s.partner_id,vehicle.id,'SUBMITTED',(p_payload->>'price')::numeric,coalesce(p_payload->>'deposit','0')::numeric,trim(p_payload->>'terms'),CASE WHEN vehicle.id IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('title',vehicle.title,'entity_type','VEHICLE') END,booking,now(),now()+interval '7 days') RETURNING id INTO new_id;
    UPDATE applications SET human_review_required=true,next_action_code='REVIEW_PARTNER_OFFER',updated_at=clock_timestamp() WHERE id=a.id;
    result:=jsonb_build_object('ok',true,'offer_id',new_id,'status','SUBMITTED');
   ELSIF p_action='select-offer' AND s.role='CLIENT' THEN
