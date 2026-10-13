@@ -4,7 +4,10 @@ import {calendarDate} from './inventory-check.mjs';
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 const stable=x=>Array.isArray(x)?x.map(stable):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,stable(x[k])])):x;
 export function bookingDatabaseError(error){
- if(error?.code==='23P01'&&error.constraint==='vehicle_booking_no_overlap')return new CrmError('На эти даты уже есть бронь или холд. Обновите календарь и выберите другой период.',409);
+ if(error?.code==='23P01'&&(error.constraint==='vehicle_booking_no_overlap'||error.message==='vehicle_availability_conflict'))return new CrmError('На эти даты уже есть бронь, холд или блокировка. Обновите календарь и выберите другой период.',409);
+ if(error?.code==='22023'&&error.message==='vehicle_availability_range_invalid')return new CrmError('Период календаря должен иметь корректное начало и окончание позже начала.',400);
+ if(error?.code==='22023'&&error.message==='vehicle_availability_status_invalid')return new CrmError('Укажите известный статус периода календаря автомобиля.',400);
+ if(error?.code==='22023'&&error.message==='vehicle_availability_quantity_invalid')return new CrmError('Одна карточка автомобиля соответствует одной машине. Количество: 0 или 1.',400);
  if(error?.code==='22023'&&error.message==='booking_dates_invalid')return new CrmError('Проверьте даты аренды: начало и окончание должны быть корректными датами.',400);
  return null;
 }

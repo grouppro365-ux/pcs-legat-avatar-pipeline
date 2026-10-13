@@ -71,3 +71,9 @@ test('catalog changes between preflight and insertion return conflict without a 
  }};
  await assert.rejects(()=>createBooking(db,input(),null),e=>e.status===409);assert.equal(writes,1);assert.equal(catalogs,2);
 });
+
+test('calendar block conflicts and invalid vehicle calendar input are reported without success',()=>{
+ assert.equal(bookingDatabaseError({code:'23P01',message:'vehicle_availability_conflict'}).status,409);
+ for(const message of ['vehicle_availability_range_invalid','vehicle_availability_status_invalid','vehicle_availability_quantity_invalid'])assert.equal(bookingDatabaseError({code:'22023',message}).status,400);
+ assert.equal(bookingDatabaseError({code:'23P01',message:'other_constraint'}),null);
+});
