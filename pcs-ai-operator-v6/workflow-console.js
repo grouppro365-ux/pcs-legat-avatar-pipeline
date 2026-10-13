@@ -35,5 +35,5 @@
    document.getElementById('pcsUnifiedIntake').onsubmit=async e=>{e.preventDefault();if(s.busy||!active(s))return;s.busy=true;const b=e.target.querySelector('button');b.disabled=true;try{const result=await api('runtime-intake',{contact_id:id,request_id,need:new FormData(e.target).get('need')});if(active(s))await workflow(result.application.id);}catch(e){if(active(s))document.getElementById('pcsUnifiedMessage').textContent=e.message;}finally{s.busy=false;b.disabled=false;}};
   }catch(e){if(active(s))s.root.textContent=e.message;}
  }
- window.pcsWorkflow={open:workflow};window.pcsUnified={open:inbox};
+ window.pcsWorkflow={open:workflow};window.pcsUnified={open:inbox,conversation};
 })();

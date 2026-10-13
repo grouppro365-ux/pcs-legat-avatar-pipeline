@@ -5,7 +5,7 @@ export const staffRequirements={session:[], 'staff-session':[],
  'application-queue':['applications.view','clients.manage'], 'application-workspace':['applications.view','clients.manage'], 'application-offers':['applications.view','clients.manage'],
  workflow:[], 'workflow-action':[],
  'unified-inbox':['clients.manage'], 'runtime-conversation':['clients.manage'], 'runtime-send':['clients.manage'], 'runtime-intake':['applications.assign','clients.manage'],
- finance:['settlements.view'], audit:['audit.view'], notifications:['notifications.view'], 'notification-read':['notifications.view'],
+ 'workflow-delivery':['notifications.view'], 'workflow-delivery-review':['notifications.manage'],finance:['settlements.view'], audit:['audit.view'], notifications:['notifications.view'], 'notification-read':['notifications.view'],
  catalog:['catalog.view','pricing.view_internal'], 'catalog-detail':['catalog.view','pricing.view_internal']};
 export function staffCan(ctx,permission){return ctx.permissions.includes('*')||ctx.permissions.includes(permission);}
 export async function authorizeStaff(req,biz,verify,op){
@@ -16,7 +16,7 @@ export async function authorizeStaff(req,biz,verify,op){
  const required=staffRequirements[op];
  if(!required||!required.every(p=>staffCan(ctx,p)))throw new CrmError('Недостаточно прав для этого раздела',403);
  if(op==='workflow'&&!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'applications.view'))throw new CrmError('Недостаточно прав для заявки',403);
- const write=['workflow-action','runtime-send','runtime-intake','notification-read'].includes(op);
+ const write=['workflow-action','workflow-delivery-review','runtime-send','runtime-intake','notification-read'].includes(op);
  if(req.method!==(write?'POST':'GET'))throw new CrmError('Метод не поддерживается',405);
  return {...ctx,auth_user_id:identity.sub};
 }
