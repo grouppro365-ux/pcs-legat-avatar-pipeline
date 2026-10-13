@@ -37,5 +37,6 @@ export function staffWorkflowDb(biz,ctx){return {query:async(q,p)=>{
 export function redactStaffWorkflow(result,ctx){
  if(!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'settlements.edit')){result.payments=[];result.instructions=null;}
  if(!staffCan(ctx,'applications.assign'))result.access=[];
+ result.permissions=ctx.permissions;
  return result;
 }

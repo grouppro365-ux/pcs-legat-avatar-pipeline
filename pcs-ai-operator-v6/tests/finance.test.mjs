@@ -4,9 +4,9 @@ import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../finance-v26.js',import.meta.url),'utf8');
 function fixture(){
- const pending=[],nodes={},sheets=[];let balanceBox=null;for(const key of ['[data-finance-list]','[data-finance-source]','[data-finance-status]','[data-finance-context]','[data-finance-filter]','[data-finance-refresh]'])nodes[key]={innerHTML:'',textContent:'',value:'all',listeners:{},addEventListener(k,fn){this.listeners[k]=fn},querySelectorAll(k){return this.buttons?.[k]||[]}};
- const root={querySelector:k=>nodes[k]},main={innerHTML:''},window={PCS:{page:'finance'},opsCall:url=>new Promise((resolve,reject)=>pending.push({url,resolve,reject})),toast(){},openSheet(title,html){sheets.push({title,html});balanceBox=html.includes('data-finance-balance')?{innerHTML:'',textContent:'Загружаю баланс брони…'}:null}};
- const document={querySelector:k=>k==='#main'?main:k==='#pcsFinanceScreen'?root:k==='[data-finance-balance]'?balanceBox:null};vm.runInNewContext(source,{window,document,URLSearchParams,Intl,Date});return{window,pending,nodes,main,sheets,get balanceBox(){return balanceBox}};
+ const pending=[],nodes={},sheets=[];let balanceBox=null,workflowButton=null;for(const key of ['[data-finance-list]','[data-finance-source]','[data-finance-status]','[data-finance-context]','[data-finance-filter]','[data-finance-refresh]'])nodes[key]={innerHTML:'',textContent:'',value:'all',listeners:{},addEventListener(k,fn){this.listeners[k]=fn},querySelectorAll(k){return this.buttons?.[k]||[]}};
+ const root={querySelector:k=>nodes[k]},main={innerHTML:''},window={PCS:{page:'finance'},opsCall:url=>new Promise((resolve,reject)=>pending.push({url,resolve,reject})),toast(){},openSheet(title,html){sheets.push({title,html});balanceBox=html.includes('data-finance-balance')?{innerHTML:'',textContent:'Загружаю баланс брони…'}:null;workflowButton=html.includes('data-finance-workflow')?{}:null}};
+ const document={querySelector:k=>k==='#main'?main:k==='#pcsFinanceScreen'?root:k==='[data-finance-balance]'?balanceBox:k==='[data-finance-workflow]'?workflowButton:null};vm.runInNewContext(source,{window,document,URLSearchParams,Intl,Date});return{window,pending,nodes,main,sheets,get balanceBox(){return balanceBox},get workflowButton(){return workflowButton}};
 }
 test('financial amounts preserve large and fractional decimals, currencies and missing data',()=>{
  const h=fixture(),cash=h.window.pcsFinanceFormat;assert.equal(cash('123456789012345678.125','THB'),'123\u00a0456\u00a0789\u00a0012\u00a0345\u00a0678,125 THB');assert.equal(cash('1.05','USD'),'1,05 USD');assert.equal(cash(null,'THB'),'Не указано');assert.equal(cash('bad','USD'),'Некорректная сумма');
@@ -45,4 +45,14 @@ test('balance failure stays explicit and a detail response after navigation cann
  const id='11111111-1111-4111-8111-111111111111';h.pending[0].resolve({source:'ledger',rows:[{reservation_id:id}]});await render;
  button.click();h.pending[1].reject(Error('Balance unavailable'));await new Promise(resolve=>setImmediate(resolve));assert.equal(h.balanceBox.textContent,'Balance unavailable');
  button.click();const box=h.balanceBox;h.window.PCS.page='crm';h.pending[2].resolve({reservation_id:id,payment_status:'paid'});await new Promise(resolve=>setImmediate(resolve));assert.equal(box.innerHTML,'');
+});
+
+test('cabinet source filters actual claim statuses and opens the canonical payment review without writing finance data',async()=>{
+ const h=fixture(),render=h.window.pcsFinance26();h.pending[0].resolve({source:'ledger',rows:[]});await render;
+ const button={dataset:{financeRow:'0'},addEventListener(k,fn){this[k]=fn}};h.nodes['[data-finance-list]'].buttons={'[data-finance-row]':[button]};
+ h.nodes['[data-finance-source]'].listeners.change({target:{value:'client-payments'}});assert.match(h.pending[1].url,/source=client-payments/);assert.equal(h.nodes['[data-finance-filter]'].hidden,false);assert.match(h.nodes['[data-finance-status]'].innerHTML,/value="PENDING"/);
+ const id='11111111-1111-4111-8111-111111111111';h.pending[1].resolve({source:'client-payments',rows:[{application_id:id,application_public_id:'APP-QA',status:'PENDING',amount:'400.10',currency:'THB',agreed_price:'1000.25',verified_amount:'500.15',pending_amount:'500.10',remaining:'500.10',deposit:'2000.00',balance_status:'PARTIAL',reference:'<script>'}]});await new Promise(r=>setImmediate(r));
+ assert.match(h.nodes['[data-finance-list]'].innerHTML,/На проверке/);assert.match(h.nodes['[data-finance-list]'].innerHTML,/500,10 THB/);
+ const opened=[];h.window.pcsWorkflow={open:id=>opened.push(id)};await button.click();assert.match(h.sheets.at(-1).html,/ещё не зачтено/);assert.match(h.sheets.at(-1).html,/2\u00a0000,00 THB/);assert.match(h.sheets.at(-1).html,/&lt;script&gt;/);assert.doesNotMatch(h.sheets.at(-1).html,/<script>/);h.workflowButton.onclick();assert.deepEqual(opened,[id]);
+ h.nodes['[data-finance-status]'].value='PENDING';h.nodes['[data-finance-refresh]'].listeners.click();assert.match(h.pending[2].url,/status=PENDING/);h.pending[2].resolve({source:'client-payments',rows:[]});
 });
