@@ -16,7 +16,7 @@ test('overlap, hold and blocked periods defeat a free period',()=>{
  for(const status of ['UNAVAILABLE','BOOKED','BLOCKED','HOLD','HELD']){const d=data();d.periods.push({...d.periods[0],status});assert.equal(assessInventory(d,params).status,'conflict');}
 });
 test('missing dates, unconfirmed periods, gaps, quantities and shared service capacity require confirmation',()=>{
- const mutations=[d=>d.periods=[],d=>d.periods[0].confirmed_at=null,d=>d.periods[0].starts_at='2026-10-11T00:00:00+07:00',d=>d.periods[0].quantity=0,d=>d.periods[0].quantity=10,d=>d.item.entity_type='SERVICE',d=>d.item.availability_status='REQUIRES_CONFIRMATION',d=>d.bookings=[{operational_status:'CONFIRMED',start_date:'2026-02-30',end_date:'2026-03-01'}],d=>d.periods=Array(201).fill(d.periods[0])];
+ const mutations=[d=>d.periods=[],d=>d.periods[0].confirmed_at=null,d=>d.periods[0].starts_at='2026-10-11T00:00:00+07:00',d=>d.periods[0].quantity=10,d=>d.item.entity_type='SERVICE',d=>d.item.availability_status='REQUIRES_CONFIRMATION',d=>d.bookings=[{operational_status:'CONFIRMED',start_date:'2026-02-30',end_date:'2026-03-01'}],d=>d.periods=Array(201).fill(d.periods[0])];
  for(const mutate of mutations){const d=data();mutate(d);assert.equal(assessInventory(d,params).status,'confirmation_required');}
 });
 test('contiguous free intervals cover dates, expired holds are ignored, an actual gap remains uncertain',()=>{

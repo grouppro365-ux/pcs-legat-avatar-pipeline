@@ -1,5 +1,7 @@
 import {CrmError} from './crm-policy.mjs';
 import {terminalApplicationStatuses} from './operations-read.mjs';
+const activeBookings=['AWAITING_PARTNER_CONFIRMATION','CONFIRMED','SERVICE_IN_PROGRESS'];
+const draftBookings=['NEW','TRIAGE','NEEDS_CLIENT_INFO','MATCHING','PARTNER_ALTERNATIVE_PROPOSED','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION'];
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 export function calendarDate(value){
  return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&Number.isFinite(Date.parse(value+'T00:00:00Z'))&&new Date(value+'T00:00:00Z').toISOString().slice(0,10)===value;
@@ -17,9 +19,11 @@ export function assessInventory(data,params){
  if(item.publication_status!=='PUBLISHED'||item.moderation_status!=='APPROVED'||item.availability_status==='UNAVAILABLE'||(item.publication_starts_at&&Date.parse(item.publication_starts_at)>now)||(item.publication_ends_at&&Date.parse(item.publication_ends_at)<=now))return result('unavailable','Карточка недоступна для предложения клиенту.');
  let uncertain=!Number.isFinite(now)||data.periods.length>200||data.bookings.length>200;
  for(const b of data.bookings){
-  if(terminalApplicationStatuses.includes(b.operational_status))continue;
-  if(!calendarDate(b.start_date)||!calendarDate(b.end_date)||b.end_date<=b.start_date){uncertain=true;continue;}
-  if(b.start_date<params.end&&b.end_date>params.start)return result('conflict','На выбранные даты есть активная бронь. Требуется другой вариант или проверка оператором.');
+  if(terminalApplicationStatuses.includes(b.operational_status)||draftBookings.includes(b.operational_status))continue;
+  if(!activeBookings.includes(b.operational_status)){uncertain=true;continue;}
+  if(!calendarDate(b.start_date)||!calendarDate(b.end_date)||b.end_date<b.start_date){uncertain=true;continue;}
+  const bookingEnd=b.end_date===b.start_date?new Date(Date.parse(b.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10):b.end_date;
+  if(b.start_date<params.end&&bookingEnd>params.start)return result('conflict','На выбранные даты есть активная бронь. Требуется другой вариант или проверка оператором.');
  }
  const intervals=[];
  for(const p of data.periods){
@@ -27,7 +31,7 @@ export function assessInventory(data,params){
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a){uncertain=true;continue;}
   if(a>=end||b<=start)continue;
   if(['HOLD','HELD'].includes(p.status)&&p.hold_until&&Date.parse(p.hold_until)<=now)continue;
-  if(['UNAVAILABLE','BOOKED','BLOCKED','HOLD','HELD'].includes(p.status))return result('conflict','Период занят, заблокирован или находится на удержании.');
+  if(['UNAVAILABLE','BOOKED','BLOCKED','HOLD','HELD'].includes(p.status)||(p.status==='AVAILABLE'&&p.quantity===0))return result('conflict','Период занят, заблокирован или находится на удержании.');
   if(p.status!=='AVAILABLE'||!Number.isFinite(Date.parse(p.confirmed_at))||p.quantity===0){uncertain=true;continue;}
   if(p.quantity!==null&&p.quantity!==undefined&&p.quantity!==1){uncertain=true;continue;}
   intervals.push([Math.max(a,start),Math.min(b,end)]);
