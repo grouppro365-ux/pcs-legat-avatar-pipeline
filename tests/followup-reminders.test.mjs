@@ -21,3 +21,8 @@ test('payment dispatch is invoked only after the internal worker secret is valid
  assert.equal((await internalFollowupReminders(req('POST','wrong'),context,transport)).status,401);assert.equal(sends,0);
  const result=await internalFollowupReminders(req('POST','expected'),context,transport);assert.equal(result.status,200);assert.equal(sends,1);assert.equal(result.body.payment_delivery.sent,0);
 });
+test('reservation projection runs only after internal authorization and reports failure separately',async()=>{
+ let projections=0;const context={base:'https://test',key:'server',biz:{query:async(q)=>q.includes('pcs_workflow_outbox')?[{created:0,marked:0}]:[{created:0}]},projections:async()=>{projections++;return{ok:false,error:'projection_unavailable'};}};
+ assert.equal((await internalFollowupReminders(req('POST','wrong'),context,async()=>Response.json('expected'))).status,401);assert.equal(projections,0);
+ const r=await internalFollowupReminders(req('POST','expected'),context,async()=>Response.json('expected'));assert.equal(projections,1);assert.equal(r.status,200);assert.equal(r.body.reservation_projection.ok,false);assert.equal(r.body.client_messages_sent,0);
+});

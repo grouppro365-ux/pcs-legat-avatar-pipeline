@@ -18,13 +18,14 @@ export const followupReminderQuery=`with due as materialized (
  ) select count(*)::int created from created n where exists(select 1 from audited a where a.entity_id=n.id::text)`;
 export async function createFollowupReminders(biz){const rows=await biz.query(followupReminderQuery,[terminalApplicationStatuses]),created=rows[0]?.created;if(!Number.isInteger(created)||created<0||created>50)throw Error('reminder_receipt_invalid');return {ok:true,created,channel:'IN_APP',client_messages_sent:0};}
 const equal=(a,b)=>{if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0;};
-export async function internalFollowupReminders(req,{base,key,biz,payments,deliveries},transport=fetch){
+export async function internalFollowupReminders(req,{base,key,biz,payments,deliveries,projections},transport=fetch){
  if(req.method!=='POST')return {status:405,body:{error:'method_not_allowed'}};
  const supplied=req.headers.get('x-pcs-internal-secret');if(!supplied)return {status:401,body:{error:'unauthorized'}};
  try{const r=await transport(base+'/rest/v1/rpc/pcs_secret_get',{method:'POST',headers:{apikey:key,authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({p_name:'internal_retry_secret'}),signal:AbortSignal.timeout(10000)});
   if(!r.ok)return {status:503,body:{error:'worker_unavailable'}};if(!equal(supplied,await r.json()))return {status:401,body:{error:'unauthorized'}};
   const reminders=await createFollowupReminders(biz),sla_escalation=await createSlaEscalations(biz);
   const workflow=await createWorkflowNotices(biz),payment_delivery=payments?await payments():null,workflow_delivery=deliveries?await deliveries():null;
-  return {status:200,body:{...reminders,workflow,sla_escalation,...(payment_delivery?{payment_delivery}: {}),...(workflow_delivery?{workflow_delivery}: {}),client_messages_sent:(payment_delivery?.sent||0)+(workflow_delivery?.sent||0)}};
+  const reservation_projection=projections?await projections():null;
+  return {status:200,body:{...reminders,...(reservation_projection?{reservation_projection}:{}),workflow,sla_escalation,...(payment_delivery?{payment_delivery}: {}),...(workflow_delivery?{workflow_delivery}: {}),client_messages_sent:(payment_delivery?.sent||0)+(workflow_delivery?.sent||0)}};
  }catch{return {status:503,body:{error:'worker_unavailable'}};}
 }
