@@ -2,9 +2,10 @@ import {CrmError} from './crm-policy.mjs';
 const textLimits={entity_type:100,title:500,city:200,publication_status:100,moderation_status:100,availability_status:100,description:20000,category:100,conditions:10000,source:2000};
 const moneyKeys=['client_price_thb','deposit_thb','internal_net_thb'];
 export function catalogEditQuery(b){
- const allowed=new Set(['id','expected_version',...Object.keys(textLimits),...moneyKeys]);
+ const allowed=new Set(['id','expected_version',...Object.keys(textLimits),...moneyKeys,'booking_capacity']);
  if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!allowed.has(k))||typeof b.id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(b.id)||typeof b.expected_version!=='string'||b.expected_version.length>100||!Number.isFinite(Date.parse(b.expected_version)))throw new CrmError('Обновите карточку перед сохранением.',400);
  const patch={},ui={};
+ if(Object.hasOwn(b,'booking_capacity')){const n=b.booking_capacity;if(n===null||n==='')patch.booking_capacity=null;else if(/^[1-9][0-9]{0,4}$/.test(String(n))&&['string','number'].includes(typeof n))patch.booking_capacity=Number(n);else throw new CrmError('Вместимость: целое число от 1 до 99999 или пустое поле.',400);}
  for(const [k,max]of Object.entries(textLimits))if(Object.hasOwn(b,k)){
   if((b[k]===null&&k==='city'))patch[k]=null;
   else {if(typeof b[k]!=='string'||b[k].length>max||(['title','entity_type','publication_status','moderation_status','availability_status'].includes(k)&&!b[k].trim()))throw new CrmError('Некорректное поле карточки: '+k,400);patch[k]=b[k];}
@@ -17,6 +18,7 @@ export function catalogEditQuery(b){
  }
  return {query:`with candidate as materialized(select * from catalog_items where id=$1::uuid and updated_at::text=$2 for update), saved as (
  update catalog_items c set
+ booking_capacity=case when $3::jsonb ? 'booking_capacity' then ($3::jsonb->>'booking_capacity')::integer else c.booking_capacity end,
  entity_type=case when $3::jsonb ? 'entity_type' then $3::jsonb->>'entity_type' else c.entity_type end,
  title=case when $3::jsonb ? 'title' then $3::jsonb->>'title' else c.title end,
  city=case when $3::jsonb ? 'city' then $3::jsonb->>'city' else c.city end,
@@ -45,8 +47,8 @@ export function catalogCreateQuery(b){
  const fingerprint={request_id:request_id.toLowerCase(),data:patch,ui};
  const payload={ui,_pcs_create_request:fingerprint};
  return {query:`with inserted as (
- insert into catalog_items(id,public_id,entity_type,title,city,publication_status,moderation_status,availability_status,version,client_price_thb,deposit_thb,internal_net_thb,created_at,updated_at)
- values($1::uuid,$2,$3::jsonb->>'entity_type',$3::jsonb->>'title',$3::jsonb->>'city','DRAFT','DRAFT',$3::jsonb->>'availability_status',1,($3::jsonb->>'client_price_thb')::numeric,($3::jsonb->>'deposit_thb')::numeric,($3::jsonb->>'internal_net_thb')::numeric,now(),clock_timestamp())
+ insert into catalog_items(id,public_id,entity_type,title,city,publication_status,moderation_status,availability_status,version,client_price_thb,deposit_thb,internal_net_thb,booking_capacity,created_at,updated_at)
+ values($1::uuid,$2,$3::jsonb->>'entity_type',$3::jsonb->>'title',$3::jsonb->>'city','DRAFT','DRAFT',$3::jsonb->>'availability_status',1,($3::jsonb->>'client_price_thb')::numeric,($3::jsonb->>'deposit_thb')::numeric,($3::jsonb->>'internal_net_thb')::numeric,($3::jsonb->>'booking_capacity')::integer,now(),clock_timestamp())
  on conflict(id) do nothing returning id,public_id
  ), first_revision as (
  insert into catalog_revisions(id,item_id,version,status,payload,created_at)

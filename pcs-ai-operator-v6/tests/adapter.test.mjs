@@ -4,11 +4,12 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const itemId='11111111-1111-4111-8111-111111111111',photoNewId='55555555-5555-4555-8555-555555555555';
-function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,createResponse,archiveResponse,mediaDeleteResponse,mediaOrderResponse,mediaAddResponse}={}){
+function adapterHarness({sendResponse,knowledgeResponse,catalogRevision,afterCatalogSave,catalogItem,createResponse,archiveResponse,mediaDeleteResponse,mediaOrderResponse,mediaAddResponse}={}){
   const item={id:itemId,edit_version:'2026-10-07 13:00:00.123456+00',entity_type:'VEHICLE',title:'MG5',city:'Pattaya',
     publication_status:'PUBLISHED',moderation_status:'APPROVED',availability_status:'AVAILABLE',
     client_price_thb:660,deposit_thb:10000,internal_net_thb:520,
     revision:{ui:{description:'Existing description',category:'car_rent',conditions:'Insurance retained',source:'PCS'}}};
+  if(catalogItem)Object.assign(item,catalogItem);
   if(catalogRevision!==undefined)item.revision=catalogRevision;
   const calls=[];const media=[{id:'photo-a',public_url:'https://example.test/a.jpg'},{id:'photo-b',public_url:'https://example.test/b.jpg'}];
   const window={fetch:async(url,init={})=>{
@@ -293,4 +294,9 @@ test('restore prospect route preserves original version, decision identity and a
 test('booking history forwards the original application ID and page to the manager',async()=>{
  const h=adapterHarness();await h.window.fetch('https://pcs-stable.local/pcs-ui-api/audit?source=business&page=2&application_id='+itemId);
  const c=h.calls.find(x=>x.op==='audit');assert.ok(c);assert.equal(c.params.application_id,itemId);assert.equal(c.params.page,'2');assert.equal(c.params.source,'business');
+});
+test('catalog adapter sends explicit capacity and verifies persisted value',async()=>{
+ const h=adapterHarness({catalogItem:{entity_type:'SERVICE'}});const r=await h.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId,{method:'PATCH',body:JSON.stringify({expected_version:'2026-10-07 13:00:00.123456+00',booking_capacity:'3'})});
+ assert.equal(r.status,200);assert.equal(h.calls.find(x=>x.op==='catalog-save').body.booking_capacity,3);assert.equal((await r.json()).item.booking_capacity,3);
+ const bad=adapterHarness({catalogItem:{entity_type:'SERVICE'},afterCatalogSave:item=>{item.booking_capacity=1;}});const b=await bad.window.fetch('https://pcs-stable.local/pcs-ui-api/catalog/'+itemId,{method:'PATCH',body:JSON.stringify({expected_version:'2026-10-07 13:00:00.123456+00',booking_capacity:'3'})});assert.equal(b.status,409);
 });

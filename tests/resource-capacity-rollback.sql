@@ -1,0 +1,16 @@
+DECLARE resource uuid:=gen_random_uuid(); one uuid:=gen_random_uuid(); two uuid:=gen_random_uuid(); period uuid:=gen_random_uuid();
+BEGIN
+ INSERT INTO public.catalog_items(id,public_id,title,entity_type,booking_capacity,availability_status,publication_status,moderation_status,client_price_thb) VALUES(resource,'QA-'||resource,'QA shared service','SERVICE',3,'AVAILABLE','PUBLISHED','APPROVED',1000);
+ INSERT INTO public.applications(id,public_id,category,item_id,operational_status,qualification_data) VALUES(one,'QA-'||one,'booking',resource,'CONFIRMED','{"start_date":"2114-01-10","end_date":"2114-01-20","booking_quantity":"2"}'),(two,'QA-'||two,'booking',resource,'CONFIRMED','{"start_date":"2114-01-12","end_date":"2114-01-14","booking_quantity":"1"}');
+ BEGIN INSERT INTO public.applications(public_id,category,item_id,operational_status,qualification_data) VALUES('QA-'||gen_random_uuid(),'booking',resource,'CONFIRMED','{"start_date":"2114-01-13","end_date":"2114-01-15","booking_quantity":"1"}');RAISE EXCEPTION 'QA resource oversold';EXCEPTION WHEN exclusion_violation THEN NULL;END;
+ INSERT INTO public.applications(public_id,category,item_id,operational_status,qualification_data) VALUES('QA-'||gen_random_uuid(),'booking',resource,'CONFIRMED','{"start_date":"2114-01-14","end_date":"2114-01-16","booking_quantity":"1"}');
+ BEGIN UPDATE public.catalog_items SET booking_capacity=2 WHERE id=resource;RAISE EXCEPTION 'QA occupied capacity reduced';EXCEPTION WHEN exclusion_violation THEN NULL;END;
+ BEGIN UPDATE public.catalog_items SET booking_capacity=NULL WHERE id=resource;RAISE EXCEPTION 'QA capacity disabled with bookings';EXCEPTION WHEN check_violation THEN NULL;END;
+ BEGIN INSERT INTO public.availability_periods(item_id,starts_at,ends_at,status) VALUES(resource,'2114-01-13 00:00+07','2114-01-15 00:00+07','BLOCKED');RAISE EXCEPTION 'QA block overwrote resource booking';EXCEPTION WHEN exclusion_violation THEN NULL;END;
+ BEGIN INSERT INTO public.availability_periods(item_id,starts_at,ends_at,status,quantity) VALUES(resource,'2114-01-13 00:00+07','2114-01-15 00:00+07','AVAILABLE',2);RAISE EXCEPTION 'QA schedule reduced occupied capacity';EXCEPTION WHEN exclusion_violation THEN NULL;END;
+ INSERT INTO public.availability_periods(id,item_id,starts_at,ends_at,status,quantity,hold_until) VALUES(period,resource,'2114-01-13 00:00+07','2114-01-15 00:00+07','HELD',0,now()-interval '1 hour');
+ BEGIN UPDATE public.availability_periods SET hold_until=now()+interval '1 hour' WHERE id=period;RAISE EXCEPTION 'QA held capacity overwrote booking';EXCEPTION WHEN exclusion_violation THEN NULL;END;
+ UPDATE public.applications SET operational_status='CANCELLED_BY_CLIENT' WHERE id=two;
+ INSERT INTO public.applications(public_id,category,item_id,operational_status,qualification_data) VALUES('QA-'||gen_random_uuid(),'booking',resource,'CONFIRMED','{"start_date":"2114-01-12","end_date":"2114-01-14","booking_quantity":"1"}');
+ BEGIN INSERT INTO public.applications(public_id,category,item_id,operational_status,qualification_data) VALUES('QA-'||gen_random_uuid(),'booking',resource,'CONFIRMED','{"start_date":"2114-02-12","end_date":"2114-02-14","booking_quantity":"0"}');RAISE EXCEPTION 'QA invalid quantity accepted';EXCEPTION WHEN invalid_parameter_value THEN NULL;END;
+END;

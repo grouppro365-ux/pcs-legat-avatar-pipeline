@@ -206,18 +206,19 @@ async function uiRoute(path,init){
     const payload={id,expected_version:body.expected_version,entity_type:item.entity_type,title:item.title,city:item.city,
       publication_status:item.publication_status,moderation_status:item.moderation_status,
       availability_status:item.availability_status,client_price_thb:item.client_price_thb,
-      deposit_thb:item.deposit_thb,internal_net_thb:item.internal_net_thb,
+      deposit_thb:item.deposit_thb,internal_net_thb:item.internal_net_thb,booking_capacity:item.booking_capacity??null,
       description:revision.description||'',category:revision.category||'',
       conditions:revision.conditions||'',source:revision.source||''};
     for(const key of ['title','city','description','conditions','source']){
       if(Object.prototype.hasOwnProperty.call(body,key))payload[key]=String(body[key]??'').trim();
     }
+    if(Object.prototype.hasOwnProperty.call(body,'booking_capacity')){const v=body.booking_capacity;if(v!==null&&v!==''&&(!['number','string'].includes(typeof v)||!/^[1-9][0-9]{0,4}$/.test(String(v))))return appError('Вместимость: целое число от 1 до 99999.',400);payload.booking_capacity=v===null||v===''?null:Number(v);}
     if(!payload.title)return appError('Укажите название',400);
     await manager('catalog-save',{method:'POST',body:payload});
     const verified=await manager('catalog-detail',{id});
     const saved=verified.item;
     const savedRevision=saved?.revision?.ui||{};
-    if(!saved||['title','city'].some(key=>saved[key]!==payload[key])||
+    if(!saved||(saved.booking_capacity??null)!==payload.booking_capacity||['title','city'].some(key=>saved[key]!==payload[key])||
       ['description','conditions','source'].some(key=>(savedRevision[key]||'')!==payload[key])){
       return appError('Сервер не подтвердил сохранение. Обновите запись перед повтором.',409);
     }
