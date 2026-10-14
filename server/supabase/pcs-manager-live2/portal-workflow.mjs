@@ -26,11 +26,18 @@ export function portalDatabaseError(e){
  if(code==='P0002')return new CrmError('Запись не найдена',404);
  return new CrmError('Действие недоступно на этом этапе. Проверьте сумму и данные.',400);
 }
+export function portalBrowse(req){
+ const u=new URL(req.url),p=u.searchParams;
+ if([...p.keys()].some(k=>!['op','page','view','q'].includes(k))||['page','view','q'].some(k=>p.getAll(k).length>1))throw new CrmError('Некорректный фильтр кабинета',400);
+ const raw=p.get('page')??'0',view=p.get('view')??'all',q=p.get('q')??'';
+ if(!/^\d{1,4}$/.test(raw)||Number(raw)>5000||!['all','active','completed'].includes(view)||q.length>120)throw new CrmError('Некорректный фильтр кабинета',400);
+ return [Number(raw),view,q.trim()];
+}
 export async function portalRoute(req,biz){
  const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');
  if(!/^[a-f0-9]{64}$/.test(token))throw new CrmError('Требуется персональная ссылка кабинета',401);
  const hash=await tokenHash(token);
- if(req.method==='GET')return (await biz.query('select pcs.portal_home($1) result',[hash]))[0].result;
+ if(req.method==='GET')return (await biz.query('select pcs.portal_home_page($1,$2::integer,$3,$4) result',[hash,...portalBrowse(req)]))[0].result;
  if(req.method!=='POST')throw new CrmError('Метод не поддерживается',405);
  const b=portalCommand(await readCrmBody(req));
  return (await biz.query('select pcs.portal_action($1,$2,$3::uuid,$4::jsonb) result',[hash,b.action,b.request_id,JSON.stringify(b.payload)]))[0].result;
