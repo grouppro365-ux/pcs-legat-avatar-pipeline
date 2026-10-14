@@ -15,3 +15,11 @@ test('execution controls are restricted to execution permission and never offere
  assert.doesNotMatch(await render(['applications.execute'],'VEHICLE'),/data-workflow="service-phase"/);
  assert.doesNotMatch(await render(['applications.view'],'SERVICE'),/data-workflow="service-phase"/);
 });
+
+test('issue lifecycle controls preserve operator permissions and show recorded resolution safely',async()=>{
+ async function render(permissions,issue,status='SERVICE_IN_PROGRESS'){const root={innerHTML:''};const window={openSheet(){},pcsManagerRequest:async()=>({permissions,application:{id:'qa',public_id:'QA',operational_status:status,execution_issue_status:issue,execution_issue_summary:'<script>bad</script>',execution_issue_resolution:'Verified correction'},access:[],partners:[],offers:[],payments:[]})};vm.runInNewContext(source,{window,document:{getElementById:()=>root},Date});await window.pcsWorkflow.open('qa');return root.innerHTML;}
+ assert.match(await render(['applications.execute'],'NONE'),/value="OPEN"/);
+ const open=await render(['applications.execute'],'OPEN');assert.match(open,/value="ESCALATE"/);assert.match(open,/value="RESOLVE"/);assert.doesNotMatch(open,/value="OPEN"/);
+ assert.doesNotMatch(await render(['applications.execute'],'ESCALATED'),/value="ESCALATE"/);
+ const reader=await render(['applications.view'],'RESOLVED');assert.doesNotMatch(reader,/data-workflow="execution-issue"/);assert.match(reader,/Verified correction/);assert.match(reader,/&lt;script&gt;/);
+});

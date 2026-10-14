@@ -37,7 +37,7 @@ export async function portalRoute(req,biz){
 }
 export async function readWorkflow(biz,id){
  if(!uuid(id))throw new CrmError('Некорректная заявка',400);
- const application=(await biz.query(`select id,public_id,client_profile_id,assigned_partner_id,category,(select entity_type from catalog_items where id=applications.item_id) item_type,qualification_data#>>'{service_execution,started,confirmed_at}' service_started_at,qualification_data#>>'{service_execution,completed,confirmed_at}' service_completed_at,execution_issue_status,operational_status,client_payment_status,selected_partner_offer_id,updated_at::text edit_version from applications where id=$1`,[id]))[0];
+ const application=(await biz.query(`select id,public_id,client_profile_id,assigned_partner_id,category,(select entity_type from catalog_items where id=applications.item_id) item_type,qualification_data#>>'{service_execution,started,confirmed_at}' service_started_at,qualification_data#>>'{service_execution,completed,confirmed_at}' service_completed_at,execution_issue_status,execution_issue_summary,execution_issue_resolution,escalated_at,operational_status,client_payment_status,selected_partner_offer_id,updated_at::text edit_version from applications where id=$1`,[id]))[0];
  if(!application)throw new CrmError('Заявка не найдена',404);
  const [partners,offers,payments,instructions,access]=await Promise.all([
   biz.query("select id,public_name from partners where status='ACTIVE' order by public_name,id limit 500",[]),
@@ -50,10 +50,11 @@ export async function readWorkflow(biz,id){
 }
 export async function adminWorkflow(biz,b){
  if(typeof b.action!=='string')throw new CrmError('Некорректное действие',400);
- const allow={'service-phase':['application_id','expected_version','phase','note','request_id','confirmed'],'issue-access':['role','profile_id'],'revoke-access':['access_id'],'assign-partner':['application_id','expected_version','partner_id'],'review-offer':['application_id','expected_version','offer_id','offer_version','decision'],'payment-instructions':['application_id','expected_version','instructions'],'review-payment':['application_id','expected_version','claim_id','claim_version','decision','note']};
+ const allow={'execution-issue':['application_id','expected_version','phase','note','request_id','confirmed'],'service-phase':['application_id','expected_version','phase','note','request_id','confirmed'],'issue-access':['role','profile_id'],'revoke-access':['access_id'],'assign-partner':['application_id','expected_version','partner_id'],'review-offer':['application_id','expected_version','offer_id','offer_version','decision'],'payment-instructions':['application_id','expected_version','instructions'],'review-payment':['application_id','expected_version','claim_id','claim_version','decision','note']};
  if(!allow[b.action]||Object.keys(b).some(k=>k!=='action'&&!allow[b.action].includes(k)))throw new CrmError('Действие не поддерживается',400);
  for(const k of allow[b.action])if(typeof b[k]!=='string'||b[k].length>4000||(k.endsWith('_id')&&!uuid(b[k])))throw new CrmError('Проверьте поля действия',400);
  if(b.action==='service-phase'&&(!['STARTED','COMPLETED'].includes(b.phase)||b.confirmed!=='true'||!uuid(b.request_id)||b.note.trim().length<10||b.note.length>1000))throw new CrmError('Подтвердите факт исполнения и укажите основание (10–1000 символов)',400);
+ if(b.action==='execution-issue'&&(!['OPEN','ESCALATE','RESOLVE'].includes(b.phase)||b.confirmed!=='true'||!uuid(b.request_id)||b.note.trim().length<10||b.note.length>1000))throw new CrmError('Подтвердите действие и опишите проблему или решение (10–1000 символов)',400);
  const payload={...b};delete payload.action;
  let token;
  if(b.action==='issue-access'){token=[...crypto.getRandomValues(new Uint8Array(32))].map(x=>x.toString(16).padStart(2,'0')).join('');payload.hash=await tokenHash(token);}

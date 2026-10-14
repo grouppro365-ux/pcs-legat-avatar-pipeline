@@ -5,7 +5,7 @@ export function applicationQueueQuery(view='active',rawPage='0',search=''){
  if(!['active','attention','followup','all'].includes(view)||typeof rawPage!=='string'||!/^\d{1,5}$/.test(rawPage)||Number(rawPage)>5000||typeof search!=='string'||search.length>120)throw new CrmError('Некорректные параметры очереди заявок',400);
  const page=Number(rawPage),q=search.trim();
  return {view,page,q,query:`select a.id,a.public_id,a.client_name,a.category,a.city,a.operational_status,a.partner_response_status,a.client_payment_status,a.priority,a.sla_due_at,a.human_review_required,a.execution_issue_status,a.follow_up_at,a.next_action_code,a.next_action_at,c.title item_title from applications a left join catalog_items c on c.id=a.item_id where
- ($1='all' or a.operational_status<>all($2::text[])) and
+ ($1='all' or a.operational_status<>all($2::text[]) or ($1='attention' and a.execution_issue_status in ('OPEN','ESCALATED'))) and
  ($1 not in ('attention','followup') or ($1='followup' and a.follow_up_at<=now()) or ($1='attention' and (a.sla_due_at<now() or a.human_review_required or (a.execution_issue_status is not null and a.execution_issue_status not in ('NONE','RESOLVED','CLOSED'))))) and
  ($3='' or strpos(lower(coalesce(a.public_id,'')||' '||coalesce(a.client_name,'')||' '||coalesce(a.city,'')||' '||coalesce(c.title,'')),lower($3))>0)
  order by a.updated_at desc,a.id desc limit 51 offset $4`,params:[view,terminalApplicationStatuses,q,page*50]};

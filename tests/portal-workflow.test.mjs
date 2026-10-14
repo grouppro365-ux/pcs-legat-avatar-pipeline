@@ -48,3 +48,11 @@ test('service phase requires an explicit human confirmation and stable request i
  for(const changes of [{phase:'OTHER'},{confirmed:'false'},{note:'short'},{request_id:'bad'},{client_profile_id:id}])await assert.rejects(()=>adminWorkflow({query:()=>assert.fail('invalid write')},{...b,...changes}));
  assert.throws(()=>portalCommand({action:'service-phase',request_id:id,payload:{application_id:id,expected_version:'version'}}));
 });
+
+test('execution issue actions require evidence and cannot be invoked through customer cabinet',async()=>{
+ const b={action:'execution-issue',application_id:id,expected_version:'version',phase:'OPEN',request_id:id,confirmed:'true',note:'Provider did not arrive at confirmed time'};
+ const db={query:async()=>[{result:{ok:true}}]};
+ for(const phase of ['OPEN','ESCALATE','RESOLVE'])assert.deepEqual(await adminWorkflow(db,{...b,phase}),{ok:true});
+ for(const changes of [{phase:'OTHER'},{confirmed:'false'},{note:'short'},{note:'x'.repeat(1001)},{request_id:'bad'},{actor_user_id:id}])await assert.rejects(()=>adminWorkflow({query:()=>assert.fail('invalid issue write')},{...b,...changes}));
+ assert.throws(()=>portalCommand({action:'execution-issue',request_id:id,payload:{application_id:id,expected_version:'version'}}));
+});
