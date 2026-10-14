@@ -19,5 +19,5 @@ test('staff workflow delegates with verified identity and redacts finance/access
  let params;const wrapped=staffWorkflowDb({query:async(q,p)=>{assert.match(q,/staff_workflow_action/);params=p;return [{result:{ok:true}}]}},{auth_user_id:id});
  await wrapped.query('select pcs.portal_admin_action($1,$2::jsonb) result',['review-offer','{}']);assert.deepEqual(params,[id,'review-offer','{}']);
  await assert.rejects(()=>wrapped.query('select * from secrets',[]));
- const r=redactStaffWorkflow({payments:[1],instructions:{secret:1},access:[1]},{permissions:['applications.view']});assert.deepEqual(r.payments,[]);assert.equal(r.instructions,null);assert.deepEqual(r.access,[]);
+ const r=redactStaffWorkflow({application:{payment_balance:{verified_amount:'1000'}},payments:[1],instructions:{secret:1},access:[1]},{permissions:['applications.view']});assert.deepEqual(r.payments,[]);assert.equal(r.instructions,null);assert.equal(r.application.payment_balance,undefined);assert.deepEqual(r.access,[]);
 });

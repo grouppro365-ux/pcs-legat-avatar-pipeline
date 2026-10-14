@@ -47,7 +47,8 @@ BEGIN
    a.accepted_offer_snapshot->>'client_price_thb' agreed_price_thb,
    coalesce(a.accepted_offer_snapshot#>>'{availability_snapshot,booking_quantity}','1') booking_quantity,a.accepted_offer_snapshot#>>'{availability_snapshot,booking,start_date}' start_date,a.accepted_offer_snapshot#>>'{availability_snapshot,booking,end_date}' end_date,
    a.accepted_offer_snapshot->>'deposit_thb' deposit_thb,a.accepted_offer_snapshot->>'terms' agreed_terms,
-   i.instructions payment_instructions,i.recipient payment_recipient
+   i.instructions payment_instructions,i.recipient payment_recipient,
+   (SELECT to_jsonb(b) FROM pcs.application_service_balance(a.id) b) payment_balance
   FROM applications a LEFT JOIN pcs.application_payment_instructions i ON i.application_id=a.id
   WHERE (s.role='CLIENT' AND a.client_profile_id=s.client_profile_id) OR (s.role='PARTNER' AND a.assigned_partner_id=s.partner_id)
   ORDER BY a.updated_at DESC,a.id LIMIT 100
