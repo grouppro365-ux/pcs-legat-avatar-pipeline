@@ -36,9 +36,9 @@ SET search_path=pg_catalog,public AS $fn$
 DECLARE ctx jsonb; required text; result jsonb;
 BEGIN
  ctx:=pcs.staff_context(p_auth);
- required:=CASE WHEN p_action IN ('assign-partner','issue-access','revoke-access') THEN 'applications.assign' WHEN p_action='service-phase' THEN 'applications.execute' WHEN p_action='review-offer' THEN 'applications.quote' WHEN p_action IN ('payment-instructions','review-payment') THEN 'settlements.edit' END;
+ required:=CASE WHEN p_action IN ('assign-partner','issue-access','revoke-access') THEN 'applications.assign' WHEN p_action IN ('service-phase','execution-issue') THEN 'applications.execute' WHEN p_action='review-offer' THEN 'applications.quote' WHEN p_action IN ('payment-instructions','review-payment') THEN 'settlements.edit' END;
  IF ctx IS NULL OR required IS NULL OR NOT (ctx->'permissions' ? required OR ctx->'permissions' ? '*') THEN RAISE EXCEPTION 'staff_action_forbidden' USING ERRCODE='42501'; END IF;
- result:=pcs.portal_admin_action(p_action,p_payload);
+ IF p_action='execution-issue' THEN result:=pcs.manage_execution_issue(p_payload,(ctx->>'user_id')::uuid);ELSE result:=pcs.portal_admin_action(p_action,p_payload);END IF;
  IF result->>'replayed' IS DISTINCT FROM 'true' THEN
  INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','staff.workflow.'||p_action,'app_users',ctx->>'user_id',jsonb_build_object('auth_user_id',p_auth,'application_id',p_payload->>'application_id','access_id',p_payload->>'access_id','request_id',p_payload->>'request_id','phase',p_payload->>'phase'),'SUCCESS');
  END IF;

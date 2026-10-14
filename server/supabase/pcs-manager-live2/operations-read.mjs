@@ -21,12 +21,12 @@ export const overviewQueries={
  'active_bookings',(select count(*)::int from active where category='booking'),
  'sla_overdue',(select count(*)::int from active where sla_due_at<now()),
  'human_review',(select count(*)::int from active where human_review_required),
- 'execution_issues',(select count(*)::int from active where execution_issue_status not in ('NONE','RESOLVED','CLOSED') and execution_issue_status is not null),
+ 'execution_issues',(select count(*)::int from applications where execution_issue_status in ('OPEN','ESCALATED')),
  'catalog',(select count(*)::int from catalog_items where publication_status<>'ARCHIVED'),
  'available',(select count(*)::int from catalog_items where publication_status='PUBLISHED' and moderation_status='APPROVED' and availability_status='AVAILABLE' and (publication_starts_at is null or publication_starts_at<=now()) and (publication_ends_at is null or publication_ends_at>now())),
  'catalog_review',(select count(*)::int from catalog_items where publication_status<>'ARCHIVED' and (moderation_status<>'APPROVED' or availability_status='REQUIRES_CONFIRMATION')),
  'unread_notifications',(select count(*)::int from notifications where read_at is null and recipient_partner_id is null),
- 'attention_applications',coalesce((select jsonb_agg(a) from (select a.id,a.public_id,a.client_name,a.category,a.operational_status,a.sla_due_at,a.human_review_required,a.execution_issue_status from active a where a.sla_due_at<now() or a.human_review_required or (a.execution_issue_status not in ('NONE','RESOLVED','CLOSED') and a.execution_issue_status is not null) order by a.sla_due_at nulls last,a.id limit 5)a),'[]'::jsonb),
+ 'attention_applications',coalesce((select jsonb_agg(a) from (select a.id,a.public_id,a.client_name,a.category,a.operational_status,a.sla_due_at,a.human_review_required,a.execution_issue_status from applications a where (a.operational_status<>all($1::text[]) and (a.sla_due_at<now() or a.human_review_required)) or a.execution_issue_status in ('OPEN','ESCALATED') order by a.sla_due_at nulls last,a.id limit 5)a),'[]'::jsonb),
  'bookings',coalesce((select jsonb_agg(a) from (select a.id,a.public_id,a.operational_status,c.title from active a left join catalog_items c on c.id=a.item_id where a.category='booking' order by a.created_at desc,a.id limit 2)a),'[]'::jsonb)
  ) data`
 };

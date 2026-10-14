@@ -140,6 +140,7 @@ CREATE OR REPLACE FUNCTION pcs.portal_admin_action(p_action text,p_payload jsonb
 DECLARE a applications%ROWTYPE; o pcs_partner_offers%ROWTYPE; c pcs.application_payment_claims%ROWTYPE;
  idv uuid; total numeric; expected numeric; new_status text; result jsonb;
 BEGIN
+ IF p_action='execution-issue' THEN RETURN pcs.manage_execution_issue(p_payload);END IF;
  IF p_action='service-phase' THEN RETURN pcs.confirm_service_execution(p_payload);END IF;
  IF p_action='issue-access' THEN
   IF p_payload->>'role'='CLIENT' AND EXISTS(SELECT 1 FROM client_profiles WHERE id=(p_payload->>'profile_id')::uuid AND blocked IS NOT TRUE AND merged_into_id IS NULL) THEN
