@@ -10,22 +10,25 @@ export function inventoryParams(id,start,end){
  if(!uuid(id)||!calendarDate(start)||!calendarDate(end)||end<=start)throw new CrmError('Укажите карточку и корректные даты: окончание позже начала',400);
  return {id,start,end,start_at:start+'T00:00:00+07:00',end_at:end+'T00:00:00+07:00'};
 }
-export const inventoryQuery=`select jsonb_build_object('item',jsonb_build_object('id',c.id,'title',c.title,'entity_type',c.entity_type,'availability_status',c.availability_status,'publication_status',c.publication_status,'moderation_status',c.moderation_status,'publication_starts_at',c.publication_starts_at,'publication_ends_at',c.publication_ends_at), 'checked_at',now(),
+export const inventoryQuery=`select jsonb_build_object('item',jsonb_build_object('id',c.id,'title',c.title,'entity_type',c.entity_type,'booking_capacity',c.booking_capacity,'availability_status',c.availability_status,'publication_status',c.publication_status,'moderation_status',c.moderation_status,'publication_starts_at',c.publication_starts_at,'publication_ends_at',c.publication_ends_at), 'checked_at',now(),
  'periods',coalesce((select jsonb_agg(p) from (select starts_at,ends_at,status,quantity,confirmed_at,hold_until from availability_periods where item_id=c.id and (starts_at is null or ends_at is null or (starts_at<$3::timestamptz and ends_at>$2::timestamptz)) order by starts_at,id limit 201)p),'[]'::jsonb),
- 'bookings',coalesce((select jsonb_agg(b) from (select operational_status,qualification_data->>'start_date' start_date,qualification_data->>'end_date' end_date from applications where item_id=c.id and category='booking' and operational_status<>all($4::text[]) order by created_at,id limit 201)b),'[]'::jsonb)) data from catalog_items c where c.id=$1 limit 1`;
+ 'bookings',coalesce((select jsonb_agg(b) from (select operational_status,coalesce(qualification_data->>'booking_quantity','1') booking_quantity,qualification_data->>'start_date' start_date,qualification_data->>'end_date' end_date from applications where item_id=c.id and (category='booking' or qualification_data->>'resource_capacity_booking'='true') and operational_status<>all($4::text[]) order by created_at,id limit 201)b),'[]'::jsonb)) data from catalog_items c where c.id=$1 limit 1`;
 export function assessInventory(data,params){
  const item=data.item,now=Date.parse(data.checked_at),start=Date.parse(params.start_at),end=Date.parse(params.end_at);
  const result=(status,reason)=>({status,reason,item:{id:item.id,title:item.title},start:params.start,end:params.end,timezone:'Asia/Bangkok',checked_at:data.checked_at});
  if(item.publication_status!=='PUBLISHED'||item.moderation_status!=='APPROVED'||item.availability_status==='UNAVAILABLE'||(item.publication_starts_at&&Date.parse(item.publication_starts_at)>now)||(item.publication_ends_at&&Date.parse(item.publication_ends_at)<=now))return result('unavailable','Карточка недоступна для предложения клиенту.');
+ const shared=['PROPERTY','SERVICE'].includes(item.entity_type),capacity=shared?item.booking_capacity:1,occupied=[];
  let uncertain=!Number.isFinite(now)||data.periods.length>200||data.bookings.length>200;
  for(const b of data.bookings){
   if(terminalApplicationStatuses.includes(b.operational_status)||draftBookings.includes(b.operational_status))continue;
   if(!activeBookings.includes(b.operational_status)){uncertain=true;continue;}
   if(!calendarDate(b.start_date)||!calendarDate(b.end_date)||b.end_date<b.start_date){uncertain=true;continue;}
   const bookingEnd=b.end_date===b.start_date?new Date(Date.parse(b.end_date+'T00:00:00Z')+86400000).toISOString().slice(0,10):b.end_date;
+  if(shared){const qty=Number(b.booking_quantity??1);if(!/^[1-9][0-9]{0,4}$/.test(String(b.booking_quantity??1))||!Number.isInteger(qty)||qty<1||qty>99999){uncertain=true;continue;}occupied.push([Date.parse(b.start_date+'T00:00:00+07:00'),Date.parse(bookingEnd+'T00:00:00+07:00'),qty]);continue;}
   if(b.start_date<params.end&&bookingEnd>params.start)return result('conflict','На выбранные даты есть активная бронь. Требуется другой вариант или проверка оператором.');
  }
- const intervals=[];
+ const intervals=[],limits=[];
+ if(shared&&(!Number.isInteger(capacity)||capacity<1))uncertain=true;
  for(const p of data.periods){
   const a=Date.parse(p.starts_at),b=Date.parse(p.ends_at);
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a){uncertain=true;continue;}
@@ -33,13 +36,15 @@ export function assessInventory(data,params){
   if(['HOLD','HELD'].includes(p.status)&&p.hold_until&&Date.parse(p.hold_until)<=now)continue;
   if(['UNAVAILABLE','BOOKED','BLOCKED','HOLD','HELD'].includes(p.status)||(p.status==='AVAILABLE'&&p.quantity===0))return result('conflict','Период занят, заблокирован или находится на удержании.');
   if(p.status!=='AVAILABLE'||!Number.isFinite(Date.parse(p.confirmed_at))||p.quantity===0){uncertain=true;continue;}
-  if(p.quantity!==null&&p.quantity!==undefined&&p.quantity!==1){uncertain=true;continue;}
+  if(p.quantity!==null&&p.quantity!==undefined&&(!Number.isInteger(p.quantity)||p.quantity<1||(!shared&&p.quantity!==1))){uncertain=true;continue;}
+  if(shared&&p.quantity!=null)limits.push([a,b,p.quantity]);
   intervals.push([Math.max(a,start),Math.min(b,end)]);
  }
+ if(shared&&Number.isInteger(capacity)&&capacity>0){const points=[...new Set([start,end,...occupied.flatMap(x=>x.slice(0,2)),...limits.flatMap(x=>x.slice(0,2))])].filter(x=>x>=start&&x<end);for(const t of points){const used=occupied.filter(x=>x[0]<=t&&x[1]>t).reduce((n,x)=>n+x[2],0),limit=Math.min(capacity,...limits.filter(x=>x[0]<=t&&x[1]>t).map(x=>x[2]));if(used+1>limit)return result('conflict','На выбранный период подтверждённая вместимость исчерпана.');}}
  let covered=start;for(const [a,b] of intervals.sort((x,y)=>x[0]-y[0])){if(a>covered)break;covered=Math.max(covered,b);}
  // Periods do not establish shared service capacity, quantities or partner confirmation.
- if(!['CAR','VEHICLE','PROPERTY','REAL_ESTATE'].includes(item.entity_type)||item.availability_status!=='AVAILABLE'||uncertain||covered<end)return result('confirmation_required','Наличие на весь период не подтверждено. Уточните даты и доступность у ответственного или партнёра.');
- return result('available','В сохранённых данных весь период отмечен свободным. Перед оформлением брони повторите проверку: она не резервирует объект.');
+ if(!['CAR','VEHICLE','PROPERTY','REAL_ESTATE','SERVICE'].includes(item.entity_type)||item.availability_status!=='AVAILABLE'||uncertain||covered<end)return result('confirmation_required','Наличие на весь период не подтверждено. Уточните даты и доступность у ответственного или партнёра.');
+ return result('available',shared?'На весь период есть подтверждённая вместимость для одного объекта или места. Проверка не резервирует его.':'В сохранённых данных весь период отмечен свободным. Перед оформлением брони повторите проверку: она не резервирует объект.');
 }
 export async function checkInventory(biz,id,start,end){
  const params=inventoryParams(id,start,end),rows=await biz.query(inventoryQuery,[id,params.start_at,params.end_at,terminalApplicationStatuses]);

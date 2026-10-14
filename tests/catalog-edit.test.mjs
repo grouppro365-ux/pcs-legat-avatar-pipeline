@@ -19,3 +19,9 @@ test('archive only accepts identity and captured version, preserving atomic hist
  for(const b of [null,{id:draft.id},{id:draft.id,expected_version:'bad'},{id:draft.id,expected_version:draft.expected_version,title:'override'}])await assert.rejects(()=>archiveCatalog({query:()=>assert.fail('write')},b),e=>e.status===400);
  await assert.rejects(()=>archiveCatalog({query:async()=>[]},{id:draft.id,expected_version:draft.expected_version}),e=>e.status===409);
 });
+test('explicit capacity is persisted on update and creation; fractional/negative capacity is rejected',()=>{
+ const q=catalogEditQuery({...draft,booking_capacity:'3'});assert.equal(JSON.parse(q.params[2]).booking_capacity,3);assert.match(q.query,/booking_capacity=case/);
+ const c=catalogCreateQuery({...create,booking_capacity:2});assert.equal(JSON.parse(c.params[2]).booking_capacity,2);assert.match(c.query,/internal_net_thb,booking_capacity,created_at/);
+ for(const v of [-1,0,1.5,true,'02',100000])assert.throws(()=>catalogEditQuery({...draft,booking_capacity:v}));
+ assert.equal(JSON.parse(catalogEditQuery({...draft,booking_capacity:null}).params[2]).booking_capacity,null);
+});

@@ -30,3 +30,12 @@ test('canonical read parameterizes date boundaries, hides client details and pro
  await assert.rejects(()=>checkInventory({query:async()=>[]},id,params.start,params.end),e=>e.status===404);
  await assert.rejects(()=>checkInventory({query:async()=>{throw Error('Unavailable')}},id,params.start,params.end),/Unavailable/);
 });
+test('shared resource checks simultaneous units rather than treating any booking as a full block',()=>{
+ const d=data();d.item.entity_type='SERVICE';d.item.booking_capacity=3;d.periods[0].quantity=3;
+ d.bookings=[{operational_status:'CONFIRMED',start_date:'2026-10-10',end_date:'2026-10-15',booking_quantity:'2'},{operational_status:'CONFIRMED',start_date:'2026-10-15',end_date:'2026-10-20',booking_quantity:'2'}];
+ assert.equal(assessInventory(d,params).status,'available');
+ d.bookings.push({operational_status:'CONFIRMED',start_date:'2026-10-14',end_date:'2026-10-16',booking_quantity:'1'});assert.equal(assessInventory(d,params).status,'conflict');
+ d.bookings.pop();d.periods[0].quantity=2;assert.equal(assessInventory(d,params).status,'conflict');
+ d.periods[0].quantity=3;d.item.booking_capacity=null;assert.equal(assessInventory(d,params).status,'confirmation_required');
+ d.item.booking_capacity=3;d.bookings[0].booking_quantity='1.0';assert.equal(assessInventory(d,params).status,'confirmation_required');
+});
