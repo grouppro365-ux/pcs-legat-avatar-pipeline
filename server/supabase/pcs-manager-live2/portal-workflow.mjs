@@ -37,7 +37,7 @@ export async function portalRoute(req,biz){
 }
 export async function readWorkflow(biz,id){
  if(!uuid(id))throw new CrmError('Некорректная заявка',400);
- const application=(await biz.query(`select id,public_id,client_profile_id,assigned_partner_id,category,(select entity_type from catalog_items where id=applications.item_id) item_type,qualification_data#>>'{service_execution,started,confirmed_at}' service_started_at,qualification_data#>>'{service_execution,completed,confirmed_at}' service_completed_at,execution_issue_status,execution_issue_summary,execution_issue_resolution,escalated_at,operational_status,client_payment_status,selected_partner_offer_id,updated_at::text edit_version from applications where id=$1`,[id]))[0];
+ const application=(await biz.query(`select id,public_id,client_profile_id,assigned_partner_id,category,(select entity_type from catalog_items where id=applications.item_id) item_type,qualification_data#>>'{service_execution,started,confirmed_at}' service_started_at,qualification_data#>>'{service_execution,completed,confirmed_at}' service_completed_at,execution_issue_status,execution_issue_summary,execution_issue_resolution,escalated_at,(select to_jsonb(b) from pcs.application_service_balance(applications.id) b) payment_balance,operational_status,client_payment_status,selected_partner_offer_id,updated_at::text edit_version from applications where id=$1`,[id]))[0];
  if(!application)throw new CrmError('Заявка не найдена',404);
  const [partners,offers,payments,instructions,access]=await Promise.all([
   biz.query("select id,public_name from partners where status='ACTIVE' order by public_name,id limit 500",[]),

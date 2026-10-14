@@ -35,7 +35,7 @@ export function staffWorkflowDb(biz,ctx){return {query:async(q,p)=>{
  return biz.query('select pcs.staff_workflow_action($1::uuid,$2,$3::jsonb) result',[ctx.auth_user_id,...p]);
 }};}
 export function redactStaffWorkflow(result,ctx){
- if(!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'settlements.edit')){result.payments=[];result.instructions=null;}
+ if(!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'settlements.edit')){result.payments=[];result.instructions=null;if(result.application)delete result.application.payment_balance;}
  if(!staffCan(ctx,'applications.assign'))result.access=[];
  result.permissions=ctx.permissions;
  return result;
