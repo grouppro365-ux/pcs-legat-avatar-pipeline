@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {portalCommand,tokenHash,portalRoute,portalDatabaseError,adminWorkflow} from '../server/supabase/pcs-manager-live2/portal-workflow.mjs';
+import {portalCommand,portalBrowse,tokenHash,portalRoute,portalDatabaseError,adminWorkflow} from '../server/supabase/pcs-manager-live2/portal-workflow.mjs';
 import {inboxPage,unifiedInbox} from '../server/supabase/pcs-manager-live2/unified-inbox.mjs';
 const id='00000000-0000-4000-8000-000000000001';
 test('portal commands cannot inject another profile, role or admin action',()=>{
@@ -55,4 +55,12 @@ test('execution issue actions require evidence and cannot be invoked through cus
  for(const phase of ['OPEN','ESCALATE','RESOLVE'])assert.deepEqual(await adminWorkflow(db,{...b,phase}),{ok:true});
  for(const changes of [{phase:'OTHER'},{confirmed:'false'},{note:'short'},{note:'x'.repeat(1001)},{request_id:'bad'},{actor_user_id:id}])await assert.rejects(()=>adminWorkflow({query:()=>assert.fail('invalid issue write')},{...b,...changes}));
  assert.throws(()=>portalCommand({action:'execution-issue',request_id:id,payload:{application_id:id,expected_version:'version'}}));
+});
+
+test('cabinet browsing binds bounded pages and literal search without accepting profile or role injection',async()=>{
+ assert.deepEqual(portalBrowse(new Request('https://test/?page=2&view=active&q=%25_%20')), [2,'active','%_']);
+ for(const q of ['page=-1','page=5001','page=1&page=2','view=admin','q='+ 'x'.repeat(121),'profile_id='+id,'role=PARTNER'])assert.throws(()=>portalBrowse(new Request('https://test/?'+q)),e=>e.status===400);
+ const calls=[];const db={query:async(q,p)=>{calls.push([q,p]);return [{result:{ok:true}}]}};
+ await portalRoute(new Request('https://test/?op=portal&page=3&view=completed&q=Bangkok',{headers:{authorization:'Bearer '+'a'.repeat(64)}}),db);
+ assert.match(calls[0][0],/portal_home_page/);assert.deepEqual(calls[0][1].slice(1),[3,'completed','Bangkok']);
 });

@@ -8,7 +8,7 @@ test('invalid managed identity never queries business data',async()=>{
 });
 test('business role is resolved by server mapping, never by JWT role or caller fields',async()=>{
  const queries=[];const db={query:async(sql,args)=>{queries.push([sql,args]);return sql.includes('portal_account_hash')?[{hash:'server-hash'}]:[{result:{role:'CLIENT',applications:[]}}]}};
- const result=await accountRoute(req(),db,async()=>({sub:id,role:'admin'}));assert.equal(result.role,'CLIENT');assert.deepEqual(queries[0][1],[id]);assert.deepEqual(queries[1][1],['server-hash']);
+ const result=await accountRoute(req(),db,async()=>({sub:id,role:'admin'}));assert.equal(result.role,'CLIENT');assert.deepEqual(queries[0][1],[id]);assert.deepEqual(queries[1][1],['server-hash',0,'all','']);
  await assert.rejects(accountRoute(req({action:'bind',invitation:'a'.repeat(64),role:'PARTNER'}),db,async()=>({sub:id})),e=>e.status===400);
 });
 test('binding sends only verified user identity and hashes to the canonical transaction',async()=>{
