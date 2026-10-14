@@ -41,3 +41,10 @@ test('vehicle offer requires explicit vehicle and both rental dates without acce
  for(const extra of [{start_date:'2112-01-10'},{catalog_item_id:id},{catalog_item_id:'bad',start_date:'2112-01-10',end_date:'2112-01-15'},{...rental.payload,partner_id:id}])assert.throws(()=>portalCommand({...base,payload:{...base.payload,...extra}}));
  assert.equal(portalDatabaseError({message:'vehicle_offer_dates_invalid',code:'22023'}).status,400);
 });
+test('service phase requires an explicit human confirmation and stable request identity',async()=>{
+ const b={action:'service-phase',application_id:id,expected_version:'version',phase:'STARTED',request_id:id,confirmed:'true',note:'Checked the actual service start'};
+ let payload;const db={query:async(q,p)=>{payload=JSON.parse(p[1]);return[{result:{ok:true}}];}};
+ assert.deepEqual(await adminWorkflow(db,b),{ok:true});assert.equal(payload.request_id,id);
+ for(const changes of [{phase:'OTHER'},{confirmed:'false'},{note:'short'},{request_id:'bad'},{client_profile_id:id}])await assert.rejects(()=>adminWorkflow({query:()=>assert.fail('invalid write')},{...b,...changes}));
+ assert.throws(()=>portalCommand({action:'service-phase',request_id:id,payload:{application_id:id,expected_version:'version'}}));
+});

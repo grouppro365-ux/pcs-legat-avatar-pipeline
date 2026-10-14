@@ -122,7 +122,7 @@ BEGIN
    result:=pcs.client_confirm_selected_offer(a.id,s.client_profile_id);
    UPDATE applications SET client_payment_status='AWAITING_PAYMENT',updated_at=clock_timestamp() WHERE id=a.id;
   ELSIF p_action='payment' AND s.role='CLIENT' THEN
-   IF a.operational_status<>'CONFIRMED' OR a.client_payment_status NOT IN ('AWAITING_PAYMENT','PARTIALLY_PAID','INSTRUCTIONS_SENT') OR NOT EXISTS(SELECT 1 FROM pcs.application_payment_instructions WHERE application_id=a.id) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF a.operational_status NOT IN ('CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED') OR a.client_payment_status NOT IN ('AWAITING_PAYMENT','PARTIALLY_PAID','INSTRUCTIONS_SENT') OR NOT EXISTS(SELECT 1 FROM pcs.application_payment_instructions WHERE application_id=a.id) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
    IF coalesce(p_payload->>'amount','') !~ '^[0-9]{1,10}(\.[0-9]{1,2})?$' OR (p_payload->>'amount')::numeric<=0 OR length(trim(coalesce(p_payload->>'reference',''))) NOT BETWEEN 1 AND 500 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
    INSERT INTO pcs.application_payment_claims(application_id,client_profile_id,amount_thb,reference) VALUES(a.id,s.client_profile_id,(p_payload->>'amount')::numeric,trim(p_payload->>'reference')) RETURNING id INTO new_id;
    UPDATE applications SET human_review_required=true,next_action_code='VERIFY_PAYMENT',updated_at=clock_timestamp() WHERE id=a.id;
@@ -140,6 +140,7 @@ CREATE OR REPLACE FUNCTION pcs.portal_admin_action(p_action text,p_payload jsonb
 DECLARE a applications%ROWTYPE; o pcs_partner_offers%ROWTYPE; c pcs.application_payment_claims%ROWTYPE;
  idv uuid; total numeric; expected numeric; new_status text; result jsonb;
 BEGIN
+ IF p_action='service-phase' THEN RETURN pcs.confirm_service_execution(p_payload);END IF;
  IF p_action='issue-access' THEN
   IF p_payload->>'role'='CLIENT' AND EXISTS(SELECT 1 FROM client_profiles WHERE id=(p_payload->>'profile_id')::uuid AND blocked IS NOT TRUE AND merged_into_id IS NULL) THEN
    INSERT INTO pcs.portal_access(token_hash,role,client_profile_id,expires_at) VALUES(p_payload->>'hash','CLIENT',(p_payload->>'profile_id')::uuid,now()+interval '7 days') RETURNING id INTO idv;
@@ -167,14 +168,14 @@ BEGIN
    UPDATE pcs_partner_offers SET status=p_payload->>'decision',reviewed_at=now(),updated_at=clock_timestamp() WHERE id=o.id;
    UPDATE applications SET operational_status=CASE WHEN p_payload->>'decision'='APPROVED' THEN 'QUOTE_READY' ELSE operational_status END,updated_at=clock_timestamp() WHERE id=a.id;
   ELSIF p_action='payment-instructions' THEN
-   IF a.operational_status<>'CONFIRMED' OR a.selected_partner_offer_id IS NULL OR NOT EXISTS(SELECT 1 FROM partners WHERE id=a.assigned_partner_id AND client_payment_recipient='PARTNER' AND pcs_collects_client_payment IS NOT TRUE) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
+   IF a.operational_status NOT IN ('CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED') OR a.selected_partner_offer_id IS NULL OR NOT EXISTS(SELECT 1 FROM partners WHERE id=a.assigned_partner_id AND client_payment_recipient='PARTNER' AND pcs_collects_client_payment IS NOT TRUE) THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
    IF length(trim(coalesce(p_payload->>'instructions',''))) NOT BETWEEN 1 AND 4000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
    INSERT INTO pcs.application_payment_instructions(application_id,recipient,instructions) VALUES(a.id,'PARTNER',trim(p_payload->>'instructions')) ON CONFLICT(application_id) DO UPDATE SET instructions=excluded.instructions,updated_at=clock_timestamp();
    UPDATE applications SET client_payment_status=CASE WHEN client_payment_status IN ('NOT_REQUIRED_YET','AWAITING_PAYMENT','INSTRUCTIONS_SENT') THEN 'INSTRUCTIONS_SENT' ELSE client_payment_status END,updated_at=clock_timestamp() WHERE id=a.id;
   ELSIF p_action='review-payment' THEN
    SELECT * INTO c FROM pcs.application_payment_claims WHERE id=(p_payload->>'claim_id')::uuid AND application_id=a.id FOR UPDATE;
    IF NOT FOUND OR c.status<>'PENDING' OR c.updated_at::text<>coalesce(p_payload->>'claim_version','') THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001'; END IF;
-   IF a.operational_status<>'CONFIRMED' OR p_payload->>'decision' NOT IN ('VERIFIED','REJECTED') OR p_payload->>'decision' IS NULL OR length(trim(coalesce(p_payload->>'note',''))) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
+   IF a.operational_status NOT IN ('CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED') OR p_payload->>'decision' NOT IN ('VERIFIED','REJECTED') OR p_payload->>'decision' IS NULL OR length(trim(coalesce(p_payload->>'note',''))) NOT BETWEEN 1 AND 1000 THEN RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
    IF p_payload->>'decision'='VERIFIED' THEN
     IF NOT EXISTS(SELECT 1 FROM pcs.application_payment_instructions WHERE application_id=a.id AND recipient='PARTNER') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
     expected:=(a.accepted_offer_snapshot->>'client_price_thb')::numeric;
@@ -183,7 +184,7 @@ BEGIN
     new_status:=CASE WHEN total=expected THEN 'PAID_TO_PARTNER' ELSE 'PARTIALLY_PAID' END;
    ELSE new_status:=a.client_payment_status; END IF;
    UPDATE pcs.application_payment_claims SET status=p_payload->>'decision',review_note=trim(p_payload->>'note'),reviewed_at=now(),updated_at=clock_timestamp() WHERE id=c.id;
-   UPDATE applications SET client_payment_status=new_status,next_action_code=CASE WHEN new_status='PAID_TO_PARTNER' THEN 'PREPARE_SERVICE' ELSE next_action_code END,updated_at=clock_timestamp() WHERE id=a.id;
+   UPDATE applications SET client_payment_status=new_status,next_action_code=CASE WHEN new_status='PAID_TO_PARTNER' AND a.operational_status='COMPLETED' THEN 'ARCHIVE_COMPLETED_SERVICE' WHEN new_status='PAID_TO_PARTNER' AND a.operational_status='SERVICE_IN_PROGRESS' THEN 'VERIFY_SERVICE_COMPLETION' WHEN new_status='PAID_TO_PARTNER' THEN 'PREPARE_SERVICE' ELSE next_action_code END,updated_at=clock_timestamp() WHERE id=a.id;
   ELSE RAISE EXCEPTION 'portal_invalid_input' USING ERRCODE='22023'; END IF;
   idv:=a.id;result:=jsonb_build_object('ok',true,'application_id',a.id);
  END IF;

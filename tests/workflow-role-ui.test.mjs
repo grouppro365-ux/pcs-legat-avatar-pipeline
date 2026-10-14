@@ -8,3 +8,10 @@ test('concierge role cannot write payment data; legacy administrator keeps exist
  const html=await fixture(['applications.view','applications.quote','applications.assign']);assert.match(html,/data-offer=/);assert.match(html,/data-link=/);assert.doesNotMatch(html,/data-workflow="review-payment"|data-workflow="payment-instructions"/);
  assert.match(await fixture(undefined),/data-workflow="review-payment"/);
 });
+test('execution controls are restricted to execution permission and never offered for vehicles',async()=>{
+ async function render(permissions,type,status='CONFIRMED',started=null){const root={innerHTML:''};const window={openSheet(){},pcsManagerRequest:async()=>({permissions,application:{id:'qa',public_id:'QA',item_type:type,selected_partner_offer_id:'offer',operational_status:status,service_started_at:started},access:[],partners:[],offers:[],payments:[]})};vm.runInNewContext(source,{window,document:{getElementById:()=>root},Date});await window.pcsWorkflow.open('qa');return root.innerHTML;}
+ assert.match(await render(['applications.execute'],'SERVICE'),/name="phase" value="STARTED"/);
+ assert.match(await render(['applications.execute'],'PROPERTY','SERVICE_IN_PROGRESS','date'),/name="phase" value="COMPLETED"/);
+ assert.doesNotMatch(await render(['applications.execute'],'VEHICLE'),/data-workflow="service-phase"/);
+ assert.doesNotMatch(await render(['applications.view'],'SERVICE'),/data-workflow="service-phase"/);
+});

@@ -7,7 +7,7 @@ export const enqueuePaymentInstructions=`insert into pcs_workflow_outbox(aggrega
  'price',a.accepted_offer_snapshot->>'client_price_thb','deposit',a.accepted_offer_snapshot->>'deposit_thb')
  from applications a join pcs.application_payment_instructions i on i.application_id=a.id
  join client_profiles c on c.id=a.client_profile_id
- where a.operational_status='CONFIRMED' and a.client_payment_status in ('AWAITING_PAYMENT','INSTRUCTIONS_SENT','PARTIALLY_PAID')
+ where a.operational_status in ('CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED') and (a.operational_status='CONFIRMED' or i.updated_at>=coalesce((select (value->>'enabled_from')::timestamptz from system_settings where key='late_payment_instructions'),'infinity'::timestamptz)) and a.client_payment_status in ('AWAITING_PAYMENT','INSTRUCTIONS_SENT','PARTIALLY_PAID')
  and c.blocked is not true and c.merged_into_id is null and c.source_contact_id is not null
  and i.recipient='PARTNER' and not exists(select 1 from pcs_workflow_outbox e where e.idempotency_key='payment-instructions:'||a.id::text||':'||md5(i.updated_at::text))
  order by i.updated_at,a.id limit 50 on conflict(idempotency_key) do nothing returning id`;
@@ -18,7 +18,7 @@ export const claimPaymentInstructions=`with due as (
  payload=e.payload||jsonb_build_object('payment_worker_owner',gen_random_uuid()),last_error=null from due d where e.id=d.id returning e.id,e.payload,e.attempts`;
 export const currentPaymentInstructions=`select a.id from applications a join pcs.application_payment_instructions i on i.application_id=a.id
  join client_profiles c on c.id=a.client_profile_id where a.id=$1::uuid and a.client_profile_id=$2::uuid
- and a.operational_status='CONFIRMED' and a.client_payment_status in ('AWAITING_PAYMENT','INSTRUCTIONS_SENT','PARTIALLY_PAID')
+ and a.operational_status in ('CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED') and (a.operational_status='CONFIRMED' or i.updated_at>=coalesce((select (value->>'enabled_from')::timestamptz from system_settings where key='late_payment_instructions'),'infinity'::timestamptz)) and a.client_payment_status in ('AWAITING_PAYMENT','INSTRUCTIONS_SENT','PARTIALLY_PAID')
  and i.updated_at::text=$3 and c.source_contact_id=$4::uuid and c.blocked is not true and c.merged_into_id is null
  and i.recipient='PARTNER'`;
 export const finishPaymentInstructions=`with changed as (

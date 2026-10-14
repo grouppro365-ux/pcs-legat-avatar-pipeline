@@ -17,7 +17,7 @@
    return '';
   }
   if(a.operational_status==='AWAITING_PARTNER_CONFIRMATION'&&a.partner_response_status==='ACCEPTED')return `<button data-action="confirm" data-app="${a.id}">Подтверждаю условия сделки</button>`;
-  if(a.operational_status==='CONFIRMED'&&a.payment_instructions&&['INSTRUCTIONS_SENT','AWAITING_PAYMENT','PARTIALLY_PAID'].includes(a.client_payment_status))return `<form data-action="payment" data-app="${a.id}"><h3>Сообщить об оплате партнёру</h3><p>${esc(a.payment_instructions)}</p><p class="muted">Поступление денег проверит оператор. Возвратный депозит учитывается отдельно от стоимости услуги.</p><label>Сумма оплаты услуги, THB<input name="amount" type="number" min="0.01" max="9999999999" step="0.01" required></label><label>Номер перевода или банковская ссылка на подтверждение<input name="reference" maxlength="500" required></label><button>Передать на проверку</button></form>`;
+  if(['CONFIRMED','SERVICE_IN_PROGRESS','COMPLETED'].includes(a.operational_status)&&a.payment_instructions&&['INSTRUCTIONS_SENT','AWAITING_PAYMENT','PARTIALLY_PAID'].includes(a.client_payment_status))return `<form data-action="payment" data-app="${a.id}"><h3>Сообщить об оплате партнёру</h3><p>${esc(a.payment_instructions)}</p><p class="muted">Поступление денег проверит оператор. Возвратный депозит учитывается отдельно от стоимости услуги.</p><label>Сумма оплаты услуги, THB<input name="amount" type="number" min="0.01" max="9999999999" step="0.01" required></label><label>Номер перевода или банковская ссылка на подтверждение<input name="reference" maxlength="500" required></label><button>Передать на проверку</button></form>`;
   return '';
  };
  function render(){
