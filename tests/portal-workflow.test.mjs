@@ -64,3 +64,10 @@ test('cabinet browsing binds bounded pages and literal search without accepting 
  await portalRoute(new Request('https://test/?op=portal&page=3&view=completed&q=Bangkok',{headers:{authorization:'Bearer '+'a'.repeat(64)}}),db);
  assert.match(calls[0][0],/portal_home_page/);assert.deepEqual(calls[0][1].slice(1),[3,'completed','Bangkok']);
 });
+
+test('scoped history route binds application/kind/page and rejects extra or duplicate scope inputs',async()=>{
+ const calls=[];const db={query:async(q,p)=>{calls.push([q,p]);return [{result:{rows:[]}}]}};
+ const req=q=>new Request('https://test/?op=portal&'+q,{headers:{authorization:'Bearer '+'a'.repeat(64)}});
+ await portalRoute(req('history=payments&application_id='+id+'&page=5'),db);assert.match(calls[0][0],/portal_application_history/);assert.deepEqual(calls[0][1].slice(1),[id,'payments',5]);
+ for(const q of ['history=admin&application_id='+id,'history=offers&application_id=bad','history=offers&application_id='+id+'&page=-1','history=offers&application_id='+id+'&page=5001','history=offers&history=payments&application_id='+id,'history=offers&application_id='+id+'&role=PARTNER','history=offers&application_id='+id+'&q=other'])await assert.rejects(portalRoute(req(q),{query:()=>assert.fail('invalid history read')}),e=>e.status===400);
+});
