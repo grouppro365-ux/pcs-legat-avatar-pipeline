@@ -55,3 +55,10 @@ test('late history response is discarded after account logout',async()=>{
  const f=fixture([{id,public_id:'QA'}],{transport:async(url,opt,home)=>new URL(url).searchParams.has('history')?new Promise(resolve=>finish=()=>resolve({ok:true,json:async()=>({page:0,rows:[],has_more:false})})):({ok:true,json:async()=>home})});await tick();const panel=f.nodes['pcsHistory-'+id]={innerHTML:'',textContent:''};
  f.events.click({target:{closest:s=>s==='button[data-cabinet-history]'?{dataset:{app:id,cabinetHistory:'payments'}}:null}});await f.nodes.logout.onclick();finish();await tick();assert.equal(panel.innerHTML,'');assert.equal(f.nodes.applications.textContent,'');
 });
+
+test('only the partner sees withdrawal controls for an unselected submitted or approved offer',async()=>{
+ const id='00000000-0000-4000-8000-000000000001';
+ async function render(role,status,selected=null){const f=fixture([{id,public_id:'QA',operational_status:'QUOTE_READY',selected_partner_offer_id:selected}],{transport:async(url,opt,home)=>({ok:true,json:async()=>({...home,role,offers:[{id:'offer',application_id:id,status,edit_version:'offer-version',terms:'Public terms'}]})})});await tick();return f.nodes.applications.innerHTML;}
+ const partner=await render('PARTNER','APPROVED');assert.match(partner,/data-action="withdraw-offer"/);assert.match(partner,/name="offer_version" value="offer-version"/);assert.match(partner,/name="confirmed"/);
+ assert.doesNotMatch(await render('CLIENT','APPROVED'),/data-action="withdraw-offer"/);assert.doesNotMatch(await render('PARTNER','ACCEPTED','offer'),/data-action="withdraw-offer"/);assert.doesNotMatch(await render('PARTNER','WITHDRAWN'),/data-action="withdraw-offer"/);assert.match(await render('CLIENT','WITHDRAWN'),/Отозвано партнёром/);
+});

@@ -79,3 +79,9 @@ test('operator workflow binds independent bounded pages and probes without retur
  assert.deepEqual(calls.find(([q])=>q===workflowOffersQuery)[1],[id,100]);assert.deepEqual(calls.find(([q])=>q===workflowPaymentsQuery)[1],[id,500]);
  for(const bad of ['-1','5001','abc','',null])await assert.rejects(()=>readWorkflow({query:()=>assert.fail('invalid page read')},id,bad,'0'),e=>e.status===400);
 });
+
+test('partner withdrawal command requires exact offer identity, reason and explicit confirmation',()=>{
+ const b={action:'withdraw-offer',request_id:id,payload:{application_id:id,expected_version:'v1',offer_id:id,offer_version:'offer-v1',note:'Supplier corrected the previous offer',confirmed:'true'}};
+ assert.equal(portalCommand(b),b);
+ for(const extra of [{offer_id:'bad'},{confirmed:'false'},{note:'short'},{note:'x'.repeat(1001)},{offer_version:null},{partner_id:id}])assert.throws(()=>portalCommand({...b,payload:{...b.payload,...extra}}),e=>e.status===400);
+});
