@@ -71,3 +71,11 @@ test('scoped history route binds application/kind/page and rejects extra or dupl
  await portalRoute(req('history=payments&application_id='+id+'&page=5'),db);assert.match(calls[0][0],/portal_application_history/);assert.deepEqual(calls[0][1].slice(1),[id,'payments',5]);
  for(const q of ['history=admin&application_id='+id,'history=offers&application_id=bad','history=offers&application_id='+id+'&page=-1','history=offers&application_id='+id+'&page=5001','history=offers&history=payments&application_id='+id,'history=offers&application_id='+id+'&role=PARTNER','history=offers&application_id='+id+'&q=other'])await assert.rejects(portalRoute(req(q),{query:()=>assert.fail('invalid history read')}),e=>e.status===400);
 });
+
+test('operator workflow binds independent bounded pages and probes without returning the extra row',async()=>{
+ const {readWorkflow,workflowOffersQuery,workflowPaymentsQuery}=await import('../server/supabase/pcs-manager-live2/portal-workflow.mjs');const calls=[];
+ const db={query:async(q,p)=>{calls.push([q,p]);return q===workflowOffersQuery?Array.from({length:101},(_,i)=>({id:i,client_price_thb:'100.25'})):q===workflowPaymentsQuery?[{id:'old',amount_thb:'10.25'}]:q.includes('from applications where id=')?[{id}]:[];}};
+ const r=await readWorkflow(db,id,'1','5');assert.equal(r.offers.length,100);assert.equal(r.payments.length,1);assert.deepEqual(r.pagination.offers,{page:1,has_more:true,limit:100});assert.equal(r.pagination.payments.page,5);assert.equal(r.pagination.payments.has_more,false);
+ assert.deepEqual(calls.find(([q])=>q===workflowOffersQuery)[1],[id,100]);assert.deepEqual(calls.find(([q])=>q===workflowPaymentsQuery)[1],[id,500]);
+ for(const bad of ['-1','5001','abc','',null])await assert.rejects(()=>readWorkflow({query:()=>assert.fail('invalid page read')},id,bad,'0'),e=>e.status===400);
+});

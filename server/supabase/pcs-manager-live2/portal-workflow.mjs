@@ -49,18 +49,25 @@ export async function portalRoute(req,biz){
  const b=portalCommand(await readCrmBody(req));
  return (await biz.query('select pcs.portal_action($1,$2,$3::uuid,$4::jsonb) result',[hash,b.action,b.request_id,JSON.stringify(b.payload)]))[0].result;
 }
-export async function readWorkflow(biz,id){
+export function workflowPage(raw='0'){
+ if(typeof raw!=='string'||!/^\d{1,4}$/.test(raw)||Number(raw)>5000)throw new CrmError('Некорректная страница сделки',400);
+ return Number(raw);
+}
+export const workflowOffersQuery=`select id,status,partner_id,catalog_item_id,public_snapshot->>'title' item_title,coalesce(availability_snapshot->>'booking_quantity','1') booking_quantity,availability_snapshot#>>'{booking,start_date}' start_date,availability_snapshot#>>'{booking,end_date}' end_date,client_price_thb::text,deposit_thb::text,terms,expires_at,updated_at::text edit_version from pcs_partner_offers where application_id=$1 order by created_at desc,id desc limit 101 offset $2`;
+export const workflowPaymentsQuery='select id,amount_thb::text,reference,status,review_note,updated_at::text edit_version from pcs.application_payment_claims where application_id=$1 order by created_at desc,id desc limit 101 offset $2';
+export async function readWorkflow(biz,id,rawOffers='0',rawPayments='0'){
+ const offersPage=workflowPage(rawOffers),paymentsPage=workflowPage(rawPayments);
  if(!uuid(id))throw new CrmError('Некорректная заявка',400);
  const application=(await biz.query(`select id,public_id,client_profile_id,assigned_partner_id,category,(select entity_type from catalog_items where id=applications.item_id) item_type,qualification_data#>>'{service_execution,started,confirmed_at}' service_started_at,qualification_data#>>'{service_execution,completed,confirmed_at}' service_completed_at,execution_issue_status,execution_issue_summary,execution_issue_resolution,escalated_at,(select to_jsonb(b) from pcs.application_service_balance(applications.id) b) payment_balance,operational_status,client_payment_status,selected_partner_offer_id,updated_at::text edit_version from applications where id=$1`,[id]))[0];
  if(!application)throw new CrmError('Заявка не найдена',404);
  const [partners,offers,payments,instructions,access]=await Promise.all([
   biz.query("select id,public_name from partners where status='ACTIVE' order by public_name,id limit 500",[]),
-  biz.query(`select id,status,partner_id,catalog_item_id,public_snapshot->>'title' item_title,coalesce(availability_snapshot->>'booking_quantity','1') booking_quantity,availability_snapshot#>>'{booking,start_date}' start_date,availability_snapshot#>>'{booking,end_date}' end_date,client_price_thb::text,deposit_thb::text,terms,expires_at,updated_at::text edit_version from pcs_partner_offers where application_id=$1 order by created_at desc limit 100`,[id]),
-  biz.query('select id,amount_thb::text,reference,status,review_note,updated_at::text edit_version from pcs.application_payment_claims where application_id=$1 order by created_at desc limit 100',[id]),
+  biz.query(workflowOffersQuery,[id,offersPage*100]),
+  biz.query(workflowPaymentsQuery,[id,paymentsPage*100]),
   biz.query('select recipient,instructions from pcs.application_payment_instructions where application_id=$1',[id]),
   biz.query('select id,role,expires_at,revoked_at from pcs.portal_access where (client_profile_id=$1::uuid and $1::uuid is not null) or (partner_id=$2::uuid and $2::uuid is not null) order by created_at desc limit 100',[application.client_profile_id,application.assigned_partner_id])
  ]);
- return {application,partners,offers,payments,instructions:instructions[0]||null,access};
+ return {application,partners,offers:offers.slice(0,100),payments:payments.slice(0,100),pagination:{offers:{page:offersPage,has_more:offers.length>100,limit:100},payments:{page:paymentsPage,has_more:payments.length>100,limit:100}},instructions:instructions[0]||null,access};
 }
 export async function adminWorkflow(biz,b){
  if(typeof b.action!=='string')throw new CrmError('Некорректное действие',400);
