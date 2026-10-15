@@ -1,5 +1,5 @@
 import {CrmError,readCrmBody} from './crm-policy.mjs';
-import {uuid,tokenHash,portalCommand,portalBrowse} from './portal-workflow.mjs';
+import {uuid,tokenHash,portalCommand,portalRead} from './portal-workflow.mjs';
 export const authBase='https://ep-small-cell-av1ecg0k.neonauth.c-11.us-east-1.aws.neon.tech/neondb/auth';
 export async function accountRoute(req,biz,verify){
  const token=(req.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');
@@ -14,7 +14,7 @@ export async function accountRoute(req,biz,verify){
   return (await biz.query('select pcs.portal_bind_account($1::uuid,$2,$3) result',[identity.sub,await tokenHash(b.invitation),await tokenHash(fresh)]))[0].result;
  }
  const hash=(await biz.query('select pcs.portal_account_hash($1::uuid) hash',[identity.sub]))[0].hash;
- if(req.method==='GET')return (await biz.query('select pcs.portal_home_page($1,$2::integer,$3,$4) result',[hash,...portalBrowse(req)]))[0].result;
+ if(req.method==='GET')return portalRead(req,biz,hash);
  const command=portalCommand(b);
  return (await biz.query('select pcs.portal_action($1,$2,$3::uuid,$4::jsonb) result',[hash,command.action,command.request_id,JSON.stringify(command.payload)]))[0].result;
 }

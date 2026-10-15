@@ -33,11 +33,18 @@ export function portalBrowse(req){
  if(!/^\d{1,4}$/.test(raw)||Number(raw)>5000||!['all','active','completed'].includes(view)||q.length>120)throw new CrmError('Некорректный фильтр кабинета',400);
  return [Number(raw),view,q.trim()];
 }
+export async function portalRead(req,biz,hash){
+ const p=new URL(req.url).searchParams;
+ if(!p.has('history'))return (await biz.query('select pcs.portal_home_page($1,$2::integer,$3,$4) result',[hash,...portalBrowse(req)]))[0].result;
+ const kind=p.get('history'),id=p.get('application_id'),raw=p.get('page')??'0';
+ if([...p.keys()].some(k=>!['op','history','application_id','page'].includes(k))||['history','application_id','page'].some(k=>p.getAll(k).length>1)||!['offers','payments'].includes(kind)||!uuid(id)||!/^\d{1,4}$/.test(raw)||Number(raw)>5000)throw new CrmError('Некорректная страница истории заявки',400);
+ return (await biz.query('select pcs.portal_application_history($1,$2::uuid,$3,$4::integer) result',[hash,id,kind,Number(raw)]))[0].result;
+}
 export async function portalRoute(req,biz){
  const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');
  if(!/^[a-f0-9]{64}$/.test(token))throw new CrmError('Требуется персональная ссылка кабинета',401);
  const hash=await tokenHash(token);
- if(req.method==='GET')return (await biz.query('select pcs.portal_home_page($1,$2::integer,$3,$4) result',[hash,...portalBrowse(req)]))[0].result;
+ if(req.method==='GET')return portalRead(req,biz,hash);
  if(req.method!=='POST')throw new CrmError('Метод не поддерживается',405);
  const b=portalCommand(await readCrmBody(req));
  return (await biz.query('select pcs.portal_action($1,$2,$3::uuid,$4::jsonb) result',[hash,b.action,b.request_id,JSON.stringify(b.payload)]))[0].result;

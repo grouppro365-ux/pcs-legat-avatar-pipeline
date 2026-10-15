@@ -41,3 +41,17 @@ test('a late older-page response cannot replace a newer refresh',async()=>{
  f.events.click({target:{closest:selector=>selector==='button[data-cabinet-page]'?{dataset:{cabinetPage:'1'}}:null}});f.nodes.refresh.onclick();assert.equal(pending.length,2);
  pending[1]();await tick();assert.match(f.nodes.applications.innerHTML,/Страница 1/);pending[0]();await tick();assert.match(f.nodes.applications.innerHTML,/Страница 1/);
 });
+
+test('application history reads older pages, escapes references and retains records after a failed read',async()=>{
+ const id='00000000-0000-4000-8000-000000000001';let fail=false;
+ const f=fixture([{id,public_id:'QA'}],{transport:async(url,opt,home)=>{const p=new URL(url).searchParams;return {ok:!fail,json:async()=>fail?{error:'History temporarily unavailable'}:p.has('history')?{page:Number(p.get('page')),rows:[{id:'claim',amount_thb:'10.25',status:'VERIFIED',reference:'<script>reference</script>',created_at:'2026-10-15'}],has_more:true}:home};}});await tick();
+ const panel=f.nodes['pcsHistory-'+id]={innerHTML:'',textContent:''};
+ const click=page=>f.events.click({target:{closest:s=>s==='button[data-cabinet-history]'?{dataset:{app:id,cabinetHistory:'payments',historyPage:String(page)}}:null}});
+ click(5);await tick();const params=new URL(f.calls.at(-1).url).searchParams;assert.equal(params.get('application_id'),id);assert.equal(params.get('history'),'payments');assert.equal(params.get('page'),'5');assert.equal(params.has('q'),false);assert.match(panel.innerHTML,/страница 6/);assert.match(panel.innerHTML,/&lt;script&gt;/);assert.doesNotMatch(panel.innerHTML,/<script>/);
+ fail=true;click(6);await tick();assert.match(panel.innerHTML,/10.25/);assert.match(panel.innerHTML,/History temporarily unavailable/);
+});
+test('late history response is discarded after account logout',async()=>{
+ const id='00000000-0000-4000-8000-000000000001';let finish;
+ const f=fixture([{id,public_id:'QA'}],{transport:async(url,opt,home)=>new URL(url).searchParams.has('history')?new Promise(resolve=>finish=()=>resolve({ok:true,json:async()=>({page:0,rows:[],has_more:false})})):({ok:true,json:async()=>home})});await tick();const panel=f.nodes['pcsHistory-'+id]={innerHTML:'',textContent:''};
+ f.events.click({target:{closest:s=>s==='button[data-cabinet-history]'?{dataset:{app:id,cabinetHistory:'payments'}}:null}});await f.nodes.logout.onclick();finish();await tick();assert.equal(panel.innerHTML,'');assert.equal(f.nodes.applications.textContent,'');
+});

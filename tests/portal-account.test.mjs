@@ -15,3 +15,9 @@ test('binding sends only verified user identity and hashes to the canonical tran
  const db={query:async(sql,args)=>{assert.match(sql,/portal_bind_account/);assert.equal(args[0],id);assert.equal(args.length,3);assert.match(args[1],/^[a-f0-9]{64}$/);assert.notEqual(args[1],'a'.repeat(64));assert.notEqual(args[1],args[2]);return [{result:{ok:true}}]}};
  assert.equal((await accountRoute(req({action:'bind',invitation:'a'.repeat(64)}),db,async()=>({sub:id}))).ok,true);
 });
+
+test('managed history uses the server-owned access mapping after verified identity lookup',async()=>{
+ const calls=[];const db={query:async(q,p)=>{calls.push([q,p]);return q.includes('portal_account_hash')?[{hash:'private-server-hash'}]:[{result:{rows:[]}}]}};
+ await accountRoute(new Request('https://test/?op=portal-account&history=offers&application_id='+id+'&page=2',{headers:{authorization:'Bearer jwt'}}),db,async()=>({sub:id,role:'admin'}));
+ assert.match(calls[1][0],/portal_application_history/);assert.deepEqual(calls[1][1],['private-server-hash',id,'offers',2]);
+});
