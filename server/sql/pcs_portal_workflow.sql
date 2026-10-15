@@ -41,7 +41,7 @@ END $fn$;
 CREATE OR REPLACE FUNCTION pcs.portal_action(p_hash text,p_action text,p_request uuid,p_payload jsonb) RETURNS jsonb LANGUAGE plpgsql
  SET search_path=pg_catalog,public AS $fn$
 DECLARE s pcs.portal_access%ROWTYPE; a applications%ROWTYPE; previous pcs.portal_commands%ROWTYPE;
- result jsonb; fingerprint text; new_id uuid; profile client_profiles%ROWTYPE; total numeric; vehicle public.catalog_items%ROWTYPE; booking jsonb;
+ result jsonb; fingerprint text; new_id uuid; withdrawal_offer public.pcs_partner_offers%ROWTYPE; profile client_profiles%ROWTYPE; total numeric; vehicle public.catalog_items%ROWTYPE; booking jsonb;
 BEGIN
  SELECT * INTO s FROM pcs.portal_access WHERE token_hash=p_hash AND revoked_at IS NULL AND expires_at>now() FOR SHARE;
  IF NOT FOUND THEN RAISE EXCEPTION 'portal_access_denied' USING ERRCODE='42501'; END IF;
@@ -78,6 +78,18 @@ BEGIN
    VALUES(a.id,s.partner_id,vehicle.id,'SUBMITTED',(p_payload->>'price')::numeric,coalesce(p_payload->>'deposit','0')::numeric,trim(p_payload->>'terms'),CASE WHEN vehicle.id IS NULL THEN '{}'::jsonb ELSE jsonb_build_object('title',vehicle.title,'entity_type',vehicle.entity_type) END,booking,now(),now()+interval '7 days') RETURNING id INTO new_id;
    UPDATE applications SET human_review_required=true,next_action_code='REVIEW_PARTNER_OFFER',updated_at=clock_timestamp() WHERE id=a.id;
    result:=jsonb_build_object('ok',true,'offer_id',new_id,'status','SUBMITTED');
+  ELSIF p_action='withdraw-offer' AND s.role='PARTNER' THEN
+   IF a.selected_partner_offer_id IS NOT NULL OR a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') THEN RAISE EXCEPTION 'portal_withdraw_not_available' USING ERRCODE='23514';END IF;
+   IF p_payload->>'confirmed' IS DISTINCT FROM 'true' OR length(trim(coalesce(p_payload->>'note',''))) NOT BETWEEN 10 AND 1000 THEN RAISE EXCEPTION 'portal_withdraw_input_invalid' USING ERRCODE='22023';END IF;
+   SELECT * INTO withdrawal_offer FROM public.pcs_partner_offers WHERE id=(p_payload->>'offer_id')::uuid AND application_id=a.id AND partner_id=s.partner_id FOR UPDATE;
+   IF NOT FOUND OR withdrawal_offer.status NOT IN ('SUBMITTED','APPROVED') OR withdrawal_offer.updated_at::text IS DISTINCT FROM p_payload->>'offer_version' THEN RAISE EXCEPTION 'portal_version_conflict' USING ERRCODE='40001';END IF;
+   UPDATE public.pcs_partner_offers SET status='WITHDRAWN',public_snapshot=coalesce(public_snapshot,'{}'::jsonb)||jsonb_build_object('withdrawn_public',withdrawal_offer.status='APPROVED'),updated_at=clock_timestamp() WHERE id=withdrawal_offer.id;
+   UPDATE public.applications SET human_review_required=true,next_action_code='REVIEW_WITHDRAWN_OFFER',
+    operational_status=CASE WHEN operational_status IN ('QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') AND NOT EXISTS(SELECT 1 FROM public.pcs_partner_offers other JOIN public.partners p ON p.id=other.partner_id WHERE other.application_id=a.id AND other.status='APPROVED' AND (other.expires_at IS NULL OR other.expires_at>now()) AND p.status='ACTIVE') THEN 'MATCHING' ELSE operational_status END,
+    updated_at=clock_timestamp() WHERE id=a.id;
+   INSERT INTO public.audit_events(actor_role,action,entity_type,entity_id,patch,reason,result) VALUES('PORTAL_PARTNER','offer.withdrawn','pcs_partner_offers',withdrawal_offer.id::text,jsonb_build_object('application_id',a.id,'previous_status',withdrawal_offer.status,'request_id',p_request,'access_id',s.id),trim(p_payload->>'note'),'SUCCESS');
+   INSERT INTO public.notifications(event_key,entity_type,entity_id,channel,title,body,status,dedupe_key) VALUES('application.offer_withdrawn','applications',a.id::text,'IN_APP','Партнёр отозвал предложение: '||coalesce(a.public_id,'PCS'),trim(p_payload->>'note'),'PENDING','offer-withdrawn:'||withdrawal_offer.id::text||':'||p_request::text) ON CONFLICT(dedupe_key) DO NOTHING;
+   result:=jsonb_build_object('ok',true,'application_id',a.id,'offer_id',withdrawal_offer.id,'status','WITHDRAWN');
   ELSIF p_action='select-offer' AND s.role='CLIENT' THEN
    IF a.operational_status NOT IN ('NEW','TRIAGE','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION') THEN RAISE EXCEPTION 'portal_invalid_state' USING ERRCODE='23514'; END IF;
    PERFORM 1 FROM partners p JOIN pcs_partner_offers o ON o.partner_id=p.id WHERE o.id=(p_payload->>'offer_id')::uuid AND o.application_id=a.id AND p.status='ACTIVE' FOR SHARE OF p;

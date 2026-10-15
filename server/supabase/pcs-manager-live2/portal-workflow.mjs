@@ -2,8 +2,8 @@ import { CrmError, readCrmBody } from './crm-policy.mjs';
 export const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 export async function tokenHash(token){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 export function portalCommand(b){
- if(!b||!uuid(b.request_id)||!['request','submit-offer','select-offer','confirm','decline','payment'].includes(b.action)||!b.payload||Array.isArray(b.payload)||typeof b.payload!=='object')throw new CrmError('Некорректное действие кабинета',400);
- const allow={request:['need','city'],'submit-offer':['application_id','expected_version','price','deposit','terms','catalog_item_id','start_date','end_date','booking_quantity'],'select-offer':['application_id','expected_version','offer_id'],confirm:['application_id','expected_version'],decline:['application_id','expected_version'],payment:['application_id','expected_version','amount','reference']};
+ if(!b||!uuid(b.request_id)||!['request','submit-offer','select-offer','withdraw-offer','confirm','decline','payment'].includes(b.action)||!b.payload||Array.isArray(b.payload)||typeof b.payload!=='object')throw new CrmError('Некорректное действие кабинета',400);
+ const allow={'withdraw-offer':['application_id','expected_version','offer_id','offer_version','note','confirmed'],request:['need','city'],'submit-offer':['application_id','expected_version','price','deposit','terms','catalog_item_id','start_date','end_date','booking_quantity'],'select-offer':['application_id','expected_version','offer_id'],confirm:['application_id','expected_version'],decline:['application_id','expected_version'],payment:['application_id','expected_version','amount','reference']};
  if(Object.keys(b).some(k=>!['action','request_id','payload'].includes(k))||Object.keys(b.payload).some(k=>!allow[b.action].includes(k)))throw new CrmError('Поле не поддерживается',400);
  if(b.action!=='request'&&(!uuid(b.payload.application_id)||typeof b.payload.expected_version!=='string'||b.payload.expected_version.length>100))throw new CrmError('Обновите заявку',400);
  if(b.action==='submit-offer'){
@@ -11,6 +11,7 @@ export function portalCommand(b){
   else if(p.start_date||p.end_date)throw new CrmError('Выберите автомобиль для указанных дат',400);
  }
  if(b.action==='submit-offer'&&b.payload.booking_quantity&&!/^[1-9][0-9]{0,4}$/.test(b.payload.booking_quantity))throw new CrmError('Количество должно быть целым числом от 1 до 99999',400);
+ if(b.action==='withdraw-offer'&&(!uuid(b.payload.offer_id)||typeof b.payload.offer_version!=='string'||b.payload.offer_version.length>100||b.payload.confirmed!=='true'||typeof b.payload.note!=='string'||b.payload.note.trim().length<10||b.payload.note.length>1000))throw new CrmError('Подтвердите отзыв и укажите причину (10–1000 символов)',400);
  if(b.action==='select-offer'&&!uuid(b.payload.offer_id))throw new CrmError('Некорректное предложение',400);
  for(const k of Object.keys(b.payload))if(typeof b.payload[k]!=='string'||b.payload[k].length>4000)throw new CrmError('Некорректное поле',400);
  return b;

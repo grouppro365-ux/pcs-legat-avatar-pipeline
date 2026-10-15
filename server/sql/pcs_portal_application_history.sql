@@ -17,7 +17,7 @@ BEGIN
    o.availability_snapshot#>>'{booking,start_date}' start_date,o.availability_snapshot#>>'{booking,end_date}' end_date
   FROM pcs_partner_offers o JOIN applications a ON a.id=o.application_id JOIN partners p ON p.id=o.partner_id LEFT JOIN catalog_items c ON c.id=o.catalog_item_id
   WHERE a.id=p_application
-   AND ((s.role='CLIENT' AND a.client_profile_id=s.client_profile_id AND o.status IN ('APPROVED','ACCEPTED') AND (o.expires_at IS NULL OR o.expires_at>now() OR o.status='ACCEPTED'))
+   AND ((s.role='CLIENT' AND a.client_profile_id=s.client_profile_id AND ((o.status IN ('APPROVED','ACCEPTED') AND (o.expires_at IS NULL OR o.expires_at>now() OR o.status='ACCEPTED')) OR (o.status='WITHDRAWN' AND o.public_snapshot->>'withdrawn_public'='true')))
      OR (s.role='PARTNER' AND o.partner_id=s.partner_id AND a.assigned_partner_id=s.partner_id))
   ORDER BY o.created_at DESC,o.id LIMIT 101 OFFSET p_page*100
  ) x;
