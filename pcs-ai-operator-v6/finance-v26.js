@@ -9,7 +9,7 @@ function cash(value,currency){
  const [whole,fraction]=text.split('.');return whole.replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0')+(fraction?','+fraction:'')+' '+String(currency||'Не указана валюта');
 }
 const fmt=v=>{if(!v)return'—';try{return new Intl.DateTimeFormat('ru-RU',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}catch{return'Некорректная дата'}};
-function header(){return typeof window.opsHeader==='function'?window.opsHeader('Деньги','Финансы','Операции PCS, расчёты с партнёрами и сохранённые цены.'):'<h1>Финансы</h1>'}
+function header(){return '<button class="btn soft" data-pcs-attribution>Источники и результаты</button>'+(typeof window.opsHeader==='function'?window.opsHeader('Деньги','Финансы','Операции PCS, расчёты с партнёрами и сохранённые цены.'):'<h1>Финансы</h1>')}
 function row(x,source,index){
  let title,amount,meta;
  if(source==='ledger'){title=x.counterparty||types[x.entry_type]||x.entry_type||'Операция';amount=cash(x.amount,x.currency);meta=[types[x.entry_type]||x.entry_type,statuses[x.status]||x.status,'Создано: '+fmt(x.created_at)];}

@@ -1,7 +1,8 @@
 import {CrmError,readCrmBody} from './crm-policy.mjs';
 import {uuid} from './portal-workflow.mjs';
 export const staffRoles=['OPS_ADMIN','CONCIERGE_MANAGER','CATALOG_MANAGER','FINANCE_RECONCILIATION','AUDITOR_READONLY','PARTNERSHIP_MANAGER'];
-export const staffRequirements={session:[], 'staff-session':[],
+export const staffRequirements={session:[], 'staff-session':[], 'authorize-purpose':[], 'attribution-report':['settlements.view','audit.view'],
+ 'application-detail':['applications.view','clients.manage'], 'application-conflict':['applications.view'], 'application-rental-phase':['applications.execute','clients.manage'],
  'application-queue':['applications.view','clients.manage'], 'application-workspace':['applications.view','clients.manage'], 'application-offers':['applications.view','clients.manage'],
  workflow:[], 'workflow-action':[],
  'unified-inbox':['clients.manage'], 'runtime-conversation':['clients.manage'], 'runtime-send':['clients.manage'], 'runtime-intake':['applications.assign','clients.manage'],
@@ -16,7 +17,7 @@ export async function authorizeStaff(req,biz,verify,op){
  const required=staffRequirements[op];
  if(!required||!required.every(p=>staffCan(ctx,p)))throw new CrmError('Недостаточно прав для этого раздела',403);
  if(op==='workflow'&&!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'applications.view'))throw new CrmError('Недостаточно прав для заявки',403);
- const write=['workflow-action','workflow-delivery-review','runtime-send','runtime-intake','notification-read'].includes(op);
+ const write=['authorize-purpose','application-rental-phase','workflow-action','workflow-delivery-review','runtime-send','runtime-intake','notification-read'].includes(op);
  if(req.method!==(write?'POST':'GET'))throw new CrmError('Метод не поддерживается',405);
  return {...ctx,auth_user_id:identity.sub};
 }

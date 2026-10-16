@@ -8,9 +8,14 @@ export function shouldGenerateCustomerReply(channel, savedMessage) {
   return Boolean(savedMessage) && AUTOMATED_HUB_CHANNELS.has(String(channel || '').toLowerCase());
 }
 
+const VERIFIED_TEMPLATES = new Set(['social-greeting','social-thanks','social-ack','car-rental-qualification-v1','car-rental-catalog-v1','car-rental-choice-v1','car-rental-payment-info-v1']);
+export function hasAutomaticAuthority(generated) {
+  return generated?.provider === 'deterministic' && VERIFIED_TEMPLATES.has(generated?.model) && generated?.confidence === 1;
+}
+
 export function mayAutoSendHubReply({ localDraft = false, connection, generated, risk, replyMode }) {
   return Boolean(!localDraft && connection?.enabled && connection?.status === 'active' && replyMode === 'auto'
-    && generated.autoSend && !risk && generated.model !== 'safe-fallback');
+    && generated.autoSend && hasAutomaticAuthority(generated) && !risk && generated.model !== 'safe-fallback');
 }
 
 export function mayQueueLocalReply({ config, connection, row, generated, risk }) {

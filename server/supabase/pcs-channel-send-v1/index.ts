@@ -1,5 +1,6 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { remoteTransportAllowed } from './transport-policy.mjs';
+import { channelCommand, durableChannelSend } from './durable-send.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -118,16 +119,15 @@ async function botHelp(to: string, text: string) {
   return { raw: payload, id: String(payload?.data?.id || payload?.id || '') || null };
 }
 
-async function line(to: string, text: string) {
+async function line(to: string, text: string, retryKey: string) {
   const token = await secret('channel_line_channel_access_token');
   if (!token) throw new Error('line_access_token_missing');
-  const retryKey = crypto.randomUUID();
   const payload = await fetchWithRetry('https://api.line.me/v2/bot/message/push', {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'X-Line-Retry-Key': retryKey },
     body: JSON.stringify({ to, messages: [{ type: 'text', text }] }),
   }, 'line');
-  return { raw: { ...payload, retry_key: retryKey }, id: null };
+  return { raw: { ...payload, retry_key: retryKey }, id: String(payload?.sentMessages?.[0]?.id || '') || null };
 }
 
 Deno.serve(async (request) => {
@@ -137,53 +137,22 @@ Deno.serve(async (request) => {
     const expected = await secret('internal_retry_secret').catch(() => '');
     if (!expected || request.headers.get('x-pcs-internal-secret') !== expected) return json({ error: 'forbidden' }, 403);
     body = await request.json();
-    const channel = String(body?.channel || '').toLowerCase();
-    const contactId = String(body?.contact_id || '');
-    const text = String(body?.text || '').trim();
-    if (!CHANNELS.has(channel) || !contactId || !text) return json({ error: 'channel_contact_text_required' }, 400);
-    if (text.length > 1800) return json({ error: 'message_too_long' }, 400);
+    const {channel,contact_id:contactId,text}=channelCommand(body);
     const config = await configuration(channel);
     const target = await recipient(contactId, channel);
     if (!remoteTransportAllowed(channel, target.id)) return json({ error: 'local_instagram_outbound_not_enabled' }, 409);
-    const sent = channel === 'line'
-      ? await line(target.id, text)
-      : channel === 'instagram' && String(config.transport || 'meta') === 'bothelp'
-        ? await botHelp(target.id, text)
-        : await meta(channel, target.id, text, config);
-    const { data: message, error } = await sb.from('pcs_messages').insert({
-      contact_id: contactId,
-      direction: 'out',
-      text,
-      status: 'sent',
-      raw: { source: 'pcs-channel-send-v1', transport: String(config.transport || channel), request_id: String(body?.request_id || ''), provider_message_id: sent.id },
-      contact_name: target.contact.name || null,
-      channel,
-      external_message_id: sent.id,
-      external_chat_id: target.id,
-    }).select('id').single();
-    if (error) throw error;
-    return json({ ok: true, message_id: message.id, external_message_id: sent.id });
+    const result=await durableChannelSend({db:sb,body,target,config,send:async(out:any)=>{
+      if(out.recipient!==target.id||out.transport!==String(config.transport||channel))throw Error('channel_destination_changed');
+      const sent=channel==='line'?await line(out.recipient,out.text,out.retry_key)
+        :channel==='instagram'&&out.transport==='bothelp'?await botHelp(out.recipient,out.text)
+        :await meta(channel,out.recipient,out.text,config);
+      if(!sent.id)throw Error('channel_delivery_unconfirmed');
+      return {id:sent.id};
+    }});
+    return json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (body?.contact_id) {
-      try {
-        if (body.channel === 'instagram') {
-          await sb.from('pcs_tasks').insert({
-            contact_id: body.contact_id,
-            title: 'Instagram: проверить доставку ответа',
-            comment: `Доставка не подтверждена: ${message.slice(0, 700)}. Проверьте переписку перед повторной отправкой.`,
-            priority: 'HIGH',
-            due_at: new Date().toISOString(),
-          });
-        } else await sb.from('pcs_failed_jobs').insert({
-          operation: `${String(body?.channel || 'channel')}_send`,
-          payload: { contact_id: body.contact_id, request_id: body?.request_id || null },
-          error: message.slice(0, 1000),
-          contact_id: body.contact_id,
-          next_retry_at: new Date(Date.now() + 60_000).toISOString(),
-        });
-      } catch { /* the primary send error remains the response */ }
-    }
+    // Durable sender owns review. Never enqueue an uncertain external send for automatic retry.
     return json({ ok: false, error: message }, 502);
   }
 });

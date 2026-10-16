@@ -5,10 +5,11 @@ import { languageForMessage, socialIntent, socialReply } from './social.mjs';
 import { buildSystemPrompt, humanRisk } from './journey.mjs';
 import { parseBotHelpPayload } from './bothelp.mjs';
 import { hubMessage } from './conversation-hub.mjs';
-import { shouldGenerateCustomerReply, mayAutoSendHubReply, mayQueueLocalReply } from './channel-policy.mjs';
+import { shouldGenerateCustomerReply, mayAutoSendHubReply, mayQueueLocalReply, hasAutomaticAuthority } from './channel-policy.mjs';
 import { receiveLocalInstagram, localEventStore, receiveLocalOutbox, localOutboxStore } from './instagram-local.mjs';
 import { carRentalJourney, rentalCandidates } from './car-rental-journey.mjs';
 import { continueVehicleBooking } from '../../../supabase/functions/pcs-business-runtime-v8/vehicle-offer.mjs';
+import { generationIdentity, recoverableEvent, generationDisposition } from './inbound-recovery.mjs';
 import { carOfferSnapshot, carOffersReply } from './car-rental-response.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
@@ -327,7 +328,7 @@ async function generate(contactId: string, sourceMessageId: string, text: string
     return { answer: socialReply(language, social), provider: 'deterministic', model: `social-${social}`, confidence: 1, knowledgeIds: [], autoSend: !!settings?.auto_send };
   }
   const [{ data: settings }, { data: history }, kb] = await Promise.all([
-    sb.from('pcs_settings').select('tokenrouter_model,openrouter_model,ai_provider_order,min_confidence,auto_send').eq('id', 'main').maybeSingle(),
+    sb.from('pcs_settings').select('tokenrouter_model,openrouter_model,ai_provider_order,auto_send').eq('id', 'main').maybeSingle(),
     sb.from('pcs_messages').select('direction,text').eq('contact_id', contactId).neq('id', sourceMessageId).order('created_at', { ascending: false }).limit(12),
     knowledgeContext(),
   ]);
@@ -347,7 +348,7 @@ async function generate(contactId: string, sourceMessageId: string, text: string
       clearTimeout(timeout);
       const payload = await response.json().catch(() => ({}));
       const answer = String(payload?.choices?.[0]?.message?.content || '').trim();
-      if (response.ok && answer) return { answer: answer.slice(0, 1800), provider, model, confidence: Number(settings?.min_confidence || 0.9), knowledgeIds: kb.ids, autoSend: !!settings?.auto_send };
+      if (response.ok && answer) return { answer: answer.slice(0, 1800), provider, model, confidence: null, knowledgeIds: kb.ids, autoSend: false };
     } catch (error) {
       console.error('instagram_ai_provider_failed', provider, error instanceof Error ? error.message : String(error));
     }
@@ -510,10 +511,10 @@ async function setConversationState(contactId: string, status: string, nextActio
     .in('status', ['NEW', 'QUALIFYING', 'WAITING_CLIENT', 'IN_PROGRESS', 'OFFER_SENT']);
 }
 
-async function dispatch(channel: string, contactId: string, text: string) {
+async function dispatch(channel: string, contactId: string, text: string, requestId: string) {
   const internal = await secret('internal_retry_secret');
   if (!internal) throw new Error('internal_retry_secret_missing');
-  const response = await fetch(META_SEND, { method: 'POST', headers: { 'content-type': 'application/json', 'x-pcs-internal-secret': internal }, body: JSON.stringify({ channel, contact_id: contactId, text }) });
+  const response = await fetch(META_SEND, { method: 'POST', headers: { 'content-type': 'application/json', 'x-pcs-internal-secret': internal }, body: JSON.stringify({ channel, contact_id: contactId, text, request_id: requestId }) });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || !payload?.ok) throw new Error(payload?.error || `channel_send_${response.status}`);
   return payload;
@@ -542,24 +543,19 @@ async function processInbound(channel: string, row: any, localDraft = false, loc
     if (transport !== 'bothelp' && row.account && row.account !== accountId) throw new Error('instagram_recipient_mismatch');
   }
   let saved = await ingest(channel, row);
-  if (localDraft && !saved) {
-    // The event receipt may have failed after the message or draft was saved.
-    // Recover from the durable message rather than generating a second draft.
+  if (!saved) {
     const existing = await sb.from('pcs_messages').select('id,contact_id').eq('channel', channel)
       .eq('external_message_id', row.message_id).eq('direction', 'in').maybeSingle();
     if (existing.error) throw existing.error;
-    if (!existing.data) throw new Error('local_ingest_requires_recovery');
-    const prior = await sb.from('pcs_ai_generations').select('id,status,answer,policy_decision,requires_human,risk').eq('source_message_id', existing.data.id)
-      .order('created_at', { ascending: false }).limit(1).maybeSingle();
-    if (prior.error) throw prior.error;
-    if(prior.data?.id) {
-      if(prior.data.status==='pending_send')await queueLocalReply(prior.data,row,localConfig);
-      return {action:['pending_send','sending','sent'].includes(prior.data.status)?'pending_send':'approval_required',
-        contact_id:existing.data.contact_id,generation_id:prior.data.id};
-    }
-    const contact = await contactFor(channel, row.external_user_id, row.name);
+    if (!existing.data) throw new Error('ingest_requires_recovery');
+    const {data:contact,error}=await sb.from('pcs_contacts').select('*').eq('id',existing.data.contact_id).single();
+    if(error)throw error;
     saved = { messageId: existing.data.id, contact, language: languageForMessage(row.text, contact.detected_language) };
   }
+  const prior=await sb.from('pcs_ai_generations').select('*').eq('source_message_id',saved.messageId)
+    .order('created_at',{ascending:true}).limit(1).maybeSingle();
+  if(prior.error)throw prior.error;
+  if(prior.data)return finishInbound(channel,prior.data,row,connection,localDraft,localConfig);
   if (!shouldGenerateCustomerReply(channel, saved)) return { duplicate: !saved };
   const manualAttachment = localDraft && (row.kind !== 'text' || (row.attachments || []).length > 0);
   const generated = manualAttachment
@@ -574,6 +570,7 @@ async function processInbound(channel: string, row: any, localDraft = false, loc
   const canQueueLocal=localDraft&&mayQueueLocalReply({config:localConfig,connection,row,generated,risk});
   const automatic=canAutoSend||canQueueLocal;
   const generation: any = {
+    id: await generationIdentity(channel,saved.messageId),
     contact_id: saved.contact.id,
     source_message_id: saved.messageId,
     provider: generated.provider,
@@ -586,61 +583,114 @@ async function processInbound(channel: string, row: any, localDraft = false, loc
     next_action: canQueueLocal ? 'Дождаться доставки Instagram' : canAutoSend ? 'Ответить автоматически' : 'Проверить и отправить ответ',
     knowledge_item_ids: generated.knowledgeIds,
     policy_decision: automatic ? 'auto' : 'approval',
-    policy_reason: canQueueLocal ? 'local_instagram_outbox' : manualAttachment ? 'attachment_manual_review' : localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : 'channel_not_active'),
+    policy_reason: canQueueLocal ? 'local_instagram_outbox' : manualAttachment ? 'attachment_manual_review' : localDraft ? 'local_instagram_pilot_draft' : risk || (replyMode !== 'auto' ? 'channel_draft_mode' : !generated.autoSend ? 'global_auto_send_off' : providerUnavailable ? 'ai_provider_unavailable' : !hasAutomaticAuthority(generated) ? 'unverified_ai_authority' : 'channel_not_active'),
     status: canQueueLocal ? 'pending_send' : canAutoSend ? 'sending' : 'approval_required',
     business_connection_id: channel,
     source_text: row.text,
     offer_snapshot: (generated as any).offerSnapshot || null,
   };
-  const { data: record, error } = await sb.from('pcs_ai_generations').insert(generation).select('*').single();
-  if (error) throw error;
-  if(canQueueLocal) {
-    await queueLocalReply(record,row,localConfig);
-    await setConversationState(saved.contact.id,'IN_PROGRESS','Ответ ожидает доставки Instagram');
-    return {action:'pending_send',contact_id:saved.contact.id,generation_id:record.id};
+  const inserted = await sb.from('pcs_ai_generations').upsert(generation,{onConflict:'id',ignoreDuplicates:true});
+  if(inserted.error)throw inserted.error;
+  const {data:record,error}=await sb.from('pcs_ai_generations').select('*').eq('id',generation.id).single();
+  if(error)throw error;
+  return finishInbound(channel,record,row,connection,localDraft,localConfig);
+}
+
+async function finishInbound(channel,record,row,connection,localDraft,localConfig) {
+  const settings=await sb.from('pcs_settings').select('auto_send').eq('id','main').maybeSingle();
+  if(settings.error)throw settings.error;
+  const autoAllowed=mayAutoSendHubReply({connection,generated:{...record,autoSend:settings.data?.auto_send===true},
+    risk:record.risk==='low'?null:record.risk,replyMode:connection?.public_config?.reply_mode});
+  let disposition=generationDisposition(record,{localDraft,autoAllowed});
+  if(disposition==='local'&&record.status==='pending_send'&&!mayQueueLocalReply({config:localConfig,connection,row,
+    generated:{...record,autoSend:settings.data?.auto_send===true},risk:record.risk==='low'?null:record.risk}))disposition='approval';
+  if(disposition==='sent')return {action:'sent',duplicate:true,contact_id:record.contact_id,generation_id:record.id};
+  if(disposition==='local') {
+    if(record.status==='pending_send')await queueLocalReply(record,row,localConfig);
+    await setConversationState(record.contact_id,'IN_PROGRESS','Ответ ожидает доставки Instagram');
+    return {action:'pending_send',contact_id:record.contact_id,generation_id:record.id};
   }
-  if (!canAutoSend) {
-    const channelLabel = channel === 'line' ? 'LINE' : channel === 'whatsapp' ? 'WhatsApp' : channel === 'facebook' ? 'Facebook' : 'Instagram';
-    const taskTitle = risk ? `${channelLabel}: требуется оператор` : `Проверить ответ ${channelLabel}`;
-    await Promise.all([
-      createTask(saved.contact.id, taskTitle, `${row.text}\n\nЧерновик:\n${generated.answer}`),
-      setConversationState(saved.contact.id, 'IN_PROGRESS', `Проверить и отправить черновик ${channelLabel}`),
-    ]);
-    return { action: 'approval_required', contact_id: saved.contact.id, generation_id: record.id };
+  if(disposition==='approval') {
+    if(record.policy_decision==='auto'&&(!localDraft||record.status==='pending_send')){
+      const held=await sb.from('pcs_ai_generations').update({status:'approval_required',policy_decision:'approval',
+        requires_human:true,policy_reason:'recovery_requires_current_operator_review',updated_at:new Date().toISOString()})
+        .eq('id',record.id).neq('status','sent');
+      if(held.error)throw held.error;
+    }
+    const label=channel==='line'?'LINE':channel==='whatsapp'?'WhatsApp':channel==='facebook'?'Facebook':'Instagram';
+    await createTask(record.contact_id,`Проверить ответ ${label}`,`${row.text}\n\nЧерновик:\n${record.answer}`);
+    await setConversationState(record.contact_id,'IN_PROGRESS',`Проверить и отправить черновик ${label}`);
+    return {action:'approval_required',contact_id:record.contact_id,generation_id:record.id};
   }
   try {
-    await dispatch(channel, saved.contact.id, generated.answer);
-    await Promise.all([
-      sb.from('pcs_ai_generations').update({ status: 'sent', updated_at: new Date().toISOString() }).eq('id', record.id),
-      setConversationState(saved.contact.id, 'WAITING_CLIENT', 'Дождаться ответа клиента'),
-    ]);
-    return { action: 'sent', contact_id: saved.contact.id, generation_id: record.id };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    await sb.from('pcs_ai_generations').update({ status: 'failed', updated_at: new Date().toISOString() }).eq('id', record.id);
-    await sb.from('pcs_failed_jobs').insert({ operation: `${channel}_send`, payload: { generation_id: record.id, contact_id: saved.contact.id }, error: message, contact_id: saved.contact.id, next_retry_at: new Date(Date.now() + 60_000).toISOString() });
-    await createTask(saved.contact.id, `${channel.toUpperCase()}: ответ не отправлен`, message);
+    await dispatch(channel,record.contact_id,record.answer,record.id);
+    const updated=await sb.from('pcs_ai_generations').update({status:'sent',updated_at:new Date().toISOString()}).eq('id',record.id);
+    if(updated.error)throw updated.error;
+    await setConversationState(record.contact_id,'WAITING_CLIENT','Дождаться ответа клиента');
+    return {action:'sent',contact_id:record.contact_id,generation_id:record.id};
+  } catch(error) {
+    const message=error instanceof Error?error.message:String(error);
+    const uncertain=/delivery_review_required|delivery_unconfirmed/.test(message);
+    const update=await sb.from('pcs_ai_generations').update({status:uncertain?'approval_required':'failed',
+      ...(uncertain?{policy_decision:'approval',requires_human:true,policy_reason:'delivery_requires_review'}:{}),
+      updated_at:new Date().toISOString()}).eq('id',record.id).neq('status','sent');
+    if(update.error)throw update.error;
+    await createTask(record.contact_id,`${channel.toUpperCase()}: проверить доставку ответа`,message);
+    if(uncertain)return {action:'approval_required',contact_id:record.contact_id,generation_id:record.id};
     throw error;
   }
 }
 
-async function processEvent(channel: string, eventId: string, eventRowId: string, body: any) {
+async function processEvent(channel: string, eventId: string, eventRowId: string, body: any, owner: string) {
   try {
-  const rows = body?.__pcs_transport === 'bothelp' ? parseBotHelpPayload(body) : channel === 'whatsapp' ? parseWhatsApp(body) : channel === 'line' ? parseLine(body) : parseMessenger(body, channel);
+  const rows = body?.__pcs_rows || (body?.__pcs_transport === 'bothelp' ? parseBotHelpPayload(body) : channel === 'whatsapp' ? parseWhatsApp(body) : channel === 'line' ? parseLine(body) : parseMessenger(body, channel));
     if (!rows.length) throw new Error('message_payload_missing');
     const results = [];
     for (const row of rows) {
       if (!row.message_id) row.message_id = eventId;
     results.push(await processInbound(channel, row));
     }
-    await sb.from('pcs_channel_events').update({ status: 'processed', processed_at: new Date().toISOString(), error: null, payload: { source: body?.__pcs_transport || 'meta', results } }).eq('id', eventRowId);
+    const done=await sb.from('pcs_channel_events').update({ status: 'processed', processed_at: new Date().toISOString(), error: null, payload: { owner,source: body?.__pcs_transport || 'meta',rows:rows.map(({raw,...row})=>row), results } }).eq('id', eventRowId).eq('payload->>owner',owner).select('id').maybeSingle();
+    if(done.error)throw done.error;if(!done.data)throw Error('event_claim_lost');
     return results;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await sb.from('pcs_channel_events').update({ status: 'failed', error: message.slice(0, 1000), processed_at: new Date().toISOString() }).eq('id', eventRowId);
+    const failed=await sb.from('pcs_channel_events').update({ status: 'failed', error: message.slice(0, 1000), processed_at: new Date().toISOString() }).eq('id', eventRowId).eq('payload->>owner',owner).select('id').maybeSingle();
+    if(failed.error)throw failed.error;
+    if(failed.data){
+      const job=await sb.from('pcs_failed_jobs').upsert({id:await generationIdentity('meta-recovery',eventRowId),operation:'meta_inbound',
+        payload:{channel,event_row_id:eventRowId},error:'inbound_processing_failed',next_retry_at:new Date(Date.now()+60000).toISOString()},
+        {onConflict:'id',ignoreDuplicates:true});
+      if(job.error)throw job.error;
+    }
     console.error('meta_event_failed', channel, eventId, message);
     throw error;
   }
+}
+
+async function claimRecovery(event) {
+  if(!recoverableEvent(event))return null;
+  const owner=crypto.randomUUID();
+  let query=sb.from('pcs_channel_events').update({status:'processing',error:null,
+    payload:{...event.payload,owner,started_at:new Date().toISOString()}}).eq('id',event.id).eq('status',event.status);
+  query=event.payload?.owner?query.eq('payload->>owner',event.payload.owner):query.is('payload->>owner',null);
+  const claimed=await query.select('*').maybeSingle();if(claimed.error)throw claimed.error;
+  return claimed.data;
+}
+async function recoverStoredEvent(request,channel) {
+  const expected=await secret('internal_retry_secret');
+  if(!expected||!safeEqual(request.headers.get('x-pcs-internal-secret')||'',expected))return json({error:'forbidden'},403);
+  const body=await request.json().catch(()=>null);
+  if(!/^[0-9a-f-]{36}$/i.test(body?.event_row_id||''))return json({error:'invalid_event_id'},400);
+  const found=await sb.from('pcs_channel_events').select('*').eq('id',body.event_row_id).eq('channel',channel).single();
+  if(found.error)return json({error:'event_missing'},404);
+  if(found.data.status==='processed')return json({ok:true,duplicate:true});
+  if(!Array.isArray(found.data.payload?.rows)||!found.data.payload.rows.length)return json({error:'event_rows_missing'},409);
+  const claimed=await claimRecovery(found.data);
+  if(!claimed)return json({error:'event_busy'},409);
+  try{return json({ok:true,results:await processEvent(channel,claimed.external_event_id,claimed.id,
+    {__pcs_rows:claimed.payload.rows,__pcs_transport:claimed.payload.source},claimed.payload.owner)});}
+  catch{return json({error:'inbound_recovery_failed'},502);}
 }
 
 Deno.serve(async (request) => {
@@ -648,6 +698,7 @@ Deno.serve(async (request) => {
   if (url.pathname.includes('/bothelp-admin')) return handleBotHelpAdmin(request, url);
   const channel = String(url.searchParams.get('channel') || '').toLowerCase();
   if (!CHANNELS.has(channel)) return json({ error: 'channel_required' }, 400);
+  if(request.method==='POST'&&url.searchParams.get('op')==='recover')return recoverStoredEvent(request,channel);
   if (request.method === 'GET') {
     const expected = await secret(`channel_${channel}_verify_token`).catch(() => '');
     const supplied = url.searchParams.get('hub.verify_token') || '';
@@ -686,17 +737,25 @@ Deno.serve(async (request) => {
   try { body = JSON.parse(new TextDecoder().decode(bytes)); } catch { return json({ error: 'invalid_json' }, 400); }
   if (botHelp) body.__pcs_transport = 'bothelp';
   const eventId = (botHelp ? 'bothelp:' : '') + await sha256(bytes);
+  const rows=botHelp?parseBotHelpPayload(body):channel==='whatsapp'?parseWhatsApp(body):parseMessenger(body,channel);
+  if(!rows.length)return json({ok:true,ignored:true});
+  const owner=crypto.randomUUID();
   const inserted = await sb.from('pcs_channel_events').insert({
     channel,
     external_event_id: eventId,
-    payload: { object: String(body?.object || ''), entry_count: Array.isArray(body?.entry) ? body.entry.length : 0 },
+    payload: { owner,started_at:new Date().toISOString(),source:botHelp?'bothelp':'meta',rows:rows.map(({raw,...row})=>row) },
     status: 'processing',
-  }).select('id').single();
+  }).select('*').single();
+  let event=inserted.data;
   if (inserted.error) {
-    if (inserted.error.code === '23505') return json({ ok: true, duplicate: true });
-    return json({ ok: false, error: 'event_store_failed' }, 500);
+    if(inserted.error.code!=='23505')return json({ok:false,error:'event_store_failed'},500);
+    const prior=await sb.from('pcs_channel_events').select('*').eq('channel',channel).eq('external_event_id',eventId).single();
+    if(prior.error)return json({ok:false,error:'event_read_failed'},500);
+    if(prior.data.status==='processed')return json({ok:true,duplicate:true});
+    event=await claimRecovery(prior.data);
+    if(!event)return json({ok:false,error:'event_busy'},503);
   }
-  const job = processEvent(channel, eventId, inserted.data.id, body);
+  const job = processEvent(channel,eventId,event.id,body,event.payload?.owner||owner);
   if (botHelp) {
     try { return json({ ok: true, accepted: true, results: await job }); }
     catch (error) { return json({ ok: false, error: error instanceof Error ? error.message : String(error) }, 500); }

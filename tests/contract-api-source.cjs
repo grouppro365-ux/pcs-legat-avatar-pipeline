@@ -10,9 +10,11 @@ assert.match(source, /\['renter\.license_no','Водительские прав�
 assert.match(source, /s\?\.renter\?\.phone\|\|s\?\.renter\?\.line\|\|s\?\.renter\?\.telegram/);
 assert.match(source, /if\(!contact\)fields\.push\(\{path:'renter\.contact',label:'Телефон или канал связи'\}\)/);
 assert.doesNotMatch(source, /\['renter\.phone','Телефон'\]/);
-assert.match(source, /op=session/);
+assert.match(source, /authorizePurpose/);
+assert.doesNotMatch(source, /op=session/);
 assert.match(source, /syncNeonReservation\(req,m\[1\]\)/);
-assert.match(source, /q\.payment_kind==='booking_deposit'/);
+assert.match(source, /await contractFinance\(db,r,f\|\|\[\]\)/);
+assert.doesNotMatch(source, /\['income','payment','booking_deposit'\]/);
 assert.match(source, /booking_deposit:booking/);
 assert.match(source, /booking_snapshot_diverged/);
 assert.match(source, /payment_status:linked\?\.payment_status==='paid'\?'partial'/);

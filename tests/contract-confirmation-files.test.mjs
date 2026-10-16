@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {stripTypeScriptTypes} from 'node:module';
 import {readFileSync} from 'node:fs';
 import {webcrypto} from 'node:crypto';
+import {authorizePurpose,documentPurpose} from '../server/supabase/pcs-contract-files/purpose-auth.mjs';
 import * as policy from '../server/supabase/pcs-contract-files/document-policy.mjs';
 function fixture(contract){
  let handler,updates=[],events=[],uploads=[],filters=[];
@@ -12,7 +13,8 @@ function fixture(contract){
   const query={select:()=>query,eq:(key,value)=>{filters.push([key,value]);return query},is:(key,value)=>{filters.push([key,value]);return query},single:async()=>({data:update?{id:contract.id,...update}:contract,error:null}),update:body=>{updates.push(body);update=body;return query},insert:async body=>{events.push(body);return{error:null}}};
   return query;
  },storage:{from:()=>({upload:async(path,data,opt)=>{uploads.push({path,size:data.length,opt});return{error:null}}})}};
- const context={...policy,createClient:()=>db,Request,Response,URL,TextEncoder,TextDecoder,Uint8Array,atob,btoa,AbortSignal,Date,crypto:webcrypto,fetch:async()=>new Response('{"ok":true}',{status:200}),Deno:{env:{get:name=>name==='SUPABASE_URL'?'https://example.test':'test-only'},serve:f=>{handler=f}}};
+ const context={...policy,documentPurpose,createClient:()=>db,Request,Response,URL,TextEncoder,TextDecoder,Uint8Array,atob,btoa,AbortSignal,Date,crypto:webcrypto,fetch:async(url,opts)=>{assert.equal(new URL(url).searchParams.get('op'),'authorize-purpose');return Response.json({ok:true,purpose:JSON.parse(opts.body).purpose})},Deno:{env:{get:name=>name==='SUPABASE_URL'?'https://example.test':'test-only'},serve:f=>{handler=f}}};
+ context.authorizePurpose=(req,base,purpose)=>authorizePurpose(req,base,purpose,context.fetch);
  const source=stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-contract-files/index.ts',import.meta.url),'utf8')).replace(/^import .*$/mg,'');vm.runInNewContext(source,context);
  const send=()=>handler(new Request('https://example.test/functions/v1/pcs-contract-files',{method:'POST',headers:{authorization:'Bearer test-only','content-type':'application/json'},body:JSON.stringify({contract_id:contract.id,mime:'image/jpeg',filename:'signed.jpg',base64:'YWJj'})}));
  return{send,updates,events,uploads,filters};

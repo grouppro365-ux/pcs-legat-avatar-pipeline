@@ -136,7 +136,7 @@ test('oversized requests are rejected before authentication and storage', async 
 });
 
 test('local pilot remains draft even when channel and global auto-send are on', () => {
-  const settings = { connection: { enabled: true, status: 'active' }, replyMode: 'auto', generated: { autoSend: true, model: 'tested' }, risk: null };
+  const settings = { connection: { enabled: true, status: 'active' }, replyMode: 'auto', generated: { autoSend: true, provider:'deterministic', confidence:1, model: 'social-greeting' }, risk: null };
   assert.equal(mayAutoSendHubReply(settings), true);
   assert.equal(mayAutoSendHubReply({ ...settings, localDraft: true }), false);
   assert.equal(remoteTransportAllowed('instagram', 'instagrapi:77:88'), false);

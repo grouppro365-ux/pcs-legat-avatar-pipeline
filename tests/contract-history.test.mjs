@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
+import {authorizePurpose,contractPurpose} from '../server/supabase/pcs-contract-api/purpose-auth.mjs';
 const read=path=>readFileSync(new URL(path,import.meta.url),'utf8');
 function ui(){
  const sheets=[],toasts=[],requests=[];
@@ -33,7 +34,9 @@ function server({auth=true,empty=false,eventFailure=false}={}){
   }};return q;
  }};
  const source=stripTypeScriptTypes(read('../server/supabase/pcs-contract-api/index.ts')).replace(/^import .*;\n/gm,'');
- vm.runInNewContext(source,{createClient:()=>db,crypto:globalThis.crypto,TextEncoder,URL,Request,Response,Date,fetch:async()=>Response.json({ok:false}),Deno:{env:{get:()=> 'https://test.invalid'},serve:fn=>{handler=fn}}});
+ const context={authorizePurpose,contractPurpose,createClient:()=>db,crypto:globalThis.crypto,TextEncoder,URL,Request,Response,Date,fetch:async(url,opts)=>{assert.equal(new URL(url).searchParams.get('op'),'authorize-purpose');assert.equal(JSON.parse(opts.body).purpose,'contracts.read');return Response.json({ok:auth,purpose:'contracts.read'})},Deno:{env:{get:()=> 'https://test.invalid'},serve:fn=>{handler=fn}}};
+ context.authorizePurpose=(req,base,purpose)=>authorizePurpose(req,base,purpose,context.fetch);
+ vm.runInNewContext(source,context);
  return{queries,call:()=>handler(new Request('https://test.invalid/pcs-contract-api/reservations/bbbb/contracts/history',{headers:auth?{authorization:'Bearer qa'}:{}}))};
 }
 test('API bounds history and strips private paths, actor identifiers and unrelated payload fields',async()=>{

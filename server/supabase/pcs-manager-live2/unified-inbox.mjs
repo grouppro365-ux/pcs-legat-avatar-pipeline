@@ -14,24 +14,35 @@ export async function unifiedInbox(op,base,key,pageValue='0',fetcher=fetch){
  rows.sort((a,b)=>(Date.parse(b.last_contact_at)||0)-(Date.parse(a.last_contact_at)||0)||a.id.localeCompare(b.id));
  return {page,rows,truncated:more,unavailable};
 }
-export async function runtimeConversation(base,key,id,fetcher=fetch){
+async function runtimeContact(base,key,id,fetcher=fetch){
  if(!uuid(id))throw new CrmError('Некорректный диалог',400);
  const contacts=await rest(base,key,'pcs_contacts?select=id,name,username,need,summary,telegram_id,telegram_chat_id,business_connection_id,preferred_channel&id=eq.'+id,fetcher);
  if(!contacts.length)throw new CrmError('Диалог не найден',404);
- const messages=await rest(base,key,'pcs_messages?select=id,direction,text,status,channel,created_at&contact_id=eq.'+id+'&order=created_at.desc,id.desc&limit=200',fetcher);
- return {source:'runtime',contact:contacts[0],messages:messages.reverse(),limit:200};
+ return contacts[0];
 }
-export async function intakeRuntime(biz,base,key,b,fetcher=fetch){
- if(!uuid(b.contact_id)||!uuid(b.request_id)||typeof b.need!=='string'||!b.need.trim()||b.need.length>4000)throw new CrmError('Проверьте заявку',400);
- const {contact}=await runtimeConversation(base,key,b.contact_id,fetcher);
- // Canonical profile uses the existing trusted Telegram identity provisioner.
- if(!contact.telegram_id)throw new CrmError('Для этого канала сначала свяжите контакт с профилем клиента',409);
- const profile=(await biz.query('select pcs.ensure_telegram_client_profile($1::uuid,$2,$3,$4) profile',[contact.id,String(contact.telegram_id),contact.username,contact.name]))[0].profile.id;
- const rows=await biz.query(`with added as (
-  insert into applications(id,public_id,client_profile_id,client_name,client_contact,category,client_visible_notes,source_code,human_review_required,next_action_code)
-  values($1,'APP-'||replace($1::text,'-',''),$2,$3,$4,'general',$5,'UNIFIED_INBOX',true,'QUALIFY_REQUEST')
-  on conflict(id) do nothing returning id
- ) select id,public_id,client_profile_id,client_visible_notes from applications where id=$1 union all select id,'APP-'||replace(id::text,'-',''),$2::uuid,$5::text from added`,[b.request_id,profile,contact.name,String(contact.telegram_id),b.need.trim()]);
- const application=rows[0];if(!application||(application.client_profile_id!==profile||application.client_visible_notes!==b.need.trim()))throw new CrmError('Номер заявки уже используется',409);
- return {ok:true,application};
+export async function runtimeConversation(base,key,id,fetcher=fetch){
+ const contact=await runtimeContact(base,key,id,fetcher);
+ const messages=await rest(base,key,'pcs_messages?select=id,direction,text,status,channel,created_at&contact_id=eq.'+id+'&order=created_at.desc,id.desc&limit=200',fetcher);
+ return {source:'runtime',contact,messages:messages.reverse(),limit:200};
+}
+export async function intakeRuntime(biz,base,key,b,fetcher=fetch,actor='pcs-manager-admin'){
+ if(!b||Array.isArray(b)||Object.keys(b).some(k=>!['contact_id','request_id','need'].includes(k))||!uuid(b.contact_id)||!uuid(b.request_id)||typeof b.need!=='string'||!b.need.trim()||b.need.length>4000)throw new CrmError('Проверьте заявку',400);
+ const contact=await runtimeContact(base,key,b.contact_id,fetcher);
+ let channel='telegram',message=null;
+ if(!contact.telegram_id){
+  // Use persisted ingress, not a caller supplied channel, mutable phone or name.
+  const received=await rest(base,key,'pcs_messages?select=id,channel,raw&contact_id=eq.'+contact.id+'&direction=eq.in&status=eq.received&channel=in.(whatsapp,instagram,facebook)&order=created_at.desc,id.desc&limit=1',fetcher);
+  const inbound=received[0];
+  if(!inbound||!uuid(inbound.id)||!['whatsapp','instagram','facebook'].includes(inbound.channel)||inbound.raw?.source!=='pcs-meta-webhook-v1')throw new CrmError('Не найдено подтверждённое входящее сообщение поддерживаемого канала. Связь клиента требует проверки.',409);
+  channel=inbound.channel;message=inbound.id;
+ }
+ try{
+  const rows=await biz.query('select pcs.runtime_intake($1::uuid,$2::uuid,$3,$4::uuid,$5,$6,$7,$8,$9) application',[contact.id,b.request_id,channel,message,contact.telegram_id?String(contact.telegram_id):null,contact.username||null,contact.name||null,b.need.trim(),actor]);
+  if(!rows[0]?.application)throw new CrmError('Не удалось создать заявку',503);
+  return {ok:true,application:rows[0].application};
+ }catch(e){
+  if(e instanceof CrmError)throw e;
+  if(/runtime_intake_|client_identity_|client_profile_not_available/.test(String(e?.message||'')))throw new CrmError(e.code==='42501'?'Профиль клиента недоступен. Требуется проверка связи.':'Идентификатор заявки или связь клиента уже изменены. Обновите диалог.',e.code==='22023'?400:409);
+  throw e;
+ }
 }

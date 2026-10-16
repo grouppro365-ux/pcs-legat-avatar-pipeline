@@ -44,7 +44,7 @@ test('local automatic replies require activation, fresh input and safe AI policy
   assert.equal(typeof policy.mayQueueLocalReply,'function');
   const config={enabled:true,outgoing_enabled:true,account_id:'1',outgoing_since:'2026-10-01T12:00:00Z',pilot_recipient_ids:['2']};
   const row={account:'instagrapi:1',external_user_id:'instagrapi:1:2',timestamp:Date.parse('2026-10-01T12:01:00Z')};
-  const generated={autoSend:true,model:'car-rental-qualification-v1',confidence:1};
+  const generated={provider:'deterministic',autoSend:true,model:'car-rental-qualification-v1',confidence:1};
   const args={config,connection:{enabled:true,status:'active',public_config:{reply_mode:'auto'}},row,generated,risk:null};
   assert.equal(policy.mayQueueLocalReply(args),true);
   for(const change of [{config:{...config,outgoing_enabled:false}}, {config:{...config,outgoing_since:null}},
