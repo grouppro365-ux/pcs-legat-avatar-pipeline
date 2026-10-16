@@ -42,7 +42,7 @@ test('runtime scripts have explicit release keys, including the current send mod
  assert.ok(html.includes('approval-review.js?v=20261004-approval1'));
  assert.ok(html.includes('global-search.js?v=20261006-search2'));
  for(const file of ['finance-v26.css','crm-task-queue.js','crm-task-edit.js'])assert.ok(html.includes(file+'?v=20261004-finance-tasks1'));
- assert.ok(html.includes('finance-v26.js?v=20261012-payments1'));
+ assert.ok(html.includes('finance-v26.js?v=20261016-attribution1'));
  assert.ok(html.includes('router-v26.js?v=20261004-prospect2'));
  assert.ok(html.includes('prospecting.js?v=20261008-review2'));
  assert.ok(html.includes('neon-adapter.js?v=20261014-capacity1'));

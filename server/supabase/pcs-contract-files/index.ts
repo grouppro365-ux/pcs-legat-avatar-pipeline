@@ -1,10 +1,11 @@
+import {authorizePurpose,documentPurpose} from './purpose-auth.mjs';
 import { documentUpload, selectedDocumentFiles, recognizedFields, MAX_OCR_BYTES } from './document-policy.mjs';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 const url=Deno.env.get('SUPABASE_URL')!;const key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;const db=createClient(url,key,{auth:{persistSession:false}});
 const cors={'access-control-allow-origin':'*','access-control-allow-headers':'authorization,content-type','access-control-allow-methods':'GET,POST,DELETE,OPTIONS'};
 const j=(x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{...cors,'content-type':'application/json;charset=utf-8'}});
 async function sha(s:string){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function auth(req:Request){const h=req.headers.get('authorization')||'';if(!h.startsWith('Bearer '))return false;const r=await fetch(url+'/functions/v1/pcs-manager-live2?op=session',{headers:{authorization:h,accept:'application/json'}}).catch(()=>null);if(!r||r.status!==200)return false;try{return (await r.json())?.ok===true}catch{return false}}
+async function auth(req:Request){let kind=null;if(req.method==='POST'){try{kind=(await req.clone().json())?.kind}catch{return false}}return authorizePurpose(req,url,documentPurpose(req.method,kind));}
 
 async function secret(name:string){const {data}=await db.rpc('pcs_secret_get',{p_name:name});return String(data||'')}
 async function recognizeDocuments(reservationId:string,selection?:string[]){

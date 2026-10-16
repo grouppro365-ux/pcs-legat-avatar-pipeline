@@ -1,3 +1,5 @@
+import {authorizePurpose,contractPurpose} from './purpose-auth.mjs';
+import {contractFinance} from './contract-finance.mjs';
 import {carryVersionFields} from './version-policy.mjs';
 import {confirmationRequest,handoverInput} from './confirmation-policy.mjs';
 import {createClient} from 'npm:@supabase/supabase-js@2';
@@ -6,7 +8,7 @@ const ALLOWED=new Set(['https://pcs-ai-operator-live.vercel.app','https://pcs-ai
 function cors(req:Request){const o=req.headers.get('origin')||'';return {'access-control-allow-origin':ALLOWED.has(o)?o:'https://nnlzgertmmxuteozoeel.supabase.co','access-control-allow-headers':'authorization,content-type','access-control-allow-methods':'GET,POST,PATCH,OPTIONS','vary':'Origin'}}
 const J=(req:Request,x:any,s=200)=>new Response(JSON.stringify(x),{status:s,headers:{...cors(req),'content-type':'application/json;charset=utf-8','cache-control':'no-store'}});
 async function hash(s:string){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function ok(req:Request){const a=req.headers.get('authorization')||'';if(!a.startsWith('Bearer '))return false;const {data}=await db.from('pcs_sessions').select('token_hash').eq('token_hash',await hash(a.slice(7))).gt('expires_at',new Date().toISOString()).maybeSingle();if(data)return true;try{const r=await fetch(Deno.env.get('SUPABASE_URL')+'/functions/v1/pcs-manager-live2?op=session',{headers:{authorization:a}});return r.ok&&(await r.json()).ok===true}catch{return false}}
+async function ok(req:Request){return authorizePurpose(req,Deno.env.get('SUPABASE_URL')||'',contractPurpose(req.method));}
 function P(req:Request){const n=new URL(req.url).pathname;for(const m of ['/functions/v1/pcs-contract-api','/pcs-contract-api']){const i=n.indexOf(m);if(i>=0)return n.slice(i+m.length)||'/'}return n}
 const E=(s:any)=>String(s??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c] as string));
 const value=(o:any,p:string)=>p.split('.').reduce((a,k)=>a?.[k],o);
@@ -18,10 +20,8 @@ async function snapshot(id:string,o:any={},trustedCatalog:any=null,trustedClient
   const i=r.pcs_catalog_items||{},c=r.pcs_contacts||{},m=i.metadata||{};
   const {data:f,error:fe}=await db.from('pcs_finance_entries').select('*').eq('reservation_id',id);
   if(fe)throw fe;
-  const rows=f||[];
-  const paid=rows.filter((q:any)=>q.status==='paid'&&['income','payment','booking_deposit'].includes(q.entry_type)).reduce((a:number,q:any)=>a+Number(q.amount||0),0);
-  const booking=rows.filter((q:any)=>q.status==='paid'&&q.payment_kind==='booking_deposit').reduce((a:number,q:any)=>a+Number(q.amount||0),0);
-  const transfer=rows.filter((q:any)=>q.entry_type==='transfer_fee'&&!['cancelled','refunded'].includes(q.status)).reduce((a:number,q:any)=>a+Number(q.amount||0),0);
+  const finance=await contractFinance(db,r,f||[]);
+  const {paid,booking,transfer}=finance;
   const baseAmount=Number(r.base_amount||0),seasonalAmount=Number(r.seasonal_amount||baseAmount||0);
   const season=baseAmount>0?seasonalAmount/baseAmount:1;
   const days=Math.max(1,Math.round((new Date(r.end_date).getTime()-new Date(r.start_date).getTime())/86400000));
@@ -29,7 +29,7 @@ async function snapshot(id:string,o:any={},trustedCatalog:any=null,trustedClient
     renter:{name:c.name||'',id_or_passport:c.id_or_passport||'',nationality:c.nationality||c.country||'',license_no:c.license_no||'',phone:c.phone||'',line:c.line_contact||'',telegram:c.username||'',address:c.address||''},
     vehicle:{model:m.car_model||m.model||(String(i.title||'').split(' · ')[1]||i.title||''),registration_no:m.registration_no||m.reg_no||m.plate||'',color:m.color||'',fuel_type:m.fuel_type||''},
     rental:{start_date:r.start_date,end_date:r.end_date,start_time:'',end_time:'',total_time:`${days} дн.`,remark:r.notes||''},
-    pricing:{rate:trustedCatalog?(trustedCatalog.client_price_thb==null?null:Number(trustedCatalog.client_price_thb)):i.base_price??i.price??null,rate_period:i.base_price_period||null,currency:r.currency||i.currency||'THB',season_multiplier:Number(season.toFixed(4)),duration_multiplier:Number(r.duration_multiplier??1),transfer_fee:transfer,extras:Number(r.extras_amount??0),deposit:trustedCatalog?(trustedCatalog.deposit_thb==null?null:Number(trustedCatalog.deposit_thb)):m.security_deposit_thb==null?null:Number(m.security_deposit_thb),booking_deposit:booking,paid,total:Number(r.total_amount??0),balance:Math.max(0,Number(r.total_amount||0)-paid)},
+    pricing:{rate:trustedCatalog?(trustedCatalog.client_price_thb==null?null:Number(trustedCatalog.client_price_thb)):i.base_price??i.price??null,rate_period:i.base_price_period||null,currency:finance.currency,season_multiplier:Number(season.toFixed(4)),duration_multiplier:Number(r.duration_multiplier??1),transfer_fee:transfer,extras:Number(r.extras_amount??0),deposit:trustedCatalog?(trustedCatalog.deposit_thb==null?null:Number(trustedCatalog.deposit_thb)):m.security_deposit_thb==null?null:Number(m.security_deposit_thb),booking_deposit:booking,paid,total:finance.total,balance:finance.balance},
     handover:{fuel_level:'',condition_note:'',equipment:''}
   };
   for(const k of ['renter','vehicle','rental'])s[k]={...s[k],...(o?.[k]||{})};
@@ -124,4 +124,4 @@ m=p.match(/^\/contracts\/([0-9a-f-]+)\/confirm-fact$/i);if(m&&req.method==='POST
  const {data,error}=await db.rpc('pcs_confirm_contract_fact',{p_contract_id:m[1],p_kind:b.kind,p_occurred_at:b.occurred_at,p_operator_name:b.operator_name,p_note:b.note,p_actor:actor,p_confirmed:b.confirmed});
  if(error)throw error;return J(req,data);
 }
-return J(req,{error:'not_found',path:p},404)}catch(e){const code=String((e as any)?.message||e);const validation=['confirmation_required','invalid_confirmation_kind','invalid_confirmation_date','operator_name_required','confirmation_note_required','confirmation_actor_required'];const conflict=['contract_not_ready_to_sign','contract_not_current','fact_already_confirmed','handover_required','return_required','return_before_handover','invalid_rental_transition','rental_status_changed'];return J(req,{error:code},validation.includes(code)?400:conflict.includes(code)?409:code==='contract_not_found'?404:500)}});
+return J(req,{error:'not_found',path:p},404)}catch(e){const code=String((e as any)?.message||e);const validation=['confirmation_required','invalid_confirmation_kind','invalid_confirmation_date','operator_name_required','confirmation_note_required','confirmation_actor_required'];const conflict=['reservation_finance_requires_review','contract_not_ready_to_sign','contract_not_current','fact_already_confirmed','handover_required','return_required','return_before_handover','invalid_rental_transition','rental_status_changed'];return J(req,{error:code},code==='reservation_finance_unavailable'?503:validation.includes(code)?400:conflict.includes(code)?409:code==='contract_not_found'?404:500)}});

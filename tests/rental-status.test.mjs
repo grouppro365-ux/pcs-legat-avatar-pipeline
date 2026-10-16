@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync} from 'node:fs';
 import {stripTypeScriptTypes} from 'node:module';
+import {authorizePurpose,contractPurpose} from '../server/supabase/pcs-contract-api/purpose-auth.mjs';
 import {confirmationRequest,handoverInput} from '../server/supabase/pcs-contract-api/confirmation-policy.mjs';
 import {carryVersionFields} from '../server/supabase/pcs-contract-api/version-policy.mjs';
 
@@ -13,13 +14,15 @@ function fixture({handover=true,returned=false,newer=false,phase='CONFIRMED',fai
   const q={select(){return this},eq(){return this},gt(){return this},not(){return this},limit(){return this},single(){return this},maybeSingle(){return this},then(resolve){resolve({data:table==='pcs_sessions'?{token_hash:'test'}:table==='pcs_reservations'?{source:'neon_contract_projection',status:'confirmed'}:this.isNewer?(newer?[{id:'cccc'}]:[]):contract,error:null})}};
   q.gt=function(){this.isNewer=true;return this};return q;
  },rpc:async(name,args)=>{rpcs.push({name,args});if(fail){fail=false;return{error:{message:'temporary_storage_error'}}}return{data:{reservation_id:'bbbb',status:args.p_status}}}};
- const context={confirmationRequest,handoverInput,carryVersionFields,createClient:()=>db,crypto:globalThis.crypto,TextEncoder,URL,Request,Response,Date,fetch:async(url,opts)=>{
+ const context={authorizePurpose,contractPurpose,confirmationRequest,handoverInput,carryVersionFields,createClient:()=>db,crypto:globalThis.crypto,TextEncoder,URL,Request,Response,Date,fetch:async(url,opts)=>{
   const op=new URL(url).searchParams.get('op');
+  if(op==='authorize-purpose')return Response.json({ok:true,purpose:JSON.parse(opts.body).purpose});
   if(op==='application-detail')return Response.json({category:'booking',operational_status:phase});
   if(op==='application-rental-phase'){const b=JSON.parse(opts.body);writes.push(b);if(failManager||b.expected_status!==phase)return Response.json({error:'conflict'},{status:409});phase=b.status;return Response.json({ok:true})}
   throw Error('Unexpected external call');
  },Deno:{env:{get:key=>key==='SUPABASE_URL'?'https://test.invalid':'test'},serve:fn=>{handler=fn}}};
  const source=stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-contract-api/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,'');
+ context.authorizePurpose=(req,base,purpose)=>authorizePurpose(req,base,purpose,context.fetch);
  vm.runInNewContext(source,context);
  return{writes,rpcs,call:async(status,confirmed=true)=>handler(new Request('https://test.invalid/pcs-contract-api/contracts/aaaa/rental-status',{method:'POST',headers:{authorization:'Bearer test','content-type':'application/json'},body:JSON.stringify({status,confirmed})})),phase:()=>phase};
 }

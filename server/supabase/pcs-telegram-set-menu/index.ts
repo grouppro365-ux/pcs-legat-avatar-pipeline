@@ -1,3 +1,4 @@
+import {authorizePurpose} from './purpose-auth.mjs';
 const ENTRY='https://grouppro365-ux.github.io/pcs-legat-avatar-pipeline/?release=20261003-tasks2';
 const BASE=Deno.env.get('SUPABASE_URL')||'';
 const SERVICE_KEY=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')||'';
@@ -15,16 +16,7 @@ function headers(req:Request){const origin=req.headers.get('origin')||'';return 
   ...(ORIGINS.has(origin)?{'access-control-allow-origin':origin}:{})
 }}
 function json(req:Request,body:unknown,status=200){return new Response(JSON.stringify(body),{status,headers:headers(req)})}
-async function sha256(value:string){const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return [...new Uint8Array(hash)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-async function authorized(req:Request){const authorization=req.headers.get('authorization')||'';if(!/^Bearer\s+\S+$/i.test(authorization)||!BASE||!SERVICE_KEY)return false;
-  const token=authorization.replace(/^Bearer\s+/i,'');
-  const query=new URLSearchParams({token_hash:`eq.${await sha256(token)}`,expires_at:`gt.${new Date().toISOString()}`,select:'token_hash',limit:'1'});
-  try{
-    const session=await fetch(`${BASE}/rest/v1/pcs_sessions?${query}`,{headers:{apikey:SERVICE_KEY,authorization:`Bearer ${SERVICE_KEY}`}});
-    if(session.ok&&(await session.json()).length)return true;
-  }catch{}
-  try{const session=await fetch(`${BASE}/functions/v1/pcs-manager-live2?op=session`,{headers:{authorization}});return session.ok}catch{return false}
-}
+async function authorized(req:Request){return authorizePurpose(req,BASE,'bot.configure');}
 async function botToken(){if(!BASE||!SERVICE_KEY)throw new Error('server_config_missing');const response=await fetch(`${BASE}/rest/v1/rpc/pcs_edge_runtime_config`,{method:'POST',headers:{apikey:SERVICE_KEY,authorization:`Bearer ${SERVICE_KEY}`,'content-type':'application/json'},body:'{}'});if(!response.ok)throw new Error('runtime_config_'+response.status);const config=await response.json();if(!config?.telegram_bot_token)throw new Error('telegram_token_missing');return String(config.telegram_bot_token)}
 async function telegram(token:string,method:string,payload:unknown={}){const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);try{const response=await fetch(`https://api.telegram.org/bot${token}/${method}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload),signal:controller.signal});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.description||`telegram_${response.status}`);return data.result}finally{clearTimeout(timer)}}
 
