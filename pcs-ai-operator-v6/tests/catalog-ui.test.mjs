@@ -9,11 +9,11 @@ function harness(){
   const item={id:'11111111-1111-4111-8111-111111111111',title:'MG5',city:'Pattaya',price:660};
   const window={PCS:{catalog:[item]},PCS_EXTRAS37:[{...item,name:'MG5'}],go(){},
     call:async()=>({item:{...item,revision:{ui:{description:'Existing description'}}},media:[]})};
-  const document={getElementById:id=>nodes[id]||null,querySelectorAll:()=>[],querySelector:()=>null,body:{}};
-  vm.runInNewContext(readFileSync(new URL('../operator-ux-v37.js',import.meta.url),'utf8'),
-    {window,document,localStorage:{},location:{search:''},URLSearchParams,MutationObserver:class{observe(){}},
+  const document={getElementById:id=>nodes[id]||null,querySelectorAll:()=>[],querySelector:()=>null,body:{classList:{contains:()=>false,add(){},remove(){}}}};
+  const context=vm.createContext({window,document,localStorage:{},location:{search:''},URLSearchParams,MutationObserver:class{observe(){}},
       setTimeout(){},requestAnimationFrame(){},cancelAnimationFrame(){},
       call:(...args)=>window.call(...args),openSheet:(title,body)=>sheets.push({title,body}),toast(){},console});
+  for(const file of ['navigation-lifecycle.js','sheet-lifecycle.js','operator-ux-v37.js'])vm.runInContext(readFileSync(new URL('../'+file,import.meta.url),'utf8'),context);
   return {window,nodes,sheets,item};
 }
 test('catalog and existing service rows expose editing the selected id and photos',async()=>{

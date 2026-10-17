@@ -51,16 +51,19 @@ function showAllPopular(){
   if(link)link.textContent='Показаны все';
 }
 async function openProduct(id){
-  if(!id)return;
+  if(!id)return;const scope=window.pcsNavigation.capture();
   try{
     if(typeof window.pricingManager!=='function')throw new Error('Карточка объекта недоступна');
-    await window.pricingManager(id);
+    const opened=await window.pricingManager(id);
+    if(opened===false||!window.pcsNavigation.isCurrent(scope))return;
     if(!document.body.classList.contains('sheet-open'))throw new Error('Не удалось открыть карточку объекта');
-  }catch(e){window.toast?.(e.message||'Не удалось открыть объект')}
+  }catch(e){if(window.pcsNavigation.isCurrent(scope))window.toast?.(e.message||'Не удалось открыть объект')}
 }
 async function showAllFinance(){
+  const intent=window.pcsSheetLifecycle?.begin(),scope=window.pcsNavigation.capture();
   try{
     const r=await window.opsCall('/finance'),list=Array.isArray(r)?r:r?.items||[];
+    if(!window.pcsNavigation.isCurrent(scope)||(intent&&!window.pcsSheetLifecycle.current(intent)))return;
     const rows=list.map(x=>{const neg=['expense','partner_payout'].includes(x.entry_type),amount=Number(x.amount||0);return `<div class="pcs-v32-finrow"><span><b>${esc(x.counterparty||x.note||x.entry_type||'Операция')}</b><small>${esc(x.created_at?new Date(x.created_at).toLocaleString('ru-RU'):'')}</small></span><strong class="${neg?'neg':''}">${neg?'-':'+'}${money(amount,x.currency)}</strong></div>`}).join('');
     window.openSheet?.('Все операции',`<div class="pcs-v32-finlist">${rows||'<div class="pcs-ap-empty">Финансовых операций пока нет</div>'}</div>`);
   }catch(e){window.toast?.(e.message||'Не удалось загрузить операции')}
@@ -91,9 +94,9 @@ function drawExtrasFromData(){
   box.innerHTML=list.map(extraCard).join('')||'<div class="pcs-ap-empty">В этой категории услуг пока нет</div>';
 }
 async function hydrateExtras(){
-  const box=document.getElementById('pcsApServices');if(!box||box.dataset.v32Hydrated)return;
+  const box=document.getElementById('pcsApServices');if(!box||box.dataset.v32Hydrated||window.pcsExtrasOwner37)return;const scope=window.pcsNavigation.capture(),current=()=>window.pcsNavigation.isCurrent(scope)&&box.isConnected;
   box.dataset.v32Hydrated='loading';
-  try{const r=await window.opsCall('/extras');extrasData=(Array.isArray(r)?r:r?.items||[]).filter(x=>x.is_active!==false);box.dataset.v32Hydrated='yes';drawExtrasFromData()}catch(e){delete box.dataset.v32Hydrated;box.innerHTML=`<div class="pcs-ap-empty">${esc(e.message)}</div>`}
+  try{const r=await window.opsCall('/extras');if(!current())return;extrasData=(Array.isArray(r)?r:r?.items||[]).filter(x=>x.is_active!==false);box.dataset.v32Hydrated='yes';drawExtrasFromData()}catch(e){if(!current())return;delete box.dataset.v32Hydrated;box.innerHTML=`<div class="pcs-ap-empty">${esc(e.message)}</div>`}
 }
 function openExtra(id){
   const x=extrasData.find(v=>String(v.id)===String(id));if(!x)return;
@@ -130,11 +133,14 @@ function drawPriceCalendar(){
   }
   box.innerHTML=`<div class="pcs-v32-calhead"><button type="button" data-price-move="-1">←</button><h2>${new Intl.DateTimeFormat('ru-RU',{month:'long',year:'numeric'}).format(first)}</h2><button type="button" data-price-move="1">→</button></div><p class="pcs-v32-calnote">Коэффициент цены показан для каждого дня. Это календарь тарифов, а не календарь броней.</p><div class="pcs-v32-calendar">${days}</div>`;
 }
-async function showPriceCalendar(button){
-  document.querySelectorAll('.pcs-ap-subseg button').forEach(x=>x.classList.toggle('on',x===button));
-  const box=document.getElementById('pcsApTariffContent');if(!box)return;
-  box.innerHTML='<div class="pcs-ap-empty">Загрузка календаря цен…</div>';
-  try{const r=await window.opsCall('/seasonal-rules');priceRules=(Array.isArray(r)?r:r?.items||[]).filter(x=>x.is_active!==false);drawPriceCalendar()}catch(e){box.innerHTML=`<div class="pcs-ap-empty">${esc(e.message)}</div>`}
+function showPriceCalendar(button){
+  return window.pcsNavigation.run('bookings',async()=>{
+    document.querySelectorAll('.pcs-ap-subseg button').forEach(x=>x.classList.toggle('on',x===button));
+    const box=document.getElementById('pcsApTariffContent');if(!box)return;
+    const scope=window.pcsNavigation.capture(),current=()=>window.pcsNavigation.isCurrent(scope)&&box.isConnected;
+    box.innerHTML='<div class="pcs-ap-empty">Загрузка календаря цен…</div>';
+    try{const r=await window.opsCall('/seasonal-rules');if(!current())return;priceRules=(Array.isArray(r)?r:r?.items||[]).filter(x=>x.is_active!==false);drawPriceCalendar()}catch(e){if(current())box.innerHTML=`<div class="pcs-ap-empty">${esc(e.message)}</div>`}
+  });
 }
 
 document.addEventListener('click',e=>{
@@ -159,6 +165,6 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('wheel',e=>{const rail=e.target.closest('.pcs-ap-popular');if(rail&&Math.abs(e.deltaY)>Math.abs(e.deltaX)){rail.scrollLeft+=e.deltaY;e.preventDefault()}},{passive:false});
 
-new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(()=>{applyCatalogRows();refreshPopular()});const services=document.getElementById('pcsApServices');if(services)requestAnimationFrame(()=>{if(!services.dataset.v32Hydrated)hydrateExtras();else if(services.querySelector('.pcs-ap-service:not([data-extra-id])'))drawExtrasFromData()});if(document.querySelector('.pcs-ap-place'))requestAnimationFrame(installLocationPicker)}).observe(document.documentElement,{subtree:true,childList:true});
+new MutationObserver(()=>{if(document.querySelector('.ref-catalog .pcs-ap-catrow'))requestAnimationFrame(()=>{applyCatalogRows();refreshPopular()});const services=document.getElementById('pcsApServices');if(services&&!window.pcsExtrasOwner37)requestAnimationFrame(()=>{if(!services.dataset.v32Hydrated)hydrateExtras();else if(services.querySelector('.pcs-ap-service:not([data-extra-id])'))drawExtrasFromData()});if(document.querySelector('.pcs-ap-place'))requestAnimationFrame(installLocationPicker)}).observe(document.documentElement,{subtree:true,childList:true});
 hydrateExtras();installLocationPicker();
 })();

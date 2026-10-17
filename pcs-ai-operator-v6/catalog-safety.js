@@ -1,7 +1,10 @@
 (()=>{
 const oldPricing=window.pricingManager;
+const capture=()=>window.pcsNavigation?.capture();
+const current=scope=>(!scope||window.pcsNavigation.isCurrent(scope))&&(!PCS.page||PCS.page==='catalog');
+async function refreshCatalog(scope){if(!current(scope))return false;const rows=await call('/catalog');if(!current(scope))return false;PCS.catalog=rows;const rendering=window.go('catalog'),nextScope=capture();await rendering;return current(nextScope);}
 window.pricingManager=async function(id){
-  await oldPricing(id);
+  if(await oldPricing(id)===false)return false;
   const x=PCS.catalog.find(v=>v.id===id);if(!x)return;
   const priceInput=document.querySelector('#basePrice');
   if(priceInput){priceInput.type='text';priceInput.inputMode='decimal';priceInput.maxLength=30;}
@@ -28,6 +31,7 @@ const seasonSaves=new WeakMap();
 window.addSeasonRule=async function(id){
  const from=document.querySelector('#seasonFrom'),to=document.querySelector('#seasonTo'),mult=document.querySelector('#seasonMult'),button=document.querySelector('#catalogSeasonSave'),feedback=document.querySelector('#catalogSeasonResult');
  if(!from||!to||!mult||!button||seasonSaves.has(from))return;
+ const scope=capture();
  const name=document.querySelector('#seasonName'),fields=[from,to,mult,name].filter(Boolean);
  seasonSaves.set(from,'pending');button.disabled=true;button.textContent='Сохраняем…';fields.forEach(x=>x.disabled=true);if(feedback)feedback.textContent='Сохраняем сезон…';
  try{
@@ -35,15 +39,33 @@ window.addSeasonRule=async function(id){
   if(result?.ok!==true||!result.rule?.id)throw Error('Сервер не подтвердил добавление сезона. Проверьте список перед повтором.');
   seasonSaves.set(from,'saved');if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent='Сезон добавлен';
   toast('Сезон добавлен');
-  try{PCS.catalog=await call('/catalog');await catalog();if(document.querySelector('#seasonFrom')===from)await window.pricingManager(id);}
+  try{if(await refreshCatalog(scope)&&document.querySelector('#seasonFrom')===from)await window.pricingManager(id);}
   catch{if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent='Сезон сохранён. Обновите карточку, чтобы увидеть его в списке.';}
  }catch(e){seasonSaves.delete(from);if(document.querySelector('#seasonFrom')===from&&feedback)feedback.textContent=e.message||'Не удалось добавить сезон';}
  finally{const saved=seasonSaves.get(from)==='saved';button.disabled=saved;button.textContent=saved?'Сезон сохранён':'Добавить сезон';fields.forEach(x=>x.disabled=false);}
+};
+const seasonDeletes=new Set();
+window.deleteSeasonRule=async function(id,rid){
+ const anchor=document.querySelector('#basePrice'),scope=capture(),key=id+':'+rid;
+ if(!anchor||seasonDeletes.has(key))return;
+ const button=[...document.querySelectorAll('button[onclick^="deleteSeasonRule("]')].find(el=>el.getAttribute('onclick')===`deleteSeasonRule('${id}','${rid}')`);
+ seasonDeletes.add(key);if(button)button.disabled=true;
+ try{
+  const result=await adminCall({action:'delete_rule',id,rule_id:rid});
+  if(result?.ok!==true)throw Error('Сервер не подтвердил удаление сезона. Обновите список для проверки.');
+  toast('Сезон удалён');
+  if(current(scope)&&document.querySelector('#basePrice')===anchor){
+   try{if(await refreshCatalog(scope)&&document.querySelector('#basePrice')===anchor)await window.pricingManager(id)}
+   catch{toast('Сезон удалён. Обновите список каталога.');}
+  }
+ }catch(e){if(current(scope)&&document.querySelector('#basePrice')===anchor)toast(e.message||'Не удалось удалить сезон');}
+ finally{seasonDeletes.delete(key);if(button?.isConnected)button.disabled=false;}
 };
 const priceSaves=new WeakMap();
 window.saveBasePrice=async function(id){
  const input=document.querySelector('#basePrice'),button=document.querySelector('#catalogPriceSave'),error=document.querySelector('#catalogPriceError');
  if(!input||!button||priceSaves.has(input))return;
+ const scope=capture();
  priceSaves.set(input,'pending');button.disabled=true;if(error)error.textContent='';
  const fields=[input,document.querySelector('#depositThb')].filter(Boolean);fields.forEach(x=>x.disabled=true);
  try{
@@ -53,7 +75,7 @@ window.saveBasePrice=async function(id){
   priceSaves.set(input,'saved');
   if(document.querySelector('#basePrice')===input)closeSheet();
   toast('Цена и депозит сохранены');
-  try{PCS.catalog=await call('/catalog');await catalog()}catch{toast('Сохранение подтверждено. Обновите список каталога.');}
+  try{await refreshCatalog(scope)}catch{toast('Сохранение подтверждено. Обновите список каталога.');}
  }catch(e){priceSaves.delete(input);if(document.querySelector('#basePrice')===input&&error)error.textContent=e.message||'Не удалось сохранить цену';}
  finally{button.disabled=false;fields.forEach(x=>x.disabled=false);}
 };
@@ -65,6 +87,7 @@ window.confirmDeleteCatalog=function(id){
  openSheet('Убрать объект из каталога?',`<div class="danger-box"><h3>${esc(x.title)}</h3><p>Позиция будет архивирована. История бронирований, договоров и финансов сохранится.</p></div><p id="catalogArchiveError" role="alert" aria-live="polite" style="overflow-wrap:anywhere"></p><div class="toolbar"><button class="btn ghost" onclick="closeSheet()">Отмена</button><button id="catalogArchiveSave" class="btn danger" onclick="deleteCatalog('${id}')">Архивировать</button></div>`);
 };
 window.deleteCatalog=async function(id){
+ const scope=capture();
  const state=archiveState,button=document.querySelector('#catalogArchiveSave'),error=document.querySelector('#catalogArchiveError');
  if(!state||state.id!==id||state.busy||!button)return;
  state.busy=true;button.disabled=true;if(error)error.textContent='';
@@ -73,7 +96,7 @@ window.deleteCatalog=async function(id){
   const x=PCS.catalog.find(v=>v.id===id);if(x){x.publication_status='ARCHIVED';x.availability_status='UNAVAILABLE';}
   if(document.querySelector('#catalogArchiveSave')===button)closeSheet();
   archiveState=null;toast('Объект архивирован');
-  try{await catalog()}catch{toast('Архивирование подтверждено. Обновите список каталога.');}
+  try{await refreshCatalog(scope)}catch{toast('Архивирование подтверждено. Обновите список каталога.');}
  }catch(e){if(document.querySelector('#catalogArchiveSave')===button&&error)error.textContent=e.message||'Не удалось подтвердить архивирование. Обновите карточку для проверки.';}
  finally{state.busy=false;button.disabled=false;}
 };

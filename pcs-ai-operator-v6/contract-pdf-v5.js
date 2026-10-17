@@ -82,9 +82,10 @@
 
   let generating=false;
   async function download(contractId) {
-    if(generating)return;generating=true;root.toast("Готовим PDF…");
+    if(generating)return;generating=true;const intent=root.pcsSheetLifecycle?.begin();const current=()=>!intent||root.pcsSheetLifecycle.current(intent);root.toast("Готовим PDF…");
     try {
       const contract = await root.contractCall('/contracts/' + encodeURIComponent(contractId));
+      if(!current())return;
       if (!['ready_to_sign', 'signed'].includes(contract.status))
         throw new Error('Сначала проверьте и подтвердите финальную версию договора');
       if (contract.missing_fields?.length)
@@ -94,6 +95,7 @@
         throw new Error('Этот бланк рассчитан на THB. Проверьте валюту бронирования');
       const definition = root.PCSContractDocument.definition(data);
       await dependencies();
+      if(!current())return;
       const blob = await new Promise((resolve, reject) => {
         try { root.pdfMake.createPdf(definition).getBlob(resolve); }
         catch (error) { reject(error); }
@@ -113,6 +115,7 @@
       if(telegram?.downloadFile&&telegram?.isVersionAtLeast?.('8.0'))link.onclick=event=>{
         event.preventDefault();try{telegram.downloadFile({url:saved.url,file_name:saved.filename},accepted=>{if(!accepted)root.toast('Скачивание отменено. Можно повторить или открыть PDF.');});}catch{telegram.openLink(saved.url);}
       };
+      if(!current())return;
       root.openSheet('Готовый договор PDF', '<p>Договор готов. Нажмите «Скачать PDF», чтобы сохранить файл. Ссылка действует один час.</p><div id="contractPdfDownload" class="contract-pdf-actions"></div>');
       const actions=document.getElementById('contractPdfDownload');actions.appendChild(link);
       const preview=document.createElement('a');preview.href=saved.preview_url||saved.url;preview.target='_blank';preview.rel='noopener noreferrer';preview.className='btn ghost';preview.textContent='Открыть PDF';
@@ -120,7 +123,7 @@
       actions.appendChild(preview);
 
     } catch (error) {
-      root.toast(error.message || 'Не удалось создать PDF');
+      if(current())root.toast(error.message || 'Не удалось создать PDF');
     } finally {generating=false}
   }
 

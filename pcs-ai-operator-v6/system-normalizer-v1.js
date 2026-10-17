@@ -9,9 +9,9 @@ function nav(){if(typeof window.pcsInstallNav25==='function'&&window.pcsInstallN
 function brand(){window.pcsBrand26?.()}
 function normalize(){const cls=detect();if(cls){clearVisual(cls);document.body.classList.add(cls)}else clearVisual();brand();nav();document.querySelectorAll('.bottom svg').forEach(s=>{s.setAttribute('width','20');s.setAttribute('height','20')})}
 window.pcsInstallNav25=nav;
-const go0=window.go;if(typeof go0==='function')window.go=function(p){clearVisual();top();const r=go0.apply(this,arguments);const done=()=>{requestAnimationFrame(()=>{normalize();top()})};if(r&&typeof r.then==='function')r.finally(done);else setTimeout(done,0);return r};
-if(typeof window.bookingTab==='function'){const f=window.bookingTab;window.bookingTab=function(){top();const r=f.apply(this,arguments);const done=()=>{requestAnimationFrame(normalize);top()};if(r&&typeof r.then==='function')r.finally(done);else setTimeout(done,0);return r}}
-if(typeof window.pcsApTariffs==='function'){const f=window.pcsApTariffs;window.pcsApTariffs=function(){top();const r=f.apply(this,arguments);const done=()=>{requestAnimationFrame(normalize);top()};if(r&&typeof r.then==='function')r.finally(done);else setTimeout(done,0);return r}}
+// Navigation owns scroll and completion. DOM normalization never redirects
+// or scrolls on a late request from an abandoned page.
+window.pcsNavigation?.subscribe(()=>requestAnimationFrame(normalize));
 let raf=0;const observer=new MutationObserver(()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(normalize)});const root=document.getElementById('root');if(root)observer.observe(root,{childList:true,subtree:false});
 normalize();
 })();

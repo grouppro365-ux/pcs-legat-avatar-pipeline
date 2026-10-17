@@ -1,10 +1,10 @@
 export class CrmError extends Error {
   constructor(message,status=400){super(message);this.status=status}
 }
-export async function readCrmBody(req){
+export async function readCrmBody(req,maxBytes=32768){
   const reader=req.body?.getReader();if(!reader)throw new CrmError('Пустой запрос');
   let size=0;const chunks=[];
-  try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>32768){await reader.cancel();throw new CrmError('Запрос слишком большой',413)}chunks.push(value)}}finally{reader.releaseLock()}
+  try{while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>maxBytes){await reader.cancel();throw new CrmError('Запрос слишком большой',413)}chunks.push(value)}}finally{reader.releaseLock()}
   const bytes=new Uint8Array(size);let offset=0;for(const value of chunks){bytes.set(value,offset);offset+=value.byteLength}
   let b;try{b=JSON.parse(new TextDecoder().decode(bytes))}catch{throw new CrmError('Некорректный запрос')}
   if(!b||typeof b!=='object'||Array.isArray(b))throw new CrmError('Некорректный запрос');return b;
