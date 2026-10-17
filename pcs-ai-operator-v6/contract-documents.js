@@ -14,7 +14,7 @@
   if(!response.ok)throw Error(messages[result.error]||'Не удалось обработать документы ('+response.status+').');
   return result;
  }
- function active(state){return current===state&&document.getElementById('ctDocuments')?.dataset.reservation===state.rid}
+ function active(state){return current===state&&document.getElementById('ctDocuments')===state.host&&state.host?.dataset.reservation===state.rid&&(!state.intent||window.pcsSheetLifecycle.current(state.intent))}
  function status(state,message){if(active(state))document.getElementById('ctDocumentStatus').textContent=message}
  function busy(state,value){state.busy=value;if(active(state))document.querySelectorAll('#ctDocuments button,#ctDocuments input').forEach(el=>el.disabled=value||el.dataset.ocrUnsupported==='true'||(state.locked&&el.id==='ctDocumentRecognize'))}
  function checked(state){return [...document.querySelectorAll('#ctDocumentList input:checked')].map(input=>input.value)}
@@ -25,7 +25,7 @@
  }
  function render(rid){return `<section id="ctDocuments" data-reservation="${E(rid)}" class="card"><h3>Фото документов</h3><div class="grid2"><div class="field"><label for="ctPassportPhotos">Паспорт / ID — фото страниц</label><input id="ctPassportPhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple><button type="button" class="btn ghost" onclick="pcsContractDocuments.upload('passport')">Загрузить паспорт</button></div><div class="field"><label for="ctLicensePhotos">Водительские права — обе стороны</label><input id="ctLicensePhotos" type="file" accept="image/jpeg,image/png,image/webp" multiple><button type="button" class="btn ghost" onclick="pcsContractDocuments.upload('license')">Загрузить права</button></div></div><p class="muted">JPG, PNG, WEBP · до 15 МБ на фото. Документы хранятся приватно. Для распознавания отметьте до 8 снимков.</p><div id="ctDocumentList">Загружаю список…</div><p id="ctDocumentStatus" role="status" aria-live="polite"></p><p class="muted">Только после подтверждения выбранные фото будут отправлены в OpenRouter. Сверьте распознанные данные с оригиналами перед сохранением.</p><button id="ctDocumentRecognize" type="button" class="btn soft" onclick="pcsContractDocuments.recognize()">Распознать через OpenRouter</button></section>`}
  async function mount(contract){
-  const state={id:contract.id,rid:contract.reservation_id,locked:['ready_to_sign','signed','superseded','cancelled'].includes(contract.status),busy:false,files:[]};current=state;
+  const state={host:document.getElementById('ctDocuments'),intent:window.pcsSheetLifecycle?.capture(),id:contract.id,rid:contract.reservation_id,locked:['ready_to_sign','signed','superseded','cancelled'].includes(contract.status),busy:false,files:[]};current=state;
   if(!state.rid)return;
   try{await refresh(state);busy(state,false);if(state.locked)status(state,'Версия зафиксирована. Фото можно прикреплять и просматривать; распознавание полей доступно в черновике.')}catch(error){status(state,error.message)}
  }

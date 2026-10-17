@@ -10,16 +10,18 @@
  const dateValue=v=>{if(!v)return null;const d=new Date(v);if(!Number.isFinite(d.getTime()))throw Error('Укажите корректную дату');return d.toISOString()};
  async function edit(id){
   if(!valid(id))return;
+  const intent=window.pcsSheetLifecycle?.begin();
   try{
    const d=await window.call('/crm/'+id),c=d.contact||d;
+   if(intent&&!window.pcsSheetLifecycle.current(intent))return false;
    editor={id,version:c.edit_version,original:c};
    window.openSheet('Редактировать клиента',`<form id="crmEditorForm" onsubmit="event.preventDefault();pcsCrmEditor.save()"><div class="grid2">${fields.map(([key,label,max])=>`<div class="field"><label for="crmEdit_${key}">${label}</label>${max>500?`<textarea id="crmEdit_${key}" maxlength="${max}">${E(c[key])}</textarea>`:`<input id="crmEdit_${key}" maxlength="${max}" value="${E(c[key])}">`}</div>`).join('')}<div class="field"><label for="crmEdit_status">Статус CRM</label><select id="crmEdit_status">${options(statuses,c.status)}</select></div><div class="field"><label for="crmEdit_priority">Приоритет</label><select id="crmEdit_priority">${options(['LOW','NORMAL','HOT','URGENT'],c.priority)}</select></div><div class="field"><label for="crmEdit_next_action_at">Дата следующего шага</label><input id="crmEdit_next_action_at" type="datetime-local" value="${dateInput(c.next_action_at)}"></div></div><p class="muted">Изменение статуса CRM не подтверждает оплату и не меняет финансовые записи.</p><p id="crmEditorError" role="alert" class="contract-fact-error"></p><button id="crmEditorSave" class="btn" type="submit">Сохранить</button></form>`);
    return true;
-  }catch{window.toast('Не удалось загрузить карточку клиента');return false}
+  }catch{if(!intent||window.pcsSheetLifecycle.current(intent))window.toast('Не удалось загрузить карточку клиента');return false}
  }
- async function refresh(id){try{window.PCS.crm=await window.call('/crm');await window.openClient(id,false)}catch{window.toast('Изменения сохранены. Обновите карточку клиента.')}}
+ async function refresh(id){const scope=window.pcsNavigation?.capture();if(window.PCS?.page&&window.PCS.page!=='crm')return;try{const rows=await window.call('/crm');if(scope&&!window.pcsNavigation.isCurrent(scope))return;if(window.PCS?.crmId&&window.PCS.crmId!==id)return;window.PCS.crm=rows;await window.openClient(id,false)}catch{if(!scope||window.pcsNavigation.isCurrent(scope))window.toast('Изменения сохранены. Обновите карточку клиента.')}}
  async function save(){
-  const form=document.getElementById('crmEditorForm'),state=editor;if(!form||!state||busy.has('save'))return;
+  const form=document.getElementById('crmEditorForm'),state=editor;if(!form||!state||busy.has(form))return;
   const button=document.getElementById('crmEditorSave'),error=document.getElementById('crmEditorError');
   error.textContent='';
   try{
@@ -30,12 +32,12 @@
    // Preserve seconds and the absence of a reminder when the date field was not edited.
    if(raw!==dateInput(state.original.next_action_at))body.next_action_at=dateValue(raw);
    if(Object.keys(body).length===1){error.textContent='Нет изменений для сохранения.';return}
-   busy.add('save');button.disabled=true;
+   busy.add(form);button.disabled=true;
    const result=await window.call('/crm/'+state.id,{method:'PATCH',body:JSON.stringify(body)});
    state.version=result.contact.edit_version;state.original=result.contact;
    window.toast('Карточка сохранена');if(document.getElementById('crmEditorForm')===form){window.closeSheet();await refresh(state.id)}
   }catch(e){if(document.getElementById('crmEditorForm')===form)error.textContent=e.message||'Не удалось сохранить. Повторите попытку.'}
-  finally{busy.delete('save');if(document.getElementById('crmEditorForm')===form)button.disabled=false}
+  finally{busy.delete(form);if(document.getElementById('crmEditorForm')===form)button.disabled=false}
  }
  function taskForm(id){
   if(!valid(id))return;
@@ -43,15 +45,15 @@
   window.openSheet('Новая задача',`<form id="crmTaskForm" onsubmit="event.preventDefault();pcsCrmEditor.createTask()"><div class="field"><label for="crmTaskTitle">Задача</label><input id="crmTaskTitle" required maxlength="300"></div><div class="field"><label for="crmTaskComment">Комментарий</label><textarea id="crmTaskComment" maxlength="4000"></textarea></div><div class="field"><label for="crmTaskDue">Срок (необязательно)</label><input id="crmTaskDue" type="datetime-local"></div><p id="crmTaskError" role="alert" class="contract-fact-error"></p><button id="crmTaskSave" class="btn" type="submit">Создать задачу</button></form>`);
  }
  async function createTask(){
-  const form=document.getElementById('crmTaskForm'),state=taskDraft;if(!form||!state||busy.has('task'))return;
+  const form=document.getElementById('crmTaskForm'),state=taskDraft;if(!form||!state||busy.has(form))return;
   const button=document.getElementById('crmTaskSave'),error=document.getElementById('crmTaskError');error.textContent='';
   try{
    const title=document.getElementById('crmTaskTitle').value.trim();if(!title){error.textContent='Укажите задачу.';return}
    const body={id:state.id,title,comment:document.getElementById('crmTaskComment').value.trim()||null,due_at:dateValue(document.getElementById('crmTaskDue').value)};
-   busy.add('task');button.disabled=true;await window.call('/crm/'+state.contact+'/tasks',{method:'POST',body:JSON.stringify(body)});
+   busy.add(form);button.disabled=true;await window.call('/crm/'+state.contact+'/tasks',{method:'POST',body:JSON.stringify(body)});
    window.toast('Задача создана');if(document.getElementById('crmTaskForm')===form){window.closeSheet();await refresh(state.contact)}
   }catch(e){if(document.getElementById('crmTaskForm')===form)error.textContent=e.message||'Не удалось создать задачу'}
-  finally{busy.delete('task');if(document.getElementById('crmTaskForm')===form)button.disabled=false}
+  finally{busy.delete(form);if(document.getElementById('crmTaskForm')===form)button.disabled=false}
  }
  async function complete(cid,tid){
   if(!valid(cid)||!valid(tid)||busy.has(tid))return;busy.add(tid);

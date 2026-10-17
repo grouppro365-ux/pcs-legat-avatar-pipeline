@@ -1,7 +1,7 @@
 import {CrmError,readCrmBody} from './crm-policy.mjs';
 import {uuid} from './portal-workflow.mjs';
 export const staffRoles=['OPS_ADMIN','CONCIERGE_MANAGER','CATALOG_MANAGER','FINANCE_RECONCILIATION','AUDITOR_READONLY','PARTNERSHIP_MANAGER'];
-export const staffRequirements={session:[], 'staff-session':[], 'authorize-purpose':[], 'attribution-report':['settlements.view','audit.view'],
+export const staffRequirements={session:[], 'staff-session':[], 'authorize-purpose':[], 'request-qualification':['applications.view','clients.manage'], 'content-workflow':['content.view'], 'content-action':[], 'attribution-report':['settlements.view','audit.view'],
  'application-detail':['applications.view','clients.manage'], 'application-conflict':['applications.view'], 'application-rental-phase':['applications.execute','clients.manage'],
  'application-queue':['applications.view','clients.manage'], 'application-workspace':['applications.view','clients.manage'], 'application-offers':['applications.view','clients.manage'],
  workflow:[], 'workflow-action':[],
@@ -14,10 +14,10 @@ export async function authorizeStaff(req,biz,verify,op){
  if(!uuid(identity?.sub))throw new CrmError('Сессия недействительна',401);
  const ctx=(await biz.query('select pcs.staff_context($1::uuid) context',[identity.sub]))[0]?.context;
  if(!ctx||!Array.isArray(ctx.permissions))throw new CrmError('Доступ сотрудника не назначен или отозван',403);
- const required=staffRequirements[op];
+ const required=op==='request-qualification'&&req.method==='POST'?['applications.assign','clients.manage']:staffRequirements[op];
  if(!required||!required.every(p=>staffCan(ctx,p)))throw new CrmError('Недостаточно прав для этого раздела',403);
  if(op==='workflow'&&!staffCan(ctx,'settlements.view')&&!staffCan(ctx,'applications.view'))throw new CrmError('Недостаточно прав для заявки',403);
- const write=['authorize-purpose','application-rental-phase','workflow-action','workflow-delivery-review','runtime-send','runtime-intake','notification-read'].includes(op);
+ const write=(op==='request-qualification'&&req.method==='POST')||['content-action','authorize-purpose','application-rental-phase','workflow-action','workflow-delivery-review','runtime-send','runtime-intake','notification-read'].includes(op);
  if(req.method!==(write?'POST':'GET'))throw new CrmError('Метод не поддерживается',405);
  return {...ctx,auth_user_id:identity.sub};
 }

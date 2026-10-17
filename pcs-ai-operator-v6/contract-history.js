@@ -12,8 +12,10 @@
  }
  async function open(reservation){
   if(!id(reservation))return;
-  try{const data=await window.contractCall(`/reservations/${reservation}/contracts/history`);window.openSheet('Версии и журнал договора',render(data,reservation))}
-  catch(e){window.toast(e.message==='unauthorized'?'Нужно повторно войти в PCS.':'Не удалось загрузить журнал. Повторите открытие.')}
+  const intent=window.pcsSheetLifecycle?.begin();
+  const current=()=>!intent||window.pcsSheetLifecycle.current(intent);
+  try{const data=await window.contractCall(`/reservations/${reservation}/contracts/history`);if(!current())return;window.openSheet('Версии и журнал договора',render(data,reservation))}
+  catch(e){if(!current())return;window.toast(e.message==='unauthorized'?'Нужно повторно войти в PCS.':'Не удалось загрузить журнал. Повторите открытие.')}
  }
  window.pcsContractHistory={open,render};
 })();

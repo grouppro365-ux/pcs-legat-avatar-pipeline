@@ -7,10 +7,10 @@ test('all renderers keep the same bottom panel during transitions, including int
   const writes=[],pending=[],observers=[];
   const bottom={set innerHTML(value){writes.push(value)},get innerHTML(){return writes.at(-1)||''}};
   const root={};
-  const document={body:{classList:{remove(){},add(){}}},querySelector(s){return s==='.bottom'?bottom:s==='#root'?root:null},querySelectorAll(){return []},getElementById(id){return id==='root'?root:null}};
+  const document={body:{classList:{remove(){},add(){},contains:()=>false}},querySelector(s){return s==='.bottom'?bottom:s==='#root'?root:null},querySelectorAll(){return []},getElementById(id){return id==='root'?root:null}};
   const window={PCS:{page:'bookings'},scrollTo(){},go(page){this.PCS.page=page;return Promise.resolve()}};
   const context=vm.createContext({window,document,localStorage:{},location:{search:''},URLSearchParams,Promise,setTimeout(fn){pending.push(fn)},requestAnimationFrame(fn){pending.push(fn);return pending.length},cancelAnimationFrame(){},MutationObserver:class{constructor(fn){observers.push(fn)}observe(){}}});
-  for(const file of ['system-normalizer-v1.js','operator-ux-v37.js'])vm.runInContext(readFileSync(new URL('../'+file,import.meta.url),'utf8'),context);
+  for(const file of ['navigation-lifecycle.js','sheet-lifecycle.js','system-normalizer-v1.js','operator-ux-v37.js'])vm.runInContext(readFileSync(new URL('../'+file,import.meta.url),'utf8'),context);
   writes.length=0;
   window.pcsInstallNav25();
   for(const callback of observers)callback();
