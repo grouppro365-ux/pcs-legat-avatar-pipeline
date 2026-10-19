@@ -12,6 +12,17 @@ BEGIN
  IF NOT EXISTS(SELECT 1 FROM public.applications WHERE id=app AND qualification_data->>'booking_marker'='preserve' AND qualification_data#>>'{operator_qualification,answers,purchase_goal}'='Home' AND operational_status='NEW' AND selected_partner_offer_id IS NULL AND item_id IS NULL) THEN RAISE EXCEPTION 'QA answers missing or canonical fields mutated';END IF;
  SELECT count(*) INTO n FROM public.audit_events WHERE entity_id=app::text AND action='request_qualification_updated';IF n<>1 THEN RAISE EXCEPTION 'QA audit not exactly once';END IF;
  BEGIN PERFORM pcs.save_request_qualification(app,v,cmd,'property_buy','{}','Synthetic client chat',null);RAISE EXCEPTION 'QA retry changed accepted';EXCEPTION WHEN SQLSTATE '23505' THEN NULL;END;
+
+ -- Each service writes through the existing atomic command, without booking mutations.
+ SELECT md5(to_jsonb(a)::text) INTO v FROM public.applications a WHERE id=app;
+ BEGIN PERFORM pcs.save_request_qualification(app,v,gen_random_uuid(),'visa','{"pickup":"BKK"}','Synthetic visa chat',null);RAISE EXCEPTION 'QA visa accepted transfer field';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ r:=pcs.save_request_qualification(app,v,gen_random_uuid(),'visa','{"nationality":"Synthetic nationality","current_status":"Visa exemption","current_location":"Pattaya","target_visa":"Study","timeline":"November"}','Synthetic visa chat',null);
+ IF NOT EXISTS(SELECT 1 FROM public.applications WHERE id=app AND qualification_data#>>'{operator_qualification,type}'='visa' AND qualification_data#>>'{operator_qualification,answers,target_visa}'='Study' AND qualification_data->>'booking_marker'='preserve') THEN RAISE EXCEPTION 'QA visa not saved';END IF;
+ SELECT md5(to_jsonb(a)::text) INTO v FROM public.applications a WHERE id=app;
+ BEGIN PERFORM pcs.save_request_qualification(app,v,gen_random_uuid(),'transfer','{"transfer_date":"2026-02-30"}','Synthetic transfer chat',null);RAISE EXCEPTION 'QA transfer accepted bad calendar date';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ BEGIN PERFORM pcs.save_request_qualification(app,v,gen_random_uuid(),'transfer','{"transfer_time":"24:00"}','Synthetic transfer chat',null);RAISE EXCEPTION 'QA transfer accepted invalid time';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ r:=pcs.save_request_qualification(app,v,gen_random_uuid(),'transfer','{"pickup":"BKK","dropoff":"Pattaya","transfer_date":"2026-11-01","transfer_time":"23:45","passengers":"3","luggage":"2 bags"}','Synthetic transfer chat',null);
+ IF NOT EXISTS(SELECT 1 FROM public.applications WHERE id=app AND qualification_data#>>'{operator_qualification,type}'='transfer' AND qualification_data#>>'{operator_qualification,answers,transfer_time}'='23:45' AND operational_status='NEW' AND selected_partner_offer_id IS NULL AND item_id IS NULL) THEN RAISE EXCEPTION 'QA transfer missing or canonical fields mutated';END IF;
  UPDATE public.applications SET operational_status='CONFIRMED' WHERE id=app;
  SELECT md5(to_jsonb(a)::text) INTO v FROM public.applications a WHERE id=app;
  BEGIN PERFORM pcs.save_request_qualification(app,v,gen_random_uuid(),'service','{}','Synthetic chat',null);RAISE EXCEPTION 'QA confirmed application edited';EXCEPTION WHEN SQLSTATE '23514' THEN NULL;END;
