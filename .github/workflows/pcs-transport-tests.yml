@@ -5,6 +5,7 @@ on:
     paths:
       - 'server/instagram-local/**'
       - 'server/supabase/pcs-meta-webhook-v1/**'
+      - 'server/supabase/pcs-customer-followup-v1/**'
       - 'server/supabase/pcs-channel-send-v1/**'
       - 'supabase/functions/pcs-business-runtime-v8/**'
       - 'supabase/functions/_shared/**'
@@ -14,6 +15,7 @@ on:
     paths:
       - 'server/instagram-local/**'
       - 'server/supabase/pcs-meta-webhook-v1/**'
+      - 'server/supabase/pcs-customer-followup-v1/**'
       - 'server/supabase/pcs-channel-send-v1/**'
       - 'supabase/functions/pcs-business-runtime-v8/**'
       - 'supabase/functions/_shared/**'
@@ -34,6 +36,7 @@ jobs:
           sparse-checkout: |
             server/instagram-local
             server/supabase/pcs-meta-webhook-v1
+            server/supabase/pcs-customer-followup-v1
             server/supabase/pcs-channel-send-v1
             supabase/functions/pcs-business-runtime-v8
             supabase/functions/_shared
