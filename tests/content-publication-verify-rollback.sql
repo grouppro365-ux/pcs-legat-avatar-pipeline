@@ -1,0 +1,52 @@
+CREATE TEMP TABLE audit_events (LIKE public.audit_events INCLUDING ALL) ON COMMIT DROP;
+DO $qa$
+DECLARE b jsonb; p jsonb; cmd jsonb; result jsonb; prepared jsonb; observation jsonb; unreadable jsonb; pid uuid; actor uuid:=gen_random_uuid(); v integer; denied boolean;
+BEGIN
+ INSERT INTO neon_auth."user"(id,name,email,"emailVerified","createdAt","updatedAt",banned) VALUES(actor,'QA publication verification','qa-verify-'||actor||'@example.invalid',false,now(),now(),false);
+ PERFORM pcs.staff_manage(actor,'OPS_ADMIN',true);
+ b:=pcs.content_action('brand',jsonb_build_object('request_id',gen_random_uuid(),'name','QA public text','guidelines','Fixture confirmed facts only, no publication side effects.'),'pcs-manager-admin','["*"]');
+ p:=pcs.content_action('create',jsonb_build_object('request_id',gen_random_uuid(),'brand_id',b->'brand'->>'id','platform','telegram','language','en','title','QA text','body','Approved fixture text','source_facts','Verified source fixture facts without promises','source_url','https://example.invalid/qa'),'pcs-manager-admin','["*"]');pid:=(p->>'id')::uuid;v:=(p->>'version')::integer;
+ cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,'pcs-manager-admin','["*"]',NULL);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA unapproved draft verified';END IF;
+ p:=pcs.content_action('submit',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
+ p:=pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v,'revision',1,'facts_checked',true),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
+ p:=pcs.content_action('report-publication',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v,'publication_url','https://t.me/test_channel/42','publication_note','Synthetic manual report; this is not an actual publication.'),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
+ cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
+ prepared:=pcs.content_verify_publication(cmd,actor::text,'[]',NULL);
+ IF prepared->>'verification_required'<>'true' OR prepared#>>'{snapshot,body}'<>'Approved fixture text' OR EXISTS(SELECT 1 FROM pcs.content_posts WHERE id=pid AND (version<>v OR publication_verification IS NOT NULL)) OR EXISTS(SELECT 1 FROM pcs.content_commands WHERE request_id=(cmd->>'request_id')::uuid) THEN RAISE EXCEPTION 'QA prepare wrote state or lost authoritative text';END IF;
+ observation:=jsonb_build_object('method','public_telegram_text_v1','outcome','TEXT_MATCH','reason','exact_text_observed','publication_url','https://t.me/test_channel/42','fetch_url','https://t.me/s/test_channel?before=43','message_id','42','username','test_channel','expected_sha256',repeat('a',64),'observed_sha256',repeat('a',64),'published_at',now()-interval '1 day');
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,'pcs-manager-admin',NULL,observation);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA null permissions accepted';END IF;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd||'{"observation":"fake"}'::jsonb,actor::text,'[]',observation);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA client evidence injection accepted';END IF;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd||jsonb_build_object('expected_version',v-1),actor::text,'[]',observation);EXCEPTION WHEN serialization_failure THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA stale version accepted';END IF;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',observation||'{"observed_sha256":null}'::jsonb);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA match without observed text accepted';END IF;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',observation||'{"message_id":"43"}'::jsonb);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA different message identity accepted';END IF;
+ -- Revocation/banning between preparation and saving must stop the observation.
+ PERFORM pcs.staff_manage(actor,'AUDITOR_READONLY',true);
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'["*"]',observation);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA revoked approver saved';END IF;
+ PERFORM pcs.staff_manage(actor,'OPS_ADMIN',true);
+ UPDATE neon_auth."user" SET banned=true WHERE id=actor;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'["*"]',observation);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA banned approver saved';END IF;
+ UPDATE neon_auth."user" SET banned=false WHERE id=actor;
+ ALTER TABLE pg_temp.audit_events ADD CONSTRAINT qa_verify_audit_failure CHECK(action<>'content.verify-publication');
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',observation);EXCEPTION WHEN check_violation THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA audit failure did not fail';END IF;
+ IF EXISTS(SELECT 1 FROM pcs.content_posts WHERE id=pid AND (version<>v OR publication_verification IS NOT NULL)) OR EXISTS(SELECT 1 FROM pcs.content_commands WHERE request_id=(cmd->>'request_id')::uuid) THEN RAISE EXCEPTION 'QA audit failure leaked update or receipt';END IF;
+ ALTER TABLE pg_temp.audit_events DROP CONSTRAINT qa_verify_audit_failure;
+ result:=pcs.content_verify_publication(cmd,actor::text,'[]',observation);
+ IF result->>'status'<>'PUBLICATION_REPORTED' OR result#>>'{verification,outcome}'<>'TEXT_MATCH' OR result#>>'{verification,scope}'<>'public_text_only' OR (result->>'version')::integer<>v+1 THEN RAISE EXCEPTION 'QA match changed publication status or lost evidence';END IF;
+ prepared:=pcs.content_verify_publication(cmd,actor::text,'[]',NULL);
+ IF prepared->>'replayed'<>'true' OR prepared-'replayed'<>result OR (SELECT count(*) FROM pg_temp.audit_events WHERE entity_id=pid::text AND action='content.verify-publication')<>1 THEN RAISE EXCEPTION 'QA repeat lost receipt or duplicated audit';END IF;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd||jsonb_build_object('expected_version',v+1),actor::text,'[]',observation);EXCEPTION WHEN serialization_failure THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA command mutation accepted';END IF;
+ PERFORM pcs.staff_manage(actor,'AUDITOR_READONLY',true);
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'["*"]',NULL);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA revoked approver replay allowed';END IF;
+ PERFORM pcs.staff_manage(actor,'OPS_ADMIN',true);
+ v:=v+1;cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
+ unreadable:=observation||'{"outcome":"UNREADABLE","reason":"message_missing","observed_sha256":null,"published_at":null}'::jsonb;
+ result:=pcs.content_verify_publication(cmd,actor::text,'[]',unreadable);
+ IF result#>>'{verification,outcome}'<>'UNREADABLE' OR result->>'status'<>'PUBLICATION_REPORTED' OR EXISTS(SELECT 1 FROM pcs.content_posts WHERE id=pid AND publication_verification->>'outcome'='TEXT_MATCH') THEN RAISE EXCEPTION 'QA unreadable result falsely kept current match';END IF;
+ -- Changed brand approval while a fetch was pending cannot commit.
+ v:=v+1;cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
+ PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',NULL);
+ UPDATE pcs.content_brands SET version=version+1 WHERE id=(b->'brand'->>'id')::uuid;
+ denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',observation);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA changed brand approval accepted';END IF;
+ IF has_function_privilege('public','pcs.content_verify_publication(jsonb,text,jsonb,jsonb)','EXECUTE') THEN RAISE EXCEPTION 'QA PUBLIC execute enabled';END IF;
+END $qa$;

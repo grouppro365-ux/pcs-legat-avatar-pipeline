@@ -26,7 +26,7 @@ async function fixture(){
  const window={pcsSheetLifecycle:{capture:()=>epoch,current:t=>t===epoch},
   openSheet(){epoch++;root=new Element();root.innerHTML='Loading';root.isConnected=true;sheets.push(root);},
   pcsManagerRequest(op,opt){const d=deferred();requests.push({op,...opt,...d});return d.promise;}};
- class FormData {constructor(form){this.entries=Object.entries(form.elements).map(([k,v])=>[k,v.value]);}[Symbol.iterator](){return this.entries[Symbol.iterator]();}}
+ class FormData {constructor(form){this.entries=Object.entries(form.elements).map(([k,v])=>[k,v.value]);}get(key){return this.entries.find(([k])=>k===key)?.[1]??null;}[Symbol.iterator](){return this.entries[Symbol.iterator]();}}
  vm.runInNewContext(source,{window,document,FormData,crypto:{randomUUID},Date});
  const opened=window.pcsContent.open();requests[0].resolve({permissions:['*'],brands:[{id:'brand',name:'PCS',version:2,guidelines:'Accurate'}],posts:[],platforms:['telegram'],languages:['ru']});await opened;
  return{window,requests,sheets,get root(){return root;},invalidate(){epoch++;},edit(kind='new'){root.querySelector(`[data-${kind}]`).onclick();const form=root.children[0];if(kind==='brand'){form.elements.name.value='PCS';form.elements.guidelines.value='Accurate';}else for(const [k,v] of Object.entries({brand_id:'brand',platform:'telegram',language:'ru',title:'Title',source_facts:'Facts',source_url:'https://example.test',body:'Body'}))form.elements[k].value=v;return form;}};
@@ -74,4 +74,32 @@ test('cancelled generation cannot edit a replacement form',async()=>{
 });
 test('late load cannot paint a sheet closed while its root remains mounted',async()=>{
  const f=await fixture();const loading=f.window.pcsContent.open();f.invalidate();f.requests[1].resolve({permissions:['*'],brands:[],posts:[],platforms:[],languages:[]});await loading;assert.equal(f.root.innerHTML,'Loading');
+});
+
+async function contentDetail(f,overrides={},permissions=['*']){
+ const post={id:'post',brand_name:'PCS',brand_id:'brand',version:4,status:'PUBLICATION_REPORTED',current_brand_version:2,publication_url:'https://t.me/test_channel/42',revision:{revision:1,title:'PCS',platform:'telegram',language:'ru',brand_version:2,body:'Confirmed body',qa:{flags:[]}},...overrides};
+ const opening=f.window.pcsContent.open({id:post.id});f.requests.at(-1).resolve({permissions,brands:[],posts:[post],history:[],platforms:['telegram'],languages:['ru']});await opening;return post;
+}
+test('reported Telegram verification shows observed scope, preserves command retry and suppresses duplicate clicks',async()=>{
+ const f=await fixture();await contentDetail(f,{publication_verification:{outcome:'TEXT_MATCH',checked_at:'2026-10-20T12:00:00Z',revision:1}});
+ assert.match(f.root.innerHTML,/только к публичному тексту/);assert.match(f.root.innerHTML,/совпадает/);
+ const button=f.root.querySelector('[data-verify]');const sending=button.onclick({currentTarget:button});await button.onclick({currentTarget:button});assert.equal(f.requests.length,3);assert.equal(f.requests[2].body.action,'verify-publication');
+ f.requests[2].reject(Error('Network'));await sending;const retry=button.onclick({currentTarget:button});assert.equal(f.requests[3].body.request_id,f.requests[2].body.request_id);f.requests[3].reject(Error('Network'));await retry;
+});
+test('verification control requires reported Telegram content and approval permission',async()=>{
+ for(const [overrides,permissions] of [[{},['content.view']],[{status:'READY'},['*']],[{revision:{revision:1,title:'PCS',platform:'instagram',language:'ru',brand_version:2,body:'Body',qa:{flags:[]}}},['*']]]){const f=await fixture();await contentDetail(f,overrides,permissions);assert.doesNotMatch(f.root.innerHTML,/data-verify/);}
+});
+test('schedule detail names its timezone and preserves existing scheduled time',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'READY',scheduled_at:'2027-03-28T12:00:00Z'});assert.match(f.root.innerHTML,/В плане:/);assert.match(f.root.innerHTML,new RegExp(Intl.DateTimeFormat().resolvedOptions().timeZone));
+});
+test('nonexistent local DST time is rejected rather than silently shifted',async()=>{
+ const original=process.env.TZ;process.env.TZ='Europe/Berlin';
+ try{const f=await fixture();await contentDetail(f,{status:'APPROVED'});const form=f.root.querySelector('[data-schedule]');form.elements.scheduled_at={value:'2027-03-28T02:30'};
+  form.onsubmit({preventDefault(){},currentTarget:form,submitter:null});assert.equal(f.requests.length,2);assert.match(f.root.querySelector('[data-message]').textContent,/Europe\/Berlin/);assert.match(f.root.querySelector('[data-message]').textContent,/существующие дату/);
+ }finally{if(original===undefined)delete process.env.TZ;else process.env.TZ=original;}
+});
+
+test('verification finishing after brand editor opens cannot discard its unsaved draft',async()=>{
+ const f=await fixture();await contentDetail(f);const button=f.root.querySelector('[data-verify]'),verifying=button.onclick({currentTarget:button});const form=f.edit('brand');form.elements.guidelines.value='New unsaved brand rules';
+ f.requests[2].resolve({ok:true});await verifying;assert.equal(f.requests.length,3);assert.equal(f.root.children[0],form);assert.equal(form.elements.guidelines.value,'New unsaved brand rules');
 });

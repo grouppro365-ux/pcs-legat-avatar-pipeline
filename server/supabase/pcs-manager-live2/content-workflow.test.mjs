@@ -7,3 +7,10 @@ test('unconnected AI route cannot fabricate a draft',async()=>{const b={...paylo
 test('history pagination keeps selected post and separates history offset',async()=>{const queries=[];await readContentWorkflow({query:async(q,p)=>{queries.push([q,p]);return[];}},{id,page:2});assert.equal(queries[1][1][1],0);assert.equal(queries[2][1][1],40);});
 
 test('schedule requires an explicit timezone',()=>{const base={request_id:id,id,expected_version:2};assert.throws(()=>contentInput('schedule',{...base,scheduled_at:'2099-01-01T12:30:00'}));assert.equal(contentInput('schedule',{...base,scheduled_at:'2099-01-01T12:30:00+03:00'}).scheduled_at,'2099-01-01T12:30:00+03:00');});
+
+test('publication verification rejects client-supplied observations and requires approval permission before database work',async()=>{
+ const b={request_id:id,id,expected_version:2};
+ assert.throws(()=>contentInput('verify-publication',{...b,observation:{outcome:'TEXT_MATCH'}}));
+ let calls=0;await assert.rejects(()=>actContentWorkflow({query:async()=>{calls++;}},'verify-publication',b,'staff',['content.view']),e=>e.status===403);assert.equal(calls,0);
+ await assert.rejects(()=>actContentWorkflow({query:async()=>{throw Object.assign(Error('content_forbidden'),{code:'42501'});}},'verify-publication',b,'staff',['content.approve']),e=>e.status===403);
+});

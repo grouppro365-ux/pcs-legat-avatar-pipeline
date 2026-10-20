@@ -4,7 +4,7 @@
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const priority={LOW:'Низкий',NORMAL:'Обычный',HIGH:'Высокий',URGENT:'Срочный'};
  const busy=new Set();let state=null;
- function active(s){return state===s&&document.getElementById('crmTaskQueue')===s.root}
+ function active(s){return state===s&&(!s.sheet||window.pcsSheetLifecycle.current(s.sheet))&&document.getElementById('crmTaskQueue')===s.root}
  function paging(s){
   if(!active(s))return;
   document.getElementById('crmTaskQueuePrevious').disabled=s.loading||s.page===0;
@@ -40,7 +40,7 @@
  }
  async function open(){
   window.openSheet('Задачи CRM',`<section id="crmTaskQueue"><div class="field"><label for="crmTaskQueueView">Показать</label><select id="crmTaskQueueView" onchange="pcsTaskQueue.filter(this.value)"><option value="open">Все открытые</option><option value="overdue">Просроченные</option><option value="undated">Без срока</option></select></div><button class="btn ghost compact" type="button" onclick="pcsTaskQueue.reload()">Обновить</button><p id="crmTaskQueueError" role="alert"></p><p id="crmTaskQueueLimit" class="muted"></p><div id="crmTaskQueueList" class="list" aria-live="polite"></div><div class="actions"><button id="crmTaskQueuePrevious" class="btn ghost compact" type="button" onclick="pcsTaskQueue.page(-1)" disabled>Назад</button><button id="crmTaskQueueNext" class="btn ghost compact" type="button" onclick="pcsTaskQueue.page(1)" disabled>Далее</button></div></section>`);
-  state={root:document.getElementById('crmTaskQueue'),view:'open',page:0,rows:[],sequence:0,truncated:false,loading:false,loaded:false};await load(state);
+  state={root:document.getElementById('crmTaskQueue'),sheet:window.pcsSheetLifecycle?.capture(),view:'open',page:0,rows:[],sequence:0,truncated:false,loading:false,loaded:false};await load(state);
  }
  async function filter(view){if(!['open','overdue','undated'].includes(view)||!state)return;state.view=view;state.page=0;await load(state)}
  async function page(direction){const s=state;if(!s||!active(s)||s.loading||![1,-1].includes(direction)||(direction===-1&&s.page===0)||(direction===1&&(!s.loaded||!s.truncated)))return;s.page+=direction;await load(s)}
@@ -54,6 +54,6 @@
   }catch(e){if(active(s))document.getElementById('crmTaskQueueError').textContent=e.message||'Не удалось завершить задачу.'}
   finally{busy.delete(t.id);if(active(s)&&s.rows.length)draw(s)}
  }
- async function client(i){const t=state?.rows[i];if(!t||!valid(t.contact_id))return;window.closeSheet();try{await window.go('crm');await window.openClient(t.contact_id,false)}catch(e){window.toast(e.message||'Не удалось открыть клиента.')}}
- window.pcsTaskQueue={open,filter,page,complete,client,edit:i=>{const t=state?.rows[i];if(t&&valid(t.id)&&valid(t.contact_id)&&!busy.has(t.id))window.pcsTaskEdit.open(t.contact_id,t.id)},reload:()=>state&&load(state)};
+ async function client(i){const t=state?.rows[i];if(!state||!active(state)||!t||!valid(t.contact_id))return;window.closeSheet();try{const navigation=window.go('crm'),scope=window.pcsNavigation?.capture();await navigation;if(scope&&!window.pcsNavigation.isCurrent(scope))return;await window.openClient(t.contact_id,false)}catch(e){window.toast(e.message||'Не удалось открыть клиента.')}}
+ window.pcsTaskQueue={open,filter,page,complete,client,edit:i=>{const t=state?.rows[i];if(state&&active(state)&&t&&valid(t.id)&&valid(t.contact_id)&&!busy.has(t.id))window.pcsTaskEdit.open(t.contact_id,t.id)},reload:()=>state&&load(state)};
 })();
