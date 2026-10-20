@@ -34,8 +34,12 @@ export async function actContentWorkflow(biz,action,b,actor,permissions,generate
  if(action==='generate'){
   if(!generate)throw new CrmError('Генерация текста пока не подключена. Можно сохранить материал вручную.',503);
   const rows=await biz.query('select id,name,guidelines,version from pcs.content_brands where id=$1::uuid',[b.brand_id]);if(!rows.length)throw new CrmError('Бренд не найден',404);
-  const body=await generate({...b,brand:rows[0]});if(typeof body!=='string'||!body.trim()||body.length>12000)throw new CrmError('Не удалось получить пригодный черновик',502);
-  return {ok:true,body:body.trim(),status:'UNSAVED_DRAFT',requires_fact_check:true};
+  // Only the latest revision of each post in this exact editorial scope is context.
+  // The extra row detects truncation; excerpts bound provider cost and data exposure.
+  const recent=await biz.query(`select p.id,p.status,p.updated_at,r.title,left(r.body,1200) body_excerpt,r.revision from pcs.content_posts p join lateral (select revision,title,body,platform,language from pcs.content_revisions where post_id=p.id order by revision desc limit 1) r on true where p.brand_id=$1::uuid and r.platform=$2 and r.language=$3 order by p.updated_at desc,p.id limit 21`,[b.brand_id,b.platform,b.language]);
+  const memory={scope:'brand_platform_language',limit:20,truncated:recent.length>20,items:recent.slice(0,20)};
+  const body=await generate({...b,brand:rows[0],editorial_history:memory});if(typeof body!=='string'||!body.trim()||body.length>12000)throw new CrmError('Не удалось получить пригодный черновик',502);
+  return {ok:true,body:body.trim(),status:'UNSAVED_DRAFT',requires_fact_check:true,editorial_history:{count:memory.items.length,limit:memory.limit,truncated:memory.truncated,scope:memory.scope},semantic_duplicate_check:'NOT_PERFORMED'};
  }
  try{if(action==='verify-publication')return await verifyContentPublication(biz,b,actor,permissions);const rows=await biz.query('select pcs.content_action($1,$2::jsonb,$3,$4::jsonb) result',[action,JSON.stringify(b),String(actor),JSON.stringify(permissions)]);return rows[0].result;}
  catch(e){const m=String(e.message||'');if(e.code==='42501'||/content_(forbidden|actor_invalid)/.test(m))throw new CrmError('Недостаточно прав для работы с контентом',403);if(/version_conflict|request_conflict/.test(m))throw new CrmError('Материал изменён. Обновите карточку и повторите действие.',409);if(/content_/.test(m))throw new CrmError('Действие не выполнено: проверьте статус, факты, QA и редакцию бренда.',400);throw e;}
