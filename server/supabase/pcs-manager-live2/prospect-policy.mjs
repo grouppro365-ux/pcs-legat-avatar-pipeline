@@ -17,10 +17,58 @@ export function sourceUsername(value){
 }
 const entities={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:' '};
 export function plainHtml(s){return s.replace(/<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,'').replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi,(all,x)=>{if(x[0]==='#'){const n=x[1].toLowerCase()==='x'?parseInt(x.slice(2),16):parseInt(x.slice(1),10);return n>0&&n<=0x10ffff&&!(n>=0xd800&&n<=0xdfff)?String.fromCodePoint(n):'';}return entities[x.toLowerCase()]??all;}).trim();}
+// Ignore markup that cannot be rendered as a message, including nested templates.
+// Unclosed comments/raw-text/template regions conservatively hide the remainder.
+function visiblePublicHtml(html){
+ const token=/<!--|<\/?(?:script|style|template)\b[^>]*>/gi;
+ const skipRaw=(name,start)=>{const close=new RegExp('</'+name+'\\s*>','gi');close.lastIndex=start;return close.exec(html)?close.lastIndex:html.length;};
+ const skipComment=start=>{const end=html.indexOf('-->',start);return end<0?html.length:end+3;};
+ let cursor=0;const chunks=[];
+ for(let match;(match=token.exec(html));){
+  chunks.push(html.slice(cursor,match.index));let end=token.lastIndex;
+  if(match[0]==='<!--')end=skipComment(end);
+  else if(!/^<\//.test(match[0])){
+   const name=match[0].match(/^<(script|style|template)\b/i)[1].toLowerCase();
+   if(name!=='template')end=skipRaw(name,end);
+   else{
+    let depth=1;
+    for(let inner;depth&&(inner=token.exec(html));){
+     if(inner[0]==='<!--')token.lastIndex=skipComment(token.lastIndex);
+     else if(/^<template\b/i.test(inner[0]))depth++;
+     else if(/^<\/template\b/i.test(inner[0]))depth--;
+     else if(/^<(?:script|style)\b/i.test(inner[0]))token.lastIndex=skipRaw(inner[0].match(/^<(script|style)\b/i)[1],token.lastIndex);
+    }
+    end=depth?html.length:token.lastIndex;
+   }
+  }
+  // Keep a separator: removing hidden markup must not manufacture HTML tokens.
+  chunks.push(' ');cursor=end;token.lastIndex=end;
+ }
+ chunks.push(html.slice(cursor));return chunks.join('');
+}
+// Extract complete widgets with balanced div boundaries, regardless of attribute order.
+// Missing closing wrappers and nested message widgets must not borrow a sibling's text.
+export function publicMessageWidgets(html){
+ if(typeof html!=='string'||html.length>2500000)throw Error('public_page_too_large');
+ html=visiblePublicHtml(html);
+ const stack=[],active=[],widgets=[];
+ for(const tag of html.matchAll(/<\/?div\b[^>]*>/gi)){
+  if(/^<\//.test(tag[0])){
+   const frame=stack.pop();if(!frame?.post)continue;active.pop();
+   const block=html.slice(frame.start,tag.index+tag[0].length);
+   if(!frame.invalid&&[...block.matchAll(/\bdata-post="/gi)].length===1&&!/<script\b|<style\b/i.test(block))widgets.push({post:frame.post,block});
+  }else{
+   const klass=tag[0].match(/\bclass="([^"]*)"/i)?.[1],post=tag[0].match(/\bdata-post="([a-z0-9_]+\/\d+)"/i)?.[1];
+   const frame={start:tag.index,post:klass?.split(/\s+/).includes('tgme_widget_message')?post?.toLowerCase():null,invalid:false};
+   if(frame.post){if(active.length)active.at(-1).invalid=true;active.push(frame);}stack.push(frame);
+  }
+ }
+ return widgets;
+}
 export function parsePublicPage(html,username){
  if(typeof html!=='string'||html.length>2500000)throw Error('public_page_too_large');
- const blocks=html.split(/(?=<div\b[^>]*\bclass="[^"]*tgme_widget_message\s[^"]*"[^>]*\bdata-post=")/),messages=[];
- for(const block of blocks){
+ const blocks=publicMessageWidgets(html),messages=[];
+ for(const {block} of blocks){
   const post=block.match(/data-post="([a-z0-9_]+)\/(\d+)"/i);if(!post||post[1].toLowerCase()!==username)continue;
   const text=block.match(/<div\b[^>]*class="[^"]*tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
   const time=block.match(/<time\b[^>]*datetime="([^"]+)"/i);const id=post[2];if(!/^\d{1,15}$/.test(id))continue;

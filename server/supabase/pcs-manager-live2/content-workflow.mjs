@@ -1,10 +1,11 @@
+import {verifyContentPublication} from './content-publication-verify.mjs';
 import {CrmError} from './crm-policy.mjs';
 const uuid=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
 const platforms=['telegram','instagram','facebook','youtube','tiktok','website'];
 const languages=['ru','en','th','pl','es','zh','ja','ko','ar','fr','de','kk'];
 export function contentInput(action,b){
  if(!b||typeof b!=='object'||Array.isArray(b))throw new CrmError('Проверьте данные материала');
- const fields={brand:['request_id','id','expected_version','name','guidelines'],create:['request_id','brand_id','platform','language','title','body','source_facts','source_url'],revise:['request_id','id','expected_version','platform','language','title','body','source_facts','source_url'],submit:['request_id','id','expected_version'],approve:['request_id','id','expected_version','revision','facts_checked','review_note'],schedule:['request_id','id','expected_version','scheduled_at'],'report-publication':['request_id','id','expected_version','publication_url','publication_note'],generate:['brand_id','platform','language','title','source_facts','source_url']};
+ const fields={brand:['request_id','id','expected_version','name','guidelines'],create:['request_id','brand_id','platform','language','title','body','source_facts','source_url'],revise:['request_id','id','expected_version','platform','language','title','body','source_facts','source_url'],submit:['request_id','id','expected_version'],approve:['request_id','id','expected_version','revision','facts_checked','review_note'],schedule:['request_id','id','expected_version','scheduled_at'],'verify-publication':['request_id','id','expected_version'],'report-publication':['request_id','id','expected_version','publication_url','publication_note'],generate:['brand_id','platform','language','title','source_facts','source_url']};
  if(!fields[action]||Object.keys(b).some(k=>!fields[action].includes(k)))throw new CrmError('Неизвестное действие или поле');
  if(action!=='generate'&&!uuid.test(b.request_id))throw new CrmError('Обновите форму действия');
  for(const key of ['id','brand_id'])if(b[key]!=null&&!uuid.test(b[key]))throw new CrmError('Проверьте номер материала или бренда');
@@ -28,7 +29,7 @@ export async function readContentWorkflow(biz,input={}){
 }
 export async function actContentWorkflow(biz,action,b,actor,permissions,generate){
  b=contentInput(action,b);
- const required=['approve','schedule','report-publication'].includes(action)?'content.approve':'content.edit';
+ const required=['approve','schedule','report-publication','verify-publication'].includes(action)?'content.approve':'content.edit';
  if(!Array.isArray(permissions)||!permissions.some(x=>x==='*'||x===required))throw new CrmError('Недостаточно прав для работы с контентом',403);
  if(action==='generate'){
   if(!generate)throw new CrmError('Генерация текста пока не подключена. Можно сохранить материал вручную.',503);
@@ -36,6 +37,6 @@ export async function actContentWorkflow(biz,action,b,actor,permissions,generate
   const body=await generate({...b,brand:rows[0]});if(typeof body!=='string'||!body.trim()||body.length>12000)throw new CrmError('Не удалось получить пригодный черновик',502);
   return {ok:true,body:body.trim(),status:'UNSAVED_DRAFT',requires_fact_check:true};
  }
- try{const rows=await biz.query('select pcs.content_action($1,$2::jsonb,$3,$4::jsonb) result',[action,JSON.stringify(b),String(actor),JSON.stringify(permissions)]);return rows[0].result;}
- catch(e){const m=String(e.message||'');if(/version_conflict|request_conflict/.test(m))throw new CrmError('Материал изменён. Обновите карточку и повторите действие.',409);if(/content_/.test(m))throw new CrmError('Действие не выполнено: проверьте статус, факты, QA и редакцию бренда.',400);throw e;}
+ try{if(action==='verify-publication')return await verifyContentPublication(biz,b,actor,permissions);const rows=await biz.query('select pcs.content_action($1,$2::jsonb,$3,$4::jsonb) result',[action,JSON.stringify(b),String(actor),JSON.stringify(permissions)]);return rows[0].result;}
+ catch(e){const m=String(e.message||'');if(e.code==='42501'||/content_(forbidden|actor_invalid)/.test(m))throw new CrmError('Недостаточно прав для работы с контентом',403);if(/version_conflict|request_conflict/.test(m))throw new CrmError('Материал изменён. Обновите карточку и повторите действие.',409);if(/content_/.test(m))throw new CrmError('Действие не выполнено: проверьте статус, факты, QA и редакцию бренда.',400);throw e;}
 }

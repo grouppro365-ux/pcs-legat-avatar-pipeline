@@ -128,3 +128,14 @@ test("improved demand recognition never promotes a model rejection or low-confid
   assert.notEqual(validateClassifications([{...message,text}],{results:[{...result,evidence:text,...change}]},now)[0].decision,"qualified");
  }
 });
+
+test('public parser isolates empty target from later widget regardless of attribute order',()=>{
+ const page='<div class="tgme_widget_message text_not_supported_wrap" data-post="test_channel/42"></div><div data-post="test_channel/43" class="tgme_widget_message text_not_supported_wrap"><div class="tgme_widget_message_text js-message_text">Approved body</div><time datetime="2026-10-20T01:02:03Z"></time></div>';
+ const records=parsePublicPage(page,'test_channel').messages;assert.equal(records.find(m=>m.id==='42').text,'');assert.equal(records.find(m=>m.id==='42').published_at,null);assert.equal(records.find(m=>m.id==='43').text,'Approved body');
+});
+
+test('public parser ignores non-rendered and unclosed message-shaped markup',()=>{
+ const widget=publicFixture([{...message,text:'Hidden demand'}]);
+ for(const page of ['<!--'+widget+'-->','<script>const template=`'+widget+'`;</script>','<style>'+widget+'</style>','<template>'+widget+'</template>','<template><template>'+widget+'</template>'+widget+'</template>','<template><script>"</template>"</script>'+widget+'</template>','<!--'+widget,'<script>'+widget,'<style>'+widget,'<template>'+widget,'<template><template>'+widget+'</template>'])assert.equal(parsePublicPage(page,'test_channel').readable,false,page);
+ const page=parsePublicPage('<template>'+widget+'</template>'+publicFixture([{...message,id:'43',text:'Visible demand'}]),'test_channel');assert.deepEqual(page.messages.map(m=>[m.id,m.text]),[['43','Visible demand']]);
+});

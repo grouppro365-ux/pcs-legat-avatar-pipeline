@@ -109,11 +109,11 @@ test('booking changes racing with handover cannot report a successful generic up
  const r=await f.call('application-save',{body:{...validBookingTerms,id:applicationId,expected_version:'2026-10-09 00:00:00.123456+00',category:'booking',operational_status:'CONFIRMED'}});
  assert.equal(r.status,409);assert.match(f.writes[0].q,/operational_status=any\(\$6::text\[\]\)/);
 });
-test('missing bookings do not produce success and ordinary non-booking flows keep their status route',async()=>{
+test('missing bookings do not produce success and non-booking status changes require the canonical workflow',async()=>{
  const f=await fixture();assert.equal((await f.call('application-status',{body:{id:applicationId,status:'NEW'}})).status,404);
  const g=await fixture({applicationRows:[{id:applicationId,category:'general',operational_status:'NEW'}]});
  assert.equal((await g.call('application-status',{body:{id:applicationId,status:'SERVICE_IN_PROGRESS'}})).status,409);
- assert.equal(g.writes.length,1,'non-booking status reaches conditional SQL, which returned no updated row in this fixture');
+ assert.equal(g.writes.length,0,'non-booking status cannot reach the legacy unversioned UPDATE');
 });
 
 test('generic booking save retains its category when omitted and rejects invented booking states',async()=>{
@@ -175,6 +175,28 @@ test('the manager routes valid booking creation through the atomic booking/audit
 });
 
 const bookingVersion='2026-10-09 00:00:00.123456+00';
+test('legacy non-booking saves cannot erase fresh qualification or convert the request into a booking',async()=>{
+ const qualification_data={operator_qualification:{type:'visa',answers:{nationality:'Client supplied'},source_note:'Fresh client conversation'}};
+ for(const patch of [{},{qualification_data:{}},{qualification_data:{operator_qualification:{type:'service',answers:{}}}},{category:'booking',...validBookingTerms}]){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'general',operational_status:'NEW',qualification_data,edit_version:bookingVersion}]});
+  const response=await f.call('application-save',{body:{id:applicationId,category:'general',expected_version:bookingVersion,...patch,photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
+  assert.equal(response.status,409);assert.match((await response.json()).error,/рабочий процесс и квалификацию/);
+  assert.equal(f.writes.length,0,'fresh qualification must not reach a legacy whole-row replacement');assert.equal(f.uploads.length,0);
+ }
+});
+test('legacy non-booking creation rejects injected qualification before any write or media upload',async()=>{
+ for(const category of [undefined,'general','visa','transfer']){
+  const f=await fixture(),response=await f.call('application-save',{body:{...(category?{category}:{}),qualification_data:{operator_qualification:{type:'visa',answers:{nationality:'Injected'}}},photo:{content_base64:'YQ==',filename:'qa.jpg'}}});
+  assert.equal(response.status,409);assert.match((await response.json()).error,/рабочий процесс и квалификацию/);assert.equal(f.writes.length,0);assert.equal(f.uploads.length,0);assert.equal(f.reads.length,0);
+ }
+});
+test('legacy non-booking status cannot complete or reopen a request with fresh qualification',async()=>{
+ for(const status of ['COMPLETED','SERVICE_IN_PROGRESS','CONFIRMED','NEW'])for(const expected_version of [undefined,bookingVersion]){
+  const f=await fixture({applicationRows:[{id:applicationId,category:'general',operational_status:'NEW',qualification_data:{operator_qualification:{type:'visa',answers:{nationality:'Client supplied'}}},edit_version:bookingVersion}]});
+  const response=await f.call('application-status',{body:{id:applicationId,status,expected_version}});
+  assert.equal(response.status,409);assert.match((await response.json()).error,/через рабочий процесс/);assert.equal(f.writes.length,0);assert.equal(f.uploads.length,0);
+ }
+});
 test('booking mutations reject missing and stale versions before writes or uploads',async()=>{
  for(const op of ['application-save','application-status'])for(const expected_version of [undefined,null,'',bookingVersion+'0','2026-10-09T00:00:00.123Z']){
   const f=await fixture({applicationRows:[{id:applicationId,category:'booking',operational_status:'CONFIRMED',edit_version:bookingVersion}]});
