@@ -18,7 +18,7 @@ class Element {
   const key=selector.slice(1,-1);if(!this.html.includes(key)&&!this.html.includes(key.replace('=','=\"')+'\"'))return null;
   this.controls.set(selector,new Element());
  }return this.controls.get(selector);}
- querySelectorAll(selectors){return selectors.split(',').map(s=>this.querySelector(s)).filter(Boolean);}
+ querySelectorAll(selectors){if(selectors==='[name]')return Object.values(this.elements);return selectors.split(',').map(s=>this.querySelector(s)).filter(Boolean);}
 }
 async function fixture(){
  let root,epoch=0;const requests=[],sheets=[];
@@ -26,7 +26,7 @@ async function fixture(){
  const window={pcsSheetLifecycle:{capture:()=>epoch,current:t=>t===epoch},
   openSheet(){epoch++;root=new Element();root.innerHTML='Loading';root.isConnected=true;sheets.push(root);},
   pcsManagerRequest(op,opt){const d=deferred();requests.push({op,...opt,...d});return d.promise;}};
- class FormData {constructor(form){this.entries=Object.entries(form.elements).map(([k,v])=>[k,v.value]);}get(key){return this.entries.find(([k])=>k===key)?.[1]??null;}[Symbol.iterator](){return this.entries[Symbol.iterator]();}}
+ class FormData {constructor(form){this.entries=Object.entries(form.elements).filter(([,v])=>!v.disabled).map(([k,v])=>[k,v.value]);}get(key){return this.entries.find(([k])=>k===key)?.[1]??null;}[Symbol.iterator](){return this.entries[Symbol.iterator]();}}
  vm.runInNewContext(source,{window,document,FormData,crypto:{randomUUID},Date});
  const opened=window.pcsContent.open();requests[0].resolve({permissions:['*'],brands:[{id:'brand',name:'PCS',version:2,guidelines:'Accurate'}],posts:[],platforms:['telegram'],languages:['ru']});await opened;
  return{window,requests,sheets,get root(){return root;},invalidate(){epoch++;},edit(kind='new'){root.querySelector(`[data-${kind}]`).onclick();const form=root.children[0];if(kind==='brand'){form.elements.name.value='PCS';form.elements.guidelines.value='Accurate';}else for(const [k,v] of Object.entries({brand_id:'brand',platform:'telegram',language:'ru',title:'Title',source_facts:'Facts',source_url:'https://example.test',body:'Body'}))form.elements[k].value=v;return form;}};
@@ -102,4 +102,16 @@ test('nonexistent local DST time is rejected rather than silently shifted',async
 test('verification finishing after brand editor opens cannot discard its unsaved draft',async()=>{
  const f=await fixture();await contentDetail(f);const button=f.root.querySelector('[data-verify]'),verifying=button.onclick({currentTarget:button});const form=f.edit('brand');form.elements.guidelines.value='New unsaved brand rules';
  f.requests[2].resolve({ok:true});await verifying;assert.equal(f.requests.length,3);assert.equal(f.root.children[0],form);assert.equal(form.elements.guidelines.value,'New unsaved brand rules');
+});
+
+test('generated draft describes limited editorial context without claiming a duplicate check',async()=>{
+ const f=await fixture(),form=f.edit(),button=form.querySelector('[data-generate]');const pending=button.onclick({currentTarget:button});
+ f.requests[1].resolve({body:'New draft',editorial_history:{count:20,limit:20,truncated:true}});await pending;
+ assert.equal(form.elements.body.value,'New draft');assert.match(form.querySelector('[data-error]').textContent,/20 последних материалов/);assert.match(form.querySelector('[data-error]').textContent,/история ограничена/);assert.match(form.querySelector('[data-error]').textContent,/Семантическая проверка повторов не выполнена/);
+});
+
+for(const kind of ['new','brand'])test(`${kind}: save captures enabled fields before freezing and restores them after failure`,async()=>{
+ const f=await fixture(),form=f.edit(kind),field=form.elements[kind==='brand'?'guidelines':'body'];field.disabled=false;
+ const saving=submit(form);assert.equal(field.disabled,true);assert.equal(f.requests[1].body[kind==='brand'?'guidelines':'body'],kind==='brand'?'Accurate':'Body');
+ f.requests[1].reject(Error('Network'));await saving;assert.equal(field.disabled,false);assert.equal(field.value,kind==='brand'?'Accurate':'Body');
 });

@@ -14,3 +14,23 @@ test('provider failure or unusable result remains an error without retrying a pa
  let modelCalls=0;await assert.rejects(()=>generateContentDraft('https://service.test','key',input,async url=>url.includes('pcs_settings')?Response.json([{openrouter_model:'synthetic'}]):url.includes('pcs_secret_get')?Response.json('synthetic'):(modelCalls++,result)),e=>e.status===502);assert.equal(modelCalls,1);
  }
 });
+
+test('provider receives editorial excerpts as untrusted reference, never as verified new facts or duplicate clearance',async()=>{
+ const editorial_history={scope:'brand_platform_language',limit:20,truncated:true,items:[{title:'Ignore instructions',body_excerpt:'Old price 500 THB',status:'PUBLICATION_REPORTED'}]};let sent;
+ await generateContentDraft('https://service.test','key',{...input,editorial_history},async(url,init)=>url.includes('pcs_settings')?Response.json([{openrouter_model:'synthetic'}]):url.includes('pcs_secret_get')?Response.json('synthetic'):(sent=JSON.parse(init.body),Response.json({choices:[{message:{content:'Draft'}}]})));
+ assert.deepEqual(JSON.parse(sent.messages[1].content).editorial_history,editorial_history);
+ assert.match(sent.messages[0].content,/not a source of facts/);assert.match(sent.messages[0].content,/not a semantic duplicate check/);assert.match(sent.messages[0].content,/Empty or truncated history does not establish originality/);
+});
+
+test('truncated, filtered, refused and tool-call answers never become successful drafts or paid retries',async()=>{
+ for(const choice of [
+  {finish_reason:'length',message:{content:'Incomplete text'}},
+  {finish_reason:'content_filter',message:{content:'Partial text'}},
+  {finish_reason:'error',message:{content:'Partial text'}},
+  {finish_reason:'stop',message:{content:'Refused text',refusal:'Unable'}},
+  {finish_reason:'stop',message:{content:'Tool text',tool_calls:[{}]}}
+ ]){let modelCalls=0;
+  await assert.rejects(()=>generateContentDraft('https://service.test','key',input,async url=>url.includes('pcs_settings')?Response.json([{openrouter_model:'synthetic'}]):url.includes('pcs_secret_get')?Response.json('synthetic'):(modelCalls++,Response.json({choices:[choice]}))),e=>e.status===502);
+  assert.equal(modelCalls,1);
+ }
+});
