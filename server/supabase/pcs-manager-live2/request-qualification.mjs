@@ -5,13 +5,16 @@ export const qualificationTypes={
  car_rental:{title:'Аренда автомобиля',fields:{...shared,start_date:'Начало аренды',end_date:'Окончание аренды',vehicle_class:'Класс автомобиля',driver_age:'Возраст водителя',delivery:'Место получения и возврата'}},
  property_rent:{title:'Аренда недвижимости',fields:{...shared,start_date:'Дата заселения',end_date:'Дата выезда',property_type:'Тип жилья и число спален',guests:'Число гостей',pets:'Животные (нет / подробности)'}},
  property_buy:{title:'Покупка недвижимости',fields:{...shared,property_type:'Тип объекта и число спален',purchase_goal:'Цель покупки',purchase_timing:'Срок покупки',ownership:'Требования к форме владения'}},
+ visa:{title:'Визы и документы',fields:{nationality:'Гражданство заявителя',current_status:'Текущий визовый статус и срок его действия',current_location:'Текущее местонахождение заявителя',target_visa:'Нужная виза / цель оформления',timeline:'Желаемый срок оформления',applicants:'Количество заявителей',requirements:'Дополнительные обстоятельства и вопросы'}},
+ transfer:{title:'Трансфер',fields:{...shared,pickup:'Откуда забрать (адрес / аэропорт)',dropoff:'Куда доставить (адрес / аэропорт)',transfer_date:'Дата поездки в Таиланде',transfer_time:'Время подачи в Таиланде',passengers:'Количество пассажиров',luggage:'Количество и размер багажа',child_seats:'Детские кресла (нет / возраст детей)',flight_number:'Номер рейса (или не требуется)'}},
  service:{title:'Услуга / иной запрос',fields:{...shared,service_need:'Что нужно сделать',service_date:'Когда нужен результат',participants:'Для кого / количество участников'}}
 };
 export function qualificationInput(b){
  if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['id','expected_version','request_id','type','answers','source_note'].includes(k))||!uuid(b.id)||!uuid(b.request_id)||!/^[a-f0-9]{32}$/.test(b.expected_version||'')||!Object.hasOwn(qualificationTypes,b.type)||!b.answers||Array.isArray(b.answers)||typeof b.answers!=='object'||typeof b.source_note!=='string'||b.source_note.trim().length<5||b.source_note.length>1000)throw new CrmError('Укажите тип запроса, источник ответов и обновите заявку',400);
  const fields=qualificationTypes[b.type].fields;
  if(Object.keys(b.answers).some(k=>!Object.hasOwn(fields,k)||typeof b.answers[k]!=='string'||b.answers[k].length>1000))throw new CrmError('Некорректные ответы квалификации',400);
- for(const k of ['start_date','end_date'])if(b.answers[k]&&(!/^\d{4}-\d{2}-\d{2}$/.test(b.answers[k])||!Number.isFinite(Date.parse(b.answers[k]))||new Date(b.answers[k]).toISOString().slice(0,10)!==b.answers[k]))throw new CrmError('Укажите корректные даты',400);
+ for(const k of ['start_date','end_date','transfer_date'])if(b.answers[k]&&(!/^\d{4}-\d{2}-\d{2}$/.test(b.answers[k])||!Number.isFinite(Date.parse(b.answers[k]))||new Date(b.answers[k]).toISOString().slice(0,10)!==b.answers[k]))throw new CrmError('Укажите корректные даты',400);
+ if(b.answers.transfer_time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(b.answers.transfer_time))throw new CrmError('Укажите время подачи в формате ЧЧ:ММ',400);
  if(b.answers.start_date&&b.answers.end_date&&b.answers.start_date>=b.answers.end_date)throw new CrmError('Дата окончания должна быть позже начала',400);
  return {...b,source_note:b.source_note.trim(),answers:Object.fromEntries(Object.entries(b.answers).map(([k,v])=>[k,v.trim()]))};
 }
