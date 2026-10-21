@@ -115,3 +115,58 @@ for(const kind of ['new','brand'])test(`${kind}: save captures enabled fields be
  const saving=submit(form);assert.equal(field.disabled,true);assert.equal(f.requests[1].body[kind==='brand'?'guidelines':'body'],kind==='brand'?'Accurate':'Body');
  f.requests[1].reject(Error('Network'));await saving;assert.equal(field.disabled,false);assert.equal(field.value,kind==='brand'?'Accurate':'Body');
 });
+
+const duplicateCheck=(extra={})=>({outcome:'NO_SIMILARITY_FOUND',matches:[],note:'No semantic similarity found in the compared sample.',revision:1,brand_version:2,checked_at:'2026-10-21T12:00:00Z',corpus_count:12,corpus_truncated:false,...extra});
+test('semantic check control is limited to review and content approval permission',async()=>{
+ for(const [status,permissions,visible] of [['REVIEW',['content.approve'],true],['REVIEW',['*'],true],['REVIEW',['content.edit'],false],['DRAFT',['*'],false],['APPROVED',['*'],false],['PUBLICATION_REPORTED',['*'],false]]){
+  const f=await fixture();await contentDetail(f,{status},permissions);assert.equal(f.root.innerHTML.includes('data-check-duplicates'),visible);assert.doesNotMatch(f.root.innerHTML,/data-approve/);
+ }
+});
+test('only a duplicate check for current revision and current brand rules unlocks approval',async()=>{
+ for(const check of [null,duplicateCheck({revision:0}),duplicateCheck({brand_version:1}),duplicateCheck({outcome:'UNKNOWN'})]){
+  const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:check});assert.doesNotMatch(f.root.innerHTML,/data-approve/);assert.match(f.root.innerHTML,/Перед одобрением выполните AI-проверку/);
+ }
+ const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck()});assert.match(f.root.innerHTML,/data-approve/);assert.match(f.root.innerHTML,/name="duplicate_review_note"/);
+ const oldBrand=await fixture();await contentDetail(oldBrand,{status:'REVIEW',current_brand_version:3,content_duplicate_check:duplicateCheck({brand_version:3})});assert.doesNotMatch(oldBrand.root.innerHTML,/data-approve/);
+});
+test('semantic observation escapes model fields and states limited cross-language sample and editor authority',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck({outcome:'POSSIBLE_DUPLICATE',note:'<img src=x onerror=alert(1)>',checked_at:'<unsafe>',matches:[{post_id:'<script>bad</script>',reason:'<b>Reason & details</b>'}],corpus_truncated:true})});
+ assert.doesNotMatch(f.root.innerHTML,/<img|<script>|<b>Reason/);assert.match(f.root.innerHTML,/&lt;img/);assert.match(f.root.innerHTML,/&lt;script&gt;/);assert.match(f.root.innerHTML,/&lt;b&gt;Reason &amp; details/);
+ assert.match(f.root.innerHTML,/Это AI-оценка, решение принимает редактор/);assert.match(f.root.innerHTML,/до 12 последних материалов того же бренда, на разных площадках и языках/);assert.match(f.root.innerHTML,/не подтверждает полную оригинальность или достоверность фактов/);assert.match(f.root.innerHTML,/история ограничена/);
+});
+function approvalForm(f,note=''){
+ const form=f.root.querySelector('[data-approve]');form.innerHTML='<button type="submit">Approve</button>';for(const [key,value]of Object.entries({facts_checked:'on',review_note:'Fact and promise review',duplicate_review_note:note}))form.elements[key]={value};return form;
+}
+test('approval includes editor duplicate decision and refuses short notes for matches, possible duplicates or truncated history',async()=>{
+ for(const check of [duplicateCheck({outcome:'POSSIBLE_DUPLICATE'}),duplicateCheck({matches:[{post_id:'other',reason:'Similar offer'}]}),duplicateCheck({corpus_truncated:true})]){
+  const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:check});assert.match(f.root.innerHTML,/name="duplicate_review_note"[^>]*required minlength="20"/);
+  const form=approvalForm(f,'Too short');form.onsubmit({preventDefault(){},currentTarget:form,submitter:null});assert.equal(f.requests.length,2);assert.match(f.root.querySelector('[data-message]').textContent,/от 20 символов/);
+  form.elements.duplicate_review_note.value='Editor reviewed similarity and accepts distinct practical value.';form.onsubmit({preventDefault(){},currentTarget:form,submitter:null});
+  assert.equal(f.requests.length,3);assert.equal(f.requests[2].body.action,'approve');assert.equal(f.requests[2].body.facts_checked,true);assert.equal(f.requests[2].body.revision,1);assert.equal(f.requests[2].body.duplicate_review_note,form.elements.duplicate_review_note.value);f.requests[2].reject(Error('Test failure'));await Promise.resolve();
+ }
+});
+test('no similarity in complete sample permits approval with an empty duplicate comment',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck()});assert.doesNotMatch(f.root.innerHTML,/name="duplicate_review_note"[^>]*required/);const form=approvalForm(f);
+ form.onsubmit({preventDefault(){},currentTarget:form,submitter:null});assert.equal(f.requests.length,3);assert.equal(f.requests[2].body.duplicate_review_note,'');f.requests[2].reject(Error('Test failure'));await Promise.resolve();
+});
+test('semantic check uses versioned action, suppresses duplicate taps and reuses command after failure',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'REVIEW'});const button=f.root.querySelector('[data-check-duplicates]'),checking=button.onclick({currentTarget:button});await button.onclick({currentTarget:button});
+ assert.equal(f.requests.length,3);assert.equal(f.requests[2].body.action,'check-duplicates');assert.equal(f.requests[2].body.id,'post');assert.equal(f.requests[2].body.expected_version,4);const id=f.requests[2].body.request_id;
+ f.requests[2].reject(Error('AI unavailable'));await checking;assert.match(f.root.querySelector('[data-message]').textContent,/AI unavailable/);const retry=button.onclick({currentTarget:button});assert.equal(f.requests[3].body.request_id,id);f.requests[3].resolve({ok:true,id:'post',version:5});await retry;
+ assert.equal(f.requests.length,5);assert.equal(f.requests[4].op,'content-workflow');assert.equal(f.requests[4].params.id,'post');
+});
+test('late semantic check cannot replace a closed sheet or a new unsaved brand form',async()=>{
+ for(const replace of ['close','brand']){
+  const f=await fixture();await contentDetail(f,{status:'REVIEW'});const button=f.root.querySelector('[data-check-duplicates]'),checking=button.onclick({currentTarget:button});let form;
+  if(replace==='close')f.invalidate();else{form=f.edit('brand');form.elements.guidelines.value='Unsaved rules';}
+  f.requests[2].resolve({ok:true});await checking;assert.equal(f.requests.length,3);if(form){assert.equal(f.root.children[0],form);assert.equal(form.elements.guidelines.value,'Unsaved rules');}
+ }
+});
+
+test('empty saved corpus explicitly reports no comparison instead of an AI originality finding',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck({method:'EMPTY_CORPUS',corpus_count:0,note:'Других сохранённых материалов бренда нет.'})});
+ assert.match(f.root.innerHTML,/Других материалов для сравнения нет/);assert.match(f.root.innerHTML,/AI-сравнение не выполнялось/);assert.doesNotMatch(f.root.innerHTML,/AI не обнаружил смысловых повторов|Это AI-оценка/);assert.match(f.root.innerHTML,/data-approve/);assert.match(f.root.innerHTML,/не подтверждает полную оригинальность или достоверность фактов/);
+});
+test('approval explains that matching revision alone does not establish corpus freshness',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck()});assert.match(f.root.innerHTML,/При одобрении сервер проверит актуальность выборки/);assert.match(f.root.innerHTML,/материалы бренда изменились после проверки/);
+});

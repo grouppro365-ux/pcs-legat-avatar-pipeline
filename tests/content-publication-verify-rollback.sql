@@ -9,6 +9,7 @@ BEGIN
  cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
  denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,'pcs-manager-admin','["*"]',NULL);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA unapproved draft verified';END IF;
  p:=pcs.content_action('submit',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
+ v:=pcs.qa_content_check(pid,v);
  p:=pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v,'revision',1,'facts_checked',true),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
  p:=pcs.content_action('report-publication',jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v,'publication_url','https://t.me/test_channel/42','publication_note','Synthetic manual report; this is not an actual publication.'),'pcs-manager-admin','["*"]');v:=(p->>'version')::integer;
  cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
