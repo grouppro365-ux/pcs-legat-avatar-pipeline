@@ -41,7 +41,7 @@ test('runtime scripts have explicit release keys, including the current send mod
  for(const file of ['app.js','data-quality.js'])assert.ok(html.includes(file+'?v='+(file==='app.js'?'20261021-send-integrity1':'20261006-quality1')));
  assert.ok(html.includes('errors.js?v=20261019-races1'));
  assert.ok(html.includes('approval-review.js?v=20261004-approval1'));
- assert.ok(html.includes('global-search.js?v=20261020-sheets2'));
+ assert.ok(html.includes('global-search.js?v=20261021-content1'));
  assert.ok(html.includes('finance-v26.css?v=20261004-finance-tasks1'));
  for(const file of ['crm-task-queue.js','crm-task-edit.js'])assert.ok(html.includes(file+'?v=20261020-sheets2'));
  assert.ok(html.includes('finance-v26.js?v=20261016-attribution1'));
