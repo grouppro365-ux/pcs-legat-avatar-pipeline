@@ -170,3 +170,44 @@ test('empty saved corpus explicitly reports no comparison instead of an AI origi
 test('approval explains that matching revision alone does not establish corpus freshness',async()=>{
  const f=await fixture();await contentDetail(f,{status:'REVIEW',content_duplicate_check:duplicateCheck()});assert.match(f.root.innerHTML,/При одобрении сервер проверит актуальность выборки/);assert.match(f.root.innerHTML,/материалы бренда изменились после проверки/);
 });
+
+const savedTarget=(extra={})=>({id:'target',brand_id:'brand',version:3,username:'pcs_channel',title:'PCS channel',chat_id:'-100123',bot_id:'456',enabled:true,verified_at:'2026-10-21T12:00:00Z',...extra});
+async function targetList(f,{permissions=['*'],targets=[],brands=[{id:'brand',name:'PCS',version:2}]}={}){
+ const opening=f.window.pcsContent.open();f.requests.at(-1).resolve({permissions,targets,brands,posts:[],platforms:['telegram'],languages:['ru']});await opening;
+}
+function targetForm(f){f.root.querySelector('[data-targets]').onclick();const form=f.root.children[0];form.elements.brand_id.value='brand';form.elements.username.value='@PCS_Channel';return form;}
+test('channel registry launcher requires approval permission, independently from edit permission',async()=>{
+ for(const [permissions,visible]of [[['content.approve'],true],[['*'],true],[['content.edit'],false],[['content.view'],false]]){
+  const f=await fixture();await targetList(f,{permissions});assert.equal(f.root.innerHTML.includes('data-targets'),visible);if(visible){const form=targetForm(f);assert.match(form.innerHTML,/Каналы публикации/);assert.match(form.innerHTML,/Сообщения не отправляются/);assert.match(form.innerHTML,/Автопубликация ещё не включена/);}
+ }
+});
+test('saved targets show escaped brand, channel, title, verification time and registry state',async()=>{
+ const f=await fixture();await targetList(f,{brands:[{id:'brand',name:'<img src=x>'}],targets:[savedTarget({username:'<script>evil</script>',title:'<b>Unsafe & title</b>',verified_at:'<time>',enabled:false})]});const form=targetForm(f);
+ assert.doesNotMatch(form.innerHTML,/<img|<script>|<b>Unsafe/);assert.match(form.innerHTML,/&lt;img src=x&gt;/);assert.match(form.innerHTML,/&lt;script&gt;/);assert.match(form.innerHTML,/&lt;b&gt;Unsafe &amp; title/);assert.match(form.innerHTML,/Проверено: &lt;time&gt; · выключен в реестре/);assert.match(form.innerHTML,/Права проверены на указанное время/);assert.match(form.innerHTML,/Один канал может принадлежать только одному бренду/);
+});
+test('new target canonicalizes username and captures allowed fields before freezing, suppressing duplicate submit',async()=>{
+ const f=await fixture();await targetList(f);const form=targetForm(f),saving=submit(form);await submit(form);const write=f.requests[2].body;
+ assert.equal(f.requests.length,3);assert.equal(write.action,'target');assert.equal(write.brand_id,'brand');assert.equal(write.username,'pcs_channel');assert.ok(write.request_id);assert.equal(Object.hasOwn(write,'target_select'),false);assert.equal(Object.hasOwn(write,'id'),false);assert.equal(Object.hasOwn(write,'expected_version'),false);assert.equal(form.elements.username.disabled,true);
+ f.requests[2].reject(Error('Network unavailable'));await saving;assert.equal(form.elements.username.disabled,undefined);assert.equal(form.querySelector('[type=submit]').disabled,false);assert.match(form.querySelector('[data-error]').textContent,/Network unavailable/);
+});
+test('existing target selector fills persisted brand and username and rechecks its exact version',async()=>{
+ const f=await fixture();await targetList(f,{targets:[savedTarget()]});const form=targetForm(f);form.elements.target_select.value='target';form.elements.target_select.onchange();assert.equal(form.elements.brand_id.value,'brand');assert.equal(form.elements.username.value,'pcs_channel');const saving=submit(form);
+ assert.equal(f.requests[2].body.id,'target');assert.equal(f.requests[2].body.expected_version,3);f.requests[2].resolve({ok:true,target:savedTarget({version:4})});await saving;assert.equal(f.requests.length,4);assert.equal(f.requests[3].op,'content-workflow');assert.equal(f.requests[3].params.id,undefined);
+});
+test('uncertain target retry reuses request ID for unchanged payload and changes it for changed payload',async()=>{
+ const f=await fixture();await targetList(f);const form=targetForm(f);let saving=submit(form);f.requests[2].reject(Error('Unknown save result'));await saving;const first=f.requests[2].body.request_id;
+ saving=submit(form);assert.equal(f.requests[3].body.request_id,first);f.requests[3].resolve({ok:true});await saving;assert.match(form.querySelector('[data-error]').textContent,/Не получено подтверждение/);
+ form.elements.username.value='other_channel';saving=submit(form);assert.notEqual(f.requests[4].body.request_id,first);f.requests[4].reject(Error('Network'));await saving;
+});
+test('target cancellation, closure and reopening suppress stale success and failure responses',async()=>{
+ for(const ending of ['cancel','close','reopen','failure']){
+  const f=await fixture();await targetList(f);const form=targetForm(f),saving=submit(form);let replacement;
+  if(ending==='close')f.invalidate();else{form.querySelector('[data-cancel]').onclick();replacement=targetForm(f);replacement.elements.username.value='replacement_channel';}
+  if(ending==='failure')f.requests[2].reject(Error('Old failure'));else f.requests[2].resolve({ok:true,target:savedTarget()});await saving;
+  assert.equal(f.requests.length,3);if(replacement){assert.equal(f.root.children[0],replacement);assert.equal(replacement.elements.username.value,'replacement_channel');assert.equal(replacement.querySelector('[data-error]').textContent,undefined);}
+ }
+});
+test('target entry rejects URL and missing brand before any request and cannot accumulate duplicate forms',async()=>{
+ const f=await fixture();await targetList(f);const form=targetForm(f);f.root.querySelector('[data-targets]').onclick();assert.equal(f.root.children.length,1);assert.equal(f.root.querySelector('[data-targets]').disabled,true);
+ form.elements.username.value='https://t.me/pcs_channel';await submit(form);assert.equal(f.requests.length,2);assert.match(form.querySelector('[data-error]').textContent,/без ссылки/);form.elements.username.value='pcs_channel';form.elements.brand_id.value='';await submit(form);assert.equal(f.requests.length,2);
+});
