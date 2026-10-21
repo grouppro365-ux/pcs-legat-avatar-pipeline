@@ -1,6 +1,6 @@
 -- PCS content authoring uses the existing business database. No publication or GPU side effects.
 CREATE TABLE IF NOT EXISTS pcs.content_brands(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text NOT NULL CHECK(length(name) BETWEEN 1 AND 160),guidelines text NOT NULL CHECK(length(guidelines) BETWEEN 10 AND 12000),version integer NOT NULL DEFAULT 1,updated_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE IF NOT EXISTS pcs.content_posts(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),brand_id uuid NOT NULL REFERENCES pcs.content_brands(id),version integer NOT NULL DEFAULT 1,status text NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','REVIEW','APPROVED','READY','PUBLICATION_REPORTED')),scheduled_at timestamptz,approved_revision integer,approved_by text,approved_at timestamptz,publication_url text,publication_note text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS pcs.content_posts(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),brand_id uuid NOT NULL REFERENCES pcs.content_brands(id),version integer NOT NULL DEFAULT 1,status text NOT NULL DEFAULT 'DRAFT' CHECK(status IN ('DRAFT','REVIEW','APPROVED','READY','PUBLICATION_REPORTED','PUBLICATION_SENT')),scheduled_at timestamptz,approved_revision integer,approved_by text,approved_at timestamptz,publication_url text,publication_note text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS pcs.content_revisions(post_id uuid NOT NULL REFERENCES pcs.content_posts(id),revision integer NOT NULL,brand_version integer NOT NULL,brand_guidelines text NOT NULL,platform text NOT NULL CHECK(platform IN ('telegram','instagram','facebook','youtube','tiktok','website')),language text NOT NULL CHECK(language IN ('ru','en','th','pl','es','zh','ja','ko','ar','fr','de','kk')),title text NOT NULL CHECK(length(title) BETWEEN 1 AND 200),body text NOT NULL CHECK(length(body) BETWEEN 1 AND 12000),source_facts text NOT NULL CHECK(length(source_facts) BETWEEN 1 AND 16000),source_url text NOT NULL CHECK(length(source_url) BETWEEN 1 AND 2048),qa jsonb NOT NULL,created_by text NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(post_id,revision));
 CREATE TABLE IF NOT EXISTS pcs.content_commands(request_id uuid PRIMARY KEY,payload jsonb NOT NULL,result jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
 REVOKE ALL ON pcs.content_brands,pcs.content_posts,pcs.content_revisions,pcs.content_commands FROM PUBLIC;
@@ -18,7 +18,7 @@ BEGIN
 END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_qa(jsonb) FROM PUBLIC;
 CREATE OR REPLACE FUNCTION pcs.content_action(p_action text,p jsonb,p_actor text,p_permissions jsonb) RETURNS jsonb LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
-DECLARE required text; b pcs.content_brands; post pcs.content_posts; rev pcs.content_revisions; old pcs.content_commands; result jsonb; rid uuid; pid uuid; nextrev integer; payload jsonb; flags jsonb; effective_permissions jsonb; duplicate_snapshot jsonb;
+DECLARE required text; b pcs.content_brands; post pcs.content_posts; rev pcs.content_revisions; old pcs.content_commands; result jsonb; rid uuid; pid uuid; nextrev integer; payload jsonb; flags jsonb; effective_permissions jsonb; duplicate_snapshot jsonb; cancelled_jobs jsonb;
 BEGIN
  required:=CASE WHEN p_action IN ('approve','schedule','report-publication') THEN 'content.approve' ELSE 'content.edit' END;
  IF p_actor ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN
@@ -34,7 +34,12 @@ BEGIN
  IF p_action='brand' THEN
   IF length(btrim(coalesce(p->>'name','')))<1 OR length(btrim(coalesce(p->>'guidelines','')))<10 THEN RAISE EXCEPTION 'content_brand_invalid' USING ERRCODE='22023';END IF;
   IF nullif(p->>'id','') IS NULL THEN INSERT INTO pcs.content_brands(name,guidelines) VALUES(btrim(p->>'name'),btrim(p->>'guidelines')) RETURNING * INTO b;
-  ELSE UPDATE pcs.content_brands SET name=btrim(p->>'name'),guidelines=btrim(p->>'guidelines'),version=version+1,updated_at=clock_timestamp() WHERE id=(p->>'id')::uuid AND version=(p->>'expected_version')::integer RETURNING * INTO b;IF NOT FOUND THEN RAISE EXCEPTION 'content_version_conflict' USING ERRCODE='40001';END IF;END IF;
+  ELSE
+   PERFORM 1 FROM pcs.content_brands WHERE id=(p->>'id')::uuid FOR UPDATE;
+   IF to_regclass('pcs.content_publication_jobs') IS NOT NULL THEN
+    IF EXISTS(SELECT 1 FROM pcs.content_publication_jobs WHERE brand_id=(p->>'id')::uuid AND state='SENDING') THEN RAISE EXCEPTION 'content_publication_job_locked' USING ERRCODE='40001';END IF;
+   END IF;
+   UPDATE pcs.content_brands SET name=btrim(p->>'name'),guidelines=btrim(p->>'guidelines'),version=version+1,updated_at=clock_timestamp() WHERE id=(p->>'id')::uuid AND version=(p->>'expected_version')::integer RETURNING * INTO b;IF NOT FOUND THEN RAISE EXCEPTION 'content_version_conflict' USING ERRCODE='40001';END IF;END IF;
   result:=jsonb_build_object('ok',true,'brand',to_jsonb(b));
  ELSE
   IF p_action='create' THEN
@@ -43,6 +48,14 @@ BEGIN
   ELSE
    SELECT * INTO post FROM pcs.content_posts WHERE id=(p->>'id')::uuid FOR UPDATE;
    IF NOT FOUND OR post.version IS DISTINCT FROM (p->>'expected_version')::integer THEN RAISE EXCEPTION 'content_version_conflict' USING ERRCODE='40001';END IF;
+   IF post.status='PUBLICATION_SENT' THEN RAISE EXCEPTION 'content_publication_job_locked' USING ERRCODE='40001';END IF;
+   IF to_regclass('pcs.content_publication_jobs') IS NOT NULL THEN
+    IF EXISTS(SELECT 1 FROM pcs.content_publication_jobs WHERE post_id=post.id AND state IN ('SENDING','UNKNOWN','SENT')) OR (p_action<>'revise' AND EXISTS(SELECT 1 FROM pcs.content_publication_jobs WHERE post_id=post.id AND state='QUEUED')) THEN RAISE EXCEPTION 'content_publication_job_locked' USING ERRCODE='40001';END IF;
+    IF p_action='revise' THEN
+     WITH cancelled AS (UPDATE pcs.content_publication_jobs SET state='CANCELLED',last_error='content_revised',completed_at=clock_timestamp(),updated_at=clock_timestamp() WHERE post_id=post.id AND state='QUEUED' RETURNING id) SELECT jsonb_agg(id) INTO cancelled_jobs FROM cancelled;
+     UPDATE pcs.content_posts SET publication_target_id=NULL WHERE id=post.id;
+    END IF;
+   END IF;
    IF post.status='PUBLICATION_REPORTED' THEN RAISE EXCEPTION 'content_already_reported' USING ERRCODE='22023';END IF;
    SELECT * INTO b FROM pcs.content_brands WHERE id=post.brand_id FOR UPDATE;
    SELECT * INTO rev FROM pcs.content_revisions WHERE post_id=post.id ORDER BY revision DESC LIMIT 1;
@@ -74,7 +87,7 @@ BEGIN
   UPDATE pcs.content_posts SET version=version+1,updated_at=clock_timestamp() WHERE id=post.id RETURNING * INTO post;
   result:=jsonb_build_object('ok',true,'id',post.id,'version',post.version,'status',post.status);
  END IF;
- INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','content.'||p_action,'content',coalesce(post.id,b.id)::text,jsonb_build_object('actor',p_actor,'request_id',rid,'version',post.version,'revision',CASE WHEN p_action IN ('create','revise') THEN nextrev ELSE rev.revision END,'review_note',p->>'review_note','duplicate_review_note',p->>'duplicate_review_note'),'SUCCESS');
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','content.'||p_action,'content',coalesce(post.id,b.id)::text,jsonb_build_object('actor',p_actor,'request_id',rid,'version',post.version,'revision',CASE WHEN p_action IN ('create','revise') THEN nextrev ELSE rev.revision END,'review_note',p->>'review_note','duplicate_review_note',p->>'duplicate_review_note','cancelled_publication_jobs',cancelled_jobs),'SUCCESS');
  INSERT INTO pcs.content_commands(request_id,payload,result) VALUES(rid,payload,result);RETURN result;
 END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_action(text,jsonb,text,jsonb) FROM PUBLIC;

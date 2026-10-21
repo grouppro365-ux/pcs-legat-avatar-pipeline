@@ -76,9 +76,9 @@ test('late load cannot paint a sheet closed while its root remains mounted',asyn
  const f=await fixture();const loading=f.window.pcsContent.open();f.invalidate();f.requests[1].resolve({permissions:['*'],brands:[],posts:[],platforms:[],languages:[]});await loading;assert.equal(f.root.innerHTML,'Loading');
 });
 
-async function contentDetail(f,overrides={},permissions=['*']){
- const post={id:'post',brand_name:'PCS',brand_id:'brand',version:4,status:'PUBLICATION_REPORTED',current_brand_version:2,publication_url:'https://t.me/test_channel/42',revision:{revision:1,title:'PCS',platform:'telegram',language:'ru',brand_version:2,body:'Confirmed body',qa:{flags:[]}},...overrides};
- const opening=f.window.pcsContent.open({id:post.id});f.requests.at(-1).resolve({permissions,brands:[],posts:[post],history:[],platforms:['telegram'],languages:['ru']});await opening;return post;
+async function contentDetail(f,overrides={},permissions=['*'],targets=[]){
+ const post={id:'post',brand_name:'PCS',brand_id:'brand',version:4,approved_revision:1,status:'PUBLICATION_REPORTED',current_brand_version:2,publication_url:'https://t.me/test_channel/42',revision:{revision:1,title:'PCS',platform:'telegram',language:'ru',brand_version:2,body:'Confirmed body',qa:{flags:[]}},...overrides};
+ const opening=f.window.pcsContent.open({id:post.id});f.requests.at(-1).resolve({permissions,targets,brands:[],posts:[post],history:[],platforms:['telegram'],languages:['ru']});await opening;return post;
 }
 test('reported Telegram verification shows observed scope, preserves command retry and suppresses duplicate clicks',async()=>{
  const f=await fixture();await contentDetail(f,{publication_verification:{outcome:'TEXT_MATCH',checked_at:'2026-10-20T12:00:00Z',revision:1}});
@@ -178,7 +178,7 @@ async function targetList(f,{permissions=['*'],targets=[],brands=[{id:'brand',na
 function targetForm(f){f.root.querySelector('[data-targets]').onclick();const form=f.root.children[0];form.elements.brand_id.value='brand';form.elements.username.value='@PCS_Channel';return form;}
 test('channel registry launcher requires approval permission, independently from edit permission',async()=>{
  for(const [permissions,visible]of [[['content.approve'],true],[['*'],true],[['content.edit'],false],[['content.view'],false]]){
-  const f=await fixture();await targetList(f,{permissions});assert.equal(f.root.innerHTML.includes('data-targets'),visible);if(visible){const form=targetForm(f);assert.match(form.innerHTML,/Каналы публикации/);assert.match(form.innerHTML,/Сообщения не отправляются/);assert.match(form.innerHTML,/Автопубликация ещё не включена/);}
+  const f=await fixture();await targetList(f,{permissions});assert.equal(f.root.innerHTML.includes('data-targets'),visible);if(visible){const form=targetForm(f);assert.match(form.innerHTML,/Каналы публикации/);assert.match(form.innerHTML,/Сообщения не отправляются/);assert.match(form.innerHTML,/Проверка прав сама по себе не включает автопубликацию/);}
  }
 });
 test('saved targets show escaped brand, channel, title, verification time and registry state',async()=>{
@@ -210,4 +210,64 @@ test('target cancellation, closure and reopening suppress stale success and fail
 test('target entry rejects URL and missing brand before any request and cannot accumulate duplicate forms',async()=>{
  const f=await fixture();await targetList(f);const form=targetForm(f);f.root.querySelector('[data-targets]').onclick();assert.equal(f.root.children.length,1);assert.equal(f.root.querySelector('[data-targets]').disabled,true);
  form.elements.username.value='https://t.me/pcs_channel';await submit(form);assert.equal(f.requests.length,2);assert.match(form.querySelector('[data-error]').textContent,/без ссылки/);form.elements.username.value='pcs_channel';form.elements.brand_id.value='';await submit(form);assert.equal(f.requests.length,2);
+});
+
+const publicationJob=(extra={})=>({id:'job',state:'QUEUED',username:'pcs_channel',target_version:3,scheduled_at:'2029-01-21T10:30:00Z',...extra});
+function publicationForm(f,{target='target',time='2029-01-21T10:30',confirmed='on'}={}){
+ const form=f.root.querySelector('[data-publication-schedule]');form.innerHTML='<input name="target_id"><input name="scheduled_at"><input name="publication_confirmed"><p data-publication-error></p><button type="submit">Schedule</button>';for(const [k,value]of Object.entries({target_id:target,scheduled_at:time,publication_confirmed:confirmed}))form.elements[k]={value,disabled:false};return form;
+}
+test('Telegram send scheduling is separate from manual plan and restricted to enabled same-brand destinations',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'APPROVED'},['content.approve'],[savedTarget(),savedTarget({id:'disabled',username:'disabled_channel',enabled:false}),savedTarget({id:'foreign',brand_id:'other',username:'foreign_channel'})]);
+ assert.match(f.root.innerHTML,/Ручной план — без отправки/);assert.match(f.root.innerHTML,/data-publication-schedule/);assert.match(f.root.innerHTML,/Разрешаю отправить именно редакцию 1 с текстом выше/);assert.match(f.root.innerHTML,/@pcs_channel/);assert.doesNotMatch(f.root.innerHTML,/disabled_channel|foreign_channel/);
+ for(const [overrides,permissions]of [[{status:'REVIEW'},['*']],[{status:'APPROVED'},['content.edit']],[{status:'APPROVED',current_brand_version:3},['*']],[{status:'READY'},['*']]]){const no=await fixture();await contentDetail(no,overrides,permissions,[savedTarget()]);assert.doesNotMatch(no.root.innerHTML,/data-publication-schedule/);}
+});
+test('sending requires future valid local time, eligible target and explicit consent before any API call',async()=>{
+ for(const fields of [{confirmed:''},{time:'2000-01-01T10:30'},{time:'bad'},{target:'foreign'},{target:''}]){
+  const f=await fixture();await contentDetail(f,{status:'APPROVED'},['*'],[savedTarget()]);const form=publicationForm(f,fields);await submit(form);assert.equal(f.requests.length,2);assert.match(form.querySelector('[data-publication-error]').textContent,/будущее время и явно подтвердите/);
+ }
+});
+test('explicit Telegram schedule captures immutable versioned destination payload, freezes fields and suppresses duplicates',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'APPROVED'},['*'],[savedTarget()]);const form=publicationForm(f),saving=submit(form);await submit(form);
+ const b=f.requests[2].body;assert.equal(f.requests.length,3);assert.equal(b.action,'schedule-publication');assert.equal(b.id,'post');assert.equal(b.expected_version,4);assert.equal(b.target_id,'target');assert.equal(b.target_version,3);assert.equal(b.scheduled_at,new Date('2029-01-21T10:30').toISOString());assert.equal(b.publication_confirmed,true);assert.ok(b.request_id);assert.equal(Object.hasOwn(b,'body'),false);assert.equal(form.elements.target_id.disabled,true);assert.equal(form.elements.publication_confirmed.disabled,true);
+ f.requests[2].resolve({ok:true,job:publicationJob()});await saving;assert.equal(f.requests.length,4);assert.equal(f.requests[3].params.id,'post');
+});
+test('schedule unknown-result retries reuse exact command and remain editable after failure without automatically retrying',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'APPROVED'},['*'],[savedTarget()]);const form=publicationForm(f);let saving=submit(form);f.requests[2].reject(Error('Unknown network result'));await saving;assert.equal(f.requests.length,3);assert.equal(form.elements.target_id.disabled,false);const id=f.requests[2].body.request_id;
+ saving=submit(form);assert.equal(f.requests[3].body.request_id,id);f.requests[3].resolve({ok:true});await saving;assert.match(form.querySelector('[data-publication-error]').textContent,/Не получено подтверждение/);assert.equal(f.requests.length,4);
+ form.elements.scheduled_at.value='2029-01-22T10:30';saving=submit(form);assert.notEqual(f.requests[4].body.request_id,id);f.requests[4].reject(Error('Network'));await saving;
+});
+test('late scheduled-job response cannot reopen a closed sheet or discard new brand rules',async()=>{
+ for(const ending of ['close','brand','new-post']){
+  const f=await fixture();await contentDetail(f,{status:'APPROVED'},['*'],[savedTarget()]);const form=publicationForm(f),saving=submit(form);let replacement;
+  if(ending==='close')f.invalidate();else if(ending==='brand'){replacement=f.edit('brand');replacement.elements.guidelines.value='Unsaved rules';}else await contentDetail(f,{id:'other',status:'DRAFT'});
+  const count=f.requests.length;f.requests[2].resolve({ok:true,job:publicationJob()});await saving;assert.equal(f.requests.length,count);if(replacement){assert.equal(f.root.children[0],replacement);assert.equal(replacement.elements.guidelines.value,'Unsaved rules');}
+ }
+});
+test('QUEUED publication exposes only cancellation with exact job identity and repeat-safe request',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'READY',publication_job:publicationJob()});assert.match(f.root.innerHTML,/Отправка запланирована/);assert.doesNotMatch(f.root.innerHTML,/data-revise|data-report|data-publication-schedule|data-schedule/);const button=f.root.querySelector('[data-cancel-publication]'),cancelling=button.onclick({currentTarget:button});await button.onclick({currentTarget:button});const b=f.requests[2].body;
+ assert.equal(b.action,'cancel-publication');assert.equal(b.id,'post');assert.equal(b.job_id,'job');assert.equal(b.expected_version,4);assert.equal(f.requests.length,3);f.requests[2].reject(Error('Unknown cancellation'));await cancelling;const retry=button.onclick({currentTarget:button});assert.equal(f.requests[3].body.request_id,b.request_id);f.invalidate();f.requests[3].resolve({ok:true,job:publicationJob({state:'CANCELLED'})});await retry;assert.equal(f.requests.length,4);
+});
+test('SENDING and UNKNOWN jobs lock editing, reporting and rescheduling even when post status lags',async()=>{
+ for(const state of ['SENDING','UNKNOWN'])for(const status of ['APPROVED','REVIEW','READY']){
+  const f=await fixture();await contentDetail(f,{status,publication_job:publicationJob({state})},['*'],[savedTarget()]);assert.match(f.root.innerHTML,/Нужна проверка оператором/);assert.match(f.root.innerHTML,/Повторную отправку не запускайте/);assert.doesNotMatch(f.root.innerHTML,/data-revise|data-report|data-publication-schedule|data-schedule|data-cancel-publication|data-approve|data-check-duplicates|data-verify/);
+ }
+});
+test('SENT means Telegram acceptance, shows escaped job identity and allows separate public text verification',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'PUBLICATION_SENT',publication_job:publicationJob({state:'SENT',username:'<script>bad</script>',message_id:'<42>',publication_url:'https://t.me/a/42?<img>',reason:'<b>reason</b>'})});
+ assert.match(f.root.innerHTML,/Telegram принял сообщение/);assert.match(f.root.innerHTML,/Это подтверждение приёма сообщения Telegram/);assert.match(f.root.innerHTML,/Публичная доступность и совпадение текста проверяются отдельно/);assert.match(f.root.innerHTML,/data-verify/);assert.match(f.root.innerHTML,/&lt;script&gt;bad/);assert.match(f.root.innerHTML,/Номер сообщения: &lt;42&gt;/);assert.doesNotMatch(f.root.innerHTML,/<script>|<img>|<b>reason/);assert.doesNotMatch(f.root.innerHTML,/data-revise|data-report|data-publication-schedule|data-cancel-publication/);
+ const no=await fixture();await contentDetail(no,{status:'PUBLICATION_SENT',publication_job:publicationJob({state:'SENT'})},['content.view']);assert.doesNotMatch(no.root.innerHTML,/data-verify|data-cancel-publication/);
+});
+test('failed jobs can explicitly reschedule from READY while cancelled jobs require APPROVED',async()=>{
+ for(const state of ['CANCELLED','REJECTED','BLOCKED'])for(const status of ['APPROVED','READY']){
+  const f=await fixture();await contentDetail(f,{status,publication_job:publicationJob({state})},['*'],[savedTarget()]);assert.equal(f.root.innerHTML.includes('data-publication-schedule'),status==='APPROVED'||status==='READY'&&['REJECTED','BLOCKED'].includes(state));assert.doesNotMatch(f.root.innerHTML,/data-cancel-publication/);
+ }
+});
+
+test('failed-job rescheduling requires the exact approved revision and current brand rules',async()=>{
+ for(const patch of [{approved_revision:0},{approved_revision:null},{current_brand_version:3}]){
+  const f=await fixture();await contentDetail(f,{status:'READY',publication_job:publicationJob({state:'REJECTED'}),...patch},['*'],[savedTarget()]);assert.doesNotMatch(f.root.innerHTML,/data-publication-schedule/);
+ }
+});
+test('sent post status remains immutable if its job summary is absent',async()=>{
+ const f=await fixture();await contentDetail(f,{status:'PUBLICATION_SENT'},['*'],[savedTarget()]);assert.doesNotMatch(f.root.innerHTML,/data-revise|data-report|data-publication-schedule|data-schedule|data-cancel-publication/);
 });

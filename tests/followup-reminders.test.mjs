@@ -26,3 +26,8 @@ test('reservation projection runs only after internal authorization and reports 
  assert.equal((await internalFollowupReminders(req('POST','wrong'),context,async()=>Response.json('expected'))).status,401);assert.equal(projections,0);
  const r=await internalFollowupReminders(req('POST','expected'),context,async()=>Response.json('expected'));assert.equal(projections,1);assert.equal(r.status,200);assert.equal(r.body.reservation_projection.ok,false);assert.equal(r.body.client_messages_sent,0);
 });
+test('content publication callback requires the internal secret and failures remain separate from operational reminders',async()=>{
+ let publications=0;const context={base:'https://test',key:'server',biz:{query:async(q)=>q.includes('pcs_workflow_outbox')?[{created:0,marked:0}]:[{created:0}]},publications:async()=>{publications++;throw Error('private publication URI');}};
+ assert.equal((await internalFollowupReminders(req('POST','wrong'),context,async()=>Response.json('expected'))).status,401);assert.equal(publications,0);
+ const r=await internalFollowupReminders(req('POST','expected'),context,async()=>Response.json('expected'));assert.equal(r.status,200);assert.equal(publications,1);assert.equal(r.body.content_publication.ok,false);assert.equal(r.body.client_messages_sent,0);assert.equal(JSON.stringify(r).includes('private publication'),false);
+});

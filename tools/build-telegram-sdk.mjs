@@ -1,0 +1,12 @@
+import {build} from 'esbuild';
+import {readFile,writeFile} from 'node:fs/promises';
+// process-es6 0.11.6 shim bundled upstream in grammy/web.
+// Source: https://registry.npmjs.org/process-es6/-/process-es6-0.11.6.tgz
+// Upstream repository: https://github.com/calvinmetcalf/node-process-es6
+// Tarball integrity: sha512-GYBRQtL4v3wgigq10Pv58jmTbFXlIiTbSfgnNqZLY0ldUPqy1rRxDI5fCjoCpnM6TqmHQI8ydzTBXW86OYc0gA==
+const processShimLicense="(The MIT License)\n\nCopyright (c) 2013 Roman Shtylman <shtylman@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n";
+const license=(await Promise.all(['grammy/LICENSE','debug/LICENSE','ms/license.md'].map(path=>readFile(new URL('../node_modules/'+path,import.meta.url),'utf8')))).concat(processShimLicense).join('\n\n');
+const pkg=JSON.parse(await readFile(new URL('../node_modules/grammy/package.json',import.meta.url),'utf8'));
+if(pkg.version!=='1.46.0'||pkg.license!=='MIT')throw Error('Unexpected Telegram SDK version or license');
+const result=await build({stdin:{contents:"export {Api,GrammyError} from 'grammy/web';",resolveDir:process.cwd(),sourcefile:'telegram-sdk-entry.mjs'},bundle:true,format:'esm',platform:'browser',target:'es2022',minify:true,write:false,legalComments:'inline',banner:{js:'/*! grammY 1.46.0 — https://github.com/grammyjs/grammY\n'+license+'*/'}});
+await writeFile(new URL('../server/supabase/pcs-manager-live2/telegram-sdk.mjs',import.meta.url),result.outputFiles[0].contents);

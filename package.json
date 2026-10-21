@@ -2,10 +2,12 @@
   "private": true,
   "scripts": {
     "dev": "node tools/preview-server.mjs",
-    "build:cabinet-auth": "esbuild tools/cabinet-auth-entry.mjs --bundle --format=iife --platform=browser --target=es2022 --minify --legal-comments=external --outfile=pcs-ai-operator-v6/cabinet-auth-sdk.js"
+    "build:cabinet-auth": "esbuild tools/cabinet-auth-entry.mjs --bundle --format=iife --platform=browser --target=es2022 --minify --legal-comments=external --outfile=pcs-ai-operator-v6/cabinet-auth-sdk.js",
+    "build:telegram-sdk": "node tools/build-telegram-sdk.mjs"
   },
   "dependencies": {
     "@neondatabase/auth": "0.5.0-beta",
+    "grammy": "1.46.0",
     "jose": "6.2.12"
   },
   "devDependencies": {

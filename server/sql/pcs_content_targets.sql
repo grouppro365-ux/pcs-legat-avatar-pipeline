@@ -29,6 +29,9 @@ BEGIN
  IF p?'id' THEN
   SELECT * INTO target FROM pcs.content_targets WHERE id=(p->>'id')::uuid FOR UPDATE;
   IF NOT FOUND OR target.brand_id<>brand OR target.version IS DISTINCT FROM (p->>'expected_version')::integer THEN RAISE EXCEPTION 'content_target_version_conflict' USING ERRCODE='40001';END IF;
+  IF to_regclass('pcs.content_publication_jobs') IS NOT NULL THEN
+   IF EXISTS(SELECT 1 FROM pcs.content_publication_jobs WHERE target_id=target.id AND state='SENDING') THEN RAISE EXCEPTION 'content_publication_job_locked' USING ERRCODE='40001';END IF;
+  END IF;
  END IF;
  IF p_observation IS NULL THEN RETURN jsonb_build_object('ok',true,'verification_required',true,'snapshot',jsonb_build_object('id',target.id,'version',target.version,'brand_id',brand,'username',p->>'username'));END IF;
  IF jsonb_typeof(p_observation) IS DISTINCT FROM 'object' OR EXISTS(SELECT 1 FROM jsonb_object_keys(p_observation) k WHERE k NOT IN ('username','chat_id','bot_id','title','can_post_messages')) OR (SELECT count(*) FROM jsonb_object_keys(p_observation))<>5 OR p_observation->>'username' IS DISTINCT FROM p->>'username' OR jsonb_typeof(p_observation->'username') IS DISTINCT FROM 'string' OR jsonb_typeof(p_observation->'chat_id') IS DISTINCT FROM 'string' OR coalesce(p_observation->>'chat_id','') !~ '^-[1-9][0-9]{0,18}$' OR jsonb_typeof(p_observation->'bot_id') IS DISTINCT FROM 'string' OR coalesce(p_observation->>'bot_id','') !~ '^[1-9][0-9]{0,18}$' OR jsonb_typeof(p_observation->'title') IS DISTINCT FROM 'string' OR length(btrim(p_observation->>'title')) NOT BETWEEN 1 AND 256 OR p_observation->'can_post_messages' IS DISTINCT FROM 'true'::jsonb THEN RAISE EXCEPTION 'content_target_observation_invalid' USING ERRCODE='22023';END IF;

@@ -1,0 +1,4 @@
+import {readFileSync} from 'node:fs';
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const staff=read('server/sql/pcs_staff_accounts.sql'),base=read('server/sql/pcs_content_workflow.sql'),duplicates=read('server/sql/pcs_content_duplicates.sql'),targets=read('server/sql/pcs_content_targets.sql'),queue=read('server/sql/pcs_content_publication_queue.sql'),verify=read('server/sql/pcs_content_publication_verify.sql'),checks=read('tests/content-publication-queue-rollback.sql');
+console.log(JSON.stringify({query:`DO $outer$ BEGIN BEGIN EXECUTE $staff$${staff}$staff$; EXECUTE $base$${base}$base$; EXECUTE $duplicates$${duplicates}$duplicates$; EXECUTE $targets$${targets}$targets$; EXECUTE $queue$${queue}$queue$; EXECUTE $verify$${verify}$verify$; ${checks} RAISE EXCEPTION 'QA rollback complete' USING ERRCODE='Z0001';EXCEPTION WHEN SQLSTATE 'Z0001' THEN NULL;END;END $outer$;`}));

@@ -44,10 +44,10 @@ BEGIN
  unreadable:=observation||'{"outcome":"UNREADABLE","reason":"message_missing","observed_sha256":null,"published_at":null}'::jsonb;
  result:=pcs.content_verify_publication(cmd,actor::text,'[]',unreadable);
  IF result#>>'{verification,outcome}'<>'UNREADABLE' OR result->>'status'<>'PUBLICATION_REPORTED' OR EXISTS(SELECT 1 FROM pcs.content_posts WHERE id=pid AND publication_verification->>'outcome'='TEXT_MATCH') THEN RAISE EXCEPTION 'QA unreadable result falsely kept current match';END IF;
- -- Changed brand approval while a fetch was pending cannot commit.
+ -- Historical observation remains bound to the immutable approved revision, even after current brand rules change.
  v:=v+1;cmd:=jsonb_build_object('request_id',gen_random_uuid(),'id',pid,'expected_version',v);
  PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',NULL);
  UPDATE pcs.content_brands SET version=version+1 WHERE id=(b->'brand'->>'id')::uuid;
- denied:=false;BEGIN PERFORM pcs.content_verify_publication(cmd,actor::text,'[]',observation);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA changed brand approval accepted';END IF;
+ result:=pcs.content_verify_publication(cmd,actor::text,'[]',observation);IF result#>>'{verification,brand_version}'<>'1' OR result#>>'{verification,revision}'<>'1' OR result->>'status'<>'PUBLICATION_REPORTED' THEN RAISE EXCEPTION 'QA historical publication lost immutable approval context';END IF;
  IF has_function_privilege('public','pcs.content_verify_publication(jsonb,text,jsonb,jsonb)','EXECUTE') THEN RAISE EXCEPTION 'QA PUBLIC execute enabled';END IF;
 END $qa$;
