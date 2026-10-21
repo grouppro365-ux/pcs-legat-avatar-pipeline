@@ -18,7 +18,7 @@ BEGIN
 END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_qa(jsonb) FROM PUBLIC;
 CREATE OR REPLACE FUNCTION pcs.content_action(p_action text,p jsonb,p_actor text,p_permissions jsonb) RETURNS jsonb LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
-DECLARE required text; b pcs.content_brands; post pcs.content_posts; rev pcs.content_revisions; old pcs.content_commands; result jsonb; rid uuid; pid uuid; nextrev integer; payload jsonb; flags jsonb; effective_permissions jsonb;
+DECLARE required text; b pcs.content_brands; post pcs.content_posts; rev pcs.content_revisions; old pcs.content_commands; result jsonb; rid uuid; pid uuid; nextrev integer; payload jsonb; flags jsonb; effective_permissions jsonb; duplicate_snapshot jsonb;
 BEGIN
  required:=CASE WHEN p_action IN ('approve','schedule','report-publication') THEN 'content.approve' ELSE 'content.edit' END;
  IF p_actor ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN
@@ -38,24 +38,28 @@ BEGIN
   result:=jsonb_build_object('ok',true,'brand',to_jsonb(b));
  ELSE
   IF p_action='create' THEN
-   SELECT * INTO b FROM pcs.content_brands WHERE id=(p->>'brand_id')::uuid FOR SHARE;IF NOT FOUND THEN RAISE EXCEPTION 'content_brand_missing' USING ERRCODE='22023';END IF;
+   SELECT * INTO b FROM pcs.content_brands WHERE id=(p->>'brand_id')::uuid FOR UPDATE;IF NOT FOUND THEN RAISE EXCEPTION 'content_brand_missing' USING ERRCODE='22023';END IF;
    INSERT INTO pcs.content_posts(brand_id) VALUES(b.id) RETURNING * INTO post;nextrev:=1;
   ELSE
    SELECT * INTO post FROM pcs.content_posts WHERE id=(p->>'id')::uuid FOR UPDATE;
    IF NOT FOUND OR post.version IS DISTINCT FROM (p->>'expected_version')::integer THEN RAISE EXCEPTION 'content_version_conflict' USING ERRCODE='40001';END IF;
    IF post.status='PUBLICATION_REPORTED' THEN RAISE EXCEPTION 'content_already_reported' USING ERRCODE='22023';END IF;
-   SELECT * INTO b FROM pcs.content_brands WHERE id=post.brand_id FOR SHARE;
+   SELECT * INTO b FROM pcs.content_brands WHERE id=post.brand_id FOR UPDATE;
    SELECT * INTO rev FROM pcs.content_revisions WHERE post_id=post.id ORDER BY revision DESC LIMIT 1;
    nextrev:=rev.revision+1;
   END IF;
   IF p_action IN ('create','revise') THEN
    INSERT INTO pcs.content_revisions(post_id,revision,brand_version,brand_guidelines,platform,language,title,body,source_facts,source_url,qa,created_by) VALUES(post.id,nextrev,b.version,b.guidelines,p->>'platform',p->>'language',btrim(p->>'title'),btrim(p->>'body'),btrim(p->>'source_facts'),btrim(p->>'source_url'),pcs.content_qa(p),p_actor);
-   UPDATE pcs.content_posts SET status='DRAFT',scheduled_at=NULL,approved_revision=NULL,approved_by=NULL,approved_at=NULL WHERE id=post.id;
+   UPDATE pcs.content_posts SET status='DRAFT',content_duplicate_check=NULL,scheduled_at=NULL,approved_revision=NULL,approved_by=NULL,approved_at=NULL WHERE id=post.id;
   ELSIF p_action='submit' THEN
    IF post.status<>'DRAFT' THEN RAISE EXCEPTION 'content_invalid_transition' USING ERRCODE='22023';END IF;
    UPDATE pcs.content_posts SET status='REVIEW' WHERE id=post.id;
   ELSIF p_action='approve' THEN
    IF post.status<>'REVIEW' OR rev.brand_version<>b.version OR (p->>'revision')::integer IS DISTINCT FROM rev.revision OR coalesce((p->>'facts_checked')::boolean,false) IS NOT TRUE THEN RAISE EXCEPTION 'content_approval_requires_current_fact_check' USING ERRCODE='22023';END IF;
+   duplicate_snapshot:=pcs.content_duplicate_context(post.id);
+   IF post.content_duplicate_check IS NULL OR post.content_duplicate_check->>'revision' IS DISTINCT FROM rev.revision::text OR post.content_duplicate_check->>'brand_version' IS DISTINCT FROM b.version::text OR post.content_duplicate_check->>'snapshot_signature' IS DISTINCT FROM duplicate_snapshot->>'snapshot_signature' THEN RAISE EXCEPTION 'content_duplicate_check_required' USING ERRCODE='22023';END IF;
+   IF jsonb_typeof(p->'duplicate_review_note') IS NOT NULL AND (jsonb_typeof(p->'duplicate_review_note')<>'string' OR length(p->>'duplicate_review_note')>4000) THEN RAISE EXCEPTION 'content_duplicate_review_invalid' USING ERRCODE='22023';END IF;
+   IF (post.content_duplicate_check->>'outcome'='POSSIBLE_DUPLICATE' OR coalesce((post.content_duplicate_check->>'corpus_truncated')::boolean,false)) AND length(btrim(coalesce(p->>'duplicate_review_note','')))<20 THEN RAISE EXCEPTION 'content_duplicate_review_required' USING ERRCODE='22023';END IF;
    flags:=rev.qa->'flags';
    IF flags ? 'platform_length' OR flags ? 'source_facts_missing' OR flags ? 'source_link_missing' OR flags ? 'unfinished_placeholder' THEN RAISE EXCEPTION 'content_qa_blocked' USING ERRCODE='22023';END IF;
    IF flags ? 'promise_requires_review' AND length(btrim(coalesce(p->>'review_note','')))<20 THEN RAISE EXCEPTION 'content_promise_review_required' USING ERRCODE='22023';END IF;
@@ -70,7 +74,7 @@ BEGIN
   UPDATE pcs.content_posts SET version=version+1,updated_at=clock_timestamp() WHERE id=post.id RETURNING * INTO post;
   result:=jsonb_build_object('ok',true,'id',post.id,'version',post.version,'status',post.status);
  END IF;
- INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','content.'||p_action,'content',coalesce(post.id,b.id)::text,jsonb_build_object('actor',p_actor,'request_id',rid,'version',post.version,'revision',CASE WHEN p_action IN ('create','revise') THEN nextrev ELSE rev.revision END,'review_note',p->>'review_note'),'SUCCESS');
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','content.'||p_action,'content',coalesce(post.id,b.id)::text,jsonb_build_object('actor',p_actor,'request_id',rid,'version',post.version,'revision',CASE WHEN p_action IN ('create','revise') THEN nextrev ELSE rev.revision END,'review_note',p->>'review_note','duplicate_review_note',p->>'duplicate_review_note'),'SUCCESS');
  INSERT INTO pcs.content_commands(request_id,payload,result) VALUES(rid,payload,result);RETURN result;
 END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_action(text,jsonb,text,jsonb) FROM PUBLIC;

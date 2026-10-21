@@ -1,6 +1,9 @@
+import {duplicateFixtureHelper} from './pcs-content-qa-support.mjs';
 import {readFileSync} from 'node:fs';
 const sql=readFileSync(new URL('../server/sql/pcs_content_workflow.sql',import.meta.url),'utf8');
-console.log(JSON.stringify({query:`DO $outer$ BEGIN BEGIN EXECUTE $migration$${sql}$migration$;
+const duplicates=readFileSync(new URL('../server/sql/pcs_content_duplicates.sql',import.meta.url),'utf8');
+const staff=readFileSync(new URL('../server/sql/pcs_staff_accounts.sql',import.meta.url),'utf8');
+console.log(JSON.stringify({query:`DO $outer$ BEGIN BEGIN EXECUTE $staff$${staff}$staff$; EXECUTE $migration$${sql}$migration$; EXECUTE $duplicates$${duplicates}$duplicates$; ${duplicateFixtureHelper}
 DO $qa$ DECLARE b jsonb; p jsonb; cmd jsonb; out jsonb; target_id uuid; auth_id uuid:=gen_random_uuid(); managed_cmd jsonb; v int; denied boolean; editor jsonb:='["content.edit"]'; approver jsonb:='["content.approve"]'; BEGIN
  denied:=false;BEGIN PERFORM pcs.content_action('brand',jsonb_build_object('request_id',gen_random_uuid(),'name','Denied','guidelines','Denied null permissions'),'pcs-manager-admin',NULL);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA null permissions bypass';END IF;
  INSERT INTO neon_auth."user"(id,name,email,"emailVerified","createdAt","updatedAt",banned) VALUES(auth_id,'QA content','qa-content-'||auth_id||'@example.invalid',false,now(),now(),false);
@@ -21,6 +24,7 @@ DO $qa$ DECLARE b jsonb; p jsonb; cmd jsonb; out jsonb; target_id uuid; auth_id 
  denied:=false;BEGIN PERFORM pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'revision',1,'facts_checked',true),'pcs-manager-admin',editor);EXCEPTION WHEN insufficient_privilege THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA editor approval allowed';END IF;
  p:=pcs.content_action('submit',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v),'pcs-manager-admin',editor);v:=(p->>'version')::int;
  denied:=false;BEGIN PERFORM pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'revision',1),'pcs-manager-admin',approver);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA missing fact check allowed';END IF;
+ v:=pcs.qa_content_check(target_id,v);
  p:=pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'revision',1,'facts_checked',true),'pcs-manager-admin',approver);v:=(p->>'version')::int;
  denied:=false;BEGIN PERFORM pcs.content_action('schedule',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'scheduled_at','2099-01-01T12:30:00'),'pcs-manager-admin',approver);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA zoneless schedule allowed';END IF;
  p:=pcs.content_action('schedule',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'scheduled_at',now()+interval '1 day'),'pcs-manager-admin',approver);v:=(p->>'version')::int;
@@ -32,6 +36,7 @@ DO $qa$ DECLARE b jsonb; p jsonb; cmd jsonb; out jsonb; target_id uuid; auth_id 
  denied:=false;BEGIN PERFORM pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'revision',2,'facts_checked',true),'pcs-manager-admin',approver);EXCEPTION WHEN invalid_parameter_value THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA promise unreviewed';END IF;
  denied:=false;BEGIN PERFORM pcs.content_action('submit',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v-1),'pcs-manager-admin',editor);EXCEPTION WHEN serialization_failure THEN denied:=true;END;IF NOT denied THEN RAISE EXCEPTION 'QA stale version allowed';END IF;
 
+ v:=pcs.qa_content_check(target_id,v);
  p:=pcs.content_action('approve',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'revision',2,'facts_checked',true,'review_note','Fixture promise explicitly checked against documented terms.'),'pcs-manager-admin',approver);v:=(p->>'version')::int;
  p:=pcs.content_action('report-publication',jsonb_build_object('request_id',gen_random_uuid(),'id',target_id,'expected_version',v,'publication_url','https://example.com/post','publication_note','Operator checked source page and recorded this manual fixture evidence.'),'pcs-manager-admin',approver);
  IF p->>'status'<>'PUBLICATION_REPORTED' THEN RAISE EXCEPTION 'QA manual evidence status incorrect';END IF;
