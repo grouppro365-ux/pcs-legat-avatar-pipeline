@@ -1,4 +1,4 @@
-DECLARE source_id uuid:=gen_random_uuid(); request_id uuid:=gen_random_uuid(); message_id uuid:=gen_random_uuid(); first jsonb; repeated jsonb; second jsonb; another jsonb; telegram jsonb; profile uuid;
+DECLARE source_id uuid:=gen_random_uuid(); request_id uuid:=gen_random_uuid(); message_id uuid:=gen_random_uuid(); first jsonb; repeated jsonb; second jsonb; another jsonb; telegram jsonb; profile uuid; line_app jsonb;
 BEGIN
  first:=pcs.runtime_intake(source_id,request_id,'whatsapp',message_id,NULL,NULL,'Shared name','Rental request','QA isolated');
  profile:=(first->>'client_profile_id')::uuid;
@@ -12,6 +12,9 @@ BEGIN
  IF second->>'client_profile_id'<>first->>'client_profile_id' THEN RAISE EXCEPTION 'QA duplicate source profile'; END IF;
  another:=pcs.runtime_intake(gen_random_uuid(),gen_random_uuid(),'instagram',message_id,NULL,NULL,'Shared name','Another person','QA isolated');
  IF another->>'client_profile_id'=first->>'client_profile_id' THEN RAISE EXCEPTION 'QA fuzzy name merge'; END IF;
+ line_app:=pcs.runtime_intake(gen_random_uuid(),gen_random_uuid(),'line',gen_random_uuid(),NULL,NULL,'LINE name','LINE request','QA isolated');
+ IF NOT EXISTS(SELECT 1 FROM applications WHERE id=(line_app->>'id')::uuid AND qualification_data#>>'{runtime_intake,channel}'='line') THEN RAISE EXCEPTION 'QA LINE request missing exact channel provenance';END IF;
+ BEGIN PERFORM pcs.runtime_intake(gen_random_uuid(),gen_random_uuid(),'line',NULL,NULL,NULL,'LINE name','Missing LINE proof','QA isolated');RAISE EXCEPTION 'QA unproven LINE intake accepted';EXCEPTION WHEN invalid_parameter_value THEN NULL;END;
  UPDATE client_profiles SET blocked=true WHERE id=profile;
  BEGIN PERFORM pcs.runtime_intake(source_id,gen_random_uuid(),'whatsapp',message_id,NULL,NULL,'Shared name','Blocked request','QA isolated'); RAISE EXCEPTION 'QA blocked intake accepted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN PERFORM pcs.runtime_intake(source_id,request_id,'whatsapp',message_id,NULL,NULL,'Shared name','Rental request','QA isolated'); RAISE EXCEPTION 'QA blocked replay accepted'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
