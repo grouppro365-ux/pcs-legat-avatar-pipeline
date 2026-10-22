@@ -2,6 +2,16 @@ name: PCS Legat Kaggle GPU
 
 on:
   workflow_dispatch:
+    inputs:
+      engine:
+        description: Existing private Kaggle workload
+        required: true
+        default: avatar
+        type: choice
+        options: [avatar, ltx-smoke]
+  push:
+    branches: [main]
+    paths: ['tools/ltx/**']
   schedule:
     # 03:30 Thailand (UTC+7) = 20:30 UTC on the previous day.
     - cron: "30 20 * * *"
@@ -9,16 +19,27 @@ on:
 permissions:
   contents: read
 
+# Both workloads use the same existing private kernel and quota.
+concurrency:
+  group: pcs-legat-existing-kaggle
+  cancel-in-progress: false
+
 jobs:
   run-kaggle:
     runs-on: ubuntu-latest
     timeout-minutes: 360
+    env:
+      PCS_GPU_ENGINE: ${{ github.event_name == 'push' && 'ltx-smoke' || inputs.engine || 'avatar' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Prepare asset-free LTX smoke notebook
+        if: env.PCS_GPU_ENGINE == 'ltx-smoke'
+        run: python tools/ltx/prepare_kaggle_smoke.py kaggle-ltx-smoke "${{ github.run_id }}-${{ github.run_attempt }}"
       - name: Prepare current private notebook
+        if: env.PCS_GPU_ENGINE == 'avatar'
         run: |
           cat notebook.gz.part* | gzip -dc > kaggle_avatar_pipeline.ipynb
           python patch_notebook.py
@@ -30,7 +51,11 @@ jobs:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
           test -n "$KAGGLE_API_TOKEN"
-          kaggle kernels push -p . --accelerator NvidiaTeslaP100 --timeout 1800
+          if [ "$PCS_GPU_ENGINE" = "ltx-smoke" ]; then
+            kaggle kernels push -p kaggle-ltx-smoke --accelerator NvidiaTeslaP100 --timeout 1800
+          else
+            kaggle kernels push -p . --accelerator NvidiaTeslaP100 --timeout 1800
+          fi
       - name: Wait for the Kaggle run
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
@@ -48,13 +73,42 @@ jobs:
           done
           echo "Timed out waiting for Kaggle" >&2
           exit 1
-      - name: Download outputs
+      - name: Download outputs and failure diagnostics
+        if: always()
+        continue-on-error: true
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
           mkdir -p kaggle-output
           kaggle kernels output tatyanathai/pcs-legat-ai-avatar-pipeline -p kaggle-output -o
+      - name: Summarize GPU failure without private data
+        if: always()
+        run: python tools/ltx/collect_gpu_diagnostics.py kaggle-output
+      - name: Verify actual LTX artifact
+        if: success() && env.PCS_GPU_ENGINE == 'ltx-smoke'
+        run: python tools/ltx/verify_kaggle_smoke.py kaggle-output kaggle-ltx-smoke/expected-run.json
+      - name: Upload LTX smoke artifact
+        if: always() && env.PCS_GPU_ENGINE == 'ltx-smoke'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pcs-ltx-smoke-output
+          path: |
+            kaggle-output/**/ltx-smoke.mp4
+            kaggle-output/**/result.json
+            kaggle-output/**/failure.json
+            kaggle-output/pcs-gpu-diagnostics.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload failed avatar diagnostics
+        if: failure() && env.PCS_GPU_ENGINE == 'avatar'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pcs-avatar-failure-diagnostics
+          path: kaggle-output/pcs-gpu-diagnostics.json
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload run artifact
+        if: success() && env.PCS_GPU_ENGINE == 'avatar'
         uses: actions/upload-artifact@v4
         with:
           name: pcs-legat-avatar-output
