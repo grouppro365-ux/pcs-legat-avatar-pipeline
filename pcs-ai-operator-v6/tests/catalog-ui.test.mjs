@@ -43,3 +43,16 @@ test('catalog conflict retains entered draft and the captured original version',
  const button={disabled:false};await h.window.saveCatalog37(h.item.id,button);
  assert.equal(request.expected_version,version);assert.equal(h.nodes.catalogEditDescription37.value,'Draft text');assert.equal(h.nodes.catalogEditVersion37.value,version);assert.equal(button.disabled,false);assert.equal(h.item.title,'MG5');
 });
+
+test('late catalog save cannot overwrite a fresh route or replacement editor',async()=>{
+ for(const change of ['navigate','replace','close']){const h=harness();
+  for(const [key,value]of Object.entries({catalogEditVersion37:'v1',catalogEditTitle37:'Old save',catalogEditCity37:'Pattaya',catalogEditDescription37:'Old description',catalogEditConditions37:''}))h.nodes[key]={value};
+  let resolve;h.window.call=()=>new Promise(r=>resolve=r);const pending=h.window.saveCatalog37(h.item.id,{disabled:false});
+  if(change==='navigate')h.window.pcsNavigation.run('inbox',()=>{});else if(change==='replace')h.nodes.catalogEditVersion37={value:'fresh'};else h.window.pcsSheetLifecycle.invalidate();
+  h.item.title='Fresh catalog';h.item.description='Fresh description';resolve({ok:true,item:{...h.item,title:'Old save'}});await pending;assert.equal(h.item.title,'Fresh catalog');assert.equal(h.item.description,'Fresh description');
+ }
+});
+test('misbound catalog receipt cannot update local card or edit version',async()=>{const h=harness();
+ for(const [key,value]of Object.entries({catalogEditVersion37:'v1',catalogEditTitle37:'Draft',catalogEditCity37:'Pattaya',catalogEditDescription37:'Text',catalogEditConditions37:''}))h.nodes[key]={value};
+ h.window.call=async()=>({ok:true,item:{id:'other',title:'Injected',edit_version:'new'}});await h.window.saveCatalog37(h.item.id,{disabled:false});assert.equal(h.item.title,'MG5');assert.equal(h.nodes.catalogEditVersion37.value,'v1');
+});
