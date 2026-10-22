@@ -34,3 +34,18 @@ test('truncated, filtered, refused and tool-call answers never become successful
   assert.equal(modelCalls,1);
  }
 });
+
+import {readContentEvidence,contentRequestSignalsQuery,contentCatalogEvidenceQuery} from '../server/supabase/pcs-manager-live2/content-draft.mjs';
+const signal={budget_question:true,timing_question:false,availability_question:false,documents_question:false,deposit_insurance_question:true,price_concern:false,refund_concern:false};
+test('CRM context requires content edit and distinct CRM/catalog permissions before query',async()=>{let calls=0;const db={query:async()=>{calls++;return[];}};
+ assert.equal((await readContentEvidence(db,['applications.view','clients.manage','catalog.view'])).status,'NOT_AUTHORIZED');await readContentEvidence(db,['content.edit']);await readContentEvidence(db,['content.edit','applications.view']);assert.equal(calls,0);
+ assert.equal((await readContentEvidence(db,['content.edit','catalog.view'])).catalog.status,'AVAILABLE');assert.equal(calls,1);assert.equal((await readContentEvidence(db,['content.edit','applications.view','clients.manage'])).request_signals.status,'AVAILABLE');assert.equal(calls,2);
+});
+test('CRM evidence emits bounded topic counts and public catalog attributes without private fields',async()=>{
+ const out=await readContentEvidence({query:async q=>q===contentRequestSignalsQuery?Array.from({length:101},()=>({...signal,client_visible_notes:'private note',client_name:'private name'})):[{public_id:'CAR-1',title:'Public car',city:'Pattaya',entity_type:'CAR',partner_net_price:123,secret:'private'}]},['*']);
+ assert.equal(out.request_signals.sample_size,100);assert.equal(out.request_signals.truncated,true);assert.equal(out.request_signals.counts.budget_question,100);assert.deepEqual(out.catalog.items,[{public_id:'CAR-1',title:'Public car',city:'Pattaya',entity_type:'CAR'}]);assert.equal(out.catalog.date_availability_checked,false);assert.equal(JSON.stringify(out).includes('private'),false);assert.equal(JSON.stringify(out).includes('partner_net_price'),false);assert.match(contentCatalogEvidenceQuery,/publication_status='PUBLISHED' and moderation_status='APPROVED'/);
+});
+test('CRM failures are explicit unavailable and never transformed into successful zero counts',async()=>{
+ for(const query of [async()=>{throw Error('private SQL');},async()=>null,async()=>[{}]]){const r=await readContentEvidence({query},['*']);assert.equal(r.request_signals.status,'UNAVAILABLE');assert.equal(r.catalog.status,'UNAVAILABLE');assert.equal(JSON.stringify(r).includes('private SQL'),false);}
+ const empty=await readContentEvidence({query:async()=>[]},['*']);assert.equal(empty.request_signals.status,'AVAILABLE');assert.equal(empty.request_signals.sample_size,0);
+});
