@@ -6,6 +6,8 @@ import sys
 import tempfile
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
+import os
 import imageio_ffmpeg
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,7 +72,7 @@ class LtxCloudTests(unittest.TestCase):
             self.assertEqual(result['ref'], CANONICAL + '/95')
             self.assertEqual(read_receipt(receipt), result['ref'])
             output(api, receipt, Path(tmp, 'out'))
-            self.assertEqual(api.output_calls, [result['ref'], result['ref']])
+            self.assertEqual(api.output_calls, [RENAMED, result['ref'], result['ref']])
             with self.assertRaisesRegex(RuntimeError, 'receipt_already_exists'):
                 start(api, tmp, receipt)
             self.assertEqual(len(api.pushes), 1)
@@ -141,6 +143,22 @@ class LtxCloudTests(unittest.TestCase):
             self.assertNotIn("pathlib.Path('/kaggle/working/pcs-ltx-venv')", code)
             self.assertEqual(notebook['cells'][0]['outputs'], [])
 
+    def test_bootstrap_reports_stage_and_runtime_before_inference(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            metadata = prepare(tmp, 'bootstrap-fixture')
+            notebook = json.loads((Path(tmp) / metadata['code_file']).read_text())
+            code = ''.join(notebook['cells'][0]['source']).replace('/kaggle/working/', tmp + '/')
+            error = subprocess.CalledProcessError(1, ['private-subprocess-argument'])
+            with patch('subprocess.run', side_effect=[None, error]), patch.dict(os.environ):
+                with self.assertRaises(subprocess.CalledProcessError):
+                    exec(compile(code, '<bootstrap-fixture>', 'exec'), {})
+            report = json.loads(Path(tmp, 'pcs-ltx-output/bootstrap.json').read_text())
+            self.assertEqual(report['stage'], 'INSTALL_TORCH')
+            self.assertEqual(report['outcome'], 'FAILED')
+            self.assertEqual(report['run_id'], 'bootstrap-fixture')
+            self.assertEqual(report['returncode'], 1)
+            self.assertNotIn('private-subprocess-argument', json.dumps(report))
+
     def test_refuses_to_run_generation_on_this_machine(self):
         if not Path('/kaggle/working').is_dir():
             with self.assertRaisesRegex(RuntimeError, 'requires_existing_kaggle_gpu_runtime'):
@@ -151,12 +169,13 @@ class LtxCloudTests(unittest.TestCase):
             Path(tmp, 'kernel.log').write_text("PRIVATE TOKEN abcdef123\n/customer/passport.jpg\n"
                 "ModuleNotFoundError: No module named 'onnxruntime'\n"
                 "ImportError: cannot import name 'CachedFile' from 'some_module'\n"
-                "RuntimeError: secret private request\nsubprocess.CalledProcessError: private subprocess arguments\nCUDA out of memory\n")
+                "12.0s 7 \x1b[31mRuntimeError: secret private request\x1b[0m\n12.0s 8 subprocess.CalledProcessError: private subprocess arguments\nCUDA out of memory\nNo matching distribution found for torch\n")
             receipt = collect(tmp)
             encoded = json.dumps(receipt)
             self.assertEqual(receipt['missing_modules'], ['onnxruntime'])
             self.assertEqual(receipt['failed_import_names'], ['CachedFile'])
             self.assertTrue(receipt['cuda_out_of_memory'])
+            self.assertEqual(receipt['diagnostic_codes'], ['PYTORCH_WHEEL_UNAVAILABLE'])
             self.assertIn('CalledProcessError', receipt['exception_types'])
             self.assertNotIn('abcdef123', encoded)
             self.assertNotIn('passport', encoded)
