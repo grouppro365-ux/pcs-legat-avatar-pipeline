@@ -9,10 +9,10 @@ function fixture(file){
  const nodes=new Map(),calls=[],sheets=[];
  const node=id=>({id,value:'',innerHTML:'',textContent:'',disabled:false,dataset:{},listeners:{},classList:{contains:()=>false},addEventListener(k,v){this.listeners[k]=v},querySelectorAll(){return []}});
  nodes.set('main',node('main'));nodes.set('sheetbox',node('sheetbox'));
- const document={getElementById:id=>nodes.get(id)||null,addEventListener(){}};
- const c=vm.createContext({document,console,Date,URLSearchParams,Intl});c.window=c;c.PCS={page:'crm'};c.esc=String;c.toast=()=>{};
+ const document={getElementById:id=>nodes.get(id)||null,addEventListener(){},body:{classList:{contains:()=>false}}};
+ const c=vm.createContext({document,console,Date,URLSearchParams,Intl});c.window=c;c.PCS={page:'crm'};c.scrollTo=()=>{};c.esc=String;c.toast=()=>{};
  c.call=(path,opt)=>new Promise((resolve,reject)=>calls.push({path,opt,resolve,reject}));c.opsCall=c.call;
- vm.runInContext(source('sheet-lifecycle.js'),c);
+ vm.runInContext(source('sheet-lifecycle.js'),c);vm.runInContext(source('navigation-lifecycle.js'),c);
  c.openSheet=(title,html)=>{c.pcsSheetLifecycle.invalidate();sheets.push(title);for(const [id] of nodes)if(id!=='main'&&id!=='sheetbox')nodes.delete(id);nodes.get('sheetbox').innerHTML=html;for(const [,id] of html.matchAll(/id="([^"]+)"/g))nodes.set(id,node(id));};
  // Production closeSheet hides the sheet and retains all its nodes.
  c.closeSheet=()=>c.pcsSheetLifecycle.invalidate();
@@ -41,4 +41,51 @@ test('task save after cancel cannot reopen queue or accept a hidden-form retry',
 test('notification acknowledgement finishing after cancel does not reload retained sheet',async()=>{
  const h=fixture('notifications.js'),id='11111111-1111-4111-8111-111111111111',p=h.c.pcsNotifications.open();h.calls[0].resolve({view:'unread',rows:[{id,title:'event',read_version:'a'.repeat(32)}]});await p;
  const button={disabled:false,dataset:{notificationRead:'0'}};h.nodes.get('pcsNotificationList').onclick({target:{closest:s=>s==='[data-notification-read]'?button:null}});h.c.closeSheet();h.calls[1].resolve({ok:true,id,read_at:'2026-10-20T10:00:00Z'});await tick();assert.equal(h.calls.length,2);
+});
+
+test('closed offers discard late results and retained controls cannot reopen the application',async()=>{
+ const h=fixture('application-offers.js'),id='11111111-1111-4111-8111-111111111111';
+ let reopened=0;h.c.pcsApplications={openDetail(){reopened++}};
+ const pending=h.c.pcsApplicationOffers.open(id),root=h.nodes.get('pcsOfferRows');
+ h.c.closeSheet();h.calls[0].resolve({application:{id},source:'partner',page:0,rows:[{item_title:'stale offer'}]});await pending;
+ assert.equal(root.innerHTML,'');h.nodes.get('pcsOfferBack').onclick();h.nodes.get('pcsOfferRefresh').onclick();h.nodes.get('pcsOfferSource').onchange({target:{value:'quotes'}});
+ assert.equal(reopened,0);assert.equal(h.calls.length,1);
+});
+test('closed inventory discards late failures and retained date changes cannot enable retries',async()=>{
+ const h=fixture('inventory-check.js');h.c.pcsInventory.open('11111111-1111-4111-8111-111111111111');
+ h.nodes.get('pcsInventoryStart').value='2026-11-01';h.nodes.get('pcsInventoryEnd').value='2026-11-05';
+ const pending=h.nodes.get('pcsInventoryCheck').onclick(),root=h.nodes.get('pcsInventoryResult');
+ const prior=root.textContent;h.c.closeSheet();h.calls[0].reject(Error('stale failure'));await pending;
+ assert.equal(root.textContent,prior);h.nodes.get('pcsInventoryEnd').onchange();await h.nodes.get('pcsInventoryCheck').onclick();assert.equal(root.textContent,prior);assert.equal(h.calls.length,1);
+});
+const deliveryRow={id:'11111111-1111-4111-8111-111111111111',contact_id:'client1',operation:'crm_manual',edit_version:'v1'};
+function deliveryFixture(){
+ const h=fixture('delivery-review.js');h.c.PCS.page='errors';h.c.localStorage={pcsToken:'fixture'};h.c.fetch=h.c.call;
+ let refreshes=0,toasts=0;h.c.errorsPage=async()=>refreshes++;h.c.toast=()=>toasts++;
+ h.c.pcsDeliveryReview.setRows([deliveryRow]);
+ const open=()=>{h.c.pcsDeliveryReview.open(0);h.nodes.get('pcsDeliveryReviewed').checked=true;h.nodes.get('pcsDeliveryNote').value='Проверен фактический диалог';};
+ return {...h,open,counts:()=>({refreshes,toasts})};
+}
+test('closed delivery review cannot send through a retained form',async()=>{
+ const h=deliveryFixture();h.open();h.c.closeSheet();await h.c.pcsDeliveryReview.submit();assert.equal(h.calls.length,0);
+});
+test('late delivery acknowledgement does not close or refresh a reopened review',async()=>{
+ const h=deliveryFixture();h.open();const old=h.c.pcsDeliveryReview.submit();h.c.closeSheet();h.open();
+ const form=h.nodes.get('pcsDeliveryReviewForm'),button=h.nodes.get('pcsDeliveryReviewSave');
+ h.calls[0].resolve({ok:true,json:async()=>({ok:true,operator_confirmed:true,review:deliveryRow})});await old;
+ assert.equal(h.nodes.get('pcsDeliveryReviewForm'),form);assert.equal(button.disabled,false);assert.deepEqual(h.counts(),{refreshes:0,toasts:0});
+ const current=h.c.pcsDeliveryReview.submit();assert.equal(h.calls.length,2);h.calls[1].resolve({ok:false,json:async()=>({error:'current error'})});await current;
+ assert.equal(h.nodes.get('pcsDeliveryReviewError').textContent,'current error');
+});
+
+test('returning to the same route cannot revive an abandoned offers window',async()=>{
+ const h=fixture('application-offers.js'),id='11111111-1111-4111-8111-111111111111';
+ const pending=h.c.pcsApplicationOffers.open(id),root=h.nodes.get('pcsOfferRows');
+ h.c.pcsNavigation.run('inbox',()=>{});h.c.pcsNavigation.run('crm',()=>{});
+ h.calls[0].resolve({application:{id},source:'partner',page:0,rows:[{item_title:'stale same-route offer'}]});await pending;
+ assert.equal(root.innerHTML,'');h.nodes.get('pcsOfferRefresh').onclick();assert.equal(h.calls.length,1);
+});
+test('a retained delivery form cannot submit the replacement form',async()=>{
+ const h=deliveryFixture();h.open();const old=h.nodes.get('pcsDeliveryReviewForm');h.c.closeSheet();h.open();
+ old.listeners.submit({preventDefault(){}});assert.equal(h.calls.length,0);
 });

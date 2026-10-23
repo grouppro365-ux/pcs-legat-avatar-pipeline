@@ -2,7 +2,7 @@
  'use strict';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let state=null;
- const active=s=>state===s&&document.getElementById('pcsInventoryResult')===s.root;
+ const active=s=>state===s&&document.getElementById('pcsInventoryResult')===s.root&&(!s.sheet||window.pcsSheetLifecycle?.current(s.sheet))&&(!s.navigation||window.pcsNavigation?.isCurrent(s.navigation));
  async function check(s){
   if(!active(s)||s.busy)return;
   const start=document.getElementById('pcsInventoryStart').value,end=document.getElementById('pcsInventoryEnd').value;
@@ -20,8 +20,8 @@
  window.pcsInventory={open(id){
   if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))return;
   window.openSheet('Наличие на даты',`<div class="v37-catalog-editor"><p class="muted">Проверка по сохранённым периодам и активным броням. Даты указаны по времени Таиланда; окончание не входит в период.</p><div class="field"><label for="pcsInventoryStart">Начало периода</label><input id="pcsInventoryStart" type="date"></div><div class="field"><label for="pcsInventoryEnd">Окончание периода</label><input id="pcsInventoryEnd" type="date"></div><button id="pcsInventoryCheck" class="btn" type="button">Проверить наличие</button><div id="pcsInventoryResult" aria-live="polite"></div></div>`);
-  const s=state={id,root:document.getElementById('pcsInventoryResult'),button:document.getElementById('pcsInventoryCheck'),sequence:0,busy:false};
+  const s=state={id,root:document.getElementById('pcsInventoryResult'),button:document.getElementById('pcsInventoryCheck'),sequence:0,busy:false,sheet:window.pcsSheetLifecycle?.capture(),navigation:window.pcsNavigation?.capture()};
   s.button.onclick=()=>check(s);
-  for(const key of ['pcsInventoryStart','pcsInventoryEnd'])document.getElementById(key).onchange=()=>{s.sequence++;s.busy=false;s.button.disabled=false;s.root.textContent='Даты изменились. Проверьте наличие заново.';};
+  for(const key of ['pcsInventoryStart','pcsInventoryEnd'])document.getElementById(key).onchange=()=>{if(!active(s))return;s.sequence++;s.busy=false;s.button.disabled=false;s.root.textContent='Даты изменились. Проверьте наличие заново.';};
  }};
 })();
