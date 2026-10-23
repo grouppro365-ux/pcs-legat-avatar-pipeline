@@ -1,0 +1,10 @@
+#pcsContentVideoRoot{min-width:0;overflow-wrap:anywhere}
+#pcsContentVideoRoot form{display:grid;gap:12px;margin:14px 0}
+#pcsContentVideoRoot label{display:block;min-width:0}
+#pcsContentVideoRoot .input{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin-top:6px}
+#pcsContentVideoRoot textarea{min-height:100px;resize:vertical}
+#pcsContentVideoRoot fieldset{min-width:0;margin:0;padding:12px;border:1px solid var(--line,#d9dfe0);border-radius:12px}
+#pcsContentVideoRoot fieldset[hidden]{display:none}
+#pcsContentVideoRoot button,#pcsContentVideoRoot select{min-height:44px}
+#pcsContentVideoRoot .toolbar{flex-wrap:wrap}
+#pcsContentVideoRoot video,#pcsContentVideoRoot img{display:block;width:100%;height:auto}

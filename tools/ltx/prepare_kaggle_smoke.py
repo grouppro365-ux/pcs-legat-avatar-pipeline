@@ -7,14 +7,7 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def prepare(destination, run_id=None):
-    destination = Path(destination)
-    destination.mkdir(parents=True, exist_ok=True)
-    run_id = run_id or str(uuid.uuid4())
-    if not isinstance(run_id, str) or not 1 <= len(run_id) <= 160 or not all(c.isalnum() or c in '-_.' for c in run_id):
-        raise ValueError('invalid_ltx_run_id')
-    source = (ROOT / 'tools/ltx/pcs_ltx_smoke.py').read_text()
-    setup = '''import subprocess, sys, pathlib, json
+ENVIRONMENT_SETUP = '''import subprocess, sys, pathlib, json
 report_path = pathlib.Path('/kaggle/working/pcs-ltx-output/bootstrap.json')
 report_path.parent.mkdir(parents=True, exist_ok=True)
 def execute(stage, arguments, **options):
@@ -40,6 +33,16 @@ python = str(venv / 'bin/python')
 execute('INSTALL_TORCH', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'torch==2.5.1', '--index-url', 'https://download.pytorch.org/whl/cu121'])
 execute('INSTALL_DIFFUSERS', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'diffusers==0.36.0', 'transformers==4.57.3', 'accelerate==1.12.0', 'imageio==2.37.0', 'imageio-ffmpeg==0.6.0', 'sentencepiece==0.2.1', 'safetensors==0.6.2', 'huggingface-hub==0.36.0'])
 '''
+
+
+def prepare(destination, run_id=None):
+    destination = Path(destination)
+    destination.mkdir(parents=True, exist_ok=True)
+    run_id = run_id or str(uuid.uuid4())
+    if not isinstance(run_id, str) or not 1 <= len(run_id) <= 160 or not all(c.isalnum() or c in '-_.' for c in run_id):
+        raise ValueError('invalid_ltx_run_id')
+    source = (ROOT / 'tools/ltx/pcs_ltx_smoke.py').read_text()
+    setup = ENVIRONMENT_SETUP
     code = 'import os\nos.environ["PCS_LTX_RUN_ID"] = '+repr(run_id)+'\n' + setup + "\nscript=pathlib.Path('/kaggle/working/pcs_ltx_smoke.py')\nscript.write_text(" + repr(source) + ")\nexecute('INFERENCE', [python, str(script)])\n"
     notebook = {'nbformat': 4, 'nbformat_minor': 5,
                 'metadata': {'kernelspec': {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'}},
