@@ -106,3 +106,9 @@ test('a hidden application queue cannot open a request over another route',async
  root.onclick({target:{closest:()=>({dataset:{applicationOpen:'0'}})}});
  assert.equal(h.calls.length,1);assert.equal(h.sheets.length,1);
 });
+
+test('closing attribution prevents a late response from changing its retained report',async()=>{
+ const h=fixture('attribution-report.js');h.c.pcsManagerRequest=h.c.call;
+ const pending=h.c.pcsAttribution.open(),root=h.nodes.get('pcsAttributionRoot'),before=root.textContent;
+ h.c.closeSheet();h.calls[0].resolve({});await pending;assert.equal(root.textContent,before);
+});
