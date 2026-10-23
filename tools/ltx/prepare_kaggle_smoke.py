@@ -17,11 +17,11 @@ def prepare(destination, run_id=None):
     setup = '''import subprocess, sys, pathlib, json
 report_path = pathlib.Path('/kaggle/working/pcs-ltx-output/bootstrap.json')
 report_path.parent.mkdir(parents=True, exist_ok=True)
-def execute(stage, arguments):
+def execute(stage, arguments, **options):
     report = {'run_id': os.environ['PCS_LTX_RUN_ID'], 'stage': stage, 'python_version': sys.version.split()[0], 'outcome': 'RUNNING'}
     report_path.write_text(json.dumps(report))
     try:
-        subprocess.run(arguments, check=True)
+        subprocess.run(arguments, check=True, **options)
     except Exception as error:
         report.update(outcome='FAILED', error_type=type(error).__name__)
         if isinstance(error, subprocess.CalledProcessError):
@@ -32,7 +32,10 @@ def execute(stage, arguments):
     report_path.write_text(json.dumps(report))
 # Keep installed dependencies outside /kaggle/working so Kaggle outputs contain only artifacts.
 venv = pathlib.Path('/tmp/pcs-ltx-venv')
-execute('CREATE_VENV', [sys.executable, '-m', 'venv', str(venv)])
+bootstrap = pathlib.Path('/tmp/pcs-ltx-bootstrap')
+execute('INSTALL_ENV_BOOTSTRAP', [sys.executable, '-m', 'pip', 'install', '--disable-pip-version-check', '--target', str(bootstrap), 'virtualenv==20.35.3'])
+bootstrap_env = dict(os.environ, PYTHONPATH=str(bootstrap))
+execute('CREATE_VENV', [sys.executable, '-m', 'virtualenv', '--no-download', '--no-periodic-update', '--copies', '--app-data', '/tmp/pcs-ltx-venv-cache', str(venv)], env=bootstrap_env)
 python = str(venv / 'bin/python')
 execute('INSTALL_TORCH', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'torch==2.5.1', '--index-url', 'https://download.pytorch.org/whl/cu121'])
 execute('INSTALL_DIFFUSERS', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'diffusers==0.36.0', 'transformers==4.57.3', 'accelerate==1.12.0', 'imageio==2.37.0', 'imageio-ffmpeg==0.6.0', 'sentencepiece==0.2.1', 'safetensors==0.6.2', 'huggingface-hub==0.36.0'])

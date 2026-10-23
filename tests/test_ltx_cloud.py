@@ -137,6 +137,8 @@ class LtxCloudTests(unittest.TestCase):
             code = ''.join(notebook['cells'][0]['source'])
             compile(code, '<generated-kaggle-smoke>', 'exec')
             self.assertIn('torch==2.5.1', code)
+            self.assertIn('virtualenv==20.35.3', code)
+            self.assertNotIn("'-m', 'venv'", code)
             self.assertIn(REVISION, code)
             self.assertNotIn('/kaggle/input/', code)
             self.assertIn("pathlib.Path('/tmp/pcs-ltx-venv')", code)
@@ -149,7 +151,7 @@ class LtxCloudTests(unittest.TestCase):
             notebook = json.loads((Path(tmp) / metadata['code_file']).read_text())
             code = ''.join(notebook['cells'][0]['source']).replace('/kaggle/working/', tmp + '/')
             error = subprocess.CalledProcessError(1, ['private-subprocess-argument'])
-            with patch('subprocess.run', side_effect=[None, error]), patch.dict(os.environ):
+            with patch('subprocess.run', side_effect=[None, None, error]), patch.dict(os.environ):
                 with self.assertRaises(subprocess.CalledProcessError):
                     exec(compile(code, '<bootstrap-fixture>', 'exec'), {})
             report = json.loads(Path(tmp, 'pcs-ltx-output/bootstrap.json').read_text())
