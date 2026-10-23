@@ -1,6 +1,6 @@
 import {CrmError} from './crm-policy.mjs';
 import {uuid} from './portal-workflow.mjs';
-export const deliveryEventTypes=['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY'];
+export const deliveryEventTypes=['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY','CLIENT_FOLLOWUP_READY'];
 export const workflowDeliveryList=`select e.id,e.aggregate_id application_id,a.public_id,e.event_type,
  e.payload->>'kind' kind,e.payload->>'channel' channel,e.payload->>'contact_id' contact_id,
  e.status,e.attempts,e.next_attempt_at,e.last_error,e.created_at,e.sent_at,
@@ -30,7 +30,7 @@ export const reviewWorkflowDeliveryQuery=`with permission as materialized (
  select e.*,md5(to_jsonb(e)::text) current_version,
  md5(jsonb_build_object('decision',$3::text,'note',$4::text,'expected_version',$2::text)::text) fingerprint
  from pcs_workflow_outbox e where e.id=$1::uuid and e.aggregate_type='APPLICATION'
- and e.event_type in ('PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY') and (select allowed from permission)
+ and e.event_type in ('PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY','CLIENT_FOLLOWUP_READY') and (select allowed from permission)
  for update
  ),written as (
  update pcs_workflow_outbox e set status=case when $3='DELIVERED' then 'SENT' else 'CANCELLED' end,
@@ -41,7 +41,7 @@ export const reviewWorkflowDeliveryQuery=`with permission as materialized (
  from candidate c where e.id=c.id and c.current_version=$2 and c.status='CANCELLED' and c.last_error='delivery_review_required'
  and not(c.payload ? 'operator_delivery_review') and ($3<>'DELIVERED' or (coalesce(length(c.payload->>'delivery_text'),0)>0 and c.payload->>'channel' in ('telegram','line','whatsapp','instagram','facebook'))) returning e.id,e.aggregate_id,e.payload
  ),acknowledged as (
- update notifications n set read_at=clock_timestamp() from written w where n.dedupe_key in ('payment-send-review:'||w.id::text,'workflow-send-review:'||w.id::text) and n.read_at is null returning n.id
+ update notifications n set read_at=clock_timestamp() from written w where n.dedupe_key in ('payment-send-review:'||w.id::text,'workflow-send-review:'||w.id::text,'client-followup-review:'||w.id::text) and n.read_at is null returning n.id
  ),audited as (
  insert into audit_events(actor_role,action,entity_type,entity_id,patch,reason,result)
  select case when $6::uuid is null then 'ADMIN' else 'STAFF' end,'workflow_delivery_reviewed','applications',aggregate_id::text,

@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION pcs.runtime_intake(p_contact uuid,p_request uuid,p_ch
 RETURNS jsonb LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
 DECLARE c public.client_profiles%ROWTYPE; a public.applications%ROWTYPE; profile_id uuid; count_profiles integer;
 BEGIN
- IF p_contact IS NULL OR p_request IS NULL OR p_channel IS NULL OR p_channel NOT IN ('telegram','whatsapp','instagram','facebook') OR p_need IS NULL OR length(btrim(p_need)) NOT BETWEEN 1 AND 4000 OR length(coalesce(p_actor,'')) NOT BETWEEN 1 AND 200 OR (p_channel<>'telegram' AND p_message IS NULL) OR (p_channel='telegram' AND coalesce(p_telegram,'') !~ '^[0-9]{1,20}$') THEN
+ IF p_contact IS NULL OR p_request IS NULL OR p_channel IS NULL OR p_channel NOT IN ('telegram','whatsapp','instagram','facebook','line') OR p_need IS NULL OR length(btrim(p_need)) NOT BETWEEN 1 AND 4000 OR length(coalesce(p_actor,'')) NOT BETWEEN 1 AND 200 OR (p_channel<>'telegram' AND p_message IS NULL) OR (p_channel='telegram' AND coalesce(p_telegram,'') !~ '^[0-9]{1,20}$') THEN
   RAISE EXCEPTION 'runtime_intake_invalid' USING ERRCODE='22023';
  END IF;
  PERFORM pg_advisory_xact_lock(hashtextextended('runtime-intake-contact:'||p_contact::text,0));

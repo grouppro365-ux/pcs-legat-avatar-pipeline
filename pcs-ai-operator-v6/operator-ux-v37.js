@@ -28,19 +28,25 @@ window.editCatalog37=async function(id){
 window.saveCatalog37=async function(id,button){
  if(button?.disabled)return;
  const versionField=document.getElementById('catalogEditVersion37');
+ if(!versionField)return;
+ const scope=window.pcsNavigation.capture(),ticket=window.pcsSheetLifecycle?.capture();
+ const current=()=>window.pcsNavigation.isCurrent(scope)&&(!ticket||window.pcsSheetLifecycle.current(ticket))&&document.getElementById('catalogEditVersion37')===versionField;
  if(versionField?.dataset?.itemId&&versionField.dataset.itemId!==String(id)){toast('Открыта другая карточка');return}
  const body={expected_version:versionField?.value||'',title:document.getElementById('catalogEditTitle37')?.value||'',city:document.getElementById('catalogEditCity37')?.value||'',description:document.getElementById('catalogEditDescription37')?.value||'',conditions:document.getElementById('catalogEditConditions37')?.value||''};
  const capacity=document.getElementById('catalogEditCapacity37');if(capacity)body.booking_capacity=capacity.value||null;
  if(!body.title.trim()){toast('Укажите название');return}
- if(button)button.disabled=true;
+ const fields=['catalogEditTitle37','catalogEditCity37','catalogEditDescription37','catalogEditConditions37','catalogEditCapacity37'].map(key=>document.getElementById(key)).filter(Boolean);
+ if(button)button.disabled=true;fields.forEach(field=>field.disabled=true);
  try{
   const result=await call('/catalog/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify(body)});
+  if(!current())return;
+  if(result?.ok!==true||String(result.item?.id)!==String(id))throw new Error('Сервер не подтвердил сохранение карточки. Обновите её для проверки.');
   for(const rows of [window.PCS?.catalog,window.PCS_EXTRAS37]){
    const x=rows?.find(v=>String(v.id)===String(id));if(x)Object.assign(x,result.item,body,{name:result.item.title});
   }
   if(versionField===document.getElementById('catalogEditVersion37')&&result.item?.edit_version)versionField.value=result.item.edit_version;
   drawCatalog37();drawExtras37();toast('Изменения сохранены');
- }catch(e){toast(e.message||'Не удалось сохранить')}finally{if(button)button.disabled=false}
+ }catch(e){if(current())toast(e.message||'Не удалось сохранить')}finally{if(button)button.disabled=false;fields.forEach(field=>field.disabled=false)}
 };
 window.pcsExtraFilter37=(f,btn)=>{extrasFilter37=f;document.querySelectorAll('#pcsExtraFilters37 button').forEach(x=>x.classList.toggle('on',x===btn));drawExtras37()};
 async function upgradeExtras37(){extrasFilter37='all';const host=document.getElementById('pcsApServices');if(!host)return;const scope=window.pcsNavigation.capture();try{const raw=await opsCall('/extras');if(!window.pcsNavigation.isCurrent(scope)||!host.isConnected)return;window.PCS_EXTRAS37=Array.isArray(raw)?raw:Array.isArray(raw?.items)?raw.items:Array.isArray(raw?.data)?raw.data:[]}catch{if(!window.pcsNavigation.isCurrent(scope)||!host.isConnected)return;window.PCS_EXTRAS37=[]}const chips=host.previousElementSibling;if(chips)chips.outerHTML=`<div id="pcsExtraFilters37" class="v37-filter"><button class="on" onclick="pcsExtraFilter37('all',this)">Все</button><button onclick="pcsExtraFilter37('transfer',this)">Трансферы</button><button onclick="pcsExtraFilter37('visa',this)">Визы</button><button onclick="pcsExtraFilter37('medicine',this)">Медицина</button><button onclick="pcsExtraFilter37('home',this)">Бытовые</button><button onclick="pcsExtraFilter37('other',this)">Остальные</button></div>`;const search=document.getElementById('pcsApExtraSearch');if(search)search.oninput=drawExtras37;drawExtras37()}

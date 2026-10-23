@@ -9,6 +9,11 @@ export const qualificationTypes={
  transfer:{title:'Трансфер',fields:{...shared,pickup:'Откуда забрать (адрес / аэропорт)',dropoff:'Куда доставить (адрес / аэропорт)',transfer_date:'Дата поездки в Таиланде',transfer_time:'Время подачи в Таиланде',passengers:'Количество пассажиров',luggage:'Количество и размер багажа',child_seats:'Детские кресла (нет / возраст детей)',flight_number:'Номер рейса (или не требуется)'}},
  service:{title:'Услуга / иной запрос',fields:{...shared,service_need:'Что нужно сделать',service_date:'Когда нужен результат',participants:'Для кого / количество участников'}}
 };
+export function qualificationAssessment(type,answers={}){
+ const fields=Object.hasOwn(qualificationTypes,type)?qualificationTypes[type].fields:null;
+ const missing=fields?Object.keys(fields).filter(k=>!String(answers?.[k]||'').trim()):[];
+ return {type:fields?type:null,recorded:Boolean(fields),missing_questions:missing.map(key=>({key,question:fields[key]})),all_answers_recorded:Boolean(fields)&&missing.length===0,verified_availability:false};
+}
 export function qualificationInput(b){
  if(!b||typeof b!=='object'||Array.isArray(b)||Object.keys(b).some(k=>!['id','expected_version','request_id','type','answers','source_note'].includes(k))||!uuid(b.id)||!uuid(b.request_id)||!/^[a-f0-9]{32}$/.test(b.expected_version||'')||!Object.hasOwn(qualificationTypes,b.type)||!b.answers||Array.isArray(b.answers)||typeof b.answers!=='object'||typeof b.source_note!=='string'||b.source_note.trim().length<5||b.source_note.length>1000)throw new CrmError('Укажите тип запроса, источник ответов и обновите заявку',400);
  const fields=qualificationTypes[b.type].fields;
@@ -20,12 +25,12 @@ export function qualificationInput(b){
 }
 export async function readQualification(biz,id){
  if(!uuid(id))throw new CrmError('Некорректная заявка',400);
- const a=(await biz.query(`select id,public_id,city,client_visible_notes,operational_status,selected_partner_offer_id,qualification_data->'operator_qualification' qualification,md5(to_jsonb(a)::text) edit_version from applications a where id=$1::uuid`,[id]))[0];
+ const a=(await biz.query(`select id,public_id,city,client_visible_notes,operational_status,selected_partner_offer_id,qualification_data->'operator_qualification' qualification,qualification_data->'source_qualification' source_qualification,md5(coalesce(client_visible_notes,'')) source_hash,md5(to_jsonb(a)::text) edit_version from applications a where id=$1::uuid`,[id]))[0];
  if(!a)throw new CrmError('Заявка не найдена',404);
  const editable=!a.selected_partner_offer_id&&['NEW','TRIAGE','NEEDS_CLIENT_INFO','MATCHING','QUOTE_READY','QUOTE_SENT','AWAITING_CLIENT_DECISION'].includes(a.operational_status);
- const saved=a.qualification,fields=Object.hasOwn(qualificationTypes,saved?.type)?qualificationTypes[saved.type].fields:null;
- const missing=fields?Object.keys(fields).filter(k=>!String(saved.answers?.[k]||'').trim()):[];
- return {application:a,types:qualificationTypes,editable,assessment:{type:saved?.type||null,recorded:Boolean(fields),missing_questions:missing.map(key=>({key,question:fields[key]})),all_answers_recorded:Boolean(fields)&&missing.length===0,verified_availability:false}};
+ const saved=a.qualification,automatic=a.source_qualification;
+ const sourceCurrent=automatic?.method==='deterministic_exact_source_spans_v1'&&automatic.source_hash===a.source_hash;
+ return {application:a,types:qualificationTypes,editable,assessment:qualificationAssessment(saved?.type,saved?.answers),automatic:automatic?{...automatic,status:sourceCurrent?(automatic.type?'EXTRACTED_UNVERIFIED':'NEEDS_TYPE'):'STALE',review_required:true,...(sourceCurrent?{assessment:qualificationAssessment(automatic.type,automatic.answers)}:{})}:null};
 }
 export async function saveQualification(biz,input,authUser=null){
  const b=qualificationInput(input);if(authUser!==null&&!uuid(authUser))throw new CrmError('Недействительный сотрудник',403);

@@ -1,0 +1,32 @@
+DO $qa$
+DECLARE app uuid:=gen_random_uuid(); actor uuid:=gen_random_uuid(); cmd uuid:=gen_random_uuid(); v text; h text; src text:='🙂 аренда авто; city: Pattaya; start date: 2026-11-01'; proof jsonb; r jsonb; q jsonb; n integer;
+BEGIN
+ INSERT INTO public.applications(id,public_id,category,operational_status,client_visible_notes,qualification_data) VALUES(app,'QA-source-'||app,'general','NEW',src,'{"booking_marker":"preserve"}');
+ SELECT md5(to_jsonb(a)::text),md5(src) INTO v,h FROM public.applications a WHERE id=app;
+ proof:=jsonb_build_object('type',jsonb_build_object('start',strpos(src,'аренда авто')-1,'end',strpos(src,'аренда авто')-1+length('аренда авто'),'quote','аренда авто'),'answers',jsonb_build_object('city',jsonb_build_object('start',strpos(src,'Pattaya')-1,'end',strpos(src,'Pattaya')-1+length('Pattaya'),'quote','Pattaya')));
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Phuket"}',proof,h,null);RAISE EXCEPTION 'QA tampered answer accepted';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',jsonb_set(proof,'{answers,city,start}','0'),h,null);RAISE EXCEPTION 'QA tampered span accepted';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ BEGIN PERFORM pcs.save_source_qualification(app,repeat('0',32),cmd,'car_rental','{"city":"Pattaya"}',proof,h,null);RAISE EXCEPTION 'QA stale snapshot accepted';EXCEPTION WHEN SQLSTATE '40001' THEN NULL;END;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,actor);RAISE EXCEPTION 'QA unknown staff accepted';EXCEPTION WHEN SQLSTATE '42501' THEN NULL;END;
+ ALTER TABLE public.audit_events ADD CONSTRAINT qa_source_audit_failure CHECK(action<>'request_qualification_extracted') NOT VALID;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,null);RAISE EXCEPTION 'QA audit failure accepted';EXCEPTION WHEN SQLSTATE '23514' THEN NULL;END;
+ IF EXISTS(SELECT 1 FROM public.applications WHERE id=app AND qualification_data?'source_qualification') OR EXISTS(SELECT 1 FROM pcs.source_qualification_commands WHERE application_id=app) THEN RAISE EXCEPTION 'QA partial write leaked';END IF;
+ ALTER TABLE public.audit_events DROP CONSTRAINT qa_source_audit_failure;
+ r:=pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,null);q:=pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,null);IF r IS DISTINCT FROM q THEN RAISE EXCEPTION 'QA receipt changed';END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.applications WHERE id=app AND qualification_data->>'booking_marker'='preserve' AND qualification_data#>>'{source_qualification,answers,city}'='Pattaya' AND qualification_data#>>'{source_qualification,review_required}'='true' AND operational_status='NEW' AND selected_partner_offer_id IS NULL AND item_id IS NULL) THEN RAISE EXCEPTION 'QA source save mutated canonical fields';END IF;
+ SELECT count(*) INTO n FROM public.audit_events WHERE entity_id=app::text AND action='request_qualification_extracted';IF n<>1 THEN RAISE EXCEPTION 'QA audit not once';END IF;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{}',jsonb_set(proof,'{answers}','{}'),h,null);RAISE EXCEPTION 'QA changed replay accepted';EXCEPTION WHEN SQLSTATE '23505' THEN NULL;END;
+ INSERT INTO neon_auth."user"(id,name,email,"emailVerified","createdAt","updatedAt",banned) VALUES(actor,'QA source','qa-source-'||actor||'@example.invalid',false,now(),now(),false);
+ PERFORM pcs.staff_manage(actor,'OPS_ADMIN',true);SELECT md5(to_jsonb(a)::text) INTO v FROM public.applications a WHERE id=app;cmd:=gen_random_uuid();r:=pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,actor);
+ UPDATE neon_auth."user" SET banned=true WHERE id=actor;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,actor);RAISE EXCEPTION 'QA banned receipt accepted';EXCEPTION WHEN SQLSTATE '42501' THEN NULL;END;
+ UPDATE neon_auth."user" SET banned=false WHERE id=actor;PERFORM pcs.staff_manage(actor,'OPS_ADMIN',false);
+ BEGIN PERFORM pcs.save_source_qualification(app,v,cmd,'car_rental','{"city":"Pattaya"}',proof,h,actor);RAISE EXCEPTION 'QA revoked receipt accepted';EXCEPTION WHEN SQLSTATE '42501' THEN NULL;END;
+ UPDATE public.applications SET qualification_data=qualification_data||'{"operator_qualification":{"type":"service","answers":{"city":"Bangkok"}}}' WHERE id=app;SELECT md5(to_jsonb(a)::text) INTO v FROM public.applications a WHERE id=app;
+ BEGIN PERFORM pcs.save_source_qualification(app,v,gen_random_uuid(),'car_rental','{"city":"Pattaya"}',proof,h,null);RAISE EXCEPTION 'QA operator answers overwritten';EXCEPTION WHEN SQLSTATE '23514' THEN NULL;END;
+ UPDATE public.applications SET qualification_data=qualification_data-'operator_qualification',client_visible_notes='аренда авто; start date: 2026-02-30' WHERE id=app;
+ SELECT client_visible_notes,md5(to_jsonb(a)::text),md5(client_visible_notes) INTO src,v,h FROM public.applications a WHERE id=app;
+ proof:=jsonb_build_object('type',jsonb_build_object('start',0,'end',length('аренда авто'),'quote','аренда авто'),'answers',jsonb_build_object('start_date',jsonb_build_object('start',strpos(src,'2026-02-30')-1,'end',length(src),'quote','2026-02-30')));
+ BEGIN PERFORM pcs.save_source_qualification(app,v,gen_random_uuid(),'car_rental','{"start_date":"2026-02-30"}',proof,h,null);RAISE EXCEPTION 'QA invalid date accepted';EXCEPTION WHEN SQLSTATE '22023' THEN NULL;END;
+ IF has_function_privilege('public','pcs.save_source_qualification(uuid,text,uuid,text,jsonb,jsonb,text,uuid)','EXECUTE') OR has_table_privilege('public','pcs.source_qualification_commands','SELECT,INSERT,UPDATE,DELETE') THEN RAISE EXCEPTION 'QA PUBLIC privilege';END IF;
+END $qa$;

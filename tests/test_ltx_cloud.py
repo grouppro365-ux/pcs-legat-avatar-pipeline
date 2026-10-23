@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import imageio_ffmpeg
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools/ltx'))
@@ -61,7 +62,7 @@ class LtxCloudTests(unittest.TestCase):
     def test_decodes_actual_video_and_rejects_wrong_geometry_and_tampering(self):
         with tempfile.TemporaryDirectory() as tmp:
             video = Path(tmp, 'ltx-smoke.mp4')
-            subprocess.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i',
+            subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-v', 'error', '-f', 'lavfi', '-i',
                 'testsrc2=size=320x256:rate=8', '-frames:v', '17', '-c:v', 'libx264',
                 '-pix_fmt', 'yuv420p', str(video)], check=True, capture_output=True)
             artifact = artifact_receipt(video)

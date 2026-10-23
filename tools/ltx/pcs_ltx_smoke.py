@@ -29,23 +29,31 @@ def artifact_receipt(path, *, width=WIDTH, height=HEIGHT, frames=FRAMES, fps=FPS
     path = Path(path)
     if not path.is_file() or path.stat().st_size < 1024:
         raise RuntimeError('video_missing_or_empty')
-    probe = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0',
-                            '-count_frames', '-show_entries',
-                            'stream=width,height,nb_read_frames,avg_frame_rate,codec_name',
-                            '-of', 'json', str(path)], check=True, capture_output=True, text=True)
-    streams = json.loads(probe.stdout).get('streams', [])
-    if len(streams) != 1:
-        raise RuntimeError('video_stream_invalid')
-    s = streams[0]
-    n, d = map(int, s['avg_frame_rate'].split('/'))
-    if d <= 0 or s.get('width') != width or s.get('height') != height or int(s.get('nb_read_frames', 0)) != frames or not math.isclose(n / d, fps):
+    import imageio_ffmpeg
+    reader = imageio_ffmpeg.read_frames(str(path))
+    count = 0
+    try:
+        meta = next(reader)
+        if tuple(meta.get('size', ())) != (width, height) or not math.isclose(meta.get('fps', 0), fps):
+            raise RuntimeError('video_geometry_mismatch')
+        for frame in reader:
+            count += 1
+            if len(frame) != width * height * 3 or count > frames:
+                raise RuntimeError('video_geometry_mismatch')
+    finally:
+        reader.close()
+    if count != frames:
         raise RuntimeError('video_geometry_mismatch')
-    # Decode every frame, not only its container metadata.
-    subprocess.run(['ffmpeg', '-v', 'error', '-xerror', '-i', str(path), '-f', 'null', '-'], check=True, capture_output=True)
+    # Use the same pinned FFmpeg wheel that Diffusers export already requires.
+    # Enforce the decoder exit status too: a permissive reader may stop at EOF
+    # after a corrupt frame instead of raising it to Python.
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(), '-v', 'error', '-xerror',
+                    '-i', str(path), '-f', 'null', '-'], check=True,
+                   capture_output=True, timeout=30)
     return {'file': path.name, 'bytes': path.stat().st_size,
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
             'width': width, 'height': height, 'frames': frames, 'fps': fps,
-            'duration_seconds': frames / fps, 'codec': s['codec_name'], 'decode_verified': True}
+            'duration_seconds': frames / fps, 'codec': meta['codec'], 'decode_verified': True}
 
 
 def run(output_dir='/kaggle/working/pcs-ltx-output'):

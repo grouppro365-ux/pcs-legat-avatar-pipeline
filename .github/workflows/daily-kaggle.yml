@@ -84,6 +84,9 @@ jobs:
       - name: Summarize GPU failure without private data
         if: always()
         run: python tools/ltx/collect_gpu_diagnostics.py kaggle-output
+      - name: Install pinned LTX artifact verifier
+        if: success() && env.PCS_GPU_ENGINE == 'ltx-smoke'
+        run: python -m pip install --disable-pip-version-check --no-deps imageio-ffmpeg==0.6.0
       - name: Verify actual LTX artifact
         if: success() && env.PCS_GPU_ENGINE == 'ltx-smoke'
         run: python tools/ltx/verify_kaggle_smoke.py kaggle-output kaggle-ltx-smoke/expected-run.json
