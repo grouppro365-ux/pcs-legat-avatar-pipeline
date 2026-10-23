@@ -89,3 +89,20 @@ test('a retained delivery form cannot submit the replacement form',async()=>{
  const h=deliveryFixture();h.open();const old=h.nodes.get('pcsDeliveryReviewForm');h.c.closeSheet();h.open();
  old.listeners.submit({preventDefault(){}});assert.equal(h.calls.length,0);
 });
+
+for(const item of [
+ {file:'data-quality.js',open:c=>c.pcsDataQuality.open(),root:'pcsQualityRows',refresh:'pcsQualityRefresh',next:'pcsQualityNext',response:{view:'telegram',page:0,rows:[]}},
+ {file:'audit-log.js',open:c=>c.pcsAudit.open(),root:'pcsAuditList',refresh:'pcsAuditRefresh',next:'pcsAuditNext',response:{source:'crm',page:0,rows:[]}},
+ {file:'application-workspace.js',open:c=>c.pcsApplications.open(),root:'pcsApplicationQueue',refresh:'pcsApplicationRefresh',next:'pcsApplicationNext',response:{view:'active',page:0,q:'',rows:[]}}
+])test(`${item.file}: a closed retained list ignores completion and cannot request another page`,async()=>{
+ const h=fixture(item.file),pending=item.open(h.c),root=h.nodes.get(item.root),before=root.innerHTML;
+ h.c.closeSheet();h.calls[0].resolve(item.response);await pending;
+ assert.equal(root.innerHTML,before);h.nodes.get(item.refresh).onclick();h.nodes.get(item.next).disabled=false;h.nodes.get(item.next).onclick();assert.equal(h.calls.length,1);
+});
+test('a hidden application queue cannot open a request over another route',async()=>{
+ const h=fixture('application-workspace.js'),id='11111111-1111-4111-8111-111111111111',pending=h.c.pcsApplications.open();
+ h.calls[0].resolve({view:'active',page:0,q:'',rows:[{id,public_id:'APP-1'}]});await pending;
+ const root=h.nodes.get('pcsApplicationQueue');h.c.pcsNavigation.run('inbox',()=>{});
+ root.onclick({target:{closest:()=>({dataset:{applicationOpen:'0'}})}});
+ assert.equal(h.calls.length,1);assert.equal(h.sheets.length,1);
+});

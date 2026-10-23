@@ -38,7 +38,7 @@ test('runtime scripts have explicit release keys, including the current send mod
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.ok(html.includes('crm-followup.js?v=20261021-send-integrity1'));assert.ok(html.includes('delivery-review.js?v=20261023-sheets1'));
  assert.ok(html.includes('crm-message.js?v=20261021-send-integrity1'));
- for(const file of ['app.js','data-quality.js'])assert.ok(html.includes(file+'?v='+(file==='app.js'?'20261021-send-integrity1':'20261006-quality1')));
+ for(const file of ['app.js','data-quality.js'])assert.ok(html.includes(file+'?v='+(file==='app.js'?'20261021-send-integrity1':'20261023-lists1')));
  assert.ok(html.includes('errors.js?v=20261019-races1'));
  assert.ok(html.includes('approval-review.js?v=20261004-approval1'));
  assert.ok(html.includes('global-search.js?v=20261021-content1'));
