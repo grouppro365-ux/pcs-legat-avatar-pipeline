@@ -23,7 +23,7 @@
   return rows?`<details><summary style="min-height:44px;cursor:pointer">Изменения брони: до и после</summary><table style="width:100%;table-layout:fixed;overflow-wrap:anywhere"><thead><tr><th>Поле</th><th>До</th><th>После</th></tr></thead><tbody>${rows}</tbody></table></details>`:'';
  };
  let state=null;
- const active=s=>state===s&&document.getElementById('pcsAuditList')===s.root;
+ const active=s=>state===s&&document.getElementById('pcsAuditList')===s.root&&(!s.sheet||window.pcsSheetLifecycle?.current(s.sheet))&&(!s.navigation||window.pcsNavigation?.isCurrent(s.navigation));
  async function load(s){
   if(!active(s))return;const seq=++s.sequence,source=s.source,page=s.page;s.root.textContent='Загружаю журнал…';
   document.getElementById('pcsAuditPrev').disabled=true;document.getElementById('pcsAuditNext').disabled=true;
@@ -36,13 +36,13 @@
  async function open(options){
   const applicationId=options?.applicationId||'';if(applicationId&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(applicationId))throw Error('Некорректный номер брони');
   window.openSheet(applicationId?'История брони':'Журнал действий',`<p class="muted">${applicationId?'История выбранной брони.':'История сохранённых действий. Выберите источник;'} Показаны изменённые поля. Для изменений брони доступны значения до и после.</p><div class="toolbar"><select aria-label="Источник журнала" id="pcsAuditSource" style="min-height:44px;max-width:100%"><option value="crm">CRM и коммуникации</option><option value="business">Каталог и операции</option></select><button class="btn soft" id="pcsAuditRefresh">Обновить</button></div><div id="pcsAuditList" class="list" aria-live="polite"></div><div class="toolbar"><button class="btn soft" id="pcsAuditPrev" disabled>Назад</button><button class="btn soft" id="pcsAuditNext" disabled>Далее</button></div>`);
-  const s=state={root:document.getElementById('pcsAuditList'),source:applicationId?'business':'crm',applicationId,page:0,sequence:0};
+  const s=state={root:document.getElementById('pcsAuditList'),source:applicationId?'business':'crm',applicationId,page:0,sequence:0,sheet:window.pcsSheetLifecycle?.capture(),navigation:window.pcsNavigation?.capture()};
   const selector=document.getElementById('pcsAuditSource');selector.value=s.source;selector.disabled=!!applicationId;
   if(applicationId)selector.setAttribute?.('aria-label','История выбранной брони');
-  document.getElementById('pcsAuditSource').onchange=e=>{if(s.applicationId)return;s.source=e.target.value;s.page=0;load(s)};
+  document.getElementById('pcsAuditSource').onchange=e=>{if(!active(s)||s.applicationId||!['crm','business'].includes(e.target.value))return;s.source=e.target.value;s.page=0;load(s)};
   document.getElementById('pcsAuditRefresh').onclick=()=>load(s);
-  document.getElementById('pcsAuditPrev').onclick=()=>{s.page=Math.max(0,s.page-1);load(s)};
-  document.getElementById('pcsAuditNext').onclick=()=>{s.page++;load(s)};await load(s);
+  document.getElementById('pcsAuditPrev').onclick=()=>{if(!active(s)||s.page===0)return;s.page=Math.max(0,s.page-1);load(s)};
+  document.getElementById('pcsAuditNext').onclick=()=>{if(!active(s)||s.page>=5000||document.getElementById('pcsAuditNext').disabled)return;s.page++;load(s)};await load(s);
  }
  window.pcsAudit={open};
  for(const name of ['moreMenu','pcs25Menu']){const previous=window[name];if(typeof previous!=='function')continue;window[name]=function(...args){const result=previous.apply(this,args),grid=document.querySelector('.sheetbox .v26-more,.sheetbox .more-grid,.sheetbox .action-grid');if(grid){const button=document.createElement('button');button.className='btn soft';button.textContent='Журнал действий';button.onclick=open;grid.appendChild(button);}return result;};}

@@ -7,26 +7,26 @@
  const fmt=x=>x&&Number.isFinite(Date.parse(x))?new Date(x).toLocaleString('ru-RU'):'—';
  const local=x=>{if(!x||!Number.isFinite(Date.parse(x)))return '';const d=new Date(x),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`};
  let queue=null,detail=null;
- const active=s=>queue===s&&document.getElementById('pcsApplicationQueue')===s.root;
+ const active=s=>queue===s&&document.getElementById('pcsApplicationQueue')===s.root&&(!s.sheet||window.pcsSheetLifecycle?.current(s.sheet))&&(!s.navigation||window.pcsNavigation?.isCurrent(s.navigation));
  async function load(s){
   if(!active(s))return;const seq=++s.seq,{view,page,q}=s;s.root.textContent='Загружаю заявки…';
   document.getElementById('pcsApplicationPrev').disabled=true;document.getElementById('pcsApplicationNext').disabled=true;
   try{const d=await window.call('/application-queue?'+new URLSearchParams({view,page,q}));if(!active(s)||seq!==s.seq)return;
    if(d.view!==view||d.page!==page||d.q!==q||!Array.isArray(d.rows))throw Error('Некорректный ответ очереди');
    s.rows=d.rows;s.root.innerHTML=d.rows.map((a,i)=>`<article class="item" style="overflow-wrap:anywhere"><b>${esc(a.public_id||'Заявка PCS')}</b><p>${esc(a.client_name||'Клиент не указан')} · ${esc(a.city||'Город не указан')}</p><p>${esc(a.item_title||label(a.category))}</p><p><span class="pill">${esc(label(a.operational_status))}</span></p><p>Оплата: ${esc(label(a.client_payment_status))}</p>${a.human_review_required?'<p class="muted">Требуется проверка оператором</p>':''}${a.sla_due_at?`<p class="muted">Срок ответа: ${esc(fmt(a.sla_due_at))}</p>`:''}${a.follow_up_at?`<p class="muted">Повторный контакт: ${esc(fmt(a.follow_up_at))}</p>`:''}${uuid(a.id)?`<button class="btn soft" data-application-open="${i}">Открыть заявку</button>`:''}</article>`).join('')||'<p class="muted">По выбранным условиям заявок нет.</p>';
-   s.root.onclick=e=>{const b=e.target.closest?.('[data-application-open]');if(b){const a=s.rows[Number(b.dataset.applicationOpen)];if(a&&uuid(a.id))openDetail(a.id)}};
+   s.root.onclick=e=>{if(!active(s))return;const b=e.target.closest?.('[data-application-open]');if(b){const a=s.rows[Number(b.dataset.applicationOpen)];if(a&&uuid(a.id))openDetail(a.id)}};
    document.getElementById('pcsApplicationPage').textContent=`Страница ${page+1}`;
    document.getElementById('pcsApplicationPrev').disabled=page===0;document.getElementById('pcsApplicationNext').disabled=!d.truncated||page>=5000;
   }catch(e){if(active(s)&&seq===s.seq)s.root.textContent=e.message||'Не удалось загрузить заявки';}
  }
  async function open(){
   window.openSheet('Заявки PCS',`<form id="pcsApplicationSearchForm" class="toolbar"><label class="field" style="flex:1;min-width:0">Поиск<input id="pcsApplicationSearch" class="input" maxlength="120" placeholder="Номер, клиент, город, объект" style="width:100%;min-width:0"></label><button class="btn soft" type="submit">Найти</button></form><div class="toolbar"><select data-pcs-localized id="pcsApplicationView" aria-label="Очередь заявок" style="max-width:100%;min-height:44px"><option value="active">Незавершённые заявки</option><option value="attention">Требуют внимания</option><option value="followup">Наступил повторный контакт</option><option value="all">Все заявки</option></select><button class="btn soft" id="pcsApplicationRefresh">Обновить</button></div><div id="pcsApplicationQueue" class="list" aria-live="polite" style="margin-top:12px"></div><p id="pcsApplicationPage" class="muted"></p><div class="toolbar"><button class="btn soft" id="pcsApplicationPrev" disabled>Назад</button><button class="btn soft" id="pcsApplicationNext" disabled>Далее</button></div>`);
-  const s=queue={root:document.getElementById('pcsApplicationQueue'),view:'active',page:0,q:'',seq:0,rows:[]};
-  document.getElementById('pcsApplicationSearchForm').onsubmit=e=>{e.preventDefault();s.q=document.getElementById('pcsApplicationSearch').value.trim();s.page=0;load(s)};
-  document.getElementById('pcsApplicationView').onchange=e=>{s.view=e.target.value;s.page=0;load(s)};
+  const s=queue={root:document.getElementById('pcsApplicationQueue'),view:'active',page:0,q:'',seq:0,rows:[],sheet:window.pcsSheetLifecycle?.capture(),navigation:window.pcsNavigation?.capture()};
+  document.getElementById('pcsApplicationSearchForm').onsubmit=e=>{e.preventDefault();if(!active(s))return;s.q=document.getElementById('pcsApplicationSearch').value.trim();s.page=0;load(s)};
+  document.getElementById('pcsApplicationView').onchange=e=>{if(!active(s)||!['active','attention','followup','all'].includes(e.target.value))return;s.view=e.target.value;s.page=0;load(s)};
   document.getElementById('pcsApplicationRefresh').onclick=()=>load(s);
-  document.getElementById('pcsApplicationPrev').onclick=()=>{s.page=Math.max(0,s.page-1);load(s)};
-  document.getElementById('pcsApplicationNext').onclick=()=>{s.page++;load(s)};await load(s);
+  document.getElementById('pcsApplicationPrev').onclick=()=>{if(!active(s)||s.page===0)return;s.page=Math.max(0,s.page-1);load(s)};
+  document.getElementById('pcsApplicationNext').onclick=()=>{if(!active(s)||s.page>=5000||document.getElementById('pcsApplicationNext').disabled)return;s.page++;load(s)};await load(s);
  }
  const detailActive=s=>detail===s&&document.getElementById('pcsApplicationDetail')===s.root&&(!s.ticket||window.pcsSheetLifecycle.current(s.ticket));
  function fields(a,keys){return keys.filter(([k])=>a[k]!==null&&a[k]!==undefined&&a[k]!=='').map(([k,title,type])=>`<p style="overflow-wrap:anywhere;white-space:pre-wrap"><b>${title}:</b> ${esc(type==='time'?fmt(a[k]):type==='status'?label(a[k]):a[k])}</p>`).join('')}

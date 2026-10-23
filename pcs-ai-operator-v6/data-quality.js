@@ -5,7 +5,7 @@
  const names={telegram:'Одинаковый Telegram ID',phone:'Похожие записи по телефону',overdue:'Просроченный следующий шаг',missing_date:'Следующий шаг без срока'};
  const time=x=>x&&Number.isFinite(Date.parse(x))?new Date(x).toLocaleString('ru-RU'):'Не указан';
  let state;
- const active=s=>state===s&&document.getElementById('pcsQualityRows')===s.root;
+ const active=s=>state===s&&document.getElementById('pcsQualityRows')===s.root&&(!s.sheet||window.pcsSheetLifecycle?.current(s.sheet))&&(!s.navigation||window.pcsNavigation?.isCurrent(s.navigation));
  async function load(s){
   if(!active(s))return;const seq=++s.seq,{view,page}=s;s.root.textContent='Проверяю записи CRM…';document.getElementById('pcsQualityPrev').disabled=document.getElementById('pcsQualityNext').disabled=true;
   try{const d=await window.call('/data-quality?'+new URLSearchParams({view,page}));if(!active(s)||seq!==s.seq)return;
@@ -17,7 +17,7 @@
  }
  async function open(){
   window.openSheet('Качество CRM',`<p class="muted">Совпадение телефона или Telegram ID — повод проверить карточки. Общий семейный номер и разные обращения могут принадлежать разным людям. Записи не объединяются автоматически.</p><div class="field"><label for="pcsQualityView">Проверка</label><select id="pcsQualityView" data-pcs-localized>${Object.entries(names).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div><button class="btn soft" id="pcsQualityRefresh">Обновить</button><div class="list" id="pcsQualityRows" aria-live="polite" style="margin-top:12px"></div><p class="muted" id="pcsQualityPage"></p><div class="toolbar"><button class="btn soft" id="pcsQualityPrev" disabled>Назад</button><button class="btn soft" id="pcsQualityNext" disabled>Далее</button></div>`);
-  const s=state={root:document.getElementById('pcsQualityRows'),view:'telegram',page:0,seq:0};document.getElementById('pcsQualityView').onchange=e=>{s.view=e.target.value;s.page=0;load(s)};document.getElementById('pcsQualityRefresh').onclick=()=>load(s);document.getElementById('pcsQualityPrev').onclick=()=>{s.page=Math.max(0,s.page-1);load(s)};document.getElementById('pcsQualityNext').onclick=()=>{s.page++;load(s)};await load(s);
+  const s=state={root:document.getElementById('pcsQualityRows'),view:'telegram',page:0,seq:0,sheet:window.pcsSheetLifecycle?.capture(),navigation:window.pcsNavigation?.capture()};document.getElementById('pcsQualityView').onchange=e=>{if(!active(s)||!Object.hasOwn(names,e.target.value))return;s.view=e.target.value;s.page=0;load(s)};document.getElementById('pcsQualityRefresh').onclick=()=>load(s);document.getElementById('pcsQualityPrev').onclick=()=>{if(!active(s)||s.page===0)return;s.page=Math.max(0,s.page-1);load(s)};document.getElementById('pcsQualityNext').onclick=()=>{if(!active(s)||s.page>=5000||document.getElementById('pcsQualityNext').disabled)return;s.page++;load(s)};await load(s);
  }
  window.pcsDataQuality={open};
  for(const name of ['moreMenu','pcs25Menu']){const previous=window[name];if(typeof previous!=='function')continue;window[name]=function(...args){const result=previous.apply(this,args),grid=document.querySelector('.sheetbox .v26-more,.sheetbox .more-grid,.sheetbox .action-grid');if(grid){const button=document.createElement('button');button.className='btn soft';button.textContent='Качество CRM';button.onclick=open;grid.appendChild(button);}return result;};}
