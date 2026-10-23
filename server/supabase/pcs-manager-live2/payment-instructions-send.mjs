@@ -50,8 +50,12 @@ export async function dispatchPaymentInstructions(biz,db,transport,options={}){
  for(const job of jobs){
   const p=job.payload,owner=p.payment_worker_owner;let channel=p.channel,status='CANCELLED',reason='preflight_failed';
   try{
+   const accepted=options.acceptedReceipt?await options.acceptedReceipt(job):false;
+   if(accepted){status='SENT';reason=null;stats.duplicates++;}
+   else {
    const current=await biz.query(currentQuery,[p.application_id,p.client_profile_id,p.revision,p.contact_id]);
    if(!current.length){reason='superseded';stats.superseded++;}
+   else if(options.preflight&&!await options.preflight(p)){reason='superseded';stats.superseded++;}
    else {
     const found=await db.from('pcs_contacts').select('id,preferred_channel,detected_language,language,telegram_chat_id,business_connection_id').eq('id',p.contact_id).single();
     if(found.error||!found.data)throw Error('payment_contact_missing');const contact=found.data;
@@ -66,6 +70,7 @@ export async function dispatchPaymentInstructions(biz,db,transport,options={}){
     if(text.length>(channel==='telegram'?4000:1800))throw Error('payment_instructions_too_long');
     const result=await sendRuntimeMessage(db,p.contact_id,{request_id:job.id,channel,text},transport);
     status='SENT';reason=null;stats[result.duplicate?'duplicates':'sent']++;
+   }
    }
   }catch{
    // Only a durable provider receipt or a pre-send failure permits recovery.

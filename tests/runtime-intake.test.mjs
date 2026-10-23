@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {intakeRuntime} from '../server/supabase/pcs-manager-live2/unified-inbox.mjs';
 const contact='11111111-1111-4111-8111-111111111111',request='22222222-2222-4222-8222-222222222222',message='33333333-3333-4333-8333-333333333333';
 const body={contact_id:contact,request_id:request,need:'  Need a confirmed rental  '};
-function fixture(profile,received){const calls=[],reads=[];return {calls,reads,db:{query:async(q,p)=>{calls.push({q,p});return [{application:{id:request,client_profile_id:'canonical'}}]}},fetcher:async(url)=>{reads.push(url);return new Response(JSON.stringify(url.includes('pcs_contacts?')?[{id:contact,name:'Same name',...profile}]:url.includes('raw&')?(received||[]):[]));}};}
+function fixture(profile,received){const calls=[],reads=[];return {calls,reads,db:{query:async(q,p)=>{calls.push({q,p});return [{application:{id:request,client_profile_id:'canonical'}}]}},fetcher:async(url)=>{reads.push(url);return new Response(JSON.stringify(url.includes('pcs_contacts?')?[{id:contact,name:'Same name',...profile}]:url.includes('pcs_messages?')?(received||[]):[]));}};}
 test('canonical Meta intake uses persisted ingress identity and ignores same display names and phone',async()=>{
  for(const channel of ['whatsapp','instagram','facebook']){const f=fixture({phone:'shared mutable phone',preferred_channel:'telegram'},[{id:message,channel,raw:{source:'pcs-meta-webhook-v1'}}]);
  assert.equal((await intakeRuntime(f.db,'https://test','key',body,f.fetcher,'managed-user')).application.id,request);

@@ -1,0 +1,36 @@
+-- Command receipts only. External delivery uses the existing PCS workflow outbox.
+CREATE TABLE IF NOT EXISTS pcs.client_followup_commands(request_id uuid PRIMARY KEY,payload jsonb NOT NULL,result jsonb NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+REVOKE ALL ON pcs.client_followup_commands FROM PUBLIC;
+CREATE OR REPLACE FUNCTION pcs.client_followup_action(p_action text,p jsonb,p_actor text,p_permissions jsonb) RETURNS jsonb LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
+DECLARE permissions jsonb; rid uuid; app applications; profile client_profiles; job pcs_workflow_outbox; old pcs.client_followup_commands; command jsonb; receipt jsonb; prior jsonb;
+BEGIN
+ IF p_actor ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN permissions:=pcs.staff_context(p_actor::uuid)->'permissions';ELSIF p_actor='pcs-manager-admin' THEN permissions:=p_permissions;ELSE RAISE EXCEPTION 'client_followup_actor_invalid' USING ERRCODE='42501';END IF;
+ IF jsonb_typeof(permissions) IS DISTINCT FROM 'array' OR NOT coalesce(permissions?'*' OR (permissions?'applications.assign' AND permissions?'clients.manage'),false) THEN RAISE EXCEPTION 'client_followup_forbidden' USING ERRCODE='42501';END IF;
+ IF p_action IS NULL OR p_action NOT IN ('schedule','cancel') OR jsonb_typeof(p) IS DISTINCT FROM 'object' OR coalesce(p->>'request_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR coalesce(p->>'id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR coalesce(p->>'expected_version','') !~ '^[0-9a-f]{32}$' THEN RAISE EXCEPTION 'client_followup_invalid' USING ERRCODE='22023';END IF;
+ IF p_action='schedule' THEN
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('id','request_id','expected_version','channel','text','scheduled_at','confirmed','inbound_id','route')) OR p->'confirmed' IS DISTINCT FROM 'true'::jsonb OR coalesce(p->>'channel','') NOT IN ('telegram','line','whatsapp','instagram','facebook') OR jsonb_typeof(p->'text') IS DISTINCT FROM 'string' OR length(btrim(p->>'text'))<1 OR p->>'text'<>btrim(p->>'text') OR length(p->>'text')>(CASE WHEN p->>'channel'='telegram' THEN 4000 ELSE 1800 END) OR coalesce(p->>'scheduled_at','') !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$' OR (p->>'inbound_id' IS NOT NULL AND p->>'inbound_id' !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$') OR jsonb_typeof(p->'route') IS DISTINCT FROM 'object' OR jsonb_typeof(p#>'{route,target}') IS DISTINCT FROM 'string' OR length(p#>>'{route,target}') NOT BETWEEN 1 AND 512 OR EXISTS(SELECT 1 FROM jsonb_object_keys(p->'route') k WHERE k NOT IN ('target','business_connection_id','connection_fingerprint')) OR (p->>'channel'='telegram' AND (coalesce(p#>>'{route,target}','') !~ '^-?[1-9][0-9]{0,19}$' OR length(coalesce(p#>>'{route,business_connection_id}','')) NOT BETWEEN 1 AND 256)) OR (p->>'channel'<>'telegram' AND (p->'route'?'business_connection_id' OR coalesce(p#>>'{route,connection_fingerprint}','') !~ '^[a-f0-9]{64}$')) OR (p->>'channel'='telegram' AND p->'route'?'connection_fingerprint') THEN RAISE EXCEPTION 'client_followup_invalid' USING ERRCODE='22023';END IF;
+ ELSE
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('id','request_id','expected_version','job_id')) OR coalesce(p->>'job_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN RAISE EXCEPTION 'client_followup_invalid' USING ERRCODE='22023';END IF;
+ END IF;
+ rid:=(p->>'request_id')::uuid;command:=jsonb_build_object('action',p_action,'body',p,'actor',p_actor);
+ PERFORM pg_advisory_xact_lock(hashtextextended(rid::text,81));SELECT * INTO old FROM pcs.client_followup_commands WHERE request_id=rid;
+ IF FOUND THEN IF old.payload<>command THEN RAISE EXCEPTION 'client_followup_request_conflict' USING ERRCODE='40001';END IF;RETURN old.result||'{"replayed":true}'::jsonb;END IF;
+ SELECT * INTO app FROM applications WHERE id=(p->>'id')::uuid FOR UPDATE;
+ IF app.id IS NULL OR md5(to_jsonb(app)::text)<>p->>'expected_version' THEN RAISE EXCEPTION 'client_followup_version_conflict' USING ERRCODE='40001';END IF;
+ IF p_action='schedule' THEN
+  IF app.operational_status IN ('COMPLETED','CANCELLED','CANCELLED_BY_CLIENT','CANCELLED_BY_PARTNER','REJECTED','EXPIRED','FAILED') OR (p->>'scheduled_at')::timestamptz<=clock_timestamp() OR (p->>'scheduled_at')::timestamptz>clock_timestamp()+interval '90 days' THEN RAISE EXCEPTION 'client_followup_schedule_invalid' USING ERRCODE='22023';END IF;
+  SELECT * INTO profile FROM client_profiles WHERE id=app.client_profile_id FOR UPDATE;
+  IF profile.id IS NULL OR profile.blocked IS TRUE OR profile.merged_into_id IS NOT NULL OR profile.source_contact_id IS NULL THEN RAISE EXCEPTION 'client_followup_contact_unavailable' USING ERRCODE='40001';END IF;
+  PERFORM 1 FROM pcs_workflow_outbox WHERE aggregate_id=app.id AND aggregate_type='APPLICATION' AND event_type='CLIENT_FOLLOWUP_READY' AND (status IN ('PENDING','FAILED','PROCESSING') OR last_error='delivery_review_required') FOR UPDATE;
+  IF EXISTS(SELECT 1 FROM pcs_workflow_outbox WHERE aggregate_id=app.id AND aggregate_type='APPLICATION' AND event_type='CLIENT_FOLLOWUP_READY' AND (status IN ('PENDING','FAILED','PROCESSING') OR last_error='delivery_review_required')) THEN RAISE EXCEPTION 'client_followup_already_scheduled' USING ERRCODE='40001';END IF;
+  INSERT INTO pcs_workflow_outbox(aggregate_type,aggregate_id,event_type,idempotency_key,next_attempt_at,payload) VALUES('APPLICATION',app.id,'CLIENT_FOLLOWUP_READY','client-followup:'||rid::text,(p->>'scheduled_at')::timestamptz,jsonb_build_object('application_id',app.id,'public_id',app.public_id,'client_profile_id',profile.id,'contact_id',profile.source_contact_id,'revision',p->>'expected_version','channel',p->>'channel','delivery_text',p->>'text','scheduled_at',p->>'scheduled_at','inbound_id',p->'inbound_id','route',p->'route','actor',p_actor)) RETURNING * INTO job;
+ ELSE
+  SELECT * INTO job FROM pcs_workflow_outbox WHERE id=(p->>'job_id')::uuid AND aggregate_id=app.id AND aggregate_type='APPLICATION' AND event_type='CLIENT_FOLLOWUP_READY' FOR UPDATE;
+  IF job.id IS NULL OR job.status NOT IN ('PENDING','FAILED') OR job.payload ? 'payment_worker_owner' THEN RAISE EXCEPTION 'client_followup_job_locked' USING ERRCODE='40001';END IF;
+  prior:=to_jsonb(job);UPDATE pcs_workflow_outbox SET status='CANCELLED',last_error='operator_cancelled' WHERE id=job.id RETURNING * INTO job;
+ END IF;
+ receipt:=jsonb_build_object('ok',true,'id',app.id,'edit_version',md5(to_jsonb(app)::text),'job',jsonb_build_object('id',job.id,'status',job.status,'channel',job.payload->'channel','text',job.payload->'delivery_text','scheduled_at',job.payload->'scheduled_at','reason',job.last_error));
+ INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('STAFF','client_followup.'||p_action,'applications',app.id::text,jsonb_build_object('actor',p_actor,'request_id',rid,'job_id',job.id,'channel',job.payload->'channel','scheduled_at',job.payload->'scheduled_at','prior_status',prior->'status'),'SUCCESS');
+ INSERT INTO pcs.client_followup_commands(request_id,payload,result) VALUES(rid,command,receipt);RETURN receipt;
+END $fn$;
+REVOKE ALL ON FUNCTION pcs.client_followup_action(text,jsonb,text,jsonb) FROM PUBLIC;

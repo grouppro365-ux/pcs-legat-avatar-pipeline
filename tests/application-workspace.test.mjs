@@ -9,7 +9,7 @@ test('queue binds literal search, excludes terminal rows and pages all applicati
  for(const args of [['bad','0',''],['all','-1',''],['all','5001',''],['all','0','x'.repeat(121)],['all',null,'']])assert.throws(()=>applicationQueueQuery(...args),e=>e.status===400);
 });
 test('detail preserves numeric text and version without dumping private contact or documents',async()=>{
- let q;const r=await readApplicationWorkspace({query:async(sql,p)=>{q=sql;assert.deepEqual(p,[id]);return[{id,partner_proposed_client_price_thb:'10.25'}]}},id);assert.equal(r.application.partner_proposed_client_price_thb,'10.25');assert.match(q,/md5\(to_jsonb\(a\)::text\)/);assert.doesNotMatch(q,/select \*|client_contact|internal_notes|accepted_offer_snapshot|qualification_data,/);
+ let q;const r=await readApplicationWorkspace({query:async(sql,p)=>{if(!q)q=sql;assert.deepEqual(p,[id]);if(sql.includes('pcs_workflow_outbox'))return[];return[{id,partner_proposed_client_price_thb:'10.25'}]}},id);assert.equal(r.application.partner_proposed_client_price_thb,'10.25');assert.match(q,/md5\(to_jsonb\(a\)::text\)/);assert.doesNotMatch(q,/select \*|client_contact|internal_notes|accepted_offer_snapshot|qualification_data,/);
  await assert.rejects(()=>readApplicationWorkspace({query:async()=>[]},id),e=>e.status===404);await assert.rejects(()=>readApplicationWorkspace({query:()=>assert.fail()},'bad'),e=>e.status===400);
 });
 test('followup only edits schedule/note with exact fingerprint, row lock and atomic audit',async()=>{

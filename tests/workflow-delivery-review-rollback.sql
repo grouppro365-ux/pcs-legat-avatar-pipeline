@@ -6,10 +6,10 @@ BEGIN
  CREATE TEMP TABLE audit_events(LIKE public.audit_events INCLUDING DEFAULTS INCLUDING INDEXES);
  INSERT INTO applications(id,public_id,category,operational_status) VALUES(app,'QA review','general','CONFIRMED');
  INSERT INTO pcs_workflow_outbox(id,aggregate_type,aggregate_id,event_type,idempotency_key,status,last_error,payload) VALUES
- (event,'APPLICATION',app,'PAYMENT_INSTRUCTIONS_READY','qa:'||event,'CANCELLED','delivery_review_required',jsonb_build_object('channel','telegram','delivery_text','Synthetic public message')),
+ (event,'APPLICATION',app,'CLIENT_FOLLOWUP_READY','qa:'||event,'CANCELLED','delivery_review_required',jsonb_build_object('channel','telegram','delivery_text','Synthetic public message')),
  (unsent,'APPLICATION',app,'CLIENT_WORKFLOW_NOTICE_READY','qa:'||unsent,'CANCELLED','delivery_review_required','{}'),
  (active_event,'APPLICATION',app,'PAYMENT_INSTRUCTIONS_READY','qa:'||active_event,'PROCESSING',null,'{}');
- INSERT INTO notifications(event_key,entity_type,entity_id,title,body,status,dedupe_key) VALUES('payment.instructions_review','applications',app::text,'QA review','QA only','PENDING','payment-send-review:'||event::text);
+ INSERT INTO notifications(event_key,entity_type,entity_id,title,body,status,dedupe_key) VALUES('payment.instructions_review','applications',app::text,'QA review','QA only','PENDING','client-followup-review:'||event::text);
  INSERT INTO neon_auth."user"(id,name,email,"emailVerified","createdAt","updatedAt",banned) VALUES(u,'QA reviewer','qa-review-'||u::text||'@example.invalid',false,now(),now(),false);
  PERFORM pcs.staff_manage(u,'AUDITOR_READONLY',true);
  SELECT md5(to_jsonb(e)::text) INTO version FROM pcs_workflow_outbox e WHERE id=event;
@@ -42,11 +42,11 @@ BEGIN
  EXECUTE $review$__REVIEW__$review$ INTO r USING active_event,version,'NOT_DELIVERED','Active lease must stay unchanged',gen_random_uuid(),null::uuid;
  IF r.result IS NOT NULL THEN RAISE EXCEPTION 'QA active delivery overwritten';END IF;
  n:=0;
- FOR r IN EXECUTE $list$__LIST__$list$ USING ARRAY['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY'],'all',0,false LOOP
+ FOR r IN EXECUTE $list$__LIST__$list$ USING ARRAY['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY','CLIENT_FOLLOWUP_READY'],'all',0,false LOOP
   n:=n+1;IF r.delivery_text IS NOT NULL THEN RAISE EXCEPTION 'QA frozen text exposed to readonly staff';END IF;
  END LOOP;
  IF n<>3 THEN RAISE EXCEPTION 'QA outbox list incomplete';END IF;
- FOR r IN EXECUTE $list$__LIST__$list$ USING ARRAY['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY'],'all',0,true LOOP
+ FOR r IN EXECUTE $list$__LIST__$list$ USING ARRAY['PAYMENT_INSTRUCTIONS_READY','CLIENT_WORKFLOW_NOTICE_READY','CLIENT_FOLLOWUP_READY'],'all',0,true LOOP
   IF r.id=event AND r.delivery_text<>'Synthetic public message' THEN RAISE EXCEPTION 'QA reviewer cannot compare exact text';END IF;
  END LOOP;
 END;
