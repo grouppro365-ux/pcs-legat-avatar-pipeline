@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 import imageio_ffmpeg
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,14 +14,117 @@ from pcs_ltx_smoke import artifact_receipt, MODEL, REVISION, PACKAGES, run
 from prepare_kaggle_smoke import prepare
 from collect_gpu_diagnostics import collect
 from verify_kaggle_smoke import verify
+from kaggle_existing_run import start, wait, output, read_receipt, CANONICAL, RENAMED, TITLE
+
+
+class NotFound(Exception):
+    response = SimpleNamespace(status_code=404)
+
+
+class FakeKaggle:
+    def __init__(self, *, renamed=False, missing=False, private=True, statuses=None):
+        self.renamed, self.missing, self.private = renamed, missing, private
+        self.statuses = iter(statuses or ['complete'])
+        self.status_calls, self.pushes, self.output_calls = [], [], []
+        self.result = SimpleNamespace(error='', url='https://www.kaggle.com/' + CANONICAL, versionNumber=95)
+
+    def kernels_pull(self, ref, directory, **kwargs):
+        if self.missing or self.renamed and ref == CANONICAL:
+            raise NotFound()
+        Path(directory, 'kernel-metadata.json').write_text(json.dumps(
+            {'id': ref, 'id_no': 123, 'is_private': self.private}))
+
+    def kernels_status(self, ref):
+        self.status_calls.append(ref)
+        status = next(self.statuses)
+        if isinstance(status, Exception):
+            raise status
+        return SimpleNamespace(status=status)
+
+    def kernels_push(self, folder, **kwargs):
+        self.pushes.append((json.loads(Path(folder, 'kernel-metadata.json').read_text()), kwargs))
+        return self.result
+
+    def kernels_output(self, ref, directory, **kwargs):
+        self.output_calls.append(ref)
+
+    def kernels_logs(self, ref):
+        self.output_calls.append(ref)
+        return 'private raw log never printed'
 
 
 class LtxCloudTests(unittest.TestCase):
+    def test_restores_existing_renamed_kernel_without_creating_another(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prepare(tmp)
+            api = FakeKaggle(renamed=True, statuses=['running', 'complete'])
+            receipt = Path(tmp, 'run.json')
+            result = start(api, tmp, receipt, sleep=lambda _: None)
+            self.assertEqual(api.status_calls, [RENAMED, RENAMED])
+            self.assertEqual(len(api.pushes), 1)
+            metadata, options = api.pushes[0]
+            self.assertEqual(metadata['id_no'], 123)
+            self.assertEqual(metadata['id'], RENAMED)
+            self.assertEqual(metadata['title'], TITLE)
+            self.assertEqual(options['acc'], 'NvidiaTeslaT4')
+            self.assertEqual(result['ref'], CANONICAL + '/95')
+            self.assertEqual(read_receipt(receipt), result['ref'])
+            output(api, receipt, Path(tmp, 'out'))
+            self.assertEqual(api.output_calls, [result['ref'], result['ref']])
+            with self.assertRaisesRegex(RuntimeError, 'receipt_already_exists'):
+                start(api, tmp, receipt)
+            self.assertEqual(len(api.pushes), 1)
+
+    def test_missing_or_public_kernel_never_creates_a_new_one(self):
+        for options in [{'missing': True}, {'private': False}]:
+            with tempfile.TemporaryDirectory() as tmp:
+                prepare(tmp)
+                api = FakeKaggle(**options)
+                with self.assertRaises(RuntimeError):
+                    start(api, tmp, Path(tmp, 'run.json'))
+                self.assertEqual(api.pushes, [])
+
+    def test_only_successfully_accepted_expected_version_gets_receipt(self):
+        for result in [None, SimpleNamespace(error='rejected'),
+                       SimpleNamespace(error='', url='https://example.org/' + CANONICAL, versionNumber=95),
+                       SimpleNamespace(error='', url='https://www.kaggle.com/another/kernel', versionNumber=95),
+                       SimpleNamespace(error='', url='https://www.kaggle.com/' + CANONICAL, versionNumber=0)]:
+            with tempfile.TemporaryDirectory() as tmp:
+                prepare(tmp)
+                api = FakeKaggle()
+                api.result = result
+                receipt = Path(tmp, 'run.json')
+                with self.assertRaises(RuntimeError):
+                    start(api, tmp, receipt)
+                self.assertFalse(receipt.exists())
+
+    def test_polling_uses_exact_version_and_never_restarts_a_failed_job(self):
+        ref = CANONICAL + '/95'
+        api = FakeKaggle(statuses=[NotFound(), 'queued', 'running', 'complete'])
+        wait(api, ref, sleep=lambda _: None, attempts=4)
+        self.assertEqual(api.status_calls, [ref] * 4)
+        self.assertEqual(api.pushes, [])
+        for states in [['error'], ['running', 'running'], ['unrecognized']]:
+            api = FakeKaggle(statuses=states)
+            with self.assertRaises(RuntimeError):
+                wait(api, ref, sleep=lambda _: None, attempts=len(states))
+            self.assertEqual(api.pushes, [])
+
+    def test_unversioned_receipt_cannot_download_previous_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            api = FakeKaggle()
+            receipt = Path(tmp, 'run.json')
+            receipt.write_text(json.dumps({'kernel': CANONICAL, 'version': 95, 'ref': CANONICAL}))
+            with self.assertRaisesRegex(RuntimeError, 'receipt_invalid'):
+                output(api, receipt, Path(tmp, 'out'))
+            self.assertEqual(api.output_calls, [])
+
     def test_notebook_reuses_private_kernel_without_customer_assets(self):
         with tempfile.TemporaryDirectory() as tmp:
             metadata = prepare(tmp)
             original = json.loads((ROOT / 'kernel-metadata.json').read_text())
             self.assertEqual(metadata['id'], original['id'])
+            self.assertEqual(metadata['title'], original['title'])
             self.assertTrue(metadata['is_private'])
             expected=json.loads((Path(tmp) / 'expected-run.json').read_text())
             self.assertTrue(expected['run_id'])

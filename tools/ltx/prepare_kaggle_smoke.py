@@ -28,7 +28,9 @@ subprocess.run([python, '-m', 'pip', 'install', '--disable-pip-version-check', '
                 'cells': [{'cell_type': 'code', 'execution_count': None, 'id': 'pcs-ltx-cloud-smoke',
                            'metadata': {}, 'outputs': [], 'source': code.splitlines(keepends=True)}]}
     metadata = json.loads((ROOT / 'kernel-metadata.json').read_text())
-    metadata.update(title='PCS LTX Cloud Smoke', code_file='pcs_ltx_smoke.ipynb',
+    # Kaggle derives the URL slug from the title: changing it renames the
+    # existing kernel and breaks both scheduled avatar and status requests.
+    metadata.update(code_file='pcs_ltx_smoke.ipynb',
                     is_private=True, dataset_sources=[], competition_sources=[], model_sources=[],
                     kernel_sources=[], keywords=[])
     (destination / 'pcs_ltx_smoke.ipynb').write_text(json.dumps(notebook, indent=2) + '\n')
