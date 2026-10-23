@@ -36,6 +36,8 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '22'
+      - name: Install video artifact verification tools
+        run: python -m pip install --disable-pip-version-check --no-deps imageio-ffmpeg==0.6.0
       - name: Run application and browser-module regressions
         shell: bash
         run: |
