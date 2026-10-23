@@ -75,6 +75,15 @@ def start(api, folder, receipt_path, *, sleep=time.sleep):
     # Do not interrupt a previous run on this shared kernel, including the
     # version that was already accepted before its old URL returned 404.
     wait(api, ref, sleep=sleep, idle=True)
+    # Read the preceding run's log for allowlisted diagnostics only. This does
+    # not start another run and never prints raw notebook output.
+    try:
+        from collect_gpu_diagnostics import collect
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / 'previous.log').write_text(api.kernels_logs(ref))
+            print(json.dumps({'previous_run_diagnostics': collect(tmp)}), flush=True)
+    except Exception:
+        print(json.dumps({'previous_run_diagnostics': 'UNAVAILABLE'}), flush=True)
     metadata.update(id=ref, id_no=number)
     path.write_text(json.dumps(metadata, indent=2) + '\n')
     result = api.kernels_push(str(folder), timeout='3600', acc='NvidiaTeslaT4')

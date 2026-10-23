@@ -14,15 +14,30 @@ def prepare(destination, run_id=None):
     if not isinstance(run_id, str) or not 1 <= len(run_id) <= 160 or not all(c.isalnum() or c in '-_.' for c in run_id):
         raise ValueError('invalid_ltx_run_id')
     source = (ROOT / 'tools/ltx/pcs_ltx_smoke.py').read_text()
-    setup = '''import subprocess, sys, pathlib
+    setup = '''import subprocess, sys, pathlib, json
+report_path = pathlib.Path('/kaggle/working/pcs-ltx-output/bootstrap.json')
+report_path.parent.mkdir(parents=True, exist_ok=True)
+def execute(stage, arguments):
+    report = {'run_id': os.environ['PCS_LTX_RUN_ID'], 'stage': stage, 'python_version': sys.version.split()[0], 'outcome': 'RUNNING'}
+    report_path.write_text(json.dumps(report))
+    try:
+        subprocess.run(arguments, check=True)
+    except Exception as error:
+        report.update(outcome='FAILED', error_type=type(error).__name__)
+        if isinstance(error, subprocess.CalledProcessError):
+            report['returncode'] = error.returncode
+        report_path.write_text(json.dumps(report))
+        raise
+    report['outcome'] = 'COMPLETED'
+    report_path.write_text(json.dumps(report))
 # Keep installed dependencies outside /kaggle/working so Kaggle outputs contain only artifacts.
 venv = pathlib.Path('/tmp/pcs-ltx-venv')
-subprocess.run([sys.executable, '-m', 'venv', str(venv)], check=True)
+execute('CREATE_VENV', [sys.executable, '-m', 'venv', str(venv)])
 python = str(venv / 'bin/python')
-subprocess.run([python, '-m', 'pip', 'install', '--disable-pip-version-check', 'torch==2.5.1', '--index-url', 'https://download.pytorch.org/whl/cu121'], check=True)
-subprocess.run([python, '-m', 'pip', 'install', '--disable-pip-version-check', 'diffusers==0.36.0', 'transformers==4.57.3', 'accelerate==1.12.0', 'imageio==2.37.0', 'imageio-ffmpeg==0.6.0', 'sentencepiece==0.2.1', 'safetensors==0.6.2', 'huggingface-hub==0.36.0'], check=True)
+execute('INSTALL_TORCH', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'torch==2.5.1', '--index-url', 'https://download.pytorch.org/whl/cu121'])
+execute('INSTALL_DIFFUSERS', [python, '-m', 'pip', 'install', '--disable-pip-version-check', 'diffusers==0.36.0', 'transformers==4.57.3', 'accelerate==1.12.0', 'imageio==2.37.0', 'imageio-ffmpeg==0.6.0', 'sentencepiece==0.2.1', 'safetensors==0.6.2', 'huggingface-hub==0.36.0'])
 '''
-    code = 'import os\nos.environ["PCS_LTX_RUN_ID"] = '+repr(run_id)+'\n' + setup + "\nscript=pathlib.Path('/kaggle/working/pcs_ltx_smoke.py')\nscript.write_text(" + repr(source) + ")\nsubprocess.run([python, str(script)], check=True)\n"
+    code = 'import os\nos.environ["PCS_LTX_RUN_ID"] = '+repr(run_id)+'\n' + setup + "\nscript=pathlib.Path('/kaggle/working/pcs_ltx_smoke.py')\nscript.write_text(" + repr(source) + ")\nexecute('INFERENCE', [python, str(script)])\n"
     notebook = {'nbformat': 4, 'nbformat_minor': 5,
                 'metadata': {'kernelspec': {'display_name': 'Python 3', 'language': 'python', 'name': 'python3'}},
                 'cells': [{'cell_type': 'code', 'execution_count': None, 'id': 'pcs-ltx-cloud-smoke',

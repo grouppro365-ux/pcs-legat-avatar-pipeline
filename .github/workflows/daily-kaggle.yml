@@ -86,6 +86,7 @@ jobs:
             kaggle-output/**/ltx-smoke.mp4
             kaggle-output/**/result.json
             kaggle-output/**/failure.json
+            kaggle-output/**/bootstrap.json
             kaggle-output/pcs-gpu-diagnostics.json
             kaggle-run.json
           if-no-files-found: error
