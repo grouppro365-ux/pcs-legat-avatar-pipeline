@@ -36,7 +36,7 @@ test('pending knowledge save freezes fields and does not close a replacement she
 });
 test('runtime scripts have explicit release keys, including the current send modules',()=>{
  const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.ok(html.includes('crm-followup.js?v=20261021-send-integrity1'));assert.ok(html.includes('delivery-review.js?v=20261004-delivery-review1'));
+ assert.ok(html.includes('crm-followup.js?v=20261021-send-integrity1'));assert.ok(html.includes('delivery-review.js?v=20261023-sheets1'));
  assert.ok(html.includes('crm-message.js?v=20261021-send-integrity1'));
  for(const file of ['app.js','data-quality.js'])assert.ok(html.includes(file+'?v='+(file==='app.js'?'20261021-send-integrity1':'20261006-quality1')));
  assert.ok(html.includes('errors.js?v=20261019-races1'));
