@@ -5,7 +5,9 @@ import {stripTypeScriptTypes} from 'node:module';
 import {readFile} from 'node:fs/promises';
 import * as policy from './channel-policy.mjs';
 import * as recovery from './inbound-recovery.mjs';
-const source=stripTypeScriptTypes((await readFile(new URL('./index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''));
+const rawSource=await readFile(new URL('./index.ts',import.meta.url),'utf8');
+const compileSource=input=>stripTypeScriptTypes(input.replace(/^import .*;\r?\n/gm,''));
+const source=compileSource(rawSource);
 function harness(){
  const contact={id:'11111111-1111-4111-8111-111111111111',intent:'other'},messageId='22222222-2222-4222-8222-222222222222';
  const tables={pcs_contacts:[contact],pcs_messages:[{id:messageId,contact_id:contact.id,channel:'instagram',external_message_id:'external-one',direction:'in'}],
@@ -50,3 +52,5 @@ test('changed current global policy holds existing recoverable generation for op
  assert.equal((await h.run()).action,'approval_required');assert.equal(h.requests.length,1);
  assert.equal(h.tables.pcs_ai_generations[0].requires_human,true);
 });
+
+test('transport harness accepts Windows CRLF source without leftover static imports',()=>{assert.doesNotThrow(()=>new vm.Script(compileSource(rawSource.replace(/\r?\n/g,'\r\n'))));});
