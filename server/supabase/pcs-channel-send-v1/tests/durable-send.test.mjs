@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {channelConnectionFingerprint} from '../connection-snapshot.mjs';
 import { durableChannelSend } from '../durable-send.mjs';
 function fixture(){
  const tables={pcs_channel_events:[],pcs_messages:[],pcs_tasks:[]};let failure=null,hideRead=false;
@@ -63,3 +64,9 @@ test('concurrent completion after initial read cannot acknowledge another comman
  await assert.rejects(durableChannelSend({...args,body:{...args.body,text:'Different concurrent text'}}),/channel_command_changed/);
  assert.equal(sends,1);assert.equal(f.tables.pcs_messages.length,1);
 });
+
+test('frozen expected recipient mismatch fails before any durable event or provider send',async()=>{const f=fixture();let sends=0;await assert.rejects(()=>durableChannelSend({...f.args,body:{...f.args.body,expected_recipient:'old'},send:async()=>{sends++;return{id:'provider'};}}),/channel_destination_changed/);assert.equal(sends,0);assert.equal(f.tables.pcs_channel_events.length,0);});
+test('expected recipient is bound to command and legacy receipts can be read without resending',async()=>{const f=fixture();let sends=0;const args={...f.args,send:async()=>({id:'provider-'+(++sends)})};await durableChannelSend(args);await durableChannelSend({...args,body:{...args.body,expected_recipient:'123'},target:{...args.target,id:'changed'}});assert.equal(sends,1);await assert.rejects(()=>durableChannelSend({...args,body:{...args.body,expected_recipient:'456'}}),/channel_command_changed/);assert.equal(sends,1);});
+
+test('changed connection with same recipient fails before durable claim or transport',async()=>{const f=fixture(),connection={channel:'instagram',enabled:true,status:'active',updated_at:'2026-10-22T00:00:00Z',public_config:{transport:'bothelp',instagram_account_id:'123'}};const fingerprint=await channelConnectionFingerprint(connection,'instagram');connection.public_config.transport='meta';let sends=0;await assert.rejects(()=>durableChannelSend({...f.args,connection,body:{...f.args.body,expected_recipient:'123',expected_connection_fingerprint:fingerprint},send:async()=>{sends++;return{id:'provider'};}}),/channel_connection_changed/);assert.equal(sends,0);assert.equal(f.tables.pcs_channel_events.length,0);});
+test('connection fingerprint is durable command identity and cannot be changed on retry',async()=>{const f=fixture(),connection={channel:'instagram',enabled:true,status:'active',updated_at:'2026-10-22T00:00:00Z',public_config:{transport:'meta',instagram_account_id:'123'}},fingerprint=await channelConnectionFingerprint(connection,'instagram');let sends=0;const args={...f.args,connection,body:{...f.args.body,expected_recipient:'123',expected_connection_fingerprint:fingerprint},send:async()=>({id:'provider-'+(++sends)})};await durableChannelSend(args);await durableChannelSend(args);assert.equal(sends,1);await assert.rejects(()=>durableChannelSend({...args,body:{...args.body,expected_connection_fingerprint:'0'.repeat(64)}}),/channel_command_changed/);assert.equal(sends,1);});

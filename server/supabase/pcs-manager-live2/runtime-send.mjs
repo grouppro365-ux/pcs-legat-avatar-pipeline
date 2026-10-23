@@ -1,4 +1,5 @@
 import { processMessage } from './message-processing.mjs';
+import {publicationTelegramApi} from './telegram-api.mjs';
 import { CrmError } from './crm-policy.mjs';
 import { uuid } from './portal-workflow.mjs';
 export async function sendRuntimeMessage(db,id,b,transport){
@@ -31,8 +32,8 @@ export async function runtimeTransport(base,key,out,contact,fetcher=fetch){
  const secret=async name=>{const r=await fetcher(base+'/rest/v1/rpc/pcs_secret_get',{method:'POST',headers:{apikey:key,authorization:'Bearer '+key,'content-type':'application/json'},body:JSON.stringify({p_name:name}),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('transport_config_missing');return r.json();};
  if(out.channel==='telegram'){
   const token=await secret('telegram_bot_token');if(!token)throw Error('transport_config_missing');
-  const r=await fetcher('https://api.telegram.org/bot'+token+'/sendMessage',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({business_connection_id:contact.business_connection_id,chat_id:String(contact.telegram_chat_id),text:out.text}),signal:AbortSignal.timeout(15000)});const d=await r.json();if(!r.ok||!d.ok)throw Error('transport_failed');return d.result;
+  return publicationTelegramApi(token,fetcher,15).raw.sendMessage({business_connection_id:contact.business_connection_id,chat_id:String(contact.telegram_chat_id),text:out.text});
  }
  const internal=await secret('internal_retry_secret');if(!internal)throw Error('transport_config_missing');
- const r=await fetcher(base+'/functions/v1/pcs-channel-send-v1',{method:'POST',headers:{'content-type':'application/json','x-pcs-internal-secret':internal},body:JSON.stringify(out),signal:AbortSignal.timeout(30000)});const d=await r.json();if(!r.ok||!d.ok)throw Error('transport_failed');return d;
+ const r=await fetcher(base+'/functions/v1/pcs-channel-send-v1',{method:'POST',headers:{'content-type':'application/json','x-pcs-internal-secret':internal},body:JSON.stringify({...out,expected_recipient:String(contact[out.channel==='line'?'line_contact':out.channel]||'')}),signal:AbortSignal.timeout(30000)});const d=await r.json();if(!r.ok||!d.ok)throw Error('transport_failed');return d;
 }

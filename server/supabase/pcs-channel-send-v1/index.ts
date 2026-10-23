@@ -1,6 +1,7 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { remoteTransportAllowed } from './transport-policy.mjs';
 import { channelCommand, durableChannelSend } from './durable-send.mjs';
+import {channelConnectionFingerprint} from './connection-snapshot.mjs';
 
 const BASE = Deno.env.get('SUPABASE_URL')!;
 const sb = createClient(BASE, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -19,7 +20,7 @@ async function configuration(channel: string) {
   const { data, error } = await sb.from('pcs_channel_connections').select('*').eq('channel', channel).maybeSingle();
   if (error) throw error;
   if (!data || !['credentials_ok', 'active'].includes(String(data.status || ''))) throw new Error(`${channel}_credentials_not_verified`);
-  return data.public_config || {};
+  return {config:data.public_config||{},connection:data};
 }
 
 async function recipient(contactId: string, channel: string) {
@@ -137,11 +138,13 @@ Deno.serve(async (request) => {
     const expected = await secret('internal_retry_secret').catch(() => '');
     if (!expected || request.headers.get('x-pcs-internal-secret') !== expected) return json({ error: 'forbidden' }, 403);
     body = await request.json();
-    const {channel,contact_id:contactId,text}=channelCommand(body);
-    const config = await configuration(channel);
+    const {channel,contact_id:contactId,text,expected_recipient,expected_connection_fingerprint}=channelCommand(body);
+    const {config,connection} = await configuration(channel);
+    if(expected_connection_fingerprint&&expected_connection_fingerprint!==await channelConnectionFingerprint(connection,channel))throw Error('channel_connection_changed');
     const target = await recipient(contactId, channel);
+    if(expected_recipient&&target.id!==expected_recipient)throw Error('channel_destination_changed');
     if (!remoteTransportAllowed(channel, target.id)) return json({ error: 'local_instagram_outbound_not_enabled' }, 409);
-    const result=await durableChannelSend({db:sb,body,target,config,send:async(out:any)=>{
+    const result=await durableChannelSend({db:sb,body,target,config,connection,send:async(out:any)=>{
       if(out.recipient!==target.id||out.transport!==String(config.transport||channel))throw Error('channel_destination_changed');
       const sent=channel==='line'?await line(out.recipient,out.text,out.retry_key)
         :channel==='instagram'&&out.transport==='bothelp'?await botHelp(out.recipient,out.text)
