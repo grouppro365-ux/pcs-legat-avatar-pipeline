@@ -81,6 +81,18 @@ class ManagerAPI:
                     raise WorkerError('video_api_action_not_confirmed')
                 return result
             except HTTPError as error:
+                quota_exceeded = False
+                try:
+                    if error.code == 503:
+                        data = error.read(4097)
+                        detail = json.loads(data) if len(data) <= 4096 else None
+                        quota_exceeded = isinstance(detail, dict) and detail.get('code') == 'database_quota_exceeded'
+                except (ValueError, OSError):
+                    pass
+                finally:
+                    error.close()
+                if quota_exceeded:
+                    raise WorkerError('DATABASE_QUOTA_EXCEEDED') from None
                 if error.code < 500 or attempt == 2:
                     raise WorkerError('video_api_http_' + str(error.code)) from None
             except (URLError, TimeoutError, ConnectionError):
@@ -201,7 +213,11 @@ def process_one(api, kaggle, workspace, *, adapt=process_manifest, launch=start,
             'source_model': MODEL, 'model_revision': REVISION, 'manifest_sha256': technical['manifest_sha256']}
         action('complete', artifact=artifact)
         return {'outcome': 'READY_FOR_REVIEW', 'job_id': job['id']}
-    except Exception:
+    except Exception as error:
+        if isinstance(error, WorkerError) and str(error) == 'DATABASE_QUOTA_EXCEEDED':
+            # Preserve the current claim/receipt for expiry recovery. Repeating
+            # another DB write cannot resolve a provider quota suspension.
+            raise
         # A failed/uncertain launch is never retried here. Queue state and its
         # operator review gate remain authoritative for any later attempt.
         try:
