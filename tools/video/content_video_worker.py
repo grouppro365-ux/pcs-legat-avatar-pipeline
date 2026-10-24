@@ -20,7 +20,8 @@ from kaggle_existing_run import start, wait, output
 from pcs_ltx_smoke import MODEL, REVISION, PACKAGES, artifact_receipt
 from prepare_content_video import prepare, provider_input
 from ltx_provider import job_digest
-from postprocess import process_manifest
+from postprocess import process_manifest, PRESETS
+from captions import CaptionError
 
 MANAGER = 'https://nnlzgertmmxuteozoeel.supabase.co/functions/v1/pcs-manager-live2'
 BUCKET = 'pcs-content-video'
@@ -175,6 +176,13 @@ def process_one(api, kaggle, workspace, *, adapt=process_manifest, launch=start,
         return result
 
     try:
+        provider_input(job)
+        finishing = None
+        if job['spec']['version'] == 2:
+            from captions import validate_finishing
+            width, height = PRESETS[job['spec']['preset']]
+            finishing = validate_finishing(job['spec']['finishing'], width=width, height=height,
+                                          total_frames=sum(shot['frames'] for shot in job['spec']['shots']) * 3)
         kernel_dir = workspace / 'kernel'
         build(job, kernel_dir)
         action('progress', stage='GENERATING')
@@ -193,10 +201,16 @@ def process_one(api, kaggle, workspace, *, adapt=process_manifest, launch=start,
         manifest = {'job_id': job['id'], 'platform': job['spec']['preset'], 'fit': job['spec']['fit'],
                     'audio': 'mute', 'shots': [{'path': path.name, 'start': 0,
                         'duration': source['frames'] / 8} for path, source in zip(paths, job['spec']['shots'])]}
+        if job['spec']['version'] == 2:
+            manifest['finishing'] = job['spec']['finishing']
         processed = workspace / 'processed'
         technical = adapt(manifest, paths[0].parent, processed)
         if technical.get('outcome') != 'TECHNICAL_QA_PASSED' or technical.get('manual_review_required') is not True:
             raise WorkerError('video_technical_qa_not_confirmed')
+        if job['spec']['version'] == 2:
+            evidence = technical.get('finishing', {})
+            if evidence != finishing:
+                raise WorkerError('video_captions_not_confirmed')
         action('progress', stage='QA')
         error_code = 'VIDEO_UPLOAD_FAILED'
         stored = {}
@@ -218,6 +232,12 @@ def process_one(api, kaggle, workspace, *, adapt=process_manifest, launch=start,
             # Preserve the current claim/receipt for expiry recovery. Repeating
             # another DB write cannot resolve a provider quota suspension.
             raise
+        if isinstance(error, CaptionError):
+            error_code = {'caption_glyph_unsupported': 'CAPTION_GLYPH_UNSUPPORTED',
+                          'caption_line_too_wide': 'CAPTION_LINE_TOO_WIDE',
+                          'caption_font_unavailable': 'CAPTION_FONT_UNAVAILABLE',
+                          'caption_font_integrity_failed': 'CAPTION_FONT_UNAVAILABLE',
+                          'caption_fonttools_version_mismatch': 'CAPTION_FONT_UNAVAILABLE'}.get(str(error), 'VIDEO_CAPTIONS_INVALID')
         # A failed/uncertain launch is never retried here. Queue state and its
         # operator review gate remain authoritative for any later attempt.
         try:

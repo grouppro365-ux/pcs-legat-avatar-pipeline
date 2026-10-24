@@ -43,11 +43,11 @@ def _ffmpeg():
     return imageio_ffmpeg.get_ffmpeg_exe()
 
 
-def _run(arguments, *, timeout=120):
+def _run(arguments, *, timeout=120, cwd=None, env=None):
     try:
         return subprocess.run([_ffmpeg(), '-nostdin', '-hide_banner',
                                '-max_alloc', '134217728', '-threads', '2', *arguments],
-                              check=True, capture_output=True, timeout=timeout)
+                              check=True, capture_output=True, timeout=timeout, cwd=cwd, env=env)
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError):
         # Decoder logs and source paths stay local, never in the job receipt.
         raise VideoError('video_processing_failed') from None
@@ -83,7 +83,8 @@ def _source(root, relative):
 
 def validate_manifest(manifest, input_root):
     """Resolve only regular local video containers beneath the trusted root."""
-    if not isinstance(manifest, dict) or set(manifest) != {'job_id', 'platform', 'fit', 'audio', 'shots'}:
+    if (not isinstance(manifest, dict) or not {'job_id', 'platform', 'fit', 'audio', 'shots'} <= set(manifest)
+            or set(manifest) - {'job_id', 'platform', 'fit', 'audio', 'shots', 'finishing'}):
         raise VideoError('video_manifest_invalid')
     job = manifest['job_id']
     if not isinstance(job, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,63}', job):
@@ -116,11 +117,19 @@ def validate_manifest(manifest, input_root):
                                 'start': shot['start'], 'duration': shot['duration']})
     if total > MAX_SECONDS or total_bytes > MAX_TOTAL_BYTES:
         raise VideoError('video_resource_limit')
-    canonical = {**manifest, 'shots': source_receipts}
-    fingerprint = hashlib.sha256(json.dumps(canonical, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     rounded_seconds = sum(round(shot[2] * FPS) for shot in resolved) / FPS
     if rounded_seconds > MAX_SECONDS:
         raise VideoError('video_resource_limit')
+    canonical = {**manifest, 'shots': source_receipts}
+    if 'finishing' in manifest:
+        from captions import CaptionError, validate_finishing
+        try:
+            evidence = validate_finishing(manifest['finishing'], width=PRESETS[manifest['platform']][0],
+                                         height=PRESETS[manifest['platform']][1], total_frames=round(rounded_seconds * FPS))
+        except CaptionError as error:
+            raise VideoError(str(error)) from None
+        canonical['finishing_font_sha256'] = evidence['font_sha256']
+    fingerprint = hashlib.sha256(json.dumps(canonical, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     return resolved, rounded_seconds, fingerprint
 
 
@@ -232,6 +241,29 @@ def process_manifest(manifest, input_root, output_root):
         _run(['-v', 'error', '-xerror', '-protocol_whitelist', 'file,pipe',
               '-f', 'concat', '-safe', '1', '-i', str(listing), '-an', '-c:v', 'copy',
               '-map_metadata', '-1', '-movflags', '+faststart', str(output)])
+        finishing_receipt = None
+        if 'finishing' in manifest:
+            from captions import CaptionError, prepare_caption_file
+            try:
+                _, finishing_receipt = prepare_caption_file(manifest['finishing'], directory,
+                                                           width=width, height=height, total_frames=round(seconds * FPS))
+            except CaptionError as error:
+                raise VideoError(str(error)) from None
+            captioned = directory / 'captioned.mp4'
+            result = _run(['-v', 'info', '-xerror', '-protocol_whitelist', 'file,pipe',
+                          '-f', 'mov', '-i', 'output.mp4', '-an',
+                          '-vf', 'ass=filename=captions.ass:fontsdir=fonts',
+                          '-frames:v', str(round(seconds * FPS)), '-c:v', 'libx264',
+                          '-preset', 'veryfast', '-crf', '23', '-bf', '0', '-threads', '2',
+                          '-filter_threads', '1', '-pix_fmt', 'yuv420p', '-map_metadata', '-1',
+                          '-movflags', '+faststart', 'captioned.mp4'], timeout=max(30, int(seconds * 10)),
+                         cwd=directory, env={**os.environ, 'FONTCONFIG_FILE': str(directory / 'fonts.conf'),
+                                             'FONTCONFIG_PATH': str(directory)})
+            logs = result.stderr.decode('utf-8', errors='replace')
+            if ('fontselect:' not in logs or 'Glyph ' in logs or 'failed to find' in logs.lower()
+                    or 'DejaVuSans' not in logs):
+                raise VideoError('caption_renderer_not_confirmed')
+            output = captioned
         qa = technical_qa(output, width=width, height=height, expected_seconds=seconds)
         generated_cover = directory / 'cover.png'
         _run(['-v', 'error', '-protocol_whitelist', 'file,pipe', '-f', 'mov', '-i', str(output),
@@ -251,6 +283,8 @@ def process_manifest(manifest, input_root, output_root):
                    'unverified_checks': ['brand', 'language', 'claims', 'captions', 'safe_zones',
                                          'generation_artifacts', 'semantic_duplicates'],
                    'published': False}
+        if finishing_receipt is not None:
+            receipt['finishing'] = finishing_receipt
         # Exclusive names prevent concurrent jobs from silently replacing each other.
         # The completion receipt is written last; a crash cannot appear complete.
         try:

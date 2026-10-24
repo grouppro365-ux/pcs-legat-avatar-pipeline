@@ -12,7 +12,23 @@ from ltx_provider import validate_job
 def provider_input(job):
     # The canonical queue's editorial snapshot is NOT sent to Kaggle. Only the
     # exact prompts and bounded settings explicitly confirmed by the operator.
-    return validate_job({key: job[key] for key in ('id', 'claim_id', 'spec')})
+    spec = job['spec']
+    generation_keys = {'version', 'mode', 'preset', 'fit', 'shots'}
+    if not isinstance(spec, dict) or type(spec.get('version')) is not int or spec['version'] not in (1, 2):
+        raise ValueError('video_provider_spec_invalid')
+    expected = generation_keys | ({'finishing'} if spec['version'] == 2 else set())
+    if set(spec) != expected:
+        raise ValueError('video_provider_spec_invalid')
+    generation = {key: spec[key] for key in generation_keys}
+    generation['version'] = 1
+    minimized = validate_job({'id': job['id'], 'claim_id': job['claim_id'], 'spec': generation})
+    if spec['version'] == 2:
+        from captions import validate_finishing
+        from postprocess import PRESETS
+        width, height = PRESETS[spec['preset']]
+        validate_finishing(spec['finishing'], width=width, height=height,
+                          total_frames=sum(shot['frames'] for shot in spec['shots']) * 3)
+    return minimized
 
 
 def prepare(job, destination):

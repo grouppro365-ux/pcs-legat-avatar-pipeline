@@ -4,10 +4,22 @@ const plain=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const integer=x=>Number.isSafeInteger(x)&&x>0&&x<1e9;
 const own=(b,keys)=>plain(b)&&Object.keys(b).every(k=>keys.includes(k));
 const fail=(message='Проверьте данные видеозадания',status=400)=>{throw new CrmError(message,status)};
-export const videoCapabilities={modes:['TEXT_TO_VIDEO'],presets:['reel','story','tiktok','shorts','feed','pinterest','landscape'],max_shots:3,source_width:320,source_height:256,source_fps:8,frames:[17,33],inference_steps:30,requires_upscale_confirmation:true,manual_review_required:true,automatic_publication:false};
+export const videoCapabilities={modes:['TEXT_TO_VIDEO'],presets:['reel','story','tiktok','shorts','feed','pinterest','landscape'],spec_versions:[1,2],max_shots:3,source_width:320,source_height:256,source_fps:8,frames:[17,33],inference_steps:30,requires_upscale_confirmation:true,manual_review_required:true,automatic_publication:false,finishing:{version:1,style:'readable-v1',languages:['ru','en'],max_cues:12,max_lines:2,max_line_codepoints:36,max_text_codepoints:72,frame_rate:24}};
+const captionControls=/[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u00ad\u061c\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ud800-\udfff]/u;
+const captionBlank=/^[\u0020\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]*$/u;
+export function videoFinishing(finishing,totalFrames){
+ if(!own(finishing,['version','style','language','cues'])||finishing.version!==1||finishing.style!=='readable-v1'||!['ru','en'].includes(finishing.language)||!Array.isArray(finishing.cues)||finishing.cues.length<1||finishing.cues.length>12||!Number.isSafeInteger(totalFrames)||totalFrames<1||totalFrames>297)fail('Проверьте формат титров');
+ let previousEnd=0;
+ for(const cue of finishing.cues){
+  if(!own(cue,['start_frame','end_frame','text'])||!Number.isSafeInteger(cue.start_frame)||!Number.isSafeInteger(cue.end_frame)||cue.start_frame<previousEnd||cue.end_frame<=cue.start_frame||cue.end_frame>totalFrames||typeof cue.text!=='string'||Array.from(cue.text).length>72||captionControls.test(cue.text)||/[{}\\]/u.test(cue.text))fail('Проверьте время и текст титров');
+  const lines=cue.text.split('\n');if(lines.length>2||lines.some(line=>captionBlank.test(line)||Array.from(line).length>36))fail('Титр должен содержать одну или две непустые строки до 36 символов');
+  previousEnd=cue.end_frame;
+ }
+ return finishing;
+}
 export function videoSpec(spec){
- if(!own(spec,['version','mode','preset','fit','shots'])||spec.version!==1||spec.mode!=='TEXT_TO_VIDEO'||!videoCapabilities.presets.includes(spec.preset)||!['contain','cover'].includes(spec.fit)||!Array.isArray(spec.shots)||spec.shots.length<1||spec.shots.length>3)fail();
- let total=0;for(const shot of spec.shots){if(!own(shot,['prompt','negative_prompt','seed','frames'])||typeof shot.prompt!=='string'||shot.prompt.trim().length<10||shot.prompt.length>2000||typeof shot.negative_prompt!=='string'||shot.negative_prompt.length>1000||!Number.isSafeInteger(shot.seed)||shot.seed<0||shot.seed>2147483647||![17,33].includes(shot.frames))fail();total+=shot.frames;}if(total>99)fail();return spec;
+ if(!plain(spec)||![1,2].includes(spec.version)||!own(spec,spec.version===1?['version','mode','preset','fit','shots']:['version','mode','preset','fit','shots','finishing'])||spec.mode!=='TEXT_TO_VIDEO'||!videoCapabilities.presets.includes(spec.preset)||!['contain','cover'].includes(spec.fit)||!Array.isArray(spec.shots)||spec.shots.length<1||spec.shots.length>3)fail();
+ let total=0;for(const shot of spec.shots){if(!own(shot,['prompt','negative_prompt','seed','frames'])||typeof shot.prompt!=='string'||shot.prompt.trim().length<10||shot.prompt.length>2000||typeof shot.negative_prompt!=='string'||shot.negative_prompt.length>1000||!Number.isSafeInteger(shot.seed)||shot.seed<0||shot.seed>2147483647||![17,33].includes(shot.frames))fail();total+=shot.frames;}if(total>99)fail();if(spec.version===2)videoFinishing(spec.finishing,total*3);return spec;
 }
 export function contentVideoInput(action,b){
  const fields={create:['request_id','post_id','expected_post_version','revision','spec','confirmed','upscale_confirmed'],cancel:['request_id','job_id','expected_version'],review:['request_id','job_id','expected_version','decision','confirmed','note','artifact_sha256'],'resolve-unknown':['request_id','job_id','expected_version','provider_checked','note']};
@@ -26,7 +38,7 @@ function databaseError(error){
 export async function readContentVideo(biz,input={}){
  if(!own(input,['post_id','job_id','page'])||(input.post_id!=null&&!uuid(input.post_id))||(input.job_id!=null&&!uuid(input.job_id))||input.post_id&&input.job_id)fail();
  const page=Number(input.page??0);if(!Number.isSafeInteger(page)||page<0||page>1000)fail();
- const post=input.post_id?(await biz.query(`select p.id,p.version,p.status,r.revision,b.version brand_version,r.platform,r.title,b.name brand_name from pcs.content_posts p join pcs.content_brands b on b.id=p.brand_id join lateral(select revision,platform,title from pcs.content_revisions where post_id=p.id order by revision desc limit 1)r on true where p.id=$1::uuid`,[input.post_id]))[0]:null;
+ const post=input.post_id?(await biz.query(`select p.id,p.version,p.status,r.revision,b.version brand_version,r.platform,r.language,r.title,b.name brand_name from pcs.content_posts p join pcs.content_brands b on b.id=p.brand_id join lateral(select revision,platform,language,title from pcs.content_revisions where post_id=p.id order by revision desc limit 1)r on true where p.id=$1::uuid`,[input.post_id]))[0]:null;
  if(input.post_id&&!post)fail('Материал не найден',404);
  const rows=await biz.query(`select pcs.content_video_job(j) job from public.pcs_workflow_outbox j where j.aggregate_type='CONTENT_POST' and j.event_type='CONTENT_VIDEO_GENERATION' and ($1::uuid is null or j.aggregate_id=$1::uuid) and ($2::uuid is null or j.id=$2::uuid) order by j.created_at desc,j.id limit 21 offset $3`,[input.post_id||null,input.job_id||null,input.job_id?0:page*20]);
  return {ok:true,post,jobs:rows.slice(0,20).map(x=>x.job),has_more:rows.length>20,page,capabilities:videoCapabilities};
@@ -37,7 +49,7 @@ export async function actContentVideo(biz,action,b,actor,permissions){
  try{const result=(await biz.query('select pcs.content_video_action($1,$2::jsonb,$3,$4::jsonb) result',[action,JSON.stringify(b),String(actor),JSON.stringify(permissions)]))[0]?.result;if(result?.ok!==true||!uuid(result.job?.id)||action!=='create'&&result.job.id!==b.job_id||action==='create'&&result.job.post_id!==b.post_id)fail('Не получено подтверждение видеозадания. Повторите ту же команду.',502);return result;}catch(error){databaseError(error);}
 }
 const workerFields={claim:['request_id'],read:['request_id','job_id','claim_id','expected_version'],progress:['request_id','job_id','claim_id','expected_version','stage','provider_receipt'],complete:['request_id','job_id','claim_id','expected_version','artifact'],fail:['request_id','job_id','claim_id','expected_version','error_code']};
-const errorCodes=['VIDEO_PREPARATION_FAILED','GPU_LAUNCH_UNKNOWN','VIDEO_GENERATION_FAILED','VIDEO_POSTPROCESS_FAILED','VIDEO_UPLOAD_FAILED','WORKER_INTERRUPTED','QA_FAILED','PROVIDER_UNAVAILABLE'];
+const errorCodes=['VIDEO_PREPARATION_FAILED','GPU_LAUNCH_UNKNOWN','VIDEO_GENERATION_FAILED','VIDEO_POSTPROCESS_FAILED','VIDEO_UPLOAD_FAILED','WORKER_INTERRUPTED','QA_FAILED','PROVIDER_UNAVAILABLE','CAPTION_GLYPH_UNSUPPORTED','CAPTION_LINE_TOO_WIDE','CAPTION_FONT_UNAVAILABLE','VIDEO_CAPTIONS_INVALID'];
 export function videoWorkerInput(action,b){
  if(!workerFields[action]||!own(b,workerFields[action])||!uuid(b.request_id))fail('Некорректная команда видеопроцесса');
  if(action!=='claim'&&(!uuid(b.job_id)||!uuid(b.claim_id)||!integer(b.expected_version)))fail('Некорректная привязка видеопроцесса');
