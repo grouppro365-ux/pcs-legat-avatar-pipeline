@@ -4,7 +4,7 @@ import {videoWorkerAction} from './content-video.mjs';
 import {signVideoUpload,verifyVideoArtifact} from './content-video-storage.mjs';
 
 export async function contentVideoWorkerRoute(req,{biz,storage,verifyJWT}){
- const identity=await authorizeVideoWorker(req,verifyJWT);
+ const identity=await authorizeVideoWorker(req,verifyJWT,{onReject:details=>console.warn('pcs-video-worker-auth',details)});
  const body=await readCrmBody(req,131072),{action,...payload}=body;
  if(action==='upload'){
   if(Object.keys(payload).some(k=>!['request_id','job_id','claim_id','expected_version','kind'].includes(k))||!['video','cover'].includes(payload.kind))throw new CrmError('Некорректный запрос загрузки видео',400);

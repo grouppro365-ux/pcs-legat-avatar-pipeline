@@ -19,7 +19,7 @@ test('edit opens the selected v26 knowledge record with its existing values',()=
   assert.equal(h.sheets[0]?.title,'Редактировать запись');
   assert.match(h.sheets[0].html,/value="Ford Focus"/);
   assert.match(h.sheets[0].html,/400 THB daily/);
-  assert.match(h.sheets[0].html,/saveKnowledge\('kb-existing'\)/);
+  assert.match(h.sheets[0].html,/saveKnowledge\('kb-existing',this\)/);
 });
 test('knowledge edit preserves exact price and captured revision on conflict',async()=>{
  const row={id:'11111111-1111-4111-8111-111111111111',revision:7,title:'Rule',category:'car_rent',description:'Terms',status:'outdated',visibility:'customer_safe'},nodes={},calls=[];let closed=0;
@@ -63,7 +63,7 @@ test('unknown record never silently opens a creation form',()=>{
 test('existing knowledge entry exposes its own photo manager inside Mini App',()=>{
   const h=knowledgeHarness([{id:'kb-photo',title:'Existing'}]);
   h.window.editKnowledge('kb-photo');
-  assert.match(h.sheets[0].html,/knowledgePhotos\('kb-photo'\)/);
+  assert.match(h.sheets[0].html,/knowledgePhotos\('kb-photo',this\)/);
 });
 
 test('Mini App uploads the selected knowledge photo batch sequentially to the existing entry',async()=>{
@@ -101,5 +101,5 @@ test('Mini App deletes selected knowledge photos only after confirmation',async(
 
 test('mini app uses a fresh cache key for the repaired editor',()=>{
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  assert.match(html,/knowledge-editor\.js\?v=20261006-knowledge1/, 'fresh cache key required');
+  assert.match(html,/knowledge-editor\.js\?v=20261024-navigation1/, 'fresh cache key required');
 });

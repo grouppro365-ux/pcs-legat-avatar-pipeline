@@ -30,6 +30,8 @@ test('all supported main workflow triggers retain identity and refreshing does n
  for(const event_name of ['push','schedule','workflow_dispatch'])assert.equal((await authorize({...payload(),event_name,iat:seconds,nbf:seconds,exp:seconds+300})).worker_id,owner);
  assert.equal((await authorize({...payload(),run_attempt:'2'})).worker_id,'github:39984787683:2');
  assert.equal((await authorize({...payload(),sub:'repo:grouppro365-ux@268951037/pcs-legat-avatar-pipeline@1316651310:ref:refs/heads/main'})).worker_id,owner);
+ assert.equal((await authorize({...payload(),job_workflow_ref:videoWorkerTrust.workflow_ref,job_workflow_sha:payload().workflow_sha})).worker_id,owner);
+ for(const patch of [{job_workflow_ref:videoWorkerTrust.workflow_ref,job_workflow_sha:'b'.repeat(40)},{job_workflow_ref:'other/workflow@refs/heads/main',job_workflow_sha:payload().workflow_sha}])await assert.rejects(authorize({...payload(),...patch}),{status:403});
 });
 
 test('a renamed or forked repository, non-main code and another workflow are refused',async()=>{
@@ -74,4 +76,15 @@ test('method and authorization syntax checks stop before the verifier',async()=>
   await assert.rejects(authorizeVideoWorker(req(authorization),verify,{now:()=>now}),{status:403});
  await assert.rejects(authorizeVideoWorker(req('Bearer '+token,'GET'),verify,{now:()=>now}),{status:405});
  assert.equal(calls,0);
+});
+
+test('rejection diagnostics expose fixed codes and check names, never tokens or raw claims',async()=>{
+ const diagnostics=[];
+ const onReject=value=>diagnostics.push(value);
+ await assert.rejects(authorizeVideoWorker(req(),async()=>{throw Object.assign(Error('private '+token),{code:'ERR_JWT_CLAIM_VALIDATION_FAILED',claim:'aud'});},{now:()=>now,onReject}),{status:403});
+ assert.deepEqual(diagnostics.pop(),{reason:'JWT_VERIFICATION_FAILED',code:'ERR_JWT_CLAIM_VALIDATION_FAILED',claim:'aud'});
+ await assert.rejects(authorizeVideoWorker(req(),verified({...payload(),ref:'private-branch-name'}),{now:()=>now,onReject}),{status:403});
+ assert.deepEqual(diagnostics.pop(),{reason:'TRUST_CONTRACT_FAILED',checks:['ref']});
+ await assert.rejects(authorizeVideoWorker(req(),async()=>{throw Object.assign(Error(token),{code:'secret-code',claim:'private-claim'});},{now:()=>now,onReject}),{status:403});
+ assert.deepEqual(diagnostics.pop(),{reason:'JWT_VERIFICATION_FAILED',code:'VERIFIER_UNAVAILABLE'});
 });
