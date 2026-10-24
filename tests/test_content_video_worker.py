@@ -1,12 +1,13 @@
 import copy
 import hashlib
+import io
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'tools/video'),str(ROOT/'tools/ltx')]
@@ -95,6 +96,34 @@ class VideoWorkerTests(unittest.TestCase):
   self.assertEqual(requests[0].data,requests[1].data);self.assertNotEqual(requests[0].get_header('Authorization'),requests[1].get_header('Authorization'))
   self.assertEqual(len(tokens),2)
   with self.assertRaises(WorkerError):oidc_token({'ACTIONS_ID_TOKEN_REQUEST_URL':'https://evil.example','ACTIONS_ID_TOKEN_REQUEST_TOKEN':'private'})
+
+ def test_confirmed_database_quota_stops_retries_and_never_logs_raw_response(self):
+  calls=[];sleeps=[];streams=[]
+  def transport(req):
+   calls.append(req);stream=io.BytesIO(json.dumps({'code':'database_quota_exceeded','error':'private provider details'}).encode());streams.append(stream)
+   raise HTTPError(req.full_url,503,'Unavailable',{},stream)
+  with self.assertRaisesRegex(WorkerError,'^DATABASE_QUOTA_EXCEEDED$'):
+   ManagerAPI(lambda:'ephemeral',transport,sleeps.append).call('claim')
+  self.assertEqual(len(calls),1);self.assertEqual(sleeps,[]);self.assertTrue(streams[0].closed)
+  for raw in [b'not json',b'[]',b'{"code":"other"}',b'x'*4097]:
+   attempts=[]
+   def transient(req):
+    attempts.append(1)
+    if len(attempts)==1:raise HTTPError(req.full_url,503,'Unavailable',{},io.BytesIO(raw))
+    return {'ok':True,'job':None}
+   self.assertEqual(ManagerAPI(lambda:'ephemeral',transient,lambda _:None).call('claim'),{'ok':True,'job':None})
+   self.assertEqual(len(attempts),2)
+
+ def test_quota_during_preparation_stops_before_gpu_and_preserves_claim_without_extra_db_write(self):
+  api=API(job());original=api.call;launches=[]
+  def call(action,**body):
+   if action=='progress':raise WorkerError('DATABASE_QUOTA_EXCEEDED')
+   return original(action,**body)
+  api.call=call
+  with tempfile.TemporaryDirectory() as tmp:
+   with self.assertRaisesRegex(WorkerError,'^DATABASE_QUOTA_EXCEEDED$'):
+    process_one(api,object(),tmp,build=lambda *args:None,launch=lambda *args:launches.append(1))
+  self.assertEqual(launches,[]);self.assertEqual([name for name,_ in api.calls],['claim']);self.assertEqual(api.job['stage'],'PREPARING')
 
  def test_success_requires_all_stages_two_private_uploads_and_review_without_publishing(self):
   api=API(job());launches=[];uploads=[]

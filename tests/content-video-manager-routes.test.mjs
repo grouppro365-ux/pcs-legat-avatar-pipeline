@@ -10,7 +10,7 @@ import * as booking from '../server/supabase/pcs-manager-live2/booking-create.mj
 import * as delivery from '../server/supabase/pcs-manager-live2/manual-send.mjs';
 import * as login from '../server/supabase/pcs-manager-live2/login-policy.mjs';
 const id='11111111-1111-4111-8111-111111111111';
-async function fixture(){
+async function fixture({workerError}={}){
  let handler;const calls=[],secret='video-route-test-only';
  const biz=()=>[];biz.query=async()=>[];
  const c={...policy,...staff,...portal,...booking,...delivery,...login,crypto,TextEncoder,TextDecoder,URL,Request,Response,Date,atob,btoa,neon:()=>biz,
@@ -20,7 +20,7 @@ async function fixture(){
   readContentVideo:async(db,p)=>{calls.push(['read',p]);return {ok:true,post:{id},jobs:[{id,stage:'READY'}]};},
   actContentVideo:async(db,a,p,actor,permissions)=>{calls.push(['act',a,p,actor,permissions]);return {ok:true,job:{id}};},
   signVideoRead:async(storage,job,kind)=>{calls.push(['asset',storage,job,kind]);return {ok:true,url:'private'};},
-  contentVideoWorkerRoute:async(req,options)=>{calls.push(['worker',options]);throw new policy.CrmError('bad worker identity',401);},
+  contentVideoWorkerRoute:async(req,options)=>{calls.push(['worker',options]);throw workerError||new policy.CrmError('bad worker identity',401);},
   Deno:{env:{get:()=> 'test'},serve:fn=>{handler=fn;}}};
  vm.runInNewContext(stripTypeScriptTypes(readFileSync(new URL('../server/supabase/pcs-manager-live2/index.ts',import.meta.url),'utf8')).replace(/^import .*;\n/gm,''),c);
  const data=Buffer.from(JSON.stringify({role:'admin',exp:Date.now()+60000})).toString('base64url');
@@ -50,4 +50,15 @@ test('staff read permissions do not imply video write or approval authority',asy
  const db={query:async()=>[{context:{permissions:['audit.view']}}]};
  for(const op of ['content-video','content-video-asset'])await assert.rejects(staff.authorizeStaff(new Request('https://test/'),db,async()=>({sub:id}),op),e=>e.status===403);
  await assert.rejects(staff.authorizeStaff(new Request('https://test/'),{query:async()=>[{context:{permissions:['*']}}]},async()=>({sub:id}),'content-video-action'),e=>e.status===405);
+});
+
+test('actual manager reports a confirmed database quota suspension without exposing provider details',async()=>{
+ const secret='private-database-details';
+ const workerError=Object.assign(Error('Server error (HTTP status 402): Your account or project has exceeded the quota. '+secret),{name:'NeonDbError'});
+ const f=await fixture({workerError}),r=await f.call('content-video-worker',{method:'POST',body:{action:'claim'}});
+ assert.equal(r.status,503);assert.equal(r.headers.get('retry-after'),'3600');
+ const body=await r.json();assert.equal(body.code,'database_quota_exceeded');assert.equal(body.retry_after,3600);assert.match(body.error,/квота/);assert.ok(!JSON.stringify(body).includes(secret));
+ for(const error of [Error(workerError.message),Object.assign(Error('Server error (HTTP status 500): database failure'),{name:'NeonDbError'})]){
+  const other=await fixture({workerError:error}),response=await other.call('content-video-worker',{method:'POST',body:{action:'claim'}});assert.equal(response.status,500);assert.equal((await response.json()).code,'operation_failed');
+ }
 });
