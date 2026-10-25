@@ -26,13 +26,13 @@
    const detail=await window.call(`/crm/${id}`),contact=detail.contact||detail,message=draft(contact);
    if(!current())return;
    let attempt=attempts.get(id);if(attempt?.confirmed){attempts.set(id,null);attempt=null}
-   window.openSheet('Уточнить запрос клиента',`<form id="crmFollowupForm" data-contact="${id}" data-request-id="${crypto.randomUUID()}" onsubmit="event.preventDefault();pcsCrmFollowup.submit()"><p class="muted">Клиент: ${E(contact.name||contact.username||'—')}. Проверьте сообщение перед отправкой.${message.fallback?' Черновик на английском; отредактируйте его под язык клиента.':''}</p>${contact.need?`<p class="muted">Запрос: ${E(contact.need)}</p>`:''}<div class="field"><label for="crmFollowupText">Сообщение</label><textarea id="crmFollowupText" rows="5" required maxlength="4000">${E(message.text)}</textarea></div><p id="crmFollowupError" role="alert" class="contract-fact-error"></p><button id="crmFollowupSend" class="btn" type="submit">Отправить клиенту</button></form>`);
-   const openedForm=document.getElementById('crmFollowupForm');if(openedForm)openedForm.pcsSheetScope=window.pcsSheetLifecycle?.capture();
+   window.openSheet('Уточнить запрос клиента',`<form id="crmFollowupForm" data-contact="${id}" data-request-id="${crypto.randomUUID()}" onsubmit="event.preventDefault();pcsCrmFollowup.submit(this)"><p class="muted">Клиент: ${E(contact.name||contact.username||'—')}. Проверьте сообщение перед отправкой.${message.fallback?' Черновик на английском; отредактируйте его под язык клиента.':''}</p>${contact.need?`<p class="muted">Запрос: ${E(contact.need)}</p>`:''}<div class="field"><label for="crmFollowupText">Сообщение</label><textarea id="crmFollowupText" rows="5" required maxlength="4000">${E(message.text)}</textarea></div><p id="crmFollowupError" role="alert" class="contract-fact-error"></p><button id="crmFollowupSend" class="btn" type="submit">Отправить клиенту</button></form>`);
+   const openedForm=document.getElementById('crmFollowupForm');if(openedForm){openedForm.pcsSheetScope=window.pcsSheetLifecycle?.capture();openedForm.onsubmit=e=>{e.preventDefault();return submit(openedForm)}}
    if(attempt){const form=document.getElementById('crmFollowupForm'),field=document.getElementById('crmFollowupText');form.dataset.requestId=attempt.request_id;form.pcsAttemptedText=attempt.text;field.value=attempt.text;field.readOnly=true;document.getElementById('crmFollowupError').textContent='Доставка предыдущего сообщения не подтверждена. Повтор проверит ту же отправку.';document.getElementById('crmFollowupSend').textContent='Проверить отправку'}
   }catch{if(current())window.toast('Не удалось открыть запрос клиента. Повторите попытку.')}
  }
- async function submit(){
-  const form=document.getElementById('crmFollowupForm');if(!form||attempts.busy.has(form.dataset.contact))return;
+ async function submit(expectedForm){
+  const form=document.getElementById('crmFollowupForm');if(!form||(expectedForm&&expectedForm!==form)||attempts.busy.has(form.dataset.contact))return;
   if(form.pcsSheetScope&&!window.pcsSheetLifecycle.current(form.pcsSheetScope))return;
   const scope=form.pcsSheetScope||window.pcsSheetLifecycle?.capture(),epoch=attempts.epoch,current=()=>epoch===attempts.epoch&&(!scope||window.pcsSheetLifecycle.current(scope))&&document.getElementById('crmFollowupForm')===form;
   const field=document.getElementById('crmFollowupText'),error=document.getElementById('crmFollowupError'),button=document.getElementById('crmFollowupSend');
