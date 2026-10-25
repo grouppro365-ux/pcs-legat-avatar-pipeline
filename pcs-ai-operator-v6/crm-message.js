@@ -14,12 +14,12 @@
  function open(id){
   if(!valid(id))return;
   let attempt=attempts.get(id);if(attempt?.confirmed){attempts.set(id,null);attempt=null}
-  window.openSheet('Написать клиенту',`<form id="crmMessageForm" data-contact="${id}" data-request-id="${crypto.randomUUID()}" onsubmit="event.preventDefault();pcsCrmMessage.submit()"><div class="field"><label for="crmMessageText">Сообщение</label><textarea id="crmMessageText" required maxlength="4000" rows="5"></textarea></div><p id="crmMessageError" class="contract-fact-error" role="alert"></p><button id="crmMessageSend" class="btn" type="submit">Отправить клиенту</button></form>`);
-   const openedForm=document.getElementById('crmMessageForm');if(openedForm)openedForm.pcsSheetScope=window.pcsSheetLifecycle?.capture();
+  window.openSheet('Написать клиенту',`<form id="crmMessageForm" data-contact="${id}" data-request-id="${crypto.randomUUID()}" onsubmit="event.preventDefault();pcsCrmMessage.submit(this)"><div class="field"><label for="crmMessageText">Сообщение</label><textarea id="crmMessageText" required maxlength="4000" rows="5"></textarea></div><p id="crmMessageError" class="contract-fact-error" role="alert"></p><button id="crmMessageSend" class="btn" type="submit">Отправить клиенту</button></form>`);
+   const openedForm=document.getElementById('crmMessageForm');if(openedForm){openedForm.pcsSheetScope=window.pcsSheetLifecycle?.capture();openedForm.onsubmit=e=>{e.preventDefault();return submit(openedForm)}}
    if(attempt){const form=document.getElementById('crmMessageForm'),field=document.getElementById('crmMessageText');form.dataset.requestId=attempt.request_id;form.pcsAttemptedText=attempt.text;field.value=attempt.text;field.readOnly=true;document.getElementById('crmMessageError').textContent='Доставка предыдущего сообщения не подтверждена. Повтор проверит ту же отправку.';document.getElementById('crmMessageSend').textContent='Проверить отправку'}
  }
- async function submit(){
-  const form=document.getElementById('crmMessageForm');if(!form||attempts.busy.has(form.dataset.contact))return;
+ async function submit(expectedForm){
+  const form=document.getElementById('crmMessageForm');if(!form||(expectedForm&&expectedForm!==form)||attempts.busy.has(form.dataset.contact))return;
   if(form.pcsSheetScope&&!window.pcsSheetLifecycle.current(form.pcsSheetScope))return;
   const scope=form.pcsSheetScope||window.pcsSheetLifecycle?.capture(),epoch=attempts.epoch,current=()=>epoch===attempts.epoch&&(!scope||window.pcsSheetLifecycle.current(scope))&&document.getElementById('crmMessageForm')===form;
   const field=document.getElementById('crmMessageText'),error=document.getElementById('crmMessageError'),button=document.getElementById('crmMessageSend'),id=form.dataset.contact;

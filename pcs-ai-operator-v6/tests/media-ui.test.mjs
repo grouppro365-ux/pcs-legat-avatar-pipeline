@@ -43,13 +43,13 @@ test('photo selection deletes a batch only after confirmation',async()=>{
  assert.equal(deleted.path,'/catalog/'+id+'/media');assert.equal(JSON.parse(deleted.opt.body).expected_version,'a'.repeat(32));
 });
 
-test('double cover click is blocked while the gallery read is pending',async()=>{
+test('double cover click is blocked and replacing its session cancels the pending cover write',async()=>{
  const h=harness();await h.context.window.mediaManager(id);let resolve;
  h.context.call=(path,opt={})=>{h.calls.push({path,opt});if(opt.method==='POST')return Promise.resolve({ok:true,id,ids:JSON.parse(opt.body).ids});return new Promise(r=>resolve=r)};
  const first=h.context.window.makeMain(id,'photo-a');await h.context.window.makeMain(id,'photo-a');
  assert.equal(h.calls.filter(x=>x.opt.method==='POST').length,0);
  h.nodes.pcsMediaEditor={querySelectorAll:()=>[]};resolve([{id:'photo-a'}]);await first;
- assert.equal(h.calls.filter(x=>x.opt.method==='POST').length,1);assert.equal(h.context.PCS.mediaBusy,false);
+ assert.equal(h.calls.filter(x=>x.opt.method==='POST').length,0);assert.equal(h.context.PCS.mediaBusy,false);
 });
 test('delete preserves a replacement sheet and confirms only the requested photo',async()=>{
  const h=harness();await h.context.window.mediaManager(id);let resolve;

@@ -10,7 +10,7 @@ function fixture(storage=new Map()){
  const document={getElementById:id=>nodes.get(id)||null};
  const c=vm.createContext({document,crypto:webcrypto,console});c.window=c;c.PCS={page:'crm'};c.toast=()=>{};c.openClient=async()=>{};c.closeSheet=()=>{};
  c.sessionStorage={getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)};
- c.openSheet=(title,html)=>{nodes.clear();for(const [,id] of html.matchAll(/id="([^"]+)"/g))nodes.set(id,{value:'',textContent:'',dataset:{}});const prefix=html.includes('crmMessageForm')?'crmMessage':'crmFollowup';nodes.get(prefix+'Form').dataset={contact:html.match(/data-contact="([^"]+)"/)[1],requestId:html.match(/data-request-id="([^"]+)"/)[1]};nodes.get(prefix+'Text').value='Reviewed text'};
+ c.openSheet=(title,html)=>{nodes.clear();for(const [,id] of html.matchAll(/id="([^"]+)"/g))nodes.set(id,{value:'',textContent:'',dataset:{}});const prefix=html.includes('crmMessageForm')?'crmMessage':'crmFollowup';nodes.get(prefix+'Form').dataset={contact:html.match(/data-contact="([^"]+)"/)[1],requestId:html.match(/data-request-id="([^"]+)"/)[1]};nodes.get(prefix+'Text').value='Reviewed text';const handler=html.match(/onsubmit="([^"]+)"/)?.[1];if(handler)nodes.get(prefix+'Form').onsubmit=vm.runInContext('(async function(event){'+handler+'})',c)};
  c.call=async(path,opt)=>{if(!opt)return{contact:{name:'Client',language:'ru'}};const body=JSON.parse(opt.body);writes.push({path,body});if(outcome==='pending')return new Promise((resolve,reject)=>pending.push({resolve,reject}));if(outcome==='success')return{ok:true};const e=Error(outcome);e.code=outcome==='rejected'?'send_rejected':'delivery_uncertain';e.status=outcome==='rejected'?422:409;throw e};
  for(const file of files)vm.runInContext(readFileSync(new URL('../pcs-ai-operator-v6/'+file,import.meta.url),'utf8'),c);
  return{c,nodes,writes,pending,storage,mode:value=>outcome=value};
@@ -63,3 +63,17 @@ for(const [api,prefix] of entrypoints){
 test('logout clear removes restored private drafts and prevents late responses repopulating ledger',async()=>{
  const h=fixture();h.mode('pending');await h.c.pcsCrmMessage.open('client1');const p=h.c.pcsCrmMessage.submit();assert.equal(h.storage.size,1);h.c.pcsCrmSendAttempts.clear();h.pending[0].resolve({ok:true});await p;assert.equal(h.storage.size,0);assert.equal(h.c.pcsCrmSendAttempts.get('client1'),null);
 });
+
+for(const [api,prefix] of entrypoints){
+ test(`${api}: retained old form callback cannot send a reopened same-client or another-client draft`,async()=>{
+  for(const next of ['client1','client2']){
+   const h=fixture();lifecycle(h);h.mode('success');await h.c[api].open('client1');const old=h.nodes.get(prefix+'Form'),submitOld=old.onsubmit;
+   h.c.closeSheet();await h.c[api].open(next);const current=h.nodes.get(prefix+'Form'),field=h.nodes.get(prefix+'Text');field.value='New draft awaiting review';
+   assert.notEqual(old,current);assert.equal(typeof submitOld,'function');await submitOld({preventDefault(){}});assert.equal(h.writes.length,0);assert.equal(field.value,'New draft awaiting review');assert.notEqual(field.readOnly,true);assert.equal(h.c.pcsCrmSendAttempts.get(next),null);
+   await current.onsubmit({preventDefault(){}});assert.equal(h.writes.length,1);assert.equal(h.writes[0].path,'/crm/'+next+'/send');assert.equal(h.writes[0].body.text,'New draft awaiting review');
+  }
+ });
+ test(`${api}: explicit stale form submission cannot borrow the newly opened form without lifecycle support`,async()=>{
+  const h=fixture();h.mode('success');await h.c[api].open('client1');const old=h.nodes.get(prefix+'Form');await h.c[api].open('client1');await h.c[api].submit(old);assert.equal(h.writes.length,0);await h.c[api].submit(h.nodes.get(prefix+'Form'));assert.equal(h.writes.length,1);
+ });
+}
