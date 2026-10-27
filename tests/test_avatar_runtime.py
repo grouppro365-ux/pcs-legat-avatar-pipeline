@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools/ltx'))
@@ -140,20 +141,46 @@ class AvatarRuntimeTests(unittest.TestCase):
     def test_pinned_inspector_reads_one_version_and_never_pushes_or_persists_private_logs(self):
         class ReadOnlyAPI:
             def __init__(self): self.refs = []
-            def kernels_logs(self, ref):
+            def kernels_logs_stream(self, ref):
                 self.refs.append(ref)
-                return "OSError: private passport /private/input.jpg\n"
+                return iter([{'data': "OSError: private passport /private/input.jpg\n"}])
+            def kernels_logs(self, ref): raise AssertionError('Summary log is insufficient')
             def kernels_push(self, *args, **kwargs): raise AssertionError('GPU launch forbidden')
             def kernels_output(self, *args, **kwargs): raise AssertionError('Media download forbidden')
         with tempfile.TemporaryDirectory() as tmp:
             api = ReadOnlyAPI(); report = inspect_version(api, 103, tmp)
             self.assertEqual(api.refs, ['tatyanathai/pcs-legat-ai-avatar-pipeline/103'])
             self.assertEqual(report['inspected_run']['version'], 103)
+            self.assertEqual(report['log_source'], 'VERSION_STREAM')
             self.assertEqual([p.name for p in Path(tmp).iterdir()], ['pcs-gpu-diagnostics.json'])
             self.assertNotIn('passport', json.dumps(report))
             for version in [True, '103', 0, -1, 2_147_483_648]:
                 with self.assertRaises(ValueError): inspect_version(api, version, tmp)
             self.assertEqual(len(api.refs), 1)
+
+    def test_inspector_rejects_empty_malformed_oversized_and_failed_streams_without_private_errors(self):
+        class Stream:
+            closed = False
+            def __init__(self, rows): self.rows = iter(rows)
+            def __iter__(self): return self
+            def __next__(self): return next(self.rows)
+            def close(self): self.closed = True
+        class API:
+            def __init__(self, stream): self.stream = stream
+            def kernels_logs_stream(self, ref): return self.stream
+        for rows in [[], [{'data': '   '}], [{'private': 'passport'}], [{'data': 'long private message'}]]:
+            with tempfile.TemporaryDirectory() as tmp, patch('inspect_avatar_failure.MAX_LOG_BYTES', 8):
+                stream = Stream(rows)
+                with self.assertRaisesRegex(RuntimeError, '^kernel_diagnostic_log_unavailable$'):
+                    inspect_version(API(stream), 103, tmp)
+                self.assertTrue(stream.closed)
+                self.assertEqual(list(Path(tmp).iterdir()), [])
+        class FailedAPI:
+            def kernels_logs_stream(self, ref): raise ValueError('PRIVATE secret from provider')
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(RuntimeError, '^kernel_diagnostic_log_unavailable$'):
+                inspect_version(FailedAPI(), 103, tmp)
+            self.assertEqual(list(Path(tmp).iterdir()), [])
 
     def test_notebook_drift_fails_before_writing_any_partial_patch(self):
         for mode in ['unknown', 'duplicate', 'missing']:
