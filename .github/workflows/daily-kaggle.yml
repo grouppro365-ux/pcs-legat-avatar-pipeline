@@ -8,7 +8,12 @@ on:
         required: true
         default: avatar
         type: choice
-        options: [avatar, ltx-smoke]
+        options: [avatar, ltx-smoke, diagnostics]
+      diagnostic_version:
+        description: Accepted private kernel version to inspect without GPU
+        required: false
+        default: "103"
+        type: string
   push:
     branches: [main]
     paths: ['tools/ltx/**', 'patch_notebook.py']
@@ -29,6 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
+      PCS_DIAGNOSTIC_VERSION: ${{ inputs.diagnostic_version || '103' }}
       PCS_GPU_ENGINE: ${{ github.event_name == 'push' && 'ltx-smoke' || inputs.engine || 'avatar' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -51,7 +57,17 @@ jobs:
           pcs_diff_status=$?
           set -e
           case "$pcs_diff_status" in
-            0) echo 'PCS_GPU_ENGINE=ltx-smoke' >> "$GITHUB_ENV" ;;
+            0)
+              set +e
+              git diff --quiet "$PCS_PUSH_BEFORE" "$GITHUB_SHA" -- tools/ltx/inspect_avatar_failure.py
+              pcs_inspect_status=$?
+              set -e
+              case "$pcs_inspect_status" in
+                0) echo 'PCS_GPU_ENGINE=ltx-smoke' >> "$GITHUB_ENV" ;;
+                1) echo 'PCS_GPU_ENGINE=diagnostics' >> "$GITHUB_ENV" ;;
+                *) exit "$pcs_inspect_status" ;;
+              esac
+              ;;
             1) echo 'PCS_GPU_ENGINE=avatar' >> "$GITHUB_ENV" ;;
             *) exit "$pcs_diff_status" ;;
           esac
@@ -66,7 +82,15 @@ jobs:
           python -m json.tool kaggle_avatar_pipeline.ipynb >/dev/null
       - name: Install official Kaggle CLI
         run: python -m pip install --disable-pip-version-check kaggle==2.2.5
+      - name: Inspect an already accepted private kernel version without GPU
+        if: env.PCS_GPU_ENGINE == 'diagnostics'
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          test -n "$KAGGLE_API_TOKEN"
+          python tools/ltx/inspect_avatar_failure.py "$PCS_DIAGNOSTIC_VERSION" kaggle-output
       - name: Authenticate and start private GPU kernel
+        if: env.PCS_GPU_ENGINE != 'diagnostics'
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
@@ -77,19 +101,20 @@ jobs:
             python tools/ltx/kaggle_existing_run.py start . kaggle-run.json
           fi
       - name: Wait for the Kaggle run
+        if: env.PCS_GPU_ENGINE != 'diagnostics'
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
           python tools/ltx/kaggle_existing_run.py wait kaggle-run.json
       - name: Download outputs and failure diagnostics
-        if: always()
+        if: always() && env.PCS_GPU_ENGINE != 'diagnostics'
         continue-on-error: true
         env:
           KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
         run: |
           python tools/ltx/kaggle_existing_run.py output kaggle-run.json kaggle-output
       - name: Summarize GPU failure without private data
-        if: always()
+        if: always() && env.PCS_GPU_ENGINE != 'diagnostics'
         run: python tools/ltx/collect_gpu_diagnostics.py kaggle-output
       - name: Install pinned LTX artifact verifier
         if: success() && env.PCS_GPU_ENGINE == 'ltx-smoke'
@@ -127,5 +152,13 @@ jobs:
           path: |
             kaggle-output/pcs-gpu-diagnostics.json
             kaggle-run.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload read-only version diagnostics
+        if: success() && env.PCS_GPU_ENGINE == 'diagnostics'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pcs-avatar-version-diagnostics
+          path: kaggle-output/pcs-gpu-diagnostics.json
           if-no-files-found: error
           retention-days: 14

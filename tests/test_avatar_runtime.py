@@ -12,6 +12,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'tools/ltx'))
 from collect_gpu_diagnostics import collect, STAGES
+from inspect_avatar_failure import inspect_version
 
 
 def original_notebook():
@@ -126,12 +127,33 @@ class AvatarRuntimeTests(unittest.TestCase):
                 result = subprocess.run(['bash', '-e', '-c', script], cwd=tmp, env={**os.environ, 'PCS_PUSH_BEFORE': old, 'GITHUB_SHA': new, 'GITHUB_ENV': str(output)}, capture_output=True)
                 return result.returncode, output.read_text()
             self.assertEqual(select(before, after), (0, 'PCS_GPU_ENGINE=ltx-smoke\n'))
+            Path(tmp, 'tools/ltx').mkdir(parents=True); Path(tmp, 'tools/ltx/inspect_avatar_failure.py').write_text('read only')
+            git('add', '.'); git('commit', '-qm', 'inspect'); inspected_sha = git('rev-parse', 'HEAD')
+            self.assertEqual(select(after, inspected_sha), (0, 'PCS_GPU_ENGINE=diagnostics\n'))
             patch.write_text('patched'); git('add', '.'); git('commit', '-qm', 'avatar'); patched_sha = git('rev-parse', 'HEAD')
             self.assertEqual(select(after, patched_sha), (0, 'PCS_GPU_ENGINE=avatar\n'))
             for old in ['$(touch forbidden)', '0'*40, 'f'*40]:
                 code, values = select(old, patched_sha)
                 self.assertNotEqual(code, 0); self.assertEqual(values, '')
             self.assertFalse(Path(tmp, 'forbidden').exists())
+
+    def test_pinned_inspector_reads_one_version_and_never_pushes_or_persists_private_logs(self):
+        class ReadOnlyAPI:
+            def __init__(self): self.refs = []
+            def kernels_logs(self, ref):
+                self.refs.append(ref)
+                return "OSError: private passport /private/input.jpg\n"
+            def kernels_push(self, *args, **kwargs): raise AssertionError('GPU launch forbidden')
+            def kernels_output(self, *args, **kwargs): raise AssertionError('Media download forbidden')
+        with tempfile.TemporaryDirectory() as tmp:
+            api = ReadOnlyAPI(); report = inspect_version(api, 103, tmp)
+            self.assertEqual(api.refs, ['tatyanathai/pcs-legat-ai-avatar-pipeline/103'])
+            self.assertEqual(report['inspected_run']['version'], 103)
+            self.assertEqual([p.name for p in Path(tmp).iterdir()], ['pcs-gpu-diagnostics.json'])
+            self.assertNotIn('passport', json.dumps(report))
+            for version in [True, '103', 0, -1, 2_147_483_648]:
+                with self.assertRaises(ValueError): inspect_version(api, version, tmp)
+            self.assertEqual(len(api.refs), 1)
 
     def test_notebook_drift_fails_before_writing_any_partial_patch(self):
         for mode in ['unknown', 'duplicate', 'missing']:
