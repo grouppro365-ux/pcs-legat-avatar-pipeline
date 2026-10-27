@@ -112,6 +112,90 @@ if echo_matches != 1:
 if weight_matches != 1:
     raise RuntimeError(f'Expected exactly one EchoMimicV2 weight validation block, found {weight_matches}.')
 
+# Stage receipts contain fixed public enums only. The provider traceback stays
+# in private kernel logs; neither commands, prompts, source nor paths are copied.
+AVATAR_STAGES = (
+    ('from pathlib import Path', 'SETUP'),
+    ('# GPU gate', 'GPU_CHECK'),
+    ('# Locate the private master portrait.', 'PRIVATE_ASSET'),
+    ('# Free stable test voices', 'TTS'),
+    ('# Create isolated Python 3.10 environments', 'ENVIRONMENT'),
+    ('# EchoMimicV2: official repository', 'ECHO_INSTALL'),
+    ('# Download the official EchoMimicV2 accelerated weights', 'ECHO_WEIGHTS'),
+    ('# EchoMimicV2 smoke render', 'ECHO_RENDER'),
+    ('# MuseTalk 1.5 in its own', 'MUSE_INSTALL'),
+    ('# Download MuseTalk 1.5 and auxiliary weights', 'MUSE_WEIGHTS'),
+    ('# Lip-sync the same body-motion source', 'MUSE_RENDER'),
+    ('# Normalize delivery files', 'EXPORT'),
+    ('# Technical QA', 'QA'),
+    ('# Validate the OpenMontage source', 'OPENMONTAGE'),
+)
+
+stage_helper = r"""# Fixed-shape diagnostics for the existing private avatar runtime.
+import json as _pcs_stage_json
+from pathlib import Path as _pcs_stage_path
+
+_PCS_AVATAR_ERROR_TYPES = frozenset({
+    'CalledProcessError', 'OSError', 'RuntimeError', 'ValueError', 'TypeError',
+    'KeyError', 'FileNotFoundError', 'ModuleNotFoundError', 'ImportError',
+    'AssertionError', 'PermissionError', 'TimeoutError',
+})
+_PCS_AVATAR_STAGES = frozenset({
+    'SETUP', 'GPU_CHECK', 'PRIVATE_ASSET', 'TTS', 'ENVIRONMENT',
+    'ECHO_INSTALL', 'ECHO_WEIGHTS', 'ECHO_RENDER', 'MUSE_INSTALL',
+    'MUSE_WEIGHTS', 'MUSE_RENDER', 'EXPORT', 'QA', 'OPENMONTAGE',
+})
+
+def _pcs_avatar_stage(stage, status, error=None):
+    if stage not in _PCS_AVATAR_STAGES or status not in {'RUNNING', 'COMPLETE', 'FAILED'}:
+        raise RuntimeError('avatar_stage_identity_invalid')
+    name = type(error).__name__ if error is not None else None
+    error_type = name if name in _PCS_AVATAR_ERROR_TYPES else 'OTHER' if error is not None else None
+    errno = getattr(error, 'errno', None)
+    returncode = getattr(error, 'returncode', None)
+    record = {
+        'stage': stage, 'status': status, 'error_type': error_type,
+        'errno': errno if type(errno) is int and -4095 <= errno <= 4095 else None,
+        'returncode': returncode if type(returncode) is int and -255 <= returncode <= 255 else None,
+    }
+    # Diagnostics must not replace the original execution error if disk is full.
+    try:
+        directory = _pcs_stage_path('/kaggle/working/output')
+        directory.mkdir(parents=True, exist_ok=True)
+        temporary = directory / 'pcs-avatar-stage.json.part'
+        temporary.write_text(_pcs_stage_json.dumps(record) + '\n', encoding='utf-8')
+        temporary.replace(directory / 'pcs-avatar-stage.json')
+    except OSError:
+        pass
+"""
+
+stage_seen = set()
+for cell in nb.get('cells', []):
+    if cell.get('cell_type') != 'code':
+        continue
+    source = ''.join(cell.get('source', []))
+    first_line = next((line.strip() for line in source.splitlines() if line.strip()), '')
+    matches = [stage for prefix, stage in AVATAR_STAGES if first_line.startswith(prefix)]
+    if len(matches) != 1 or matches[0] in stage_seen:
+        raise RuntimeError('avatar_stage_markers_changed')
+    stage = matches[0]
+    stage_seen.add(stage)
+    # A try block has no new Python scope: notebook variables remain available
+    # to the following cells exactly as before instrumentation.
+    wrapped = (stage_helper + '\n' if stage == 'SETUP' else '')
+    wrapped += f"_pcs_avatar_stage({stage!r}, 'RUNNING')\ntry:\n"
+    wrapped += ''.join('    ' + line if line.strip() else line for line in source.splitlines(keepends=True))
+    if not wrapped.endswith('\n'):
+        wrapped += '\n'
+    wrapped += f"except Exception as _pcs_avatar_error:\n    _pcs_avatar_stage({stage!r}, 'FAILED', _pcs_avatar_error)\n    raise\nelse:\n    _pcs_avatar_stage({stage!r}, 'COMPLETE')\n"
+    # Every generated code cell must compile before the source notebook is replaced.
+    compile(wrapped, '<pcs-avatar-cell>', 'exec')
+    cell['source'] = wrapped.splitlines(keepends=True)
+    cell['outputs'] = []
+    cell['execution_count'] = None
+if stage_seen != {stage for _, stage in AVATAR_STAGES}:
+    raise RuntimeError('avatar_stage_markers_changed')
+
 path.write_text(json.dumps(nb, ensure_ascii=False, indent=1), encoding='utf-8')
 print(
     f'Patched {path}: uv-managed Python 3.10, setuptools<81, '

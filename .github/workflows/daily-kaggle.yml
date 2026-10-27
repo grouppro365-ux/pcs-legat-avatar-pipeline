@@ -11,7 +11,7 @@ on:
         options: [avatar, ltx-smoke]
   push:
     branches: [main]
-    paths: ['tools/ltx/**']
+    paths: ['tools/ltx/**', 'patch_notebook.py']
   schedule:
     # 03:30 Thailand (UTC+7) = 20:30 UTC on the previous day.
     - cron: "30 20 * * *"
@@ -31,10 +31,30 @@ jobs:
     env:
       PCS_GPU_ENGINE: ${{ github.event_name == 'push' && 'ltx-smoke' || inputs.engine || 'avatar' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Select the existing workload for a source push
+        if: github.event_name == 'push'
+        env:
+          PCS_PUSH_BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          [[ "$PCS_PUSH_BEFORE" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          set +e
+          git diff --quiet "$PCS_PUSH_BEFORE" "$GITHUB_SHA" -- patch_notebook.py
+          pcs_diff_status=$?
+          set -e
+          case "$pcs_diff_status" in
+            0) echo 'PCS_GPU_ENGINE=ltx-smoke' >> "$GITHUB_ENV" ;;
+            1) echo 'PCS_GPU_ENGINE=avatar' >> "$GITHUB_ENV" ;;
+            *) exit "$pcs_diff_status" ;;
+          esac
       - name: Prepare asset-free LTX smoke notebook
         if: env.PCS_GPU_ENGINE == 'ltx-smoke'
         run: python tools/ltx/prepare_kaggle_smoke.py kaggle-ltx-smoke "${{ github.run_id }}-${{ github.run_attempt }}"
