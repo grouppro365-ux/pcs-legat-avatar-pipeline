@@ -1,0 +1,20 @@
+name: Stop legacy avatar artifact publication
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/pcs-avatar-output-guard.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+# Stop the old GitHub monitor before its success-only artifact upload.
+# This does not cancel or interrupt the independently running private Kaggle job.
+concurrency:
+  group: pcs-legat-existing-kaggle
+  cancel-in-progress: true
+jobs:
+  stop-legacy-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Confirm the publication guard
+        run: echo 'Legacy GitHub monitoring stopped; private Kaggle execution is unchanged.'
