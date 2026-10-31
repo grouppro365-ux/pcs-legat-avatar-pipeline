@@ -1,0 +1,5 @@
+# Never commit AI provider keys, media, videos or jobs
+config.toml
+storage/
+.env
+*.log
