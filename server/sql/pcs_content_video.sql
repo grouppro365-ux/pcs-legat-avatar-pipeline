@@ -80,6 +80,10 @@ BEGIN
   IF EXISTS(SELECT 1 FROM public.pcs_workflow_outbox WHERE aggregate_type='CONTENT_POST' AND aggregate_id=post.id AND event_type='CONTENT_VIDEO_GENERATION' AND (status IN ('PENDING','PROCESSING') OR last_error='GPU_LAUNCH_UNKNOWN')) THEN RAISE EXCEPTION 'content_video_live_job_exists' USING ERRCODE='40001';END IF;
   INSERT INTO public.pcs_workflow_outbox(aggregate_type,aggregate_id,event_type,idempotency_key,status,next_attempt_at,payload) VALUES('CONTENT_POST',post.id,'CONTENT_VIDEO_GENERATION','content-video:'||rid::text,'PENDING',clock_timestamp(),jsonb_build_object('version',1,'stage','QUEUED','revision',rev.revision,'brand_id',brand.id,'brand_version',brand.version,'created_by',p_actor,'creator_permissions',permissions,'spec',p->'spec','source_width',320,'source_height',256,'source_fps',8,'inference_steps',30,'review_status','PENDING','manual_review_required',true,'snapshot',jsonb_build_object('brand_name',brand.name,'brand_guidelines',brand.guidelines,'title',rev.title,'body',rev.body,'platform',rev.platform,'language',rev.language,'source_facts',rev.source_facts,'source_url',rev.source_url))) RETURNING * INTO job;
  ELSE
+  -- Serialize review with publication claim: post → brand → canonical outbox.
+  SELECT * INTO job FROM public.pcs_workflow_outbox WHERE id=(p->>'job_id')::uuid AND aggregate_type='CONTENT_POST' AND event_type='CONTENT_VIDEO_GENERATION';
+  SELECT * INTO post FROM pcs.content_posts WHERE id=job.aggregate_id FOR UPDATE;
+  SELECT * INTO brand FROM pcs.content_brands WHERE id=post.brand_id FOR UPDATE;
   SELECT * INTO job FROM public.pcs_workflow_outbox WHERE id=(p->>'job_id')::uuid AND aggregate_type='CONTENT_POST' AND event_type='CONTENT_VIDEO_GENERATION' FOR UPDATE;
   IF job.id IS NULL OR (job.payload->>'version')::integer<>(p->>'expected_version')::integer THEN RAISE EXCEPTION 'content_video_version_conflict' USING ERRCODE='40001';END IF;
   stage:=job.payload->>'stage';
@@ -88,6 +92,9 @@ BEGIN
    patch:=jsonb_build_object('stage','CANCELLED','cancellation_note','Generation already accepted by the provider may continue; output will not be used.');
    UPDATE public.pcs_workflow_outbox SET status='CANCELLED',last_error=CASE WHEN stage='GENERATING' THEN 'GPU_LAUNCH_UNKNOWN' ELSE 'OPERATOR_CANCELLED' END WHERE id=job.id;
   ELSIF p_action='review' THEN
+   IF EXISTS(SELECT 1 FROM pg_attribute WHERE attrelid=to_regclass('pcs.content_publication_jobs') AND attname='video_snapshot' AND NOT attisdropped) THEN
+    IF EXISTS(SELECT 1 FROM pcs.content_publication_jobs WHERE media_kind='VIDEO' AND video_snapshot->>'id'=job.id::text AND state IN ('SENDING','UNKNOWN','SENT')) THEN RAISE EXCEPTION 'content_video_job_locked' USING ERRCODE='40001';END IF;
+   END IF;
    IF stage<>'READY' OR job.payload#>>'{artifact,sha256}' IS DISTINCT FROM p->>'artifact_sha256' OR NOT pcs.content_video_current(job) THEN RAISE EXCEPTION 'content_video_review_stale' USING ERRCODE='40001';END IF;
    patch:=jsonb_build_object('review_status',p->>'decision','review',jsonb_build_object('actor',p_actor,'decision',p->>'decision','note',btrim(p->>'note'),'artifact_sha256',p->>'artifact_sha256','checked_at',clock_timestamp()));
   ELSE
