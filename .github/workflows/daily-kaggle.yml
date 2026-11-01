@@ -81,7 +81,7 @@ jobs:
           python patch_notebook.py
           python -m json.tool kaggle_avatar_pipeline.ipynb >/dev/null
       - name: Install official Kaggle CLI
-        run: python -m pip install --disable-pip-version-check kaggle==2.2.5
+        run: python -m pip install --disable-pip-version-check -r tools/video/kaggle-requirements.txt
       - name: Inspect an already accepted private kernel version without GPU
         if: env.PCS_GPU_ENGINE == 'diagnostics'
         env:
