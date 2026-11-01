@@ -22,31 +22,34 @@ async function boundedHtml(response,maxBytes){
  const bytes=new Uint8Array(size);let offset=0;for(const value of chunks){bytes.set(value,offset);offset+=value.byteLength;}
  return new TextDecoder('utf-8',{fatal:true}).decode(bytes);
 }
-export async function observeTelegramPublication(snapshot,{fetcher=fetch,timeoutMs=12000,maxBytes=2000000}={}){
+export async function readTelegramPublicationWidget(snapshot,{fetcher=fetch,timeoutMs=12000,maxBytes=2000000}={}){
  const target=telegramPublication(snapshot.publication_url),expected=normalizePublicationText(snapshot.body);
  if(!expected||[...expected].length>4096)throw new CrmError('Одобренный текст не подходит для проверки Telegram');
  const evidence={method:'public_telegram_text_v1',outcome:'UNREADABLE',reason:'page_unavailable',publication_url:target.url,fetch_url:target.fetch_url,message_id:target.id,username:target.username,expected_sha256:await hash(expected),observed_sha256:null,published_at:null};
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
  try{
   const response=await fetcher(target.fetch_url,{redirect:'manual',signal:controller.signal});
-  if(response.status>=300&&response.status<400){await response.body?.cancel();evidence.reason='redirect_refused';return evidence;}
-  if(!response.ok){await response.body?.cancel();return evidence;}
+  if(response.status>=300&&response.status<400){await response.body?.cancel();evidence.reason='redirect_refused';return {evidence,block:null};}
+  if(!response.ok){await response.body?.cancel();return {evidence,block:null};}
   const html=await boundedHtml(response,maxBytes);
   // Bound parsing to the complete exact widget, independent of attribute order.
   // A missing/deleted target must never borrow a later message's text or time.
   const widgets=publicMessageWidgets(html).filter(x=>x.post===`${target.username}/${target.id}`);
-  if(widgets.length!==1){evidence.reason=widgets.length?'ambiguous_message':'message_missing';return evidence;}
+  if(widgets.length!==1){evidence.reason=widgets.length?'ambiguous_message':'message_missing';return {evidence,block:null};}
   const block=widgets[0].block;
   const raw=block.match(/<div\b[^>]*class="[^"]*tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-  if(!raw||[...block.matchAll(/class="[^"]*tgme_widget_message_text[\s"]/gi)].length!==1||/<div\b|<time\b|data-post=|tgme_widget_message_text_read_more|js-message_text_more/i.test(raw[1])){evidence.reason='text_unreadable';return evidence;}
+  if(!raw||[...block.matchAll(/class="[^"]*tgme_widget_message_text[\s"]/gi)].length!==1||/<div\b|<time\b|data-post=|tgme_widget_message_text_read_more|js-message_text_more/i.test(raw[1])){evidence.reason='text_unreadable';return {evidence,block:null};}
   const message=parsePublicPage(block,target.username).messages.find(m=>m.id===target.id);
-  if(!message?.published_at||!message.text||message.text.length>=12000){evidence.reason='text_unreadable';return evidence;}
+  if(!message?.published_at||!message.text||message.text.length>=12000){evidence.reason='text_unreadable';return {evidence,block:null};}
   const actual=normalizePublicationText(message.text);evidence.observed_sha256=await hash(actual);evidence.published_at=message.published_at;
   evidence.outcome=actual===expected?'TEXT_MATCH':'TEXT_MISMATCH';evidence.reason=actual===expected?'exact_text_observed':'different_text_observed';
-  return evidence;
- }catch(e){evidence.reason=controller.signal.aborted?'fetch_timeout':e.message==='page_too_large'?'page_too_large':'page_unavailable';return evidence;}
+  return {evidence,block};
+ }catch(e){evidence.reason=controller.signal.aborted?'fetch_timeout':e.message==='page_too_large'?'page_too_large':'page_unavailable';return {evidence,block:null};}
  finally{clearTimeout(timer);}
 }
+
+// HTTP callers receive evidence only; raw widget HTML stays inside observers.
+export async function observeTelegramPublication(snapshot,options){return (await readTelegramPublicationWidget(snapshot,options)).evidence;}
 
 export async function verifyContentPublication(biz,b,actor,permissions,options){
  const params=[JSON.stringify(b),String(actor),JSON.stringify(permissions)];
