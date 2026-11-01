@@ -112,3 +112,63 @@ test('mismatched post responses and read errors never expose write controls',asy
 test('published posts expose existing results but cannot start a new generation',async t=>{
  const h=harness(data({post:{...data().post,status:'PUBLICATION_SENT'},jobs:[job()]}));t.after(()=>h.dom.window.close());await h.open();assert.equal(h.q('[data-video-create]'),null);assert.ok(h.q('[data-video-preview]'));
 });
+
+const captionData=(overrides={})=>data({capabilities:{finishing:{version:1}},...overrides});
+function enableCaptions(h,f,{language='ru',count=1}={}){
+ f.elements.captions_enabled.checked=true;f.elements.captions_enabled.dispatchEvent(new h.w.Event('change'));f.elements.caption_language.value=language;f.elements.caption_count.value=String(count);f.elements.caption_count.dispatchEvent(new h.w.Event('change'));return f;
+}
+function cue(f,index,start,end,text){f.elements['caption_start_'+index].value=String(start);f.elements['caption_end_'+index].value=String(end);f.elements['caption_text_'+index].value=text;}
+
+test('caption editor requires exact finishing capability and absent capability preserves v1 wire format',async t=>{
+ for(const capabilities of [undefined,{}, {finishing:{version:0}},{finishing:{version:'1'}}]){
+  const h=harness(data({capabilities}));t.after(()=>h.dom.window.close());await h.open();const f=fill(h);assert.equal(f.elements.captions_enabled,undefined);assert.equal(h.q('[data-video-captions]'),null);h.queue.push(()=>Promise.reject(Error('stop')));submit(h,f);await tick();assert.equal(h.calls[1].options.body.spec.version,1);assert.equal(Object.hasOwn(h.calls[1].options.body.spec,'finishing'),false);
+ }
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=fill(h);assert.equal(h.q('[data-video-captions]').hidden,true);h.queue.push(()=>Promise.reject(Error('stop')));submit(h,f);await tick();assert.equal(h.calls[1].options.body.spec.version,1);assert.equal(Object.hasOwn(h.calls[1].options.body.spec,'finishing'),false);
+});
+
+test('captions create exact v2 RU Unicode multiline cues rounded to 24fps with explicit private GPU consents',async t=>{
+ const h=harness(captionData({post:{...data().post,language:'ru'}}));t.after(()=>h.dom.window.close());await h.open();const f=enableCaptions(h,fill(h),{count:2});
+ cue(f,0,0.03,1.04,'Точный текст\nЕщё строка');cue(f,1,1.05,2.125,'Финал 😀');h.queue.push(()=>Promise.reject(Error('stop')));submit(h,f);await tick();const body=h.calls[1].options.body;
+ assert.equal(body.confirmed,true);assert.equal(body.upscale_confirmed,true);assert.equal(body.spec.version,2);assert.deepEqual(body.spec.finishing,{version:1,style:'readable-v1',language:'ru',cues:[{start_frame:1,end_frame:25,text:'Точный текст\nЕщё строка'},{start_frame:25,end_frame:51,text:'Финал 😀'}]});assert.equal(body.spec.shots.length,1);assert.match(body.spec.shots[0].prompt,/green leaf/);
+ const notice=h.q('[data-video-captions]').textContent;assert.match(notice,/не передаётся в Kaggle/);assert.match(notice,/Озвучка не создаётся/);
+});
+
+test('caption toggle/count synchronize required fields, visibility, bounds and shot-duration updates',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=fill(h);assert.equal(f.elements.caption_text_0.required,false);enableCaptions(h,f,{count:3});
+ for(let i=0;i<12;i++){const visible=i<3;assert.equal(h.q(`[data-video-cue="${i}"]`).hidden,!visible);for(const name of ['caption_start_','caption_end_','caption_text_'])assert.equal(f.elements[name+i].required,visible);assert.equal(f.elements['caption_end_'+i].max,'2.125');}
+ f.elements.count.value='2';f.elements.count.dispatchEvent(new h.w.Event('change'));f.elements.frames_1.value='33';f.elements.frames_1.dispatchEvent(new h.w.Event('change'));assert.match(h.q('[data-video-duration]').textContent,/6\.25 сек/);assert.equal(f.elements.caption_end_0.max,'6.25');
+ f.elements.frames_0.value='33';f.elements.frames_0.dispatchEvent(new h.w.Event('change'));assert.match(h.q('[data-video-duration]').textContent,/8\.25 сек/);
+ f.elements.captions_enabled.checked=false;f.elements.captions_enabled.dispatchEvent(new h.w.Event('change'));assert.equal(h.q('[data-video-captions]').hidden,true);assert.ok([...h.q('[data-video-captions]').querySelectorAll('input,textarea')].every(el=>!el.required));
+});
+
+test('unused or disabled caption drafts cannot block native form validation or leak into v1 requests',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=enableCaptions(h,fill(h),{count:2});
+ cue(f,0,0,1,'Valid caption');cue(f,1,0,999,'Invalid inactive draft');assert.equal(f.checkValidity(),false);
+ f.elements.caption_count.value='1';f.elements.caption_count.dispatchEvent(new h.w.Event('change'));assert.equal(f.checkValidity(),true);
+ cue(f,0,0,999,'Disabled draft');f.elements.captions_enabled.checked=false;f.elements.captions_enabled.dispatchEvent(new h.w.Event('change'));assert.equal(f.checkValidity(),true);
+ h.queue.push(()=>Promise.reject(Error('retain form')));f.requestSubmit();await tick();assert.equal(h.calls.at(-1).options.body.spec.version,1);assert.equal(Object.hasOwn(h.calls.at(-1).options.body.spec,'finishing'),false);
+ assert.equal(f.checkValidity(),true);
+});
+
+test('caption validation blocks overlap, outside duration, invalid text, ASS and controls before API',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=enableCaptions(h,fill(h),{count:2});
+ const invalid=[[[0,1.5,'First'],[1,2,'Overlap']],[[0,1,'First'],[1,3,'Outside']],[[0,0,'Zero'],[1,2,'Next']],[[0,1,'a'.repeat(37)],[1,2,'Next']],[[0,1,'a'.repeat(36)+'\n'+'b'.repeat(36)],[1,2,'Next']],[[0,1,'one\ntwo\nthree'],[1,2,'Next']],[[0,1,'one\n '],[1,2,'Next']],[[0,1,'{\\pos(1,2)}'],[1,2,'Next']],[[0,1,'unsafe\u202e text'],[1,2,'Next']],[[0,1,'unsafe\t text'],[1,2,'Next']],[[0,1,''],[1,2,'Next']]];
+ for(const cues of invalid){cues.forEach((c,i)=>cue(f,i,...c));submit(h,f);await tick();assert.equal(h.calls.length,1,JSON.stringify(cues));assert.ok(h.q('[data-video-error]').textContent);}
+ cue(f,0,0,1,'First');cue(f,1,1,2,'Last');f.elements.caption_start_0.value='';submit(h,f);await tick();assert.equal(h.calls.length,1);
+});
+
+test('captions do not bypass required private GPU and upscale acknowledgements in normal submission',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=enableCaptions(h,fill(h),{language:'en'});cue(f,0,0,2,'Reviewed English title');f.elements.confirmed.checked=false;f.requestSubmit();await tick();assert.equal(h.calls.length,1);f.elements.confirmed.checked=true;f.elements.upscale_confirmed.checked=false;f.requestSubmit();await tick();assert.equal(h.calls.length,1);
+});
+
+test('caption commands freeze fields and reuse UUID for exact retry but change UUID after a cue edit',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const f=enableCaptions(h,fill(h),{language:'en'});cue(f,0,0,2,'Exact English caption');const pending=deferred();h.queue.push(()=>pending.promise);submit(h,f);submit(h,f);assert.equal(h.calls.length,2);assert.ok([...f.querySelectorAll('input,textarea,select,button')].every(x=>x.disabled));pending.reject(Error('lost response'));await tick();assert.ok([...f.querySelectorAll('input,textarea,select,button')].every(x=>!x.disabled));h.queue.push(()=>Promise.reject(Error('retry')));submit(h,f);await tick();assert.deepEqual(h.calls[2].options.body,h.calls[1].options.body);f.elements.caption_text_0.value='Edited English caption';h.queue.push(()=>Promise.reject(Error('retry')));submit(h,f);await tick();assert.notEqual(h.calls[3].options.body.request_id,h.calls[2].options.body.request_id);
+});
+
+test('late caption write leaves replacement window and its draft unchanged',async t=>{
+ const h=harness(captionData());t.after(()=>h.dom.window.close());await h.open();const old=enableCaptions(h,fill(h));cue(old,0,0,2,'Old caption');const pending=deferred();h.queue.push(()=>pending.promise);submit(h,old);await h.open();const current=enableCaptions(h,fill(h));cue(current,0,0,2,'New unsaved caption');const root=h.q('#pcsContentVideoRoot');pending.resolve({ok:true,job:job()});await tick();assert.equal(h.q('#pcsContentVideoRoot'),root);assert.equal(current.elements.caption_text_0.value,'New unsaved caption');assert.equal(current.elements.caption_text_0.disabled,false);submit(h,old);assert.equal(h.calls.filter(x=>x.op==='content-video-action').length,1);
+});
+
+test('persisted job caption text is displayed exactly and escaped without executable markup',async t=>{
+ const text='<img src=x onerror="alert(1)">\nТочный текст';const h=harness(captionData({jobs:[job({spec:{version:2,finishing:{version:1,style:'readable-v1',language:'ru',cues:[{start_frame:1,end_frame:25,text}]}}})]}));t.after(()=>h.dom.window.close());await h.open();const details=[...h.w.document.querySelectorAll('[data-video-job] details')].find(el=>el.textContent.includes('Заданные титры'));assert.ok(details);assert.ok(details.textContent.includes(text));assert.match(details.textContent,/0\.042–1\.042 сек/);assert.equal(details.querySelector('img'),null);assert.equal(details.querySelector('script'),null);
+});

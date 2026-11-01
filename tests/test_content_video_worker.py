@@ -23,6 +23,12 @@ def job():
   'spec':{'version':1,'mode':'TEXT_TO_VIDEO','preset':'landscape','fit':'contain',
    'shots':[{'prompt':'A green leaf moves in a light breeze.','negative_prompt':'text, logo','seed':42,'frames':17}]}}
 
+def caption_job():
+ value=job();value['spec']['version']=2
+ value['spec']['finishing']={'version':1,'style':'readable-v1','language':'ru',
+  'cues':[{'start_frame':3,'end_frame':40,'text':'Точный титр оператора'}]}
+ return value
+
 class API:
  def __init__(self,value=None):self.job=copy.deepcopy(value);self.calls=[]
  def call(self,action,**body):
@@ -40,6 +46,60 @@ class API:
   return {'ok':True,'job':copy.deepcopy(self.job)}
 
 class VideoWorkerTests(unittest.TestCase):
+ def test_caption_text_never_enters_kaggle_input_notebook_or_generation_digest(self):
+  value=caption_job();text=value['spec']['finishing']['cues'][0]['text']
+  minimized=provider_input(value)
+  self.assertEqual(minimized,provider_input(job()));self.assertEqual(minimized['spec']['version'],1)
+  self.assertNotIn('finishing',minimized['spec']);self.assertEqual(job_digest(minimized),job_digest(provider_input(job())))
+  with tempfile.TemporaryDirectory() as tmp:
+   meta=prepare(value,tmp);notebook=(Path(tmp)/meta['code_file']).read_text()
+   self.assertNotIn(text,notebook);self.assertNotIn('finishing',notebook)
+  for invalid in [None,{'version':1}]:
+   altered=caption_job();altered['spec']['finishing']=invalid
+   with self.assertRaises(ValueError):provider_input(altered)
+
+ def test_unsupported_caption_glyphs_fail_before_any_gpu_launch_with_safe_error(self):
+  value=caption_job();value['spec']['finishing']['cues'][0]['text']='漢字'
+  api=API(value);launches=[]
+  with tempfile.TemporaryDirectory() as tmp:
+   with self.assertRaisesRegex(WorkerError,'^CAPTION_GLYPH_UNSUPPORTED$'):
+    process_one(api,object(),tmp,build=lambda *args:None,launch=lambda *args:launches.append(1))
+  self.assertEqual(launches,[]);self.assertEqual([name for name,_ in api.calls],['claim','fail'])
+  self.assertEqual(api.job['error_code'],'CAPTION_GLYPH_UNSUPPORTED')
+
+ def test_real_caption_export_flows_through_worker_private_upload_contract(self):
+  import imageio_ffmpeg
+  api=API(caption_job());uploads=[]
+  with tempfile.TemporaryDirectory() as tmp:
+   root=Path(tmp)
+   def verify(value,directory):
+    directory.mkdir(parents=True,exist_ok=True);path=directory/'shot-001.mp4'
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-v','error','-f','lavfi','-i','testsrc2=size=320x256:rate=8','-frames:v','17','-c:v','libx264','-pix_fmt','yuv420p',str(path)],check=True,capture_output=True)
+    return {'fixture':'synthetic source, no GPU invocation'},[path]
+   def launch(*args):return {'kernel':'tatyanathai/pcs-legat-ai-avatar-pipeline','version':100,'ref':'tatyanathai/pcs-legat-ai-avatar-pipeline/100'}
+   def upload(url,path,**options):
+    data=path.read_bytes();uploads.append(options['mime'])
+    if options['mime']=='image/png':self.assertEqual(data[:8],bytes([137,80,78,71,13,10,26,10]))
+    return {'bytes':len(data),'sha256':hashlib.sha256(data).hexdigest()}
+   result=process_one(api,object(),root,launch=launch,await_gpu=lambda *args:None,download=lambda *args:None,verify=verify,upload=upload)
+   self.assertEqual(result['outcome'],'READY_FOR_REVIEW');self.assertEqual(api.job['artifact']['frames'],51)
+   self.assertEqual(uploads,['video/mp4','image/png']);self.assertNotIn('finishing',api.job['artifact'])
+   receipt=json.loads(next((root/'processed').glob('*.json')).read_text());self.assertTrue(receipt['finishing']['applied']);self.assertEqual(receipt['finishing']['cue_count'],1)
+
+ def test_caption_receipt_must_match_exact_preflight_not_only_a_pass_flag(self):
+  from captions import validate_finishing
+  value=caption_job();expected=validate_finishing(value['spec']['finishing'],width=1280,height=720,total_frames=51)
+  api=API(value);launches=[]
+  with tempfile.TemporaryDirectory() as tmp:
+   def launch(*args):
+    launches.append(1);return {'kernel':'tatyanathai/pcs-legat-ai-avatar-pipeline','version':100,'ref':'tatyanathai/pcs-legat-ai-avatar-pipeline/100'}
+   def verify(value,directory):
+    directory.mkdir(parents=True,exist_ok=True);path=directory/'shot-001.mp4';path.write_bytes(b'synthetic source fixture');return {},[path]
+   def adapt(*args):return {'outcome':'TECHNICAL_QA_PASSED','manual_review_required':True,'finishing':{**expected,'finishing_sha256':'0'*64}}
+   with self.assertRaisesRegex(WorkerError,'^VIDEO_POSTPROCESS_FAILED$'):
+    process_one(api,object(),tmp,build=lambda *args:None,launch=launch,await_gpu=lambda *args:None,download=lambda *args:None,verify=verify,adapt=adapt)
+  self.assertEqual(len(launches),1);self.assertFalse(any(name in ['upload','complete'] for name,_ in api.calls));self.assertEqual(api.job['stage'],'FAILED')
+
  def test_redirects_cannot_forward_ephemeral_bearer_or_signed_upload_requests(self):
   for method in ['GET','POST','PUT']:
    request=Request('https://nnlzgertmmxuteozoeel.supabase.co/private',method=method,

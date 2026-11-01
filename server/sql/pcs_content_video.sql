@@ -3,17 +3,44 @@ CREATE OR REPLACE FUNCTION pcs.content_video_permissions(p_actor text,p_permissi
  SELECT CASE WHEN p_actor ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN pcs.staff_context(p_actor::uuid)->'permissions' WHEN p_actor='pcs-manager-admin' THEN p_permissions ELSE NULL END
 $fn$;
 REVOKE ALL ON FUNCTION pcs.content_video_permissions(text,jsonb) FROM PUBLIC;
+CREATE OR REPLACE FUNCTION pcs.content_video_finishing_valid(p jsonb,p_frames integer) RETURNS boolean LANGUAGE plpgsql IMMUTABLE SET search_path=pg_catalog,public AS $fn$
+DECLARE cue jsonb; caption text; lines text[]; line text; previous_end integer:=0; cue_start integer; cue_end integer;
+BEGIN
+ IF jsonb_typeof(p) IS DISTINCT FROM 'object' OR p_frames IS NULL OR p_frames NOT BETWEEN 1 AND 297 THEN RETURN false;END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('version','style','language','cues')) OR p->'version' IS DISTINCT FROM '1'::jsonb OR p->>'style' IS DISTINCT FROM 'readable-v1' OR coalesce(p->>'language','') NOT IN ('ru','en') OR jsonb_typeof(p->'cues') IS DISTINCT FROM 'array' THEN RETURN false;END IF;
+ IF jsonb_array_length(p->'cues') NOT BETWEEN 1 AND 12 THEN RETURN false;END IF;
+ FOR cue IN SELECT value FROM jsonb_array_elements(p->'cues') LOOP
+  IF jsonb_typeof(cue) IS DISTINCT FROM 'object' THEN RETURN false;END IF;
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(cue) k WHERE k NOT IN ('start_frame','end_frame','text')) OR jsonb_typeof(cue->'start_frame') IS DISTINCT FROM 'number' OR jsonb_typeof(cue->'end_frame') IS DISTINCT FROM 'number' OR coalesce(cue->>'start_frame','') !~ '^(0|[1-9]\d{0,2})$' OR coalesce(cue->>'end_frame','') !~ '^[1-9]\d{0,2}$' OR jsonb_typeof(cue->'text') IS DISTINCT FROM 'string' THEN RETURN false;END IF;
+  cue_start:=(cue->>'start_frame')::integer;cue_end:=(cue->>'end_frame')::integer;
+  IF cue_start<previous_end OR cue_end<=cue_start OR cue_end>p_frames THEN RETURN false;END IF;
+  caption:=cue->>'text';
+  IF length(caption)>72 OR position('{' in caption)>0 OR position('}' in caption)>0 OR position(chr(92) in caption)>0 OR caption ~ U&'[\0001-\0009\000B-\001F\007F-\009F\00AD\061C\200B-\200F\2028-\202E\2060-\206F\FEFF]' THEN RETURN false;END IF;
+  lines:=string_to_array(caption,chr(10));IF coalesce(array_length(lines,1),0) NOT BETWEEN 1 AND 2 THEN RETURN false;END IF;
+  FOREACH line IN ARRAY lines LOOP
+   IF length(line)>36 OR line ~ U&'^[\0020\00A0\1680\2000-\200A\202F\205F\3000]*$' THEN RETURN false;END IF;
+  END LOOP;
+  previous_end:=cue_end;
+ END LOOP;
+ RETURN true;
+END $fn$;
+REVOKE ALL ON FUNCTION pcs.content_video_finishing_valid(jsonb,integer) FROM PUBLIC;
 CREATE OR REPLACE FUNCTION pcs.content_video_spec_valid(p jsonb,p_platform text) RETURNS boolean LANGUAGE plpgsql IMMUTABLE SET search_path=pg_catalog,public AS $fn$
 DECLARE shot jsonb; total integer:=0;
 BEGIN
- IF jsonb_typeof(p) IS DISTINCT FROM 'object' OR EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('version','mode','preset','fit','shots')) OR p->'version' IS DISTINCT FROM '1'::jsonb OR p->>'mode' IS DISTINCT FROM 'TEXT_TO_VIDEO' OR coalesce(p->>'fit','') NOT IN ('contain','cover') OR jsonb_typeof(p->'shots') IS DISTINCT FROM 'array' THEN RETURN false;END IF;
+ IF jsonb_typeof(p) IS DISTINCT FROM 'object' THEN RETURN false;END IF;
+ IF p->'version' IS DISTINCT FROM '1'::jsonb AND p->'version' IS DISTINCT FROM '2'::jsonb THEN RETURN false;END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('version','mode','preset','fit','shots','finishing') OR (p->'version'='1'::jsonb AND k='finishing')) OR p->>'mode' IS DISTINCT FROM 'TEXT_TO_VIDEO' OR coalesce(p->>'fit','') NOT IN ('contain','cover') OR jsonb_typeof(p->'shots') IS DISTINCT FROM 'array' THEN RETURN false;END IF;
  IF (CASE p_platform WHEN 'instagram' THEN p->>'preset' IN ('reel','story','feed') WHEN 'tiktok' THEN p->>'preset'='tiktok' WHEN 'youtube' THEN p->>'preset' IN ('shorts','landscape') WHEN 'telegram' THEN p->>'preset' IN ('landscape','story') WHEN 'website' THEN p->>'preset'='landscape' WHEN 'facebook' THEN p->>'preset' IN ('reel','story','feed','landscape') ELSE false END) IS DISTINCT FROM true THEN RETURN false;END IF;
  IF jsonb_array_length(p->'shots') NOT BETWEEN 1 AND 3 THEN RETURN false;END IF;
  FOR shot IN SELECT value FROM jsonb_array_elements(p->'shots') LOOP
-  IF jsonb_typeof(shot) IS DISTINCT FROM 'object' OR EXISTS(SELECT 1 FROM jsonb_object_keys(shot) k WHERE k NOT IN ('prompt','negative_prompt','seed','frames')) OR jsonb_typeof(shot->'prompt') IS DISTINCT FROM 'string' OR length(btrim(shot->>'prompt')) NOT BETWEEN 10 AND 2000 OR jsonb_typeof(shot->'negative_prompt') IS DISTINCT FROM 'string' OR length(shot->>'negative_prompt')>1000 OR jsonb_typeof(shot->'seed') IS DISTINCT FROM 'number' OR coalesce(shot->>'seed','') !~ '^\d{1,10}$' OR (shot->>'seed')::bigint>2147483647 OR jsonb_typeof(shot->'frames') IS DISTINCT FROM 'number' OR shot->'frames' IS NULL OR shot->'frames' NOT IN ('17'::jsonb,'33'::jsonb) THEN RETURN false;END IF;
+  IF jsonb_typeof(shot) IS DISTINCT FROM 'object' THEN RETURN false;END IF;
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(shot) k WHERE k NOT IN ('prompt','negative_prompt','seed','frames')) OR jsonb_typeof(shot->'prompt') IS DISTINCT FROM 'string' OR length(btrim(shot->>'prompt')) NOT BETWEEN 10 AND 2000 OR jsonb_typeof(shot->'negative_prompt') IS DISTINCT FROM 'string' OR length(shot->>'negative_prompt')>1000 OR jsonb_typeof(shot->'seed') IS DISTINCT FROM 'number' OR coalesce(shot->>'seed','') !~ '^\d{1,10}$' OR jsonb_typeof(shot->'frames') IS DISTINCT FROM 'number' OR shot->'frames' IS NULL OR shot->'frames' NOT IN ('17'::jsonb,'33'::jsonb) THEN RETURN false;END IF;
+  IF (shot->>'seed')::bigint>2147483647 THEN RETURN false;END IF;
   total:=total+(shot->>'frames')::integer;
  END LOOP;
- RETURN total<=99;
+ IF total>99 THEN RETURN false;END IF;
+ RETURN p->'version'='1'::jsonb OR pcs.content_video_finishing_valid(p->'finishing',total*3);
 END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_video_spec_valid(jsonb,text) FROM PUBLIC;
 CREATE OR REPLACE FUNCTION pcs.content_video_job(p public.pcs_workflow_outbox) RETURNS jsonb LANGUAGE sql STABLE SET search_path=pg_catalog,public AS $fn$
@@ -144,7 +171,7 @@ BEGIN
    UPDATE public.pcs_workflow_outbox SET status='SENT',sent_at=clock_timestamp(),last_error=NULL WHERE id=job.id;
   ELSIF p_action='fail' THEN
    error_code:=p->>'error_code';
-   IF error_code NOT IN ('VIDEO_PREPARATION_FAILED','GPU_LAUNCH_UNKNOWN','VIDEO_GENERATION_FAILED','VIDEO_POSTPROCESS_FAILED','VIDEO_UPLOAD_FAILED','WORKER_INTERRUPTED','QA_FAILED','PROVIDER_UNAVAILABLE') OR error_code IS NULL THEN RAISE EXCEPTION 'content_video_error_invalid' USING ERRCODE='22023';END IF;
+   IF error_code NOT IN ('VIDEO_PREPARATION_FAILED','GPU_LAUNCH_UNKNOWN','VIDEO_GENERATION_FAILED','VIDEO_POSTPROCESS_FAILED','VIDEO_UPLOAD_FAILED','WORKER_INTERRUPTED','QA_FAILED','PROVIDER_UNAVAILABLE','CAPTION_GLYPH_UNSUPPORTED','CAPTION_LINE_TOO_WIDE','CAPTION_FONT_UNAVAILABLE','VIDEO_CAPTIONS_INVALID') OR error_code IS NULL THEN RAISE EXCEPTION 'content_video_error_invalid' USING ERRCODE='22023';END IF;
    patch:=jsonb_build_object('stage','FAILED','failure_cause',error_code);
    IF job.payload->>'stage'='GENERATING' THEN error_code:='GPU_LAUNCH_UNKNOWN';END IF;
    UPDATE public.pcs_workflow_outbox SET status='FAILED',last_error=error_code WHERE id=job.id;
