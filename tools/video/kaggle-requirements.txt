@@ -1,0 +1,3 @@
+# Kaggle 2.2.5 imports six in models/upload_file.py without declaring it.
+kaggle==2.2.5
+six==1.17.0
