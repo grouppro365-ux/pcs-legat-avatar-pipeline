@@ -2,6 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {Readable} from 'node:stream';
+import busboy from 'busboy';
 import {deliverTelegramPublication,dispatchContentPublication,scheduleContentPublication} from '../server/supabase/pcs-manager-live2/content-publisher.mjs';
 import {readPublicationVideo,videoObjectPath} from '../server/supabase/pcs-manager-live2/content-video-storage.mjs';
 import {publicationTelegramApi,videoPublicationTelegramApi} from '../server/supabase/pcs-manager-live2/telegram-api.mjs';
@@ -10,15 +12,31 @@ const token='123456:synthetic_private_token_abcdefghijklmnopqrstuvwxyz';
 const bytes=Buffer.alloc(1024);bytes.write('ftyp',4);
 const digest=createHash('sha256').update(bytes).digest('hex');
 function job(){const snapshot={id,claim_id:claim,version:4,revision:2,brand_version:3,spec:{preset:'landscape',shots:[{frames:17}]},review:{decision:'APPROVED',artifact_sha256:digest}};snapshot.artifact={bucket:'pcs-content-video',path:videoObjectPath(snapshot,'video'),bytes:bytes.length,sha256:digest,width:1280,height:720,fps:24,frames:51,duration_seconds:2.125,decode_verified:true,codec:'h264',technical_qa:'PASSED',manual_review_required:true,source_model:'Lightricks/LTX-Video-0.9.5',model_revision:'e58e28c39631af4d1468ee57a853764e11c1d37e',manifest_sha256:'a'.repeat(64)};return{id,claim_id:claim,post_id:id,revision:2,media_kind:'VIDEO',video_snapshot:snapshot,username:'public_channel',chat_id:'-10012345678',bot_id:'123456',body:'Одобренная подпись — exact',claimed_at:new Date().toISOString()};}
+// Parse the original grammY wire stream with an independent RFC multipart parser.
+// Node 22's Response.formData rejects grammY's legal compact header whitespace.
+async function parseMultipart(init){
+ const parser=busboy({headers:init.headers,limits:{files:1,fileSize:25*1024*1024,fields:10,fieldSize:8192}}),parts=new Map();
+ return await new Promise((resolve,reject)=>{
+  parser.on('field',(name,value,info)=>{if(info.valueTruncated||parts.has(name))return reject(Error('multipart_field_invalid'));parts.set(name,value);});
+  parser.on('file',(name,stream,info)=>{
+   const chunks=[];stream.on('data',chunk=>chunks.push(chunk));stream.once('limit',()=>reject(Error('multipart_file_too_large')));stream.once('error',reject);stream.once('end',()=>{if(parts.has(name))return reject(Error('multipart_file_duplicate'));parts.set(name,new File(chunks,info.filename,{type:info.mimeType}));});
+  });
+  for(const event of ['filesLimit','fieldsLimit','partsLimit'])parser.once(event,()=>reject(Error('multipart_limit')));
+  parser.once('error',reject);parser.once('close',()=>resolve(parts));
+  // grammY/web supplies a native ReadableStream, used unchanged by Deno fetch.
+  Readable.fromWeb(init.body).once('error',reject).pipe(parser);
+ });
+}
 function fixture({j=job(),data=bytes,downloadError=false,downloadThrow=false,badTarget=false,sendThrow=false,sendStatus=200,resultChange={},envelope}={}){
- const calls=[],downloads=[],uploads=[];let sends=0;
+ const calls=[],downloads=[],uploads=[];let sends=0;let multipartError;
  const result={message_id:42,chat:{id:-10012345678,type:'channel',username:j.username},caption:j.body,date:Math.floor(Date.now()/1000),video:{file_id:'telegram-file',file_unique_id:'unique-file',width:1280,height:720,duration:2,file_size:1024},...resultChange};
  const storage={from(bucket){assert.equal(bucket,'pcs-content-video');return{async download(path){downloads.push(path);if(downloadThrow)throw Error('private storage detail');return downloadError?{error:Error('private storage detail')}:{data:new Blob([data])};}};}};
- const transport=async(url,init)=>{calls.push({url,init});const method=url.split('/').at(-1);if(method==='pcs_secret_get')return Response.json(token);if(method==='getMe')return Response.json({ok:true,result:{id:123456,is_bot:true}});if(method==='getChat')return Response.json({ok:true,result:{id:-10012345678,type:'channel',username:j.username,title:'PCS'}});if(method==='getChatMember')return Response.json({ok:true,result:{user:{id:123456},status:'administrator',can_post_messages:!badTarget}});assert.equal(method,'sendVideo');sends++;uploads.push(await new Response(init.body,{headers:init.headers}).formData());if(sendThrow)throw Error('private unknown '+token);return Response.json(envelope??{ok:true,result},{status:sendStatus});};
- return{j,storage,transport,downloads,calls,uploads,date:result.date,get sends(){return sends;}};
+ const transport=async(url,init)=>{calls.push({url,init});const method=url.split('/').at(-1);if(method==='pcs_secret_get')return Response.json(token);if(method==='getMe')return Response.json({ok:true,result:{id:123456,is_bot:true}});if(method==='getChat')return Response.json({ok:true,result:{id:-10012345678,type:'channel',username:j.username,title:'PCS'}});if(method==='getChatMember')return Response.json({ok:true,result:{user:{id:123456},status:'administrator',can_post_messages:!badTarget}});assert.equal(method,'sendVideo');sends++;try{uploads.push(await parseMultipart(init));}catch(error){multipartError=error;throw error;}if(sendThrow)throw Error('private unknown '+token);return Response.json(envelope??{ok:true,result},{status:sendStatus});};
+ return{j,storage,transport,downloads,calls,uploads,date:result.date,get multipartError(){return multipartError;},get sends(){return sends;}};
 }
 test('video publisher uploads the verified private bytes exactly once using upstream multipart InputFile',async()=>{
  const h=fixture();const out=await deliverTelegramPublication('https://service.test','key',h.j,h.transport,{storage:h.storage});
+ assert.ifError(h.multipartError);
  assert.deepEqual(out,{outcome:'SENT',chat_id:h.j.chat_id,caption:h.j.body,message_id:'42',date:h.date,artifact_sha256:digest,video:{file_id:'telegram-file',file_unique_id:'unique-file',width:1280,height:720,duration:2,file_size:1024}});
  assert.equal(h.sends,1);assert.deepEqual(h.downloads,[h.j.video_snapshot.artifact.path]);
  const form=h.uploads[0],fileEntries=[...form.entries()].filter(([,v])=>typeof v!=='string');assert.equal(fileEntries.length,1);
