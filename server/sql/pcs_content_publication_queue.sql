@@ -1,4 +1,4 @@
--- Durable text publication jobs within the canonical content workflow.
+-- Durable text and approved video publication jobs within the canonical content workflow.
 -- This migration performs no Telegram requests and starts no scheduler.
 ALTER TABLE pcs.content_posts ADD COLUMN IF NOT EXISTS publication_target_id uuid REFERENCES pcs.content_targets(id);
 CREATE TABLE IF NOT EXISTS pcs.content_publication_jobs (
@@ -11,20 +11,25 @@ CREATE TABLE IF NOT EXISTS pcs.content_publication_jobs (
  provider_receipt jsonb,public_url text,last_error text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),
  UNIQUE(post_id,revision),FOREIGN KEY(post_id,revision) REFERENCES pcs.content_revisions(post_id,revision)
 );
+ALTER TABLE pcs.content_publication_jobs ADD COLUMN IF NOT EXISTS media_kind text NOT NULL DEFAULT 'TEXT';
+ALTER TABLE pcs.content_publication_jobs ADD COLUMN IF NOT EXISTS video_snapshot jsonb;
+ALTER TABLE pcs.content_publication_jobs DROP CONSTRAINT IF EXISTS content_publication_jobs_media_check;
+ALTER TABLE pcs.content_publication_jobs ADD CONSTRAINT content_publication_jobs_media_check CHECK((media_kind='TEXT' AND video_snapshot IS NULL) OR (media_kind='VIDEO' AND video_snapshot IS NOT NULL AND jsonb_typeof(video_snapshot)='object'));
 CREATE INDEX IF NOT EXISTS content_publication_jobs_due ON pcs.content_publication_jobs(scheduled_at,id) WHERE state='QUEUED';
 REVOKE ALL ON pcs.content_publication_jobs FROM PUBLIC;
 ALTER TABLE pcs.content_posts DROP CONSTRAINT IF EXISTS content_posts_status_check;
 ALTER TABLE pcs.content_posts ADD CONSTRAINT content_posts_status_check CHECK(status IN ('DRAFT','REVIEW','APPROVED','READY','PUBLICATION_REPORTED','PUBLICATION_SENT'));
 CREATE OR REPLACE FUNCTION pcs.content_publication_action(p_action text,p jsonb,p_actor text,p_permissions jsonb) RETURNS jsonb
 LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
-DECLARE permissions jsonb; rid uuid; payload jsonb; prior pcs.content_commands; post pcs.content_posts; rev pcs.content_revisions; brand pcs.content_brands; target pcs.content_targets; job pcs.content_publication_jobs; receipt jsonb; prior_job jsonb;
+DECLARE permissions jsonb; rid uuid; payload jsonb; prior pcs.content_commands; post pcs.content_posts; rev pcs.content_revisions; brand pcs.content_brands; target pcs.content_targets; job pcs.content_publication_jobs; receipt jsonb; prior_job jsonb; video public.pcs_workflow_outbox; frozen jsonb;
 BEGIN
  IF p_actor ~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN permissions:=pcs.staff_context(p_actor::uuid)->'permissions';
  ELSIF p_actor='pcs-manager-admin' THEN permissions:=p_permissions;ELSE RAISE EXCEPTION 'content_actor_invalid' USING ERRCODE='42501';END IF;
  IF jsonb_typeof(permissions) IS DISTINCT FROM 'array' OR NOT coalesce(permissions?'*' OR permissions?'content.approve',false) THEN RAISE EXCEPTION 'content_forbidden' USING ERRCODE='42501';END IF;
- IF p_action NOT IN ('schedule','cancel') OR p_action IS NULL OR jsonb_typeof(p) IS DISTINCT FROM 'object' OR coalesce(p->>'request_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR coalesce(p->>'id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR jsonb_typeof(p->'expected_version') IS DISTINCT FROM 'number' OR coalesce(p->>'expected_version','') !~ '^[1-9][0-9]{0,8}$' THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
- IF p_action='schedule' THEN
-  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('request_id','id','expected_version','target_id','target_version','scheduled_at','publication_confirmed')) OR p->'publication_confirmed' IS DISTINCT FROM 'true'::jsonb OR coalesce(p->>'target_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR jsonb_typeof(p->'target_version') IS DISTINCT FROM 'number' OR coalesce(p->>'target_version','') !~ '^[1-9][0-9]{0,8}$' OR coalesce(p->>'scheduled_at','') !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$' THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
+ IF p_action NOT IN ('schedule','schedule-video','cancel') OR p_action IS NULL OR jsonb_typeof(p) IS DISTINCT FROM 'object' OR coalesce(p->>'request_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR coalesce(p->>'id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR jsonb_typeof(p->'expected_version') IS DISTINCT FROM 'number' OR coalesce(p->>'expected_version','') !~ '^[1-9][0-9]{0,8}$' THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
+ IF p_action IN ('schedule','schedule-video') THEN
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('request_id','id','expected_version','target_id','target_version','scheduled_at','publication_confirmed') AND NOT (p_action='schedule-video' AND k IN ('video_job_id','video_version','artifact_sha256','video_confirmed'))) OR p->'publication_confirmed' IS DISTINCT FROM 'true'::jsonb OR coalesce(p->>'target_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR jsonb_typeof(p->'target_version') IS DISTINCT FROM 'number' OR coalesce(p->>'target_version','') !~ '^[1-9][0-9]{0,8}$' OR coalesce(p->>'scheduled_at','') !~ '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$' THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
+  IF p_action='schedule-video' AND (coalesce(p->>'video_job_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' OR jsonb_typeof(p->'video_version') IS DISTINCT FROM 'number' OR coalesce(p->>'video_version','') !~ '^[1-9][0-9]{0,8}$' OR coalesce(p->>'artifact_sha256','') !~ '^[a-f0-9]{64}$' OR p->'video_confirmed' IS DISTINCT FROM 'true'::jsonb) THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
  ELSE
   IF EXISTS(SELECT 1 FROM jsonb_object_keys(p) k WHERE k NOT IN ('request_id','id','expected_version','job_id')) OR coalesce(p->>'job_id','') !~* '^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$' THEN RAISE EXCEPTION 'content_publication_invalid' USING ERRCODE='22023';END IF;
  END IF;
@@ -34,17 +39,22 @@ BEGIN
  SELECT * INTO post FROM pcs.content_posts WHERE id=(p->>'id')::uuid FOR UPDATE;
  IF NOT FOUND OR post.version IS DISTINCT FROM (p->>'expected_version')::integer THEN RAISE EXCEPTION 'content_version_conflict' USING ERRCODE='40001';END IF;
  SELECT * INTO brand FROM pcs.content_brands WHERE id=post.brand_id FOR UPDATE;
- IF p_action='schedule' THEN
+ IF p_action IN ('schedule','schedule-video') THEN
   SELECT * INTO rev FROM pcs.content_revisions WHERE post_id=post.id ORDER BY revision DESC LIMIT 1;
   SELECT * INTO target FROM pcs.content_targets WHERE id=(p->>'target_id')::uuid FOR UPDATE;
   IF target.id IS NULL OR target.brand_id<>post.brand_id OR NOT target.enabled OR target.version IS DISTINCT FROM (p->>'target_version')::integer OR target.verified_at IS NULL THEN RAISE EXCEPTION 'content_publication_target_changed' USING ERRCODE='40001';END IF;
   SELECT * INTO job FROM pcs.content_publication_jobs WHERE post_id=post.id AND revision=rev.revision FOR UPDATE;prior_job:=to_jsonb(job);
   IF NOT (post.status='APPROVED' OR (post.status='READY' AND job.state IN ('REJECTED','BLOCKED'))) OR post.approved_revision IS DISTINCT FROM rev.revision OR rev.brand_version<>brand.version OR rev.platform<>'telegram' OR length(rev.body)>4096 OR (p->>'scheduled_at')::timestamptz<=clock_timestamp() OR NOT isfinite((p->>'scheduled_at')::timestamptz) THEN RAISE EXCEPTION 'content_publication_approval_required' USING ERRCODE='22023';END IF;
+  IF p_action='schedule-video' THEN
+   SELECT * INTO video FROM public.pcs_workflow_outbox WHERE id=(p->>'video_job_id')::uuid FOR UPDATE;
+   IF video.id IS NULL OR video.event_type IS DISTINCT FROM 'CONTENT_VIDEO_GENERATION' OR video.aggregate_type IS DISTINCT FROM 'CONTENT_POST' OR video.aggregate_id IS DISTINCT FROM post.id OR video.status IS DISTINCT FROM 'SENT' OR video.payload->>'stage' IS DISTINCT FROM 'READY' OR video.payload->>'review_status' IS DISTINCT FROM 'APPROVED' OR video.payload#>>'{review,decision}' IS DISTINCT FROM 'APPROVED' OR video.payload#>>'{review,artifact_sha256}' IS DISTINCT FROM p->>'artifact_sha256' OR video.payload#>>'{artifact,sha256}' IS DISTINCT FROM p->>'artifact_sha256' OR video.payload->'version' IS DISTINCT FROM p->'video_version' OR NOT pcs.content_video_current(video) OR length(btrim(rev.body))=0 OR length(rev.body)>1024 THEN RAISE EXCEPTION 'content_publication_video_changed' USING ERRCODE='40001';END IF;
+   frozen:=jsonb_build_object('id',video.id,'version',video.payload->'version','claim_id',video.payload->'claim_id','revision',video.payload->'revision','brand_version',video.payload->'brand_version','spec',video.payload->'spec','artifact',video.payload->'artifact','review',video.payload->'review');
+  END IF;
   IF job.id IS NOT NULL AND job.state NOT IN ('CANCELLED','REJECTED','BLOCKED') THEN RAISE EXCEPTION 'content_publication_job_locked' USING ERRCODE='40001';END IF;
   IF job.id IS NULL THEN
-   INSERT INTO pcs.content_publication_jobs(post_id,revision,brand_id,brand_version,target_id,target_version,username,chat_id,bot_id,body,scheduled_at) VALUES(post.id,rev.revision,post.brand_id,brand.version,target.id,target.version,target.username,target.chat_id,target.bot_id,rev.body,(p->>'scheduled_at')::timestamptz) RETURNING * INTO job;
+   INSERT INTO pcs.content_publication_jobs(post_id,revision,brand_id,brand_version,target_id,target_version,username,chat_id,bot_id,body,scheduled_at,media_kind,video_snapshot) VALUES(post.id,rev.revision,post.brand_id,brand.version,target.id,target.version,target.username,target.chat_id,target.bot_id,rev.body,(p->>'scheduled_at')::timestamptz,CASE WHEN p_action='schedule-video' THEN 'VIDEO' ELSE 'TEXT' END,frozen) RETURNING * INTO job;
   ELSE
-   UPDATE pcs.content_publication_jobs SET brand_version=brand.version,target_id=target.id,target_version=target.version,username=target.username,chat_id=target.chat_id,bot_id=target.bot_id,body=rev.body,scheduled_at=(p->>'scheduled_at')::timestamptz,state='QUEUED',claim_id=NULL,claimed_at=NULL,completed_at=NULL,provider_receipt=NULL,public_url=NULL,last_error=NULL,updated_at=clock_timestamp() WHERE id=job.id RETURNING * INTO job;
+   UPDATE pcs.content_publication_jobs SET media_kind=CASE WHEN p_action='schedule-video' THEN 'VIDEO' ELSE 'TEXT' END,video_snapshot=frozen,brand_version=brand.version,target_id=target.id,target_version=target.version,username=target.username,chat_id=target.chat_id,bot_id=target.bot_id,body=rev.body,scheduled_at=(p->>'scheduled_at')::timestamptz,state='QUEUED',claim_id=NULL,claimed_at=NULL,completed_at=NULL,provider_receipt=NULL,public_url=NULL,last_error=NULL,updated_at=clock_timestamp() WHERE id=job.id RETURNING * INTO job;
   END IF;
   UPDATE pcs.content_posts SET status='READY',scheduled_at=job.scheduled_at,publication_target_id=target.id,version=version+1,updated_at=clock_timestamp() WHERE id=post.id RETURNING * INTO post;
  ELSE
@@ -60,7 +70,7 @@ END $fn$;
 REVOKE ALL ON FUNCTION pcs.content_publication_action(text,jsonb,text,jsonb) FROM PUBLIC;
 CREATE OR REPLACE FUNCTION pcs.content_claim_publication() RETURNS jsonb
 LANGUAGE plpgsql SET search_path=pg_catalog,public AS $fn$
-DECLARE post pcs.content_posts; job pcs.content_publication_jobs; target pcs.content_targets; rev pcs.content_revisions; brand_version integer; reason text;
+DECLARE post pcs.content_posts; job pcs.content_publication_jobs; target pcs.content_targets; rev pcs.content_revisions; brand_version integer; reason text; video public.pcs_workflow_outbox; frozen jsonb;
 BEGIN
  IF current_user<>pg_get_userbyid((SELECT proowner FROM pg_proc WHERE oid='pcs.content_claim_publication()'::regprocedure)) THEN RAISE EXCEPTION 'content_internal_only' USING ERRCODE='42501';END IF;
  SELECT p.* INTO post FROM pcs.content_posts p WHERE EXISTS(SELECT 1 FROM pcs.content_publication_jobs j WHERE j.post_id=p.id AND j.state='QUEUED' AND j.scheduled_at<=clock_timestamp()) ORDER BY (SELECT min(j.scheduled_at) FROM pcs.content_publication_jobs j WHERE j.post_id=p.id AND j.state='QUEUED'),p.id LIMIT 1 FOR UPDATE SKIP LOCKED;
@@ -73,6 +83,11 @@ BEGIN
  IF post.status<>'READY' OR post.publication_target_id IS DISTINCT FROM job.target_id THEN reason:='post_not_ready';
  ELSIF rev.revision IS DISTINCT FROM job.revision OR rev.brand_version IS DISTINCT FROM job.brand_version OR brand_version IS DISTINCT FROM job.brand_version OR post.approved_revision IS DISTINCT FROM job.revision OR rev.platform<>'telegram' OR rev.body<>job.body THEN reason:='approval_changed';
  ELSIF target.id IS NULL OR NOT target.enabled OR target.brand_id<>job.brand_id OR target.version<>job.target_version OR target.username<>job.username OR target.chat_id<>job.chat_id OR target.bot_id<>job.bot_id OR target.verified_at IS NULL THEN reason:='target_changed';END IF;
+ IF reason IS NULL AND job.media_kind='VIDEO' THEN
+  SELECT * INTO video FROM public.pcs_workflow_outbox WHERE id=(job.video_snapshot->>'id')::uuid FOR UPDATE;
+  frozen:=jsonb_build_object('id',video.id,'version',video.payload->'version','claim_id',video.payload->'claim_id','revision',video.payload->'revision','brand_version',video.payload->'brand_version','spec',video.payload->'spec','artifact',video.payload->'artifact','review',video.payload->'review');
+  IF video.id IS NULL OR video.event_type IS DISTINCT FROM 'CONTENT_VIDEO_GENERATION' OR video.aggregate_type IS DISTINCT FROM 'CONTENT_POST' OR video.aggregate_id IS DISTINCT FROM post.id OR video.status IS DISTINCT FROM 'SENT' OR video.payload->>'stage' IS DISTINCT FROM 'READY' OR video.payload->>'review_status' IS DISTINCT FROM 'APPROVED' OR video.payload#>>'{review,decision}' IS DISTINCT FROM 'APPROVED' OR video.payload#>>'{review,artifact_sha256}' IS DISTINCT FROM video.payload#>>'{artifact,sha256}' OR frozen IS DISTINCT FROM job.video_snapshot OR NOT pcs.content_video_current(video) THEN reason:='video_changed';END IF;
+ END IF;
  IF reason IS NOT NULL THEN
   UPDATE pcs.content_publication_jobs SET state='BLOCKED',last_error=reason,completed_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=job.id RETURNING * INTO job;
   -- A definitely unsent job returns to operator approval controls.
@@ -97,12 +112,18 @@ BEGIN
  IF job.state<>'SENDING' OR jsonb_typeof(p_result) IS DISTINCT FROM 'object' OR coalesce(p_result->>'outcome','') NOT IN ('SENT','REJECTED','UNKNOWN') THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
  outcome:=p_result->>'outcome';reason:=p_result->>'reason';
  IF outcome='SENT' THEN
+  IF job.media_kind='TEXT' THEN
   IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_result) k WHERE k NOT IN ('outcome','chat_id','text','message_id','date')) OR (SELECT count(*) FROM jsonb_object_keys(p_result))<>5 OR jsonb_typeof(p_result->'chat_id') IS DISTINCT FROM 'string' OR p_result->>'chat_id' IS DISTINCT FROM job.chat_id OR jsonb_typeof(p_result->'text') IS DISTINCT FROM 'string' OR p_result->>'text' IS DISTINCT FROM job.body OR jsonb_typeof(p_result->'message_id') IS DISTINCT FROM 'string' OR coalesce(p_result->>'message_id','') !~ '^[1-9][0-9]{0,14}$' OR jsonb_typeof(p_result->'date') IS DISTINCT FROM 'number' OR coalesce(p_result->>'date','') !~ '^[1-9][0-9]{0,15}$' OR (p_result->>'date')::numeric>9007199254740991 OR (p_result->>'date')::numeric>extract(epoch FROM clock_timestamp())+300 OR (p_result->>'date')::numeric<extract(epoch FROM job.claimed_at)-300 THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
+  ELSE
+   IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_result) k WHERE k NOT IN ('outcome','chat_id','caption','message_id','date','artifact_sha256','video')) OR (SELECT count(*) FROM jsonb_object_keys(p_result))<>7 OR jsonb_typeof(p_result->'chat_id') IS DISTINCT FROM 'string' OR p_result->>'chat_id' IS DISTINCT FROM job.chat_id OR jsonb_typeof(p_result->'caption') IS DISTINCT FROM 'string' OR p_result->>'caption' IS DISTINCT FROM job.body OR p_result->>'artifact_sha256' IS DISTINCT FROM job.video_snapshot#>>'{artifact,sha256}' OR jsonb_typeof(p_result->'message_id') IS DISTINCT FROM 'string' OR coalesce(p_result->>'message_id','') !~ '^[1-9][0-9]{0,14}$' OR jsonb_typeof(p_result->'date') IS DISTINCT FROM 'number' OR coalesce(p_result->>'date','') !~ '^[1-9][0-9]{0,15}$' OR (p_result->>'date')::numeric>9007199254740991 OR (p_result->>'date')::numeric>extract(epoch FROM clock_timestamp())+300 OR (p_result->>'date')::numeric<extract(epoch FROM job.claimed_at)-300 THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
+   IF jsonb_typeof(p_result->'video') IS DISTINCT FROM 'object' THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
+   IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_result->'video') k WHERE k NOT IN ('file_id','file_unique_id','width','height','duration','file_size')) OR (SELECT count(*) FROM jsonb_object_keys(p_result->'video'))<>6 OR jsonb_typeof(p_result#>'{video,file_id}') IS DISTINCT FROM 'string' OR length(btrim(p_result#>>'{video,file_id}')) NOT BETWEEN 1 AND 1024 OR jsonb_typeof(p_result#>'{video,file_unique_id}') IS DISTINCT FROM 'string' OR length(btrim(p_result#>>'{video,file_unique_id}')) NOT BETWEEN 1 AND 256 OR p_result#>'{video,width}' IS DISTINCT FROM job.video_snapshot#>'{artifact,width}' OR p_result#>'{video,height}' IS DISTINCT FROM job.video_snapshot#>'{artifact,height}' OR jsonb_typeof(p_result#>'{video,duration}') IS DISTINCT FROM 'number' OR coalesce(p_result#>>'{video,duration}','') !~ '^[0-9]{1,3}$' OR abs((p_result#>>'{video,duration}')::numeric-(job.video_snapshot#>>'{artifact,duration_seconds}')::numeric)>1 OR (p_result#>'{video,file_size}' IS DISTINCT FROM 'null'::jsonb AND (jsonb_typeof(p_result#>'{video,file_size}') IS DISTINCT FROM 'number' OR coalesce(p_result#>>'{video,file_size}','') !~ '^[1-9][0-9]{0,15}$' OR (p_result#>>'{video,file_size}')::numeric>9007199254740991)) THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
+  END IF;
  ELSE
-  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_result) k WHERE k NOT IN ('outcome','reason')) OR (SELECT count(*) FROM jsonb_object_keys(p_result))<>2 OR (outcome='REJECTED' AND coalesce(reason,'') NOT IN ('before_send_rejected','target_preflight_failed','provider_rejected')) OR (outcome='UNKNOWN' AND coalesce(reason,'') NOT IN ('transport_unknown','receipt_invalid')) THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
+  IF EXISTS(SELECT 1 FROM jsonb_object_keys(p_result) k WHERE k NOT IN ('outcome','reason')) OR (SELECT count(*) FROM jsonb_object_keys(p_result))<>2 OR (outcome='REJECTED' AND coalesce(reason,'') NOT IN ('before_send_rejected','target_preflight_failed','provider_rejected','video_preflight_failed')) OR (reason='video_preflight_failed' AND job.media_kind<>'VIDEO') OR (outcome='UNKNOWN' AND coalesce(reason,'') NOT IN ('transport_unknown','receipt_invalid')) THEN RAISE EXCEPTION 'content_publication_receipt_invalid' USING ERRCODE='22023';END IF;
  END IF;
  UPDATE pcs.content_publication_jobs SET state=outcome,provider_receipt=p_result,public_url=CASE WHEN outcome='SENT' THEN 'https://t.me/'||username||'/'||(p_result->>'message_id') ELSE NULL END,last_error=reason,completed_at=clock_timestamp(),updated_at=clock_timestamp() WHERE id=job.id RETURNING * INTO job;
- IF outcome='SENT' THEN UPDATE pcs.content_posts SET status='PUBLICATION_SENT',publication_url=job.public_url,publication_note='Telegram accepted the exact approved text; independent public text observation is separate.',version=version+1,updated_at=clock_timestamp() WHERE id=post.id;
+ IF outcome='SENT' THEN UPDATE pcs.content_posts SET status='PUBLICATION_SENT',publication_url=job.public_url,publication_note=CASE WHEN job.media_kind='VIDEO' THEN 'Telegram accepted the approved video source and caption; independent public media observation is separate.' ELSE 'Telegram accepted the exact approved text; independent public text observation is separate.' END,version=version+1,updated_at=clock_timestamp() WHERE id=post.id;
  ELSIF outcome='REJECTED' THEN UPDATE pcs.content_posts SET status='APPROVED',scheduled_at=NULL,publication_target_id=NULL,version=version+1,updated_at=clock_timestamp() WHERE id=post.id;END IF;
  INSERT INTO audit_events(actor_role,action,entity_type,entity_id,patch,result) VALUES('ADMIN','content.publication.complete','content',post.id::text,jsonb_build_object('job_id',job.id,'claim_id',job.claim_id,'outcome',outcome,'reason',reason,'receipt',p_result),'SUCCESS');
  RETURN jsonb_build_object('ok',true,'job',to_jsonb(job));

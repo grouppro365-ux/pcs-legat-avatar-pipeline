@@ -8,5 +8,5 @@ const processShimLicense="(The MIT License)\n\nCopyright (c) 2013 Roman Shtylman
 const license=(await Promise.all(['grammy/LICENSE','debug/LICENSE','ms/license.md'].map(path=>readFile(new URL('../node_modules/'+path,import.meta.url),'utf8')))).concat(processShimLicense).join('\n\n');
 const pkg=JSON.parse(await readFile(new URL('../node_modules/grammy/package.json',import.meta.url),'utf8'));
 if(pkg.version!=='1.46.0'||pkg.license!=='MIT')throw Error('Unexpected Telegram SDK version or license');
-const result=await build({stdin:{contents:"export {Api,GrammyError} from 'grammy/web';",resolveDir:process.cwd(),sourcefile:'telegram-sdk-entry.mjs'},bundle:true,format:'esm',platform:'browser',target:'es2022',minify:true,write:false,legalComments:'inline',banner:{js:'/*! grammY 1.46.0 — https://github.com/grammyjs/grammY\n'+license+'*/'}});
+const result=await build({stdin:{contents:"export {Api,GrammyError,InputFile} from 'grammy/web';",resolveDir:process.cwd(),sourcefile:'telegram-sdk-entry.mjs'},bundle:true,format:'esm',platform:'browser',target:'es2022',minify:true,write:false,legalComments:'inline',banner:{js:'/*! grammY 1.46.0 — https://github.com/grammyjs/grammY\n'+license+'*/'}});
 await writeFile(new URL('../server/supabase/pcs-manager-live2/telegram-sdk.mjs',import.meta.url),result.outputFiles[0].contents);

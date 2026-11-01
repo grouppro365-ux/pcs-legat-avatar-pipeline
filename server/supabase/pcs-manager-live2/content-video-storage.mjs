@@ -21,16 +21,21 @@ async function checkedBlob(storage,meta,path,cap,type){
  const {data,error}=await storage.from(videoBucket).download(path);
  if(error||!data||data.size!==meta.bytes||data.size>cap)throw new CrmError('Файл видео не подтверждён в хранилище',409);
  const bytes=new Uint8Array(await data.arrayBuffer());
+ if(bytes.length!==meta.bytes||bytes.length>cap)throw new CrmError('Размер файла видео не совпал',409);
  if(type==='mp4'&&(bytes.length<12||String.fromCharCode(...bytes.slice(4,8))!=='ftyp'))throw new CrmError('Файл не является MP4',409);
  if(type==='png'&&(bytes.length<8||![137,80,78,71,13,10,26,10].every((n,i)=>bytes[i]===n)))throw new CrmError('Обложка не является PNG',409);
  const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
  if(hash!==meta.sha256)throw new CrmError('Контрольная сумма файла видео не совпала',409);
+ return bytes;
 }
-export async function verifyVideoArtifact(storage,artifact,job){
+function validateVideoArtifact(artifact,job){
  const dims=presets[job?.spec?.preset];
  if(!dims||!artifact||artifact.width!==dims[0]||artifact.height!==dims[1]||artifact.fps!==24||!Number.isSafeInteger(artifact.frames)||artifact.frames<1||artifact.frames>1500||!Number.isFinite(artifact.duration_seconds)||artifact.duration_seconds<=0||artifact.duration_seconds>15||Math.abs(artifact.frames/24-artifact.duration_seconds)>1/24||artifact.decode_verified!==true||artifact.codec!=='h264'||artifact.technical_qa!=='PASSED'||artifact.manual_review_required!==true||artifact.source_model!=='Lightricks/LTX-Video-0.9.5'||artifact.model_revision!=='e58e28c39631af4d1468ee57a853764e11c1d37e'||!sha(artifact.manifest_sha256))throw new CrmError('Техническая проверка видео не подтверждена',409);
  const expected=job.spec.shots.reduce((sum,shot)=>sum+shot.frames/8,0);
  if(artifact.frames!==Math.round(expected*24)||Math.abs(artifact.duration_seconds-expected)>1e-6)throw new CrmError('Длительность видео не совпала с заданием',409);
+}
+export async function verifyVideoArtifact(storage,artifact,job){
+ validateVideoArtifact(artifact,job);
  await checkedBlob(storage,artifact,videoObjectPath(job,'video'),25*1024*1024,'mp4');
  await checkedBlob(storage,artifact.cover,videoObjectPath(job,'cover'),2*1024*1024,'png');
  return artifact;
@@ -44,4 +49,18 @@ export async function signVideoRead(storage,job,kind){
  const u=new URL(data.signedUrl);
  if(u.origin!=='https://nnlzgertmmxuteozoeel.supabase.co'||!u.pathname.startsWith(`/storage/v1/object/sign/${videoBucket}/jobs/`))throw new CrmError('Некорректная ссылка видео',502);
  return {ok:true,url:data.signedUrl,expires_in:120,content_type:kind==='video'?'video/mp4':'image/png',filename:kind==='video'?'pcs-video.mp4':'pcs-video-cover.png'};
+}
+
+// Return only the verified source bytes used for this upload; never a signed URL.
+export async function readPublicationVideo(storage,snapshot,{timeoutMs=12000}={}){
+ if(!snapshot||!Number.isSafeInteger(snapshot.version)||snapshot.version<1||!Number.isSafeInteger(snapshot.revision)||snapshot.revision<1||!Number.isSafeInteger(snapshot.brand_version)||snapshot.brand_version<1||snapshot.review?.decision!=='APPROVED'||snapshot.review.artifact_sha256!==snapshot.artifact?.sha256)throw new CrmError('Одобрение файла видео не подтверждено',409);
+ validateVideoArtifact(snapshot.artifact,snapshot);
+ if(snapshot.artifact.bytes<1024)throw new CrmError('Некорректный размер видео',409);
+ let timer;
+ try{
+  return await Promise.race([
+   checkedBlob(storage,snapshot.artifact,videoObjectPath(snapshot,'video'),25*1024*1024,'mp4'),
+   new Promise((_,reject)=>{timer=setTimeout(()=>reject(new CrmError('Хранилище видео не ответило',503)),timeoutMs);})
+  ]);
+ }finally{clearTimeout(timer);}
 }
